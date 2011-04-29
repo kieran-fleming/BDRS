@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+    <context:annotation-config/>
+
+    <!-- Scan for location dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.location.impl"/>
+
+    <!-- Scan for region dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.region.impl"/>
+
+    <!-- Scan for taxa dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.taxa.impl"/>
+
+    <!-- Scan for user dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.user"/>
+
+    <!-- Scan for record dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.record.impl"/>
+
+    <!-- Scan for geo services -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.geometry"/>
+
+    <!-- Scan for file services -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.file"/>
+
+    <!-- Scan for expert dao / services -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.expert"/>
+
+    <!-- Scan for taxa dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.survey"/>
+
+    <!-- Scan for help dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.content.impl"/>
+
+    <!-- Scan for group dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.group.impl"/>
+
+    <!-- Scan for metadata dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.metadata.impl"/>
+    
+    <!-- Scan for threshold dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.threshold.impl"/>
+    
+    <!-- Scan for portal dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.portal.impl"/>
+    
+    <!-- Scan for preference dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.preference.impl"/>
+    
+    <!-- Scan for managed file dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.file.impl"/>
+    
+    <!-- Scan for theme dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.theme.impl"/>
+
+    <!-- Scan for xls service -->
+    <context:component-scan base-package="au.com.gaiaresources.mv.service.xls"/>
+
+    <!-- BDRS Services -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.service"/>
+    
+    <!-- Grids -->
+    <bean id="gridService" class="au.com.gaiaresources.bdrs.model.grid.impl.GridServiceImpl">
+       <property name="precisions">
+           <list>
+               <value>2</value>
+               <value>1.5</value>
+               <value>1</value>
+               <value>0.5</value>
+               <value>0.25</value>
+           </list>
+       </property>
+       <property name="minX" value="111"/>
+       <property name="maxX" value="155"/>
+       <property name="minY" value="-44"/>
+       <property name="maxY" value="-10"/>
+    </bean>
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.grid.impl"/>
+
+    <!-- Tasks -->
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
+
+    <!-- Events -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.event"/>
+
+
+</beans>

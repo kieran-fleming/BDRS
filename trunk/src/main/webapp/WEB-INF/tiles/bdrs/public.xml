@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+
+<tiles-definitions>
+
+    <!-- reCAPTCHA -->
+    <definition name="recaptcha" extends="template">
+        <put-attribute name="title" value="Register"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/recaptcha.jsp"/>
+    </definition>
+
+    <!-- Confirmed Registration -->
+    <definition name="registrationConfirmed" extends="template">
+        <put-attribute name="title" value="Registration Confirmed"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/registrationConfirmed.jsp"/>
+    </definition>
+
+    <!-- Error page -->
+    <definition name="error" extends="template">
+        <put-attribute name="title" value="Error"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/error.jsp"/>
+    </definition>
+    
+    <!-- Embedded -->
+    <definition name="widget-template" template="/WEB-INF/jsp/bdrs/embedded/widget_template.jsp">
+    </definition>
+    
+    <definition name="latest_statistics" extends="widget-template">
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/embedded/latest_statistics.jsp"/>
+    </definition>
+    
+    <definition name="bdrs_embed_js" template="/WEB-INF/jsp/bdrs/embedded/bdrs-embed.js.jsp">
+    </definition>
+    <definition name="bdrs_embed_css" template="/WEB-INF/jsp/bdrs/embedded/bdrs-embed.css.jsp">
+    </definition>
+    
+    <!-- Field Guide -->
+    <definition name="fieldGuideGroupListing" extends="template">
+        <put-attribute name="title" value="Field Guide Group Selection"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/fieldguide/groupListing.jsp"/>
+    </definition>
+    
+    <definition name="fieldGuideTaxaListing" extends="template">
+        <put-attribute name="title" value="Field Guide Taxon Selection"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/fieldguide/taxaListing.jsp"/>
+    </definition>
+    
+    <definition name="fieldGuideViewTaxon" extends="template">
+        <put-attribute name="title" value="Field Guide Taxon Selection"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/fieldguide/taxonView.jsp"/>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>html5media/html5media.min.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="fieldGuideTaxonRankRow" template="/WEB-INF/jsp/bdrs/public/fieldguide/taxonRankRow.jsp">
+        <put-attribute name="taxon" value="object"/>
+    </definition>
+
+</tiles-definitions>

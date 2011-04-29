@@ -1,0 +1,193 @@
+Installing on openSuse
+
+bioadmin@136.154.202.28
+B1oAdm1n>?
+
+Default opensuse install
+use yast to enable ssh access (under system->services)
+use yast to open up port for SSH (security -> firewall)
+
+use yast to add a repository:
+  http://download.opensuse.org/repositories/Application:/Geo/openSUSE_11.3/
+
+use yast to install:
+* postgresql-server 
+* postgresql-devel
+* postgis 
+* postgis-utils
+* apache2
+* apache2-mod_jk
+* tomcat6 
+* tomcat6-admin-webapps
+
+use yast to enable (under system->services)
+* postgresql 
+* apache2
+* tomcat6
+
+open up port for apache and tomcat 80, 8080 (Use Yast) *N/A if firewall is off
+
+edit /var/lib/pgsql/data/pg_hba.conf to preferred auth mechanism 
+restart postgresql
+
+anthony@linux-esj6:~> createuser -Upostgres biosnaps
+anthony@linux-esj6:~> createdb -Upostgres template_postgis
+anthony@linux-esj6:~> createlang -Upostgres plpgsql template_postgis
+anthony@linux-esj6:~> psql -Upostgres template_postgis < /usr/share/postgresql/contrib/postgis-1.5/postgis.sql 
+anthony@linux-esj6:~> psql -Upostgres template_postgis < /usr/share/postgresql/contrib/postgis-1.5/spatial_ref_sys.sql 
+anthony@linux-esj6:~> createdb -Upostgres climatewatch2 -T template_postgis
+
+anthony@linux-esj6:~> psql -Upostgres climatewatch2
+climatewatch2=# grant all on database climatewatch2 to biosnaps;
+climatewatch2=# grant all on geography_columns, geometry_columns, spatial_ref_sys to biosnaps;
+
+Create
+/srv/www/htdocs/index.html:
+  <META http-equiv="refresh" content="0;URL=/BDRS/home.htm"> 
+
+Edit
+/etc/sysconfig/apache2:
+  APACHE_MODULES="actions alias auth_basic authn_file authz_host authz_groupfile authz_default authz_user autoindex cgi dir env expires include log_config mime negotiation setenvif ssl userdir php5 jk"
+
+Edit
+/etc/apache2/mod_jk.conf:
+# Setup mod_jk for the BDRS
+<IfModule mod_jk.c>
+    JkWorkersFile /etc/tomcat6/workers.properties
+    JkLogFile /var/log/tomcat6/mod_jk.log
+    JkShmFile /var/log/tomcat6/shm
+
+    JkLogLevel error
+
+    JkMount /BDRS/* ajp13
+    # Remove this after configuration is complete.
+    JkMount /manager/* ajp13
+</IfModule>
+
+
+Add to /etc/apache2/httpd.conf (at the end):
+# load mod_jk config
+Include /etc/apache2/mod_jk.conf
+
+Create
+/etc/tomcat6/workers.properties:
+worker.ajp13.port=8009
+worker.ajp13.host=localhost
+worker.ajp13.type=ajp13
+
+sudo chgrp -R tomcat /etc/tomcat6
+sudo chgrp -R tomcat /var/cache/tomcat6
+sudo chgrp -R tomcat /srv/tomcat6/webapps
+sudo chgrp -R tomcat /var/cache/tomcat6/temp
+sudo chgrp -R tomcat /var/log/tomcat6
+sudo chmod -R g+w /etc/tomcat6 /var/cache/tomcat6 /srv/tomcat6/webapps /var/cache/tomcat6/temp /var/log/tomcat6
+
+Edit
+tomcat-users.xml:
+<tomcat-users>
+  <role rolename="tomcat"/>
+  <role rolename="manager"/>
+  <user username="admin" password="BioSnaps!T0mC4t" roles="tomcat,manager"/>
+</tomcat-users>
+
+
+// OPTIONAL for performance.
+// setup apache to serve static content.
+  cd /srv/www/htdocs
+  mkdir BDRS
+  cd BDRS
+  ln -s /srv/tomcat6/webapps/BDRS/audio .
+  ln -s /srv/tomcat6/webapps/BDRS/css .
+  ln -s /srv/tomcat6/webapps/BDRS/images .
+  ln -s /srv/tomcat6/webapps/BDRS/js .
+  ln -s /srv/tomcat6/webapps/BDRS/media .
+Edit
+/etc/apache2/mod_mime-defaults.conf so that html5 videos are served with the right mime type (possibly also audio)
+ add (if they don't exist):
+	AddType video/ogg .ogv
+	AddType video/mp4 .mp4
+	AddType video/webm .webm
+
+Edit 
+/etc/mod_jk.conf:
+    JkUnMount /*.jpg  ajp13
+    JkUnMount /*.png  ajp13
+    JkUnMount /*.gif  ajp13
+    JkUnMount /*.css  ajp13
+
+Edit 
+/etc/apache2/default-server.conf:
+        Options FollowSymLinks
+
+// restart apache.
+/etc/init.d/apache2 restart
+
+// END OPTIONAL
+
+On a development machine compile the webapp:
+
+ mvn -Pprod clean compile package
+
+Copy this file 
+// make sure favicon is there (or copy one here):
+/srv/www/htdocs:
+drwxr-xr-x 2 root    root    4096 2010-08-18 15:16 BDRS
+-rw-r--r-- 1 anthony anthony 1012 2010-08-18 15:54 favicon.ico
+-rw-r--r-- 1 root    root      60 2010-08-06 16:06 index.html
+
+anthony@linux-esj6:/usr/share/tomcat6/bin> psql -Ubiosnaps climatewatch2 < /tmp/BDRS.sql 
+
+copy the BDRS.war file to /srv/tomcat6/webapps
+ rsync -avz target/BDRS.war bioadmin@136.154.202.28:
+take a copy of existing war file and sql database and put it in /srv/tomcat6/backups
+ pg_dump climatewatch2 -Ubiosnaps -f BDRS.sql
+create a folder named YYYYMMDD in /srv/tomcat6/backups and copy these files into it
+ cp -r BDR* YYYYMMDD/
+
+
+
+
+Stop Tomcat
+ /etc/init.d/tomcat6 stop
+Check if it's running
+
+Do any necessary database migrations
+ createdb -Tclimatewatch2 cwbackup
+ createdb -Tclimatewatch2 cwtest
+
+run your migration script on cwtest,
+ psql -Ubiosnaps cwtest -f migrate.sql 
+ if it's successful, then run on the production database
+
+
+start tomcat
+
+
+
+// Setup filestore for application
+// TODO make this a link
+anthony@linux-esj6:/usr/share/tomcat6/webapps> sudo mkdir BDRS/filestore
+anthony@linux-esj6:/usr/share/tomcat6/webapps> sudo chown tomcat BDRS/filestore/
+
+// Configure email:
+WEB-INF/climatewatch-email.xml:
+        <property name="host" value="localhost"/>
+// Configure DB:
+//change DB user and password in climatewatch-hibernate.xml
+  sudo vi WEB-INF/climatewatch-hibernate.xml
+WEB-INF/climatewatch-hibernate.xml:
+        <property name="username" value="biosnaps"/>
+        <property name="password" value="biosnaps"/>
+
+// Configure postgresql libraries
+  cd /srv/tomcat6/webapps/BDRS/WEB-INF/
+  rm -f lib/postg*
+
+copy in the correct ones:
+  postgis_1.3.1.jar
+  postgresql-8.2-505.jdbc4.jar
+
+sudo /etc/init.d/tomcat6 restart
+
+
+

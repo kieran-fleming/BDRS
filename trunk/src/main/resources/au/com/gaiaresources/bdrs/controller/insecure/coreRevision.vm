@@ -1,0 +1,11 @@
+<b>Core Revision Information</b>
+<div>
+<p>repository = ${coreRevision.repository}</p>
+<p>path = ${coreRevision.path}</p>
+<p>revision = ${coreRevision.revision}</p>
+<p>mixedRevisions = ${coreRevision.mixedRevisions}</p>
+<p>committedRevision = ${coreRevision.committedRevision}</p>
+<p>committedDate = ${coreRevision.committedDate}</p>
+<p>status = ${coreRevision.status}</p>
+<p>specialStatus = ${coreRevision.specialStatus}</p>
+</div>

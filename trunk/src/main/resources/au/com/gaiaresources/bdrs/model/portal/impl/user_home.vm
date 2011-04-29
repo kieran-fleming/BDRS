@@ -1,0 +1,4 @@
+<p>Welcome, ${currentUserFirstName} ${currentUserLastName}!</p>
+<p>
+This text is the default text on the home page.  In order to change it, your Administrator can log into the system and change it by going to the Admin> Edit Content menu.
+</p>

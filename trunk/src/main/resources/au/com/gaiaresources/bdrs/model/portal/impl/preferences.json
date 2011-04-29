@@ -1,0 +1,50 @@
+[
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.storage",
+        displayName: "Storage",
+        description: "Preferences related to the storage of uploaded data on the server."
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.taxonomy",
+        displayName: "Taxonomy",
+        description: "Preferences related to taxonomic information." 
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.survey",
+        displayName: "Survey",
+        description: "Preferences related to surveys." 
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
+        key: "lsid.authority",
+        value: "dev.gaiaresources.com.au",
+        locked: true,
+        description: "An Life Sciences Identifier (LSID) authority identification is a character string that uniquely identifies a source of LSIDs. The identification is usually a domain name registered to the organization that assigned the identifiers.",
+        preferenceCategoryName: "category.taxonomy",
+        portalName: null,
+		isRequired: true
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
+        key: "file.store.location",
+        value: "/tmp",
+        locked: true,
+        description: "The directory where uploaded images and data files shall be stored.",
+        preferenceCategoryName: "category.storage",
+        portalName: null,
+		isRequired: true
+    },
+	{
+        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
+        key: "survey.default",
+        value: "1",
+        locked: true,
+        description: "The id of the default survey to render should a survey ID not be given.",
+        preferenceCategoryName: "category.survey",
+        portalName: null,
+		isRequired: true
+    }
+]

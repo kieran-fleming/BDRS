@@ -1,0 +1,100 @@
+package au.com.gaiaresources.bdrs.geometry;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
+import org.geotools.geometry.jts.JTS;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.crs.DefaultGeocentricCRS;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
+import org.springframework.stereotype.Component;
+
+import com.vividsolutions.jts.geom.Geometry;
+
+@Component
+public class GeometryTransformer {
+    private static final String SPHERICAL_MERCATOR_WKT = 
+          "PROJCS[\"WGS84 / Simple Mercator\", GEOGCS[\"WGS 84\", DATUM[\"WGS_1984\", "
+        + "SPHEROID[\"WGS_1984\", 6378137.0, 298.257223563]], "
+        + "PRIMEM[\"Greenwich\", 0.0],"
+        + "UNIT[\"degree\", 0.017453292519943295],"
+        + "AXIS[\"Longitude\", EAST],"
+        + "AXIS[\"Latitude\", NORTH]],"
+        + "PROJECTION[\"Mercator_1SP\"],"
+        + "PARAMETER[\"latitude_of_origin\", 0.0],"
+        + "PARAMETER[\"central_meridian\", 0.0],"
+        + "PARAMETER[\"scale_factor\", 1.0],"
+        + "PARAMETER[\"false_easting\", 0.0],"
+        + "PARAMETER[\"false_northing\", 0.0], UNIT[\"m\", 1.0],"
+        + "AXIS[\"x\", EAST], AXIS[\"y\", NORTH], AUTHORITY[\"EPSG\",\"900913\"]]";
+    public static final int WGS84_SRID = 4326;
+    public static final int GOOGLE_SRID = 900913;
+    
+    private Map<String, MathTransform> transforms = new HashMap<String, MathTransform>();
+    private Map<Integer, CoordinateReferenceSystem> coordReferenceSystems = new HashMap<Integer, CoordinateReferenceSystem>();
+    
+    @PostConstruct
+    public void init() throws FactoryException, NoninvertibleTransformException {
+    	//TODO install JAI
+    	//CoordinateReferenceSystem sphericalMercatorCRS = CRS.parseWKT(SPHERICAL_MERCATOR_WKT);
+        CoordinateReferenceSystem wgs84 = CRS.decode("EPSG:" + WGS84_SRID);
+        
+        //MathTransform t = CRS.findMathTransform(wgs84, sphericalMercatorCRS);
+        //transforms.put(WGS84_SRID + "-" + GOOGLE_SRID, t);
+        //transforms.put(GOOGLE_SRID + "-" + WGS84_SRID, t.inverse());
+
+        coordReferenceSystems.put(4326, wgs84);
+        //coordReferenceSystems.put(900913, sphericalMercatorCRS);
+    }
+    
+    public Geometry transform(Geometry geom, int targetSRID) throws GeometryTransformationFailedException {
+        if (geom.getSRID() == targetSRID) {
+            return geom;
+        }
+        
+        try {
+            MathTransform transform = getMathTransform(geom.getSRID(), targetSRID);
+            return JTS.transform(geom, transform);
+        } catch (Exception e) {
+            throw new GeometryTransformationFailedException(e);
+        }
+    }
+    
+    private synchronized MathTransform getMathTransform(int from, int to) throws NoninvertibleTransformException, FactoryException  {
+        String key = from + "-" + to;
+        if (transforms.containsKey(key)) {
+            return transforms.get(key);
+        }
+        
+        String reverseKey = to + "-" + from;
+        if (transforms.containsKey(reverseKey)) {
+            return transforms.get(reverseKey).inverse();
+        }
+        
+        CoordinateReferenceSystem fromCRS = CRS.decode("EPSG:" + from);
+        CoordinateReferenceSystem toCRS = CRS.decode("EPSG:" + to);
+        
+        MathTransform t = CRS.findMathTransform(fromCRS, toCRS);
+        transforms.put(key, t);
+        return t;
+    }
+    
+    public CoordinateReferenceSystem getCoordinateReferenceSystem(int srid) throws InvalidGeometryException {
+        if (coordReferenceSystems.containsKey(srid)) {
+            return coordReferenceSystems.get(srid);
+        }
+        try {
+            CoordinateReferenceSystem crs = CRS.decode("EPSG:" + srid);
+            coordReferenceSystems.put(srid, crs);
+            return crs;
+        } catch (FactoryException fe) {
+            throw new InvalidGeometryException("Invalid SRID: " + srid, fe);
+        }
+    }
+}

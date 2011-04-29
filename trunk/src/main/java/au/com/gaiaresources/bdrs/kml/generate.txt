@@ -1,0 +1,7 @@
+To re-generate the bindings:
+
+xjc.bat ogckml22_modified.xsd -b bindings.xjb
+
+The bindings file puts everything in the correct package, (au.org.earthwatch.kml...). 
+The modified xsd has the deprecated Snippet removed from AbstractObjectType as JAXB cannot 
+deal with the case insensitive snippet and Snippet.

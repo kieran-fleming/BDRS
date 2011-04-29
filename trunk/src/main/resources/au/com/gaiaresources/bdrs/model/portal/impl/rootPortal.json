@@ -1,0 +1,13 @@
+[
+    {
+        classname: "au.com.gaiaresources.bdrs.model.portal.Portal",
+        name: "Biological Data Recording System",
+        isDefault: true
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint",
+        portalName: "Biological Data Recording System",
+        pattern: "^(\\S+/)?(\\S+/)?(BDRS){1}(/)?$",
+        redirect: ""
+    }
+]

@@ -1,0 +1,123 @@
+#content_container {
+   width: 100%;
+}
+
+
+DIV#headerBanner {
+	
+}
+DIV#headerBanner IMG{
+	float: left;
+}
+
+#submitDiv{
+	width: 50%;
+}
+
+.hideElement{
+	display:none;	
+}
+
+#j_submit{
+	display:none;	
+}
+
+DIV#loginInput{
+	background-image: -moz-linear-gradient(top, #FFFFFF, #E8EAE9);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FFFFFF), color-stop(1, #E8EAE9) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0, startColorstr = #FFFFFF, endColorstr = #E8EAE9 );
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#FFFFFF, endColorstr=#E8EAE9)";
+     padding: 16px 16px 16px 16px;
+     margin: 1em 1em; 
+    /* Rounded Border */
+    border: 1px solid #C9C6C6;
+    -webkit-border-radius: 8px;
+    -khtml-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    /* Drop Shadow */
+    box-shadow: 0px 0px 8px #DBDBDB;
+    -moz-box-shadow: 0px 0px 8px #DBDBDB;
+    -webkit-box-shadow: 0px 0px 8px #DBDBDB;
+    -ms-filter: /* IE8+ */
+        "filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=0, OffY=0, Color=#DBDBDB, Positive=true)"
+        ;
+    filter: /* IE<8 */ filter : progid :
+        DXImageTransform.Microsoft.dropshadow ( OffX = 0, OffY = 0, Color =
+        #DBDBDB, Positive = true );
+}
+
+
+DIV.record_form_item LABEL{
+	width: 20%;
+}
+
+DIV.record_form_item SELECT {
+	width:70%;
+}
+DIV.record_form_item INPUT{
+	width:70%;
+}
+DIV.record_form_item TEXTAREA{
+	width: 70%;
+}
+
+DIV#content_container DIV#mobileHeader {
+	min-height: 70px;
+}
+
+#companyName{
+	font-size: 1.8em;
+	line-height: 1.8em;
+}
+
+#companySlogan{
+	font-size: 0.8em;
+	line-height: 0.8em;
+}
+
+DIV#pageNavigation{
+	min-height: 40px;
+}
+
+.box{
+-webkit-border-radius: 16px;
+-khtml-border-radius: 16px;
+-moz-border-radius: 16px;
+border-radius: 16px;
+background-color: #F1F1F1;
+border: 1px solid #C9C6C6;
+}
+
+#boxImage{
+max-width: 370px;
+margin: 8px;
+}
+
+#boxImage IMG{
+max-width: 350px;
+margin: 8px;
+}
+
+#thumbNails{
+widht: 100px;
+
+}
+#thumbNails IMG{
+max-width:100px;
+clear: right;
+}
+
+.boxImageTitle{
+margin: 8px;
+max-width: 350 px;
+text-align: center;
+}
+
+.listItemText{
+	font-size: 1.5em;
+}
+
+.listItemSubText{
+	font-size: 1em;
+}

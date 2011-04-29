@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--  This file needs to be included in all projects under bdrs core so that the config loading in 
+AbstractBDRSTest.java does not fail.  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+
+	<bean id="profileConfig" class="au.com.gaiaresources.bdrs.config.ProfileConfig">
+        <property name="xmlConfigFilename" value="/../../src/main/webapp/WEB-INF/profileConfig-test.xml"/>
+    </bean>
+           
+</beans>

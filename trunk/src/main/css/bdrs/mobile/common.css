@@ -1,0 +1,647 @@
+/**
+ * The following file contains stylign that is common to the netbook
+ * and all mobile devices.
+ */
+
+/***************************/
+/* Theming	               */
+/***************************/
+
+body {
+	color: #3E3E3E;
+}
+
+.box {
+	padding: 8px 8px 8px 8px;
+	margin: 8px 8px 8px 8px;
+	background-color: #D4DFC1;
+
+	/* Rounded Border */
+	border: 1px solid #B3CB81;
+	-webkit-border-radius: 8px;
+	-khtml-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+}
+
+.gradient_bg {
+   /* Color Gradient */
+    background-image: -moz-linear-gradient(top, #2E3436, #5D5F5A);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #2E3436),
+        color-stop(1, #5D5F5A) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #2E3436, endColorstr = #5D5F5A );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#2E3436, endColorstr=#5D5F5A)"
+        ;
+
+    z-index: -5000;
+    position: fixed;
+    top:0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+#content_container {
+	min-height: 100%;
+	margin: auto;
+    background-repeat:no-repeat;
+    background-color: #D5E1BB;
+    border-left: 1px solid #ACB0A2;
+    border-right: 1px solid #ACB0A2;
+}
+
+
+
+/* Button Styling */
+input[type=submit],
+input[type=button] {
+    color: white;
+    font-weight: bold;
+
+    margin: 0px 8px 0px 8px;
+    padding: 4px 16px 4px 16px;
+
+    font-size: 1em;
+    cursor: pointer;
+
+    /* Rounded Border */
+    border: 1px solid #34561E;
+    -webkit-border-radius: 6px;
+    -khtml-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+
+    text-shadow: 1px 1px 2px #063209;
+}
+
+input[type=submit][disabled].form_action,
+input[type=button][disabled].form_action,
+input[type=submit][disabled].form_action:active,
+input[type=button][disabled].form_action:active,
+input[type=submit][disabled].form_action:hover,
+input[type=button][disabled].form_action:hover {
+    background-image: none;
+    background-color: #3B531F;
+}
+
+/* Form Actions */
+input[type=submit].form_action,
+input[type=button].form_action {
+    /* Color Gradient */
+    background-image: -moz-linear-gradient(top, #40CF43, #34A535);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #40CF43),
+        color-stop(1, #34A535) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #40CF43, endColorstr = #34A535 );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#40CF43, endColorstr=#34A535)"
+        ;
+    /* Drop Shadow */
+    /*box-shadow: 0px 0px 8px #DBDBDB;
+    -moz-box-shadow: 0px 0px 8px #DBDBDB;
+    -webkit-box-shadow: 0px 0px 8px #DBDBDB;
+    -ms-filter: /* IE8+ */
+        "filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=0, OffY=0, Color=#DBDBDB, Positive=true)"
+        ;
+    filter: /* IE<8 */ filter : progid :
+        DXImageTransform.Microsoft.dropshadow ( OffX = 0, OffY = 0, Color =
+        #DBDBDB, Positive = true );*/
+}
+
+input[type=submit].form_action:hover,
+input[type=button].form_action:hover {
+	/* Color Gradient */
+    background-image: -moz-linear-gradient(top, #75EE77, #34A535);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #75EE77),
+        color-stop(1, #34A535) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #75EE77, endColorstr = #34A535 );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#75EE77, endColorstr=#34A535)"
+        ;
+}
+
+input[type=submit].form_action:active,
+input[type=button].form_action:active {
+    background-image: none;
+    background-color: #30AC30;
+}
+
+/* Errors Messages such as login failed */
+p.message {
+    color: #FFFFFF;
+    border: 1px dashed #BAD880;
+    text-align: center;
+    font-size: 120%;
+    background-color: #2F411B;
+    margin-left: 2em;
+    margin-right: 2em;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+}
+
+/***************************/
+/* Generic Styling         */
+/***************************/
+.textcenter {
+	text-align: center;
+}
+
+.hidden {
+	display:none;
+}
+
+
+
+/***************************/
+/* Screen Styling         */
+/***************************/
+
+/* offlineRequest */
+#actionPanel {
+	padding: 1em 0em 1em 0em;
+	font-size: 1.4em;
+}
+
+/* Login Page */
+#loginBox {
+	margin: auto;
+	position: relative;
+}
+
+#loginBox input[type=text],
+#loginBox input[type=password] {
+	width: 100%;
+}
+
+#loginBox #loginButtonPanel {
+   text-align: right;
+   padding-top: 1em;
+}
+
+#loginBox #loginButtonPanel #j_submit {
+   margin-right: 0px;
+}
+
+/***************************/
+/* Structural Styling         */
+/***************************/
+
+DIV #headerText{
+	display: inline;
+	line-height: 50px;
+	font-size: medium;
+	}
+DIV #speciesImgContainer{
+	float: left;
+	}
+DIV #speciesInfoContainer{
+	padding: 1em;
+	}
+DIV #thumbsContainer{
+	clear:left;
+	float:left;
+	border: 3px solid white;
+	width: 300px;
+	background-color: rgba(213, 224, 190, 0.6);
+	}
+#distMap{
+	border: 1px solid white;
+	}
+.profileImgThumb{
+	 float:left;
+	 margin-right: 4px;
+	}
+
+#homeBtnContainer{
+	display: block;
+	width: 200px;
+	margin-top: 45px;
+	height: 200px;
+	margin-left: auto;
+	margin-right: auto;
+	font-weight: bold;
+	}
+DIV.homeBtnRow{
+	display: block;
+	height: 100px;
+	margin-top:10px;
+	margin-left: auto;
+	margin-right: auto;
+}
+BODY #mobileSubHeader{
+	background: transparent;
+	height: 30px;
+	margin-bottom: 15px;
+	}
+
+.formFieldTextShort {
+}
+
+.formFieldText {
+	width: 180px;
+	margin-bottom: 5px;
+}
+
+.formFieldTextArea {
+	width: 180px;
+	height:50px;
+	margin-bottom: 5px;
+}
+
+.formFieldSelect {
+	width: 185px;
+	margin-bottom: 5px;
+}
+
+.formFieldSelectShort {
+	margin-bottom: 5px;
+}
+
+.subHeader_btn {
+		font-weight:bold;
+		float: right;
+		padding: 1em;
+		border-bottom: 1px solid black;
+		border-left:  1px solid black;
+		position: relative;
+		top: -1px;
+	}
+ #help_btn{
+		font-weight:bold;
+ 		float: right;
+ 		padding: 1em;
+ 		border-bottom: 1px solid black;
+ 		border-left:  1px solid black;
+ 		position: relative;
+		top: -1px;
+ 		clear: right;
+ }
+#offlineStatus a{
+	display: block;
+}
+#sync{
+	width: 15px;
+	height: 15px;
+	}
+#sync.no{
+	background-color: #db6363;
+}
+	
+#sync.downloading,#sync.checking{
+	background-image: url("../../../images/mobile/sync.gif");
+}
+#sync.idle,#sync.noupdate,#sync.updateready{
+	background-image: url("../../../images/mobile/online.png");
+}
+#sync.uncached{
+	background-image: url("../../../images/mobile/offline.png");
+}
+	
+#pageContentHeader{
+	font-size: large;
+	font-weight: bold;
+	padding: 0.5em;
+    text-transform: uppercase;
+	}
+
+.btn_dash{
+	padding: 5px;
+	float:left;
+}
+
+#DIV.icon {
+	float: left;
+	margin-left: 10px;
+}
+.ico_txt {
+	text-align: center;
+	font-size: 1.2em;
+}
+
+UL {
+	padding-left: 0px;
+	padding-top: 0px;
+	list-style: none;
+	margin: 0px;
+	}
+.fullLink {
+		display: block;
+		text-decoration: none;
+		width:100%;
+		line-height: 55px;
+		height: 55px;
+		color: black;
+
+		}
+#itemsList li  {
+    border-top: 1px solid #acb0a2;
+}
+#itemsList li:last-child  {
+    border-bottom: 1px solid #acb0a2;
+}
+
+li.taxaLi{
+	background-image: -moz-linear-gradient(top, #FFFFFF, #c9c9c9);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FFFFFF),
+        color-stop(1, #c9c9c9) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #FFFFFF, endColorstr = #c9c9c9 );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#FFFFFF, endColorstr=#c9c9c9)"
+        ;
+
+	border-bottom: 1px solid #8a8d82;
+	font-size: 13px;
+	overflow: hidden;
+	vertical-align: middle;
+}
+
+li.speciesLi{
+    background-image: -moz-linear-gradient(top, #FFFFFF, #c9c9c9);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FFFFFF),
+        color-stop(1, #c9c9c9) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #FFFFFF, endColorstr = #c9c9c9 );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#FFFFFF, endColorstr=#c9c9c9)"
+        ;
+
+	line-height: 70px;
+	overflow: hidden;
+	}
+.listItemImg{
+	/*float:left;*/
+	vertical-align: middle;
+/*	padding: 1px; */
+	}
+.listItemText{
+	float:left;
+	/*font-size: 13px;*/
+	margin-left: 2ex;
+	}
+.listItemIcon{
+	 float: right;
+	 /*position: relative;
+	 top: 15px;*/
+	}
+
+.recItemLabel{
+	float:right;
+	padding-right: 0.5em;
+	}
+
+#transpBox{
+	width:  600px;
+	background-color: rgba(221, 242, 182, 0.6);
+
+	/*-webkit-box-shadow: 2px 2px 2px rgba(0,0,0,0.6);*/
+	box-shadow: 0px 0px 8px #A7C376;
+    -moz-box-shadow: 0px 0px 8px #A7C376;
+    -webkit-box-shadow: 0px 0px 8px #A7C376;
+    -ms-filter: /* IE8+ */
+        "filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=0, OffY=0, Color=#A7C376, Positive=true)";
+
+	padding: 15px 0px 15px 0px;
+	margin-left: auto;
+	margin-right: auto;
+	-webkit-border-radius: 15px;
+	-moz-border-radius:15px;
+}
+
+.transpBoxPadding {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+#speciesNameTitle{
+	padding-left: 2em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	min-height: 35px;
+	border-top: 1px solid #7A7E72;
+	border-bottom:  1px solid #7A7E72;
+
+	/* Color Gradient */
+    background-image: -moz-linear-gradient(top, #EDEDED, #CDCDCD);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #EDEDED),
+        color-stop(1, #CDCDCD) );
+    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
+        startColorstr = #EDEDED, endColorstr = #CDCDCD );
+    -ms-filter:
+        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#EDEDED, endColorstr=#CDCDCD)"
+        ;
+
+
+	overflow: auto;
+}
+.speciesInfoItemHeader{
+	font-weight: bold;
+	font-size: 13px;
+	padding-top: 1em;
+	line-height: 13px;
+}
+
+
+#speciesRecordFormImg{
+	margin: 1em;
+	float: left;
+	border: 3px solid white;
+	width: 80px;
+	height: 80px;
+	clear: right;
+}
+.recordLabel{
+	text-align: right;
+	font-family: helvetica;
+	font-size: medium;
+	width: 30%; display: block; float:left;
+	line-height: 25px;
+	}
+
+
+.headerText:FIRST-LETTER{
+	text-transform: uppercase;
+	}
+
+#inputSpeciesCommonName{
+	border: 0px;
+	background-color: #3B5998;
+	color: white;
+	font-size: 1.5em;
+	text-align: center;
+	-webkit-appearance: none;
+	}
+#inputSpeciesScientificName{
+	border: 0px;
+	background-color: #3B5998;
+	color: white;
+	font-size: 1.2em;
+	text-align: center;
+	-webkit-appearance: none;
+	}
+
+DIV .downloadProgress{
+	clear: both;
+	text-align: center;
+	vertical-align: middle;
+	}
+
+DIV .downloadMsg{
+	clear: both;
+	display: none;
+	color: white;
+	background-color: #9aba21;
+	}
+
+
+
+LABEL.species-icon-record {
+	width: 70px;
+	float: left;
+}
+
+DIV.species-icon-text {
+	float: none;
+	text-align: center;
+
+}
+
+DIV.record-icon {
+	float: none;
+}
+
+
+DIV.recordInfo {
+
+}
+.recordInput{
+	width: 70%; display: block; float:left; text-align: left; padding-top: 2px; padding-bottom: 2px;
+	}
+
+#content {
+	/*background-image: url("../../../images/mobile/bg.png");
+	width: 100%;
+	height: auto;
+	min-height: 430px;
+	background-repeat:no-repeat;
+	background-position:top;
+	background-attachment: fixed;*/
+	/*min-height: 480px;*/
+}
+
+#bgimg{
+	width:100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: -5000;
+	}
+
+.recordForm{
+	position:relative;
+	}
+
+P {
+	margin: 5px 0px;
+	line-height: 1.5em;
+}
+
+.idToolSection{
+	 width: 500px;
+	 border: 1px solid #8a8d82;
+
+	 -webkit-border-radius: 8px;
+    -khtml-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+
+    padding: 8px;
+
+	 background-color: rgba(213, 224, 190, 0.8);
+	 margin-bottom:1em;
+	 margin-left: auto;
+	 margin-right: auto;
+}
+
+.idToolHeader{
+	clear: both;
+	font-weight: bold;
+	padding-bottom: 1em;
+}
+
+
+
+.listStyle{
+min-height: 30px; text-indent: 10px;
+}
+
+.recordField{
+	background-color: transparent;
+	border: none;
+	}
+.recordFieldActive{
+	background-color: white;
+	border: thin;
+	}
+
+.recordContainer {
+    display: table;
+    color: black;
+	font-size: 11.em;
+    }
+ .recordContainer input{
+ 	border-style: none;
+	-webkit-appearance: none;
+	width: 100%;
+ }
+
+ #loginContainer {
+    display: table;
+    color: #000000;
+    padding: 50px;
+    }
+
+#headerContainer{
+	display: table;
+    color: white;
+	}
+
+IMG {
+	border: 0px;
+}
+
+#distMap{
+	width: 147px;
+	height: 110px;
+	margin-top: 0.5em;
+	}
+.distMapLrg{
+	background:url(thumb_bg.png) no-repeat center center;
+	border: none; /* Get rid of border on hover */
+	}
+
+
+.container {
+	background: #ffffff;
+	border: 1px solid #848284;
+	padding: 10px;
+}
+
+.speciesHeader {
+	font-size: large;
+	font-weight: bold;
+	padding: 0.5em;
+}
+
+a.fullLink,
+a.fullLink:hover {
+    text-decoration: none;
+}
+
+.listItemText {
+    color:#333333;
+    font-size: 1.2em;
+}

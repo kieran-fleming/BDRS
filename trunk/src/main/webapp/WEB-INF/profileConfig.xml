@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!-- Store validation as the ketchup validation string. The xxx in validate(xxx) -->
+<!-- The idea here was to have the WAR overlay take care of applying this
+	config to any sub project that didn't have its own profileConfig.xml file
+	defined. That has a hiccup as when using jetty as the WAR overlay does not 
+	occur. For now just define profileConfig.xml in each sub project.
+ -->
+
+<profile>
+    <!-- 
+    <metadata>
+        <key>Hello</key>
+        <displayName>Hello world!</displayName>
+        <validation>required, maxlength(30)</validation>
+        <type>String</type>
+    </metadata>
+     -->
+    <metadata>
+        <key>emailNewsletter</key>
+        <displayName>Receive newsletter via e-mail?</displayName>
+        <type>Boolean</type>
+    </metadata>
+</profile>

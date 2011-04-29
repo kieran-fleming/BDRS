@@ -1,0 +1,11 @@
+<html>
+    <body>
+        <p>Hi ${expert.user.firstName} ${expert.user.lastName},</p>
+        
+        <p>You have been confirmed as an expert on the Climate Watch system.</p>
+        
+        <p>You can access Climate Watch <a href="${bdrs.application.url}>here</a>.</p>
+        
+        <p>You will received notifications when you are requested to review data and you will see outstanding requests when you log into the web site.</p>
+    </body>
+</html>

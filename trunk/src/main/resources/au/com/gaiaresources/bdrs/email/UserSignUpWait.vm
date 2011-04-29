@@ -1,0 +1,10 @@
+<html>
+    <body>
+        <p>Hi ${newUser.firstName} ${newUser.lastName}!</p>
+        
+        <p>Your registration request for ${bdrs.site.name} is awaiting approval.</p>
+        
+        <p>You will receive an email when one of our administrators has approved your registration request.</p>
+        
+    </body>
+</html>

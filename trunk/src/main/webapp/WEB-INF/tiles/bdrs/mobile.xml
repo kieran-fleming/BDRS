@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+       
+<tiles-definitions>
+
+    <definition name="mobiletemplate" template="/WEB-INF/jsp/bdrs/mobile/mobile-template.jsp">
+        <put-attribute name="contentheader" value="contentheader" />
+        <put-attribute name="title" value="bdrs" />
+        <put-attribute name="sitename" value="gaia" />
+        <put-attribute name="mobileheader" value="/WEB-INF/jsp/bdrs/mobile/mobile-header.jsp" />
+		<put-attribute name="pageNavigation" value="/WEB-INF/jsp/bdrs/mobile/pageNavigation.jsp" />
+        <put-attribute name="mobilefooter" value="/WEB-INF/jsp/bdrs/mobile/mobile-footer.jsp" />
+        <put-attribute name="metakeywords" value="" />
+        <put-attribute name="metadescription" value="" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/mobile-emptyContent.jsp" />
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    
+    <definition name="errorMobile" extends="mobiletemplate">
+        <put-attribute name="title" value="Error" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/error.jsp" />
+    </definition>
+    
+    <definition name="bdrsMobileJs" extends="ajax-template">
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/bdrsMobileJs.jsp" />
+    </definition>
+    
+    <!--device specific meta-data,css,images -->
+    <definition name="android" template="/WEB-INF/jsp/bdrs/mobile/device/android.jsp" />
+    <definition name="iphone" template="/WEB-INF/jsp/bdrs/mobile/device/iphone.jsp" />
+    <definition name="nokiae75" template="/WEB-INF/jsp/bdrs/mobile/device/nokiae75.jsp" />
+    <definition name="iemobile 6.12" template="/WEB-INF/jsp/bdrs/mobile/device/iemobile.jsp" />
+    <definition name="netbook" template="/WEB-INF/jsp/bdrs/mobile/device/netbook.jsp" />
+    
+    <definition name="loginmobile" extends="mobiletemplate">
+        <put-attribute name="title" value="bdrs" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/loginmobile.jsp" />
+    </definition>
+    
+    <definition name="manifestTmpl" template="/WEB-INF/jsp/bdrs/mobile/manifestTmpl.jsp">
+        <put-list-attribute name="customJavaScript" />
+        <put-list-attribute name="customCss" />
+    </definition>
+    
+    <definition name="microTmpl" template="/WEB-INF/jsp/bdrs/mobile/microTmpl.jsp">
+    </definition>
+    
+    <definition name="bdrsMobileManifest" extends="manifestTmpl">
+        <put-attribute name="customContent" value="/WEB-INF/jsp/bdrs/mobile/manifestContent.jsp" />
+    </definition>
+    
+    <definition name="bdrsMobileDatabaseContent" extends="ajax-template">
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/bdrsMobileDatabaseContentJs.jsp" />
+    </definition>
+    
+    <definition name="help" extends="mobiletemplate">
+        <put-attribute name="title" value="title" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/help.jsp" />
+        <put-attribute name="contentHeader" value="HELP" />
+    </definition>
+    
+    <definition name="mobilehome" extends="mobiletemplate">
+        <put-attribute name="title" value="title" />
+        <put-attribute name="contentHeader" value="HOME" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/home.jsp" />
+    </definition>
+    
+    <definition name="offlinereq" extends="mobiletemplate">
+        <put-attribute name="title" value="title" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/offlineRequest.jsp" />
+        <put-attribute name="contentHeader" value="DOWNLOAD CONFIRMATION" />
+    </definition>
+    
+    <definition name="offlineOffline" extends="mobiletemplate">
+        <put-attribute name="title" value="Not Available Offline" />
+        <put-attribute name="contentHeader" value="Offline" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/mobile/offline.jsp" />
+        <put-attribute name="tabActive" value="home" />
+    </definition>
+    
+	<!-- BEGIN OF NEW STUFF:   -->
+	 <definition name="mobileTemplate" template="/WEB-INF/jsp/bdrs/mobile/mobileTemplate.jsp">
+        <put-attribute name="sitename" value="sitename" />
+        <put-attribute name="companyName" value="gaia" />
+        <put-attribute name="companySlogan" value="environmental technology consultants" />
+        <put-attribute name="metakeywords" value="" />
+        <put-attribute name="metadescription" value="" />
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+        <put-list-attribute name="customCss"></put-list-attribute>
+    </definition>
+    
+    <definition name="mobileHome" extends="mobileTemplate">
+    </definition>
+    
+    <!-- END OF NEW STUFF:   -->
+    
+</tiles-definitions>

@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+
+<tiles-definitions>
+    <!-- Portal -->
+    <definition name="portalSetup" extends="admin-template">
+        <put-attribute name="title" value="Portal Setup"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/portal/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    
+    <definition name="portalEdit" extends="admin-template">
+        <put-attribute name="title" value="Edit Portal"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/portal/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>portal.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="portalEntryPointRow" template="/WEB-INF/jsp/bdrs/root/portal/portalEntryPointRow.jsp">
+        <put-attribute name="portalEntryPoint" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <!-- Theme -->
+    <definition name="themeListing" extends="admin-template">
+        <put-attribute name="title" value="Theme Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/theme/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    
+    <definition name="themeEdit" extends="admin-template">
+        <put-attribute name="title" value="Edit Theme"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/theme/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    
+    <definition name="themeFileEdit" extends="admin-template">
+        <put-attribute name="title" value="Edit Theme File"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/theme/editThemeFile.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss">
+            <add-attribute>../js/markitup/sets/html/style.css</add-attribute>
+            <add-attribute>../js/markitup/skins/markitup/style.css</add-attribute>
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>markitup/jquery.markitup.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <!-- Threshold -->
+    <definition name="thresholdList" extends="admin-template">
+        <put-attribute name="title" value="Threshold List"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/threshold/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>threshold.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="threshold" extends="admin-template">
+        <put-attribute name="title" value="Threshold Setup"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/threshold/threshold.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>threshold.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="thresholdConditionRow" template="/WEB-INF/jsp/bdrs/admin/threshold/conditionRow.jsp">
+        <put-attribute name="threshold" type="object"/>
+        <put-attribute name="condition" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="thresholdConditionValue" template="/WEB-INF/jsp/bdrs/admin/threshold/conditionValue.jsp">
+        <put-attribute name="condition" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="thresholdActionRow" template="/WEB-INF/jsp/bdrs/admin/threshold/actionRow.jsp">
+        <put-attribute name="threshold" type="object"/>
+        <put-attribute name="action" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+
+    <definition name="thresholdActionValue" template="/WEB-INF/jsp/bdrs/admin/threshold/actionValue.jsp">
+        <put-attribute name="action" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="thresholdPathDescriptorRenderer" template="/WEB-INF/jsp/bdrs/admin/threshold/pathDescriptorRenderer.jsp">
+        <put-attribute name="path_descriptor_list" type="object"/>
+        <put-attribute name="condition" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="thresholdOperatorRenderer" template="/WEB-INF/jsp/bdrs/admin/threshold/operatorRenderer.jsp">
+        <put-attribute name="condition" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+
+    <!-- Survey Listing -->
+    <definition name="surveyListing" extends="admin-template">
+        <put-attribute name="title" value="Survey Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+
+    <!-- Survey Add Edit -->
+    <definition name="surveyEdit" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editSurvey.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+
+    <definition name="surveyEditTaxonomy" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editTaxonomy.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+
+    <definition name="surveyEditAttributes" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editAttributes.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+
+    <definition name="surveyEditLocations" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editLocations.jsp"/>
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customCss">
+            <add-attribute>bdrs/bdrs.css</add-attribute>
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+
+    <definition name="locationRow" template="/WEB-INF/jsp/bdrs/admin/survey/locationRow.jsp">
+        <put-attribute name="location"/>
+        <put-attribute name="index"/>
+    </definition>
+
+    <definition name="surveyEditUsers" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editUsers.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+
+    <!-- Attribute -->
+    <definition name="attributeRow" template="/WEB-INF/jsp/bdrs/admin/attribute/attributeRow.jsp">
+        <put-attribute name="formField" type="object"/>
+        <put-attribute name="index"/>
+        <put-attribute name="showScope"/>
+        <put-attribute name="isTag"/>
+    </definition>
+    
+    <!-- Preference -->
+    <definition name="preference" extends="admin-template">
+        <put-attribute name="title" value="Preferences"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/preference/preference.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="preferenceRow" template="/WEB-INF/jsp/bdrs/admin/preference/preferenceRow.jsp">
+        <put-attribute name="pref" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <!-- Taxonomy -->
+    <definition name="taxonomyList" extends="admin-template">
+        <put-attribute name="title" value="Taxonomy Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxonomy/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>taxonomy.js</add-attribute>
+            <add-attribute>html5media/html5media.min.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="editTaxon" extends="admin-template">
+        <put-attribute name="title" value="Edit Taxonomy"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxonomy/editTaxon.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>taxonomy.js</add-attribute>
+            <add-attribute>html5media/html5media.min.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="taxonProfileRow" template="/WEB-INF/jsp/bdrs/admin/taxonomy/profileRow.jsp">
+        <put-attribute name="profile" type="object"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="taxonAttributeTable" template="/WEB-INF/jsp/bdrs/admin/taxonomy/taxonAttributeTable.jsp">
+        <put-attribute name="formFieldList" type="object"/>
+    </definition>
+    
+    <definition name="profileTableBody" template="/WEB-INF/jsp/bdrs/admin/taxonomy/profileTableBody.jsp">
+        <put-attribute name="taxonProfileList" type="object"/>
+        <put-attribute name="newProfileIndex"/>
+    </definition>
+    
+    <!-- Taxon Groups -->
+    <definition name="taxonGroupList" extends="admin-template">
+        <put-attribute name="title" value="Taxon Group Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxongroup/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="taxonGroupEdit" extends="admin-template">
+        <put-attribute name="title" value="Edit Taxon Group"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxongroup/editTaxonGroup.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="adminUserSearch" extends="admin-template">
+    	<put-attribute name="title" value="Search For Users"/>
+    	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/adminUserSearch.jsp"/>
+    </definition>
+
+	<definition name="adminEditContent" extends="admin-template">
+		<put-attribute name="title" value="Edit Website Content"/>
+    	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/contentManagement/adminEditContent.jsp"/>
+	</definition>
+	
+	<!-- Test Data -->
+    <definition name="testDataDashboard" extends="admin-template">
+        <put-attribute name="title" value="Test Data"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/testdata/dashboard.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+        <!-- Group management -->
+    <definition name="groupList" extends="admin-template">
+        <put-attribute name="title" value="User Group Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/group/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    <definition name="groupEdit" extends="admin-template">
+        <put-attribute name="title" value="User Group"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/group/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    
+</tiles-definitions>

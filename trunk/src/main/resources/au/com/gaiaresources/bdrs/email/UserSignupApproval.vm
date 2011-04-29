@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <p>Hi ${admin.firstName} ${admin.lastName}!</p>
+        
+        <p>A registration request for ${bdrs.site.name} was received for this user, ${newUser.firstName} ${newUser.lastName}</p>
+        
+        <p>Please click on the following link (or copy and paste it into your browser) to activate the new user.</p>
+        
+        <p><a href="${bdrs.application.url}/admin/profile.htm?USER_ID=${newUser.id}">${bdrs.application.url}/admin/profile.htm?USER_ID= ${newUser.id}</a></p>
+        
+        <p>Your username is <strong>${admin.name}</strong> should be used to sign in to the site.</p>
+    </body>
+</html>

@@ -1,0 +1,9 @@
+<h1>Public About for ${portalName}</h1>
+
+<p>
+This text is the default text on the About page.  In order to change it, 
+your Administrator can log into the system and change it by going to the 
+Admin> Edit Content menu.  However, the acknowledgements for the Atlas of 
+Living Australia should always remain in the software as part of the open 
+source licencing of the system.
+</p>

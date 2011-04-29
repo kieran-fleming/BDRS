@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-2.5.xsd
+           http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+
+    <!-- Tiles config -->
+    <bean id="tilesConfigurer"
+        class="org.springframework.web.servlet.view.tiles2.TilesConfigurer">
+        <property name="definitions">
+            <list>
+            
+                <value>WEB-INF/tiles/vanilla/vanilla_template.xml</value>
+                <value>WEB-INF/tiles/vanilla/vanilla_content.xml</value>
+                
+                <!-- BDRS Generic-->
+                <value>/WEB-INF/tiles/bdrs/generic.xml</value>
+                <value>/WEB-INF/tiles/bdrs/public.xml</value>
+                <value>/WEB-INF/tiles/bdrs/secure-user.xml</value>
+                <value>/WEB-INF/tiles/bdrs/secure-admin.xml</value>
+                <value>/WEB-INF/tiles/bdrs/mobile.xml</value>
+                
+            </list>
+        </property>
+    </bean>
+
+    <!-- Tiles based view resolver -->
+    <bean id="viewResolver"
+        class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+        <property name="viewClass"
+            value="org.springframework.web.servlet.view.tiles2.TilesView" />
+        <property name="order" value="20" />
+    </bean>
+    
+</beans>

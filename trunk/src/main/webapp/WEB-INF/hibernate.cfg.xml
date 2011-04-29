@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration
+    PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <property name="dialect">org.hibernatespatial.postgis.PostgisDialect</property>
+        <property name="hibernate.query.substitutions">true 1, false 0</property>
+        <property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
+        <property name="show_sql">true</property>
+        <property name="hibernate.generate_statistics">true</property>
+        <property name="hibernate.cache.use_query_cache">true</property>
+        <property name="hibernate.cache.use_second_level_cache">true</property>
+        <property name="hibernate.connection.release_mode">after_transaction</property>
+        <property name="current_session_context_class">thread</property>
+
+        <mapping class="au.com.gaiaresources.bdrs.model.user.User"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.group.Group"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.location.Location"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.region.Region"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.TaxonGroup"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.Attribute"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.record.Record"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.record.RecordAttribute"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.survey.Survey"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.project.Project"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.metadata.Metadata"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.threshold.Threshold"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.threshold.Condition"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.threshold.Action"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.portal.Portal"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.preference.Preference"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.preference.PreferenceCategory"/>
+
+        <mapping class="au.com.gaiaresources.bdrs.model.expert.Expert"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.expert.ReviewRequest"/>
+
+        <mapping class="au.com.gaiaresources.bdrs.model.grid.Grid"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.grid.GridEntry"/>
+
+        <mapping class="au.com.gaiaresources.bdrs.model.content.Content"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.file.ManagedFile"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.theme.Theme"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.theme.ThemeElement"/>
+
+        <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.region.Region"/>
+        <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.taxa.TaxonGroup"/>
+    </session-factory>
+</hibernate-configuration>

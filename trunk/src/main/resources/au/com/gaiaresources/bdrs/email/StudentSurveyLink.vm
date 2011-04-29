@@ -1,0 +1,24 @@
+<html>
+    <body>
+        <p>Hi ${studentName}!</p>
+
+        <p>
+        	You have just been signed up to participate in the &ldquo;${surveyName}&rdquo; survey.
+    	</p>
+
+        <p>
+            Click here to begin entering records.<br/>
+            <a href="${bdrs.application.url}/home.htm?surveyId=${surveyId}">
+                ${bdrs.application.url}/home.htm?surveyId=${surveyId}
+            </a>
+        </p>
+
+        <p>
+			----------------------------<br/>
+			Biodiversity Snapshots Team<br/>
+			Developed by Museum Victoria<br/>
+			<a href="http://museumvictoria.com.au">http://museumvictoria.com.au</a><br/>
+			----------------------------<br/>
+		</p>
+    </body>
+</html>

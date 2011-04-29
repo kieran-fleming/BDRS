@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:b="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+    <!--
+    <global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>
+     -->
+
+    <http realm="ClimateWatch Realm" access-denied-page="/accessDenied.htm">
+
+        <intercept-url pattern="/authenticated/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
+
+        <intercept-url pattern="/secure/**/*" access="ROLE_USER,ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/root/**/*" access="ROLE_ROOT"/>
+        <intercept-url pattern="/bdrs/mobile/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
+        <intercept-url pattern="/user/**/*" access="ROLE_USER,ROLE_POWERUSER,ROLE_SUPERVISOR,ROLE_ADMIN,ROLE_ROOT"/>
+
+        <intercept-url pattern="/teacher/**/*" access="ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/power/**/*" access="ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/student/**/*" access="ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+
+        <intercept-url pattern="/map/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/bulkdata/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+
+        <intercept-url pattern="/bdrs/public/**/*" access=""/>
+        <intercept-url pattern="/bdrs/user/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/bdrs/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/bdrs/root/**/*" access="ROLE_ROOT"/>
+
+        <intercept-url pattern="/cc/user/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
+        <intercept-url pattern="/cc/admin/**/*" access="ROLE_ADMIN"/>
+        <!--intercept-url pattern="/html/mobile/*.manifest" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/-->
+        <!-- intercept-url pattern="/public/**/*" access=""/ -->
+        <form-login login-page="/home.htm?signin=true"
+                    authentication-failure-url="/loginfailed.htm"
+                    default-target-url="/authenticated/redirect.htm"/>
+        <logout logout-url="/logout" logout-success-url="/home.htm"/>
+    </http>
+    <authentication-manager>
+        <authentication-provider user-service-ref="userAuthenticationService">
+            <password-encoder hash="md5"/>
+        </authentication-provider>
+    </authentication-manager>
+
+    <b:bean id="userAuthenticationService" class="au.com.gaiaresources.bdrs.security.AuthenticationService"/>
+
+    <!-- Automatically receives AuthenticationEvent messages -->
+    <b:bean id="loggerListener" class="org.springframework.security.access.event.LoggerListener"/>
+
+    <!-- Captcha -->
+    <b:bean id="recaptchaService" class="au.com.gaiaresources.bdrs.security.RecaptchaService" factory-method="create"/>
+</b:beans>
+

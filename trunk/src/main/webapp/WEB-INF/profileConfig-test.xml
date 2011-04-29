@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!-- Store validation as the ketchup validation string. The xxx in validate(xxx) -->
+<profile>
+	<role>*</role>
+	<metadata>
+		<key>telephone</key>
+		<displayName>Telephone</displayName>
+		<validation>required</validation>
+		<type>String</type>
+	</metadata>
+	<metadata>
+		<key>state</key>
+		<displayName>State</displayName>
+		<validation>required, maxlength(30)</validation>
+		<type>String</type>
+	</metadata>
+	<metadata>
+	    <key>receiveEmail</key>
+	    <displayName>Receive promotional emails</displayName>
+	    <!-- validation N/A -->
+	    <validation></validation>  
+	    <type>Boolean</type>
+	</metadata>
+	 <metadata>
+        <key>otherBool</key>
+        <displayName>Some other bool</displayName>
+        <!-- validation N/A -->
+        <validation></validation>  
+        <type>Boolean</type>
+    </metadata>
+</profile>

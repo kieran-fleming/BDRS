@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+
+<tiles-definitions>
+
+    <!-- Admin -->
+    <!-- Home Page -->
+    <definition name="adminHome" extends="admin-template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/admin/home.jsp"/>
+    </definition>
+
+    <!-- User -->
+    <!-- Home Page -->
+    <definition name="userHome" extends="user-template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/user/home.jsp"/>
+    </definition>
+
+    <!-- Public -->
+    <!-- Signin page -->
+    <definition name="signin" extends="template">
+        <put-attribute name="title" value="Sign in"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/signin.jsp"/>
+    </definition>
+
+    <!-- TODO - This is a workaround for mobile users until we get a mobile version up -->
+    <definition name="loginmobile" extends="template">
+        <put-attribute name="title" value="Sign in"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/signin.jsp"/>
+    </definition>
+
+    <!-- User Sign Up -->
+    <definition name="usersignup" extends="template">
+        <put-attribute name="title" value="Register"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/userSignUp.jsp"/>
+    </definition>
+
+    <!-- Password reminder -->
+    <definition name="password-reminder" extends="template">
+        <put-attribute name="title" value="Password Reminder"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/passwordReminder.jsp"/>
+    </definition>
+
+    <!-- Home page -->
+    <definition name="home" extends="template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/home.jsp"/>
+    </definition>
+
+    <!-- About page -->
+    <definition name="about" extends="template">
+        <put-attribute name="title" value="About"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/about.jsp"/>
+    </definition>
+
+    <!-- Help page -->
+    <definition name="helpme" extends="template">
+        <put-attribute name="title" value="Help"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/help.jsp"/>
+    </definition>
+    
+    <!-- Terms and Conditions page -->
+    <definition name="termsAndConditions" extends="template">
+        <put-attribute name="title" value="Terms and Conditions"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/termsAndConditions.jsp"/>
+    </definition>
+    
+    <!-- Privacy Statement page -->
+    <definition name="privacyStatement" extends="template">
+        <put-attribute name="title" value="Privacy Statement"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/privacyStatement.jsp"/>
+    </definition>
+    
+</tiles-definitions>

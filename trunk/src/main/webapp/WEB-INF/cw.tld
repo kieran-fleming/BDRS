@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN" "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+
+<taglib>
+    <tlib-version>2.5</tlib-version>
+    <jsp-version>1.2</jsp-version>
+    <short-name>climatewatch</short-name>
+    <description>Climate Watch custom tab library</description>
+	
+   <!--  Get Theme Template -->
+    <tag>
+        <description>Provides a way to pull jsp files from outside the webcontext</description>
+        <name>getThemeTemplate</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.GetThemeTemplateTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>key</name>
+            <required>true</required>
+            <!--  Make this true if we ever want to set the key at request time -->
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>fallback</name>
+            <required>true</required>
+            <!--  Make this true if we ever want to set the key at request time -->
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+	
+	<!--  Get Content -->
+	<tag>
+  		<description>Provides an easy way to get pull content from the database
+  		The content is in raw HTML format - this is then plonked down into the dom.
+  		</description>
+    	<name>getContent</name>
+    	<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.GetContentTag</tag-class>
+    	<body-content>empty</body-content>
+    	<attribute>
+    		<name>key</name>
+    		<required>true</required>
+    		<!--  Make this true if we ever want to set the key at request time -->
+    		<rtexprvalue>false</rtexprvalue>
+    	</attribute>
+  	</tag>
+  	
+  	<!--  Get Managed File -->
+    <tag>
+        <description>
+            Gets a Managed File instance from the database using a UUID.
+        </description>
+        <name>getManagedFile</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.GetManagedFileTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>uuid</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>var</name>
+            <required>true</required>
+            <!--  Make this true if we ever want to set the key at request time -->
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+	
+	<!-- Get Property Tag -->
+	<tag>
+		<name>getProperty</name>
+		<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.GetPropertyTag</tag-class>
+		<body-content>empty</body-content>
+		<description>Extract a property from a bean and output it.</description>
+        <attribute>
+            <name>bean</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+			<description>The bean to extract a value from</description>
+        </attribute>
+		<attribute>
+            <name>property</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+			<description>The name of the property to extract</description>
+        </attribute>
+	</tag>
+	
+	<!-- Edit Tag -->
+	<tag>
+		<name>edit</name>
+		<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.EditButtonTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>url</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	
+	<!-- Action Tag -->
+    <tag>
+        <name>action</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.ActionButtonTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>url</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+	
+	<!-- Display Element Tag -->
+	<tag>
+		<name>displayElement</name>
+		<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.DisplayElementTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>render</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>bean</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+            <name>format</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+	</tag>
+	
+	<!-- Display Table Element Tag -->
+    <tag>
+        <name>displayTableElement</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.DisplayTableElementTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>render</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>bean</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>format</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+	
+	<!-- reCAPTCHA -->
+	<tag>
+		<name>recaptcha</name>
+		<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.RecaptchaTag</tag-class>
+		<body-content>empty</body-content>
+	</tag>
+	<tag>
+        <name>escapeHtml</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.CleanHtml</tag-class>
+        <body-content>empty</body-content>
+        <description>Escape html entities within a string</description>
+        <attribute>
+            <name>html</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <description>The html string you want escaped</description>
+        </attribute>
+    </tag>
+    <tag>
+        <name>stripHtml</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.StripHtml</tag-class>
+        <body-content>empty</body-content>
+        <description>Remove Html Tags</description>
+        <attribute>
+            <name>html</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <description>The string you want html removed fromescaped</description>
+        </attribute>
+    </tag>
+    
+    
+  <tag>
+    <description>Banner Menu Tag</description>
+    <name>bannerMenu</name>
+    <tag-class>au.org.ala.commonui.tag.BannerMenuTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <name>returnUrlPath</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <description>The return url path for the login/logout anchor</description>
+    </attribute>
+    <attribute>
+      <name>populateSearchBox</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <description>Whether to populate the search box with a request param</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Context Parameter Tag</description>
+    <name>contextParam</name>
+    <tag-class>au.org.ala.commonui.tag.ContextParamTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>The context parameter name</description>
+      <name>name</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Footer Menu Tag</description>
+    <name>footerMenu</name>
+    <tag-class>au.org.ala.commonui.tag.FooterMenuTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>The return url path for the login/logout anchor</description>
+      <name>returnUrlPath</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Login Status Tag</description>
+    <name>loginStatus</name>
+    <tag-class>au.org.ala.commonui.tag.LoginStatusTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>The return url path that is appended to the context path</description>
+      <name>returnUrlPath</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Login Logout Tag</description>
+    <name>loginLogoutLink</name>
+    <tag-class>au.org.ala.commonui.tag.LoginLogoutTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+     <description>The anchor element to login or logout</description>
+     <name>returnUrlPath</name>
+     <required>true</required>
+     <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Property Loader Tag</description>
+    <name>propertyLoader</name>
+    <tag-class>au.org.ala.commonui.tag.PropertyLoaderTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>The bundle name</description>
+      <name>bundle</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+      <description>the property name</description>
+      <name>property</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>User Name Tag</description>
+    <name>userName</name>
+    <tag-class>au.org.ala.commonui.tag.UserNameTag</tag-class>
+    <body-content>JSP</body-content>
+  </tag>
+</taglib>

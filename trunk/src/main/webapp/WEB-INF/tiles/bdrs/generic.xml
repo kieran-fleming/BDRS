@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+
+<tiles-definitions>
+
+    <definition name="foundation" template="/WEB-INF/jsp/template/theme/foundation.jsp">
+        <!-- JSP -->
+        <put-attribute name="title" value="BDRS"/>
+        <put-attribute name="siteName"  value="BDRS"/>
+        <put-attribute name="header" value="/WEB-INF/jsp/template/vanilla/header.jsp"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/template/vanilla/emptyContent.jsp"/>
+        <put-attribute name="footer" value="/WEB-INF/jsp/template/vanilla/footer.jsp"/>
+        <put-attribute name="metaKeywords" value="BDRS Community Science"/>
+        <put-attribute name="metaDescription" value="BDRS Community Science Portal"/>
+        
+        <!-- JavaScript -->
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customJavaScript"/>
+        <put-list-attribute name="customCss"/>
+        
+        <!-- CSS -->
+        <put-list-attribute name="customCss"/>
+    </definition>
+
+    <definition name="formInput" template="/WEB-INF/jsp/template/table/formInput.jsp">
+        <put-attribute name="path"/>
+        <put-attribute name="type" value="text"/>
+        <put-attribute name="validValues"/>
+    </definition>
+
+    <definition name="wrapFormInput" template="/WEB-INF/jsp/template/table/wrappedFormInput.jsp">
+        <put-attribute name="label"/>
+        <put-attribute name="path"/>
+        <put-attribute name="type" value="text"/>
+        <put-attribute name="validValues"/>
+    </definition>
+
+    <definition name="ajax-template" template="/WEB-INF/jsp/template/climatewatch-ajax-template.jsp">
+        <put-attribute name="content" value="/WEB-INF/jsp/template/emptyContent.jsp"/>
+    </definition>
+
+    <definition name="empty" template="/WEB-INF/jsp/template/emptyContent.jsp"/>
+    
+    <definition name="json" template="/WEB-INF/jsp/template/json.jsp"/>
+    
+    <!--  widgets -->
+    <definition name="userSearch" template="/WEB-INF/jsp/bdrs/widget/userSearch.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars" value="true"/>
+    </definition>
+    
+    <definition name="groupSearch" template="/WEB-INF/jsp/bdrs/widget/groupSearch.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars" value="true"/>
+    </definition>
+</tiles-definitions>

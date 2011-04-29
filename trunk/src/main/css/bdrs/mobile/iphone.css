@@ -1,0 +1,77 @@
+.hideElement{
+	display:none;
+}
+.hideSmallDevice{
+	display:none;
+}
+
+DIV#headerBanner {
+	-o-background-size: 100% 100%;
+    -webkit-background-size: 100% 100%;
+    -khtml-background-size: 100% 100%;
+    -moz-background-size: 100% 100%;
+    background-size: 100% 100%;
+	background-image: url(../../../images/bdrs/mobile/banner_iphone.gif);
+	background-repeat: no-repeat;
+	height: 80px;
+	z-index: -999;
+}
+DIV#headerBanner IMG{
+	width: 320px;
+	height: 61px;
+	
+}
+
+FORM#loginForm INPUT{
+	width: 93%;
+}
+
+#submitDiv{
+	width: 100%;
+}
+
+DIV.record_form_item LABEL {
+	width: 100%;
+	font-size: 1.2em;
+}
+DIV.record_form_item SELECT{
+	width: 100%;
+}
+DIV.record_form_item INPUT{
+	width: 100%;
+}	
+DIV.record_form_item TEXTAREA{
+	width: 100%;
+}
+
+#companyName{
+	font-size: 1.8em;
+	line-height: 1.8em;
+}
+
+#companySlogan{
+	font-size: 0.8em;
+	line-height: 0.8em;
+}
+
+.box{
+-webkit-border-radius: 16px;
+-khtml-border-radius: 16px;
+-moz-border-radius: 16px;
+border-radius: 16px;
+background-color: #F1F1F1;
+border: 1px solid #C9C6C6;
+}
+
+#boxImage{
+max-width: auto;
+margin: 8px;
+}
+
+.listItemText{
+	font-size: 1.2em;
+}
+
+.listItemSubText{
+	font-size: 0.8em;
+}

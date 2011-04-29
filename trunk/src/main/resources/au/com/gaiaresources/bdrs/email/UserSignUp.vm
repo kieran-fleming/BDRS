@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <p>Hi ${newUser.firstName} ${newUser.lastName}!</p>
+        
+        <p>A registration request for ${bdrs.site.name} was received for this email address, ${newUser.emailAddress}</p>
+        
+        <p>If you requested registration please click on the following link (or copy and paste it into your browser).</p>
+        
+        <p><a href="${bdrs.application.url}/confirmregistration.htm?key=${registrationkey}">${bdrs.application.url}/confirmregistration.htm?key=${registrationkey}</a></p>
+        
+        <p>Your username is <strong>${newUser.name}</strong> should be used to sign in to the site.</p>
+    </body>
+</html>

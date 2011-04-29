@@ -1,0 +1,34 @@
+<html>
+    <body>
+        <p>Hi ${studentName}!</p>
+
+        <p>
+        	Your teacher, ${teacher.firstName} ${teacher.lastName} has
+        	registered you with Museum Victoria&rsquo;s Biodiversity Snapshots.
+    	</p>
+
+    	<p>
+    		Your username is ${username}<br/>
+    		Your password is ${password}
+		</p>
+
+		<p>
+		    To start using Biodiversity Snapshots, go to the web site
+		    <a href="${bdrs.application.url}/home.htm">${bdrs.application.url}/home.htm</a>,
+		    and log in using the details above.
+	    </p>
+
+        <p>
+            Have fun taking your Biodiversity Snapshot!
+        </p>
+
+        <p>
+			----------------------------<br/>
+			Biodiversity Snapshots Team<br/>
+			Developed by Museum Victoria<br/>
+			<a href="http://museumvictoria.com.au">http://museumvictoria.com.au</a><br/>
+			----------------------------<br/>
+		</p>
+
+    </body>
+</html>

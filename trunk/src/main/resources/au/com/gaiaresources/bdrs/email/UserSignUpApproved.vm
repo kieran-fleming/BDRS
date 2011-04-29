@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <p>Hi ${newUser.firstName} ${newUser.lastName}!</p>
+        
+        <p>Your registration request for ${bdrs.site.name} has been accepted.</p>
+        
+        <p>Please click on the following link (or copy and paste it into your browser) to login to the system.</p>
+        
+        <p><a href="${bdrs.application.url}/home.htm?signin=true">${bdrs.application.url}/home.htm?signin=true</a></p>
+        
+        <p>Your username is <strong>${newUser.name}</strong> should be used to sign in to the site.</p>
+    </body>
+</html>

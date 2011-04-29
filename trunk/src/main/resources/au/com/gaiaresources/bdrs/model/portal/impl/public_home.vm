@@ -1,0 +1,9 @@
+<h1>${portalName} Home</h1>
+
+<p>
+This is an implementation of the Biological Data Recording System, software developed by the <a href="http://www.ala.org.au">Atlas of Living Australia</a>.  You can find our more about this software by visiting the <a href="http://www.ala.org.au/">Atlas of Living Australia web site</a>, or the <a href="http://code.google.com/p/ala-citizenscience/">Google Code repository</a>.
+</p>
+
+<p>
+This text is the default text on the home page.  In order to change it, your Administrator can log into the system and change it by going to the Admin> Edit Content menu.
+</p>

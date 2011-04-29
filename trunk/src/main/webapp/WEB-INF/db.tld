@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN" "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+
+<taglib>
+	<tlib-version>2.5</tlib-version>
+	<jsp-version>1.2</jsp-version>
+	<short-name>html5database</short-name>
+	<description>working with sqlite client database</description>
+
+	<!-- Get Property Tag -->
+	<tag>
+		<name>sanitise</name>
+		<tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.CleanSqlTag</tag-class>
+		<body-content>empty</body-content>
+		<description>Extract a property from a bean and output it.</description>
+		<attribute>
+			<name>sql</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+			<description>The sql string you want escaped</description>
+		</attribute>
+	</tag>
+</taglib>

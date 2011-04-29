@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.gaiaresources.com.au/bdrs"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:bdrs="http://www.gaiaresources.com.au/bdrs">
+	<annotation>
+		<documentation>Attempt to provide a schema for attribute import (and
+			export?). Not sure about xsd design so may not work but worth a shot
+		</documentation>
+	</annotation>
+	<element name="taxonGroups" type="bdrs:taxonGroup"></element>
+
+	<complexType name="taxonGroup">
+		<sequence>
+			<element name="attribute" type="bdrs:attribute" maxOccurs="unbounded"
+				minOccurs="0"></element>
+		</sequence>
+		<attribute name="id" type="string"></attribute>
+		<attribute name="shortName" type="string"></attribute>
+		<attribute name="heading" type="string"></attribute>
+	</complexType>
+
+	<complexType name="attribute">
+		<attribute name="heading" type="string" use="required"></attribute>
+		<attribute name="description" type="string"></attribute>
+		<attribute name="type" type="bdrs:attributeType"></attribute>
+		<attribute name="values" type="string"></attribute>
+		<attribute name="required" type="boolean" default="false"></attribute>
+		<attribute name="isTag" type="boolean" default="false"></attribute>
+	</complexType>
+	<simpleType name="attributeType">
+		<restriction base="string">
+			<enumeration value="IN"></enumeration>
+			<enumeration value="DE"></enumeration>
+			<enumeration value="DA"></enumeration>
+			<enumeration value="ST"></enumeration>
+			<enumeration value="TA"></enumeration>
+			<enumeration value="SV"></enumeration>
+			<enumeration value="IM"></enumeration>
+			<enumeration value="FI"></enumeration>
+		</restriction>
+	</simpleType>
+</schema>

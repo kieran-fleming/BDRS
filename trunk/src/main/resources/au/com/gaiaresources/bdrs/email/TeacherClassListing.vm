@@ -1,0 +1,37 @@
+<html>
+    <body>
+        <p>Hi ${teacher.firstName} ${teacher.lastName}!</p>
+
+        <p>
+        	You have just created a new Class/Group in Biodiversity Snapshots.
+        	Here is a list of all students accounts that have been created.
+    	</p>
+        
+        <p>
+            A group login username &amp; password has been created for each group and 
+            each student within that group can use that combination of username and password
+        </p>
+        #foreach($group in ${groups})
+        <table>
+        <tr><td><strong>Group:</strong></td><td>$group.name</td></tr>
+        <tr><td><strong>Group Username:</strong></td><td>$group.groupuser_name</td></tr>
+        <tr><td><strong>Group Password:</strong></td><td>$group.groupuser_password</td></tr>
+        <tr><td><strong>Role:</strong></td><td>$group.groupuser_role</td></tr>
+        </table>
+        Students in this group:
+       	<ul>
+       		#foreach ($user in $group.users)
+                <li>$user</li>
+            #end
+        </ul>
+        #end
+        <p>
+			----------------------------<br/>
+			Biodiversity Snapshots Team<br/>
+			Developed by Museum Victoria<br/>
+			<a href="http://museumvictoria.com.au">http://museumvictoria.com.au</a><br/>
+			----------------------------<br/>
+		</p>
+    </body>
+</html>
+

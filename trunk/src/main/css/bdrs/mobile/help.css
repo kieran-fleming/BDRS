@@ -1,0 +1,40 @@
+
+/* -----------------------------------
+  Help Page
+-------------------------------------- */
+
+#page-contents h2 {
+  background: url(../../images/mv/arrow.down.png) no-repeat 0 2px;
+  padding: .25em .5em .25em 15px;
+  cursor: pointer;
+}
+#page-contents h2.arrow-right {
+  background-image: url(../../images/mv/arrow.icon.png);
+}
+#page-contents a {
+  display: block;
+  font-size: 1em;
+  margin: .4em 0;
+  font-weight: normal;
+}
+p.faqItem{
+    font-weight: bold;
+    font-size: 1.2em;
+}
+/**
+* List Styles
+*/
+#faqText ol>li>ol>li{
+    list-style: upper-alpha;
+}
+#faqText ol>li>ol>li>ol>li{
+    list-style: lower-alpha;
+}
+#faqText ol>li>ol>li>ol>li>ol>li{
+    list-style: lower-roman;
+}
+#faqText img{
+vertical-align: text-top;
+max-width: 30%;
+max-height: 3em;
+}
