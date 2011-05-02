@@ -1,8 +1,5 @@
 Installing on openSuse
 
-bioadmin@136.154.202.28
-B1oAdm1n>?
-
 Default opensuse install
 use yast to enable ssh access (under system->services)
 use yast to open up port for SSH (security -> firewall)
