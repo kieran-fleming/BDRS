@@ -1,0 +1,94 @@
+body {  
+    font-size:14px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.5em;
+}
+
+.ui-controlgroup .ui-checkbox label, .ui-controlgroup .ui-radio label {
+    font-size: 12px;
+}
+
+.ui-loader h1 {
+    font-size:12px;
+}
+
+.ui-bar{
+    font-size:12px;
+}
+
+.ui-bar h1, 
+.ui-bar h2, 
+.ui-bar h3, 
+.ui-bar h4, 
+.ui-bar h5, 
+.ui-bar h6 {
+    font-size: 12px;
+}
+
+.ui-header .ui-title,.ui-footer .ui-title {
+    font-size:12px;
+}
+
+.ui-navbar li .ui-btn,.ui-navbar .ui-navbar-toggle .ui-btn{
+    font-size:10px;
+}
+
+.ui-navbar-expanded .ui-btn{
+    font-size:11px;
+}
+
+.ui-header .ui-btn,.ui-footer .ui-btn,.ui-bar .ui-btn{
+    font-size:11px;
+}
+
+.ui-collapsible-heading{
+    font-size:12px;
+}
+
+.ui-controlgroup-label{
+    font-size:12px;
+}
+.ui-controlgroup .ui-checkbox label,.ui-controlgroup .ui-radio label{
+    font-size:12px
+}
+
+label.ui-select{
+    font-size:12px;
+}
+
+label.ui-input-text{
+    font-size:12px;
+}
+
+input.ui-input-text,textarea.ui-input-text{
+    line-height:1.0;
+    font-size:12px;
+}
+
+.ui-li-heading{
+    font-size:12px;
+}
+span.ui-slider-label{
+    height:32px;
+    font-size:12px;
+}
+
+.ui-btn-inner {
+    font-size:12px;
+}
+
+p {
+    font-size:12px;
+}
+
+.ui-field-contain{
+    padding: 0.2em 0;
+}
+
+.ui-controlgroup,fieldset.ui-controlgroup{
+    margin: .5em 0 0.2em
+}

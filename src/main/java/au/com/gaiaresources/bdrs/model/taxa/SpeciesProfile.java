@@ -129,7 +129,9 @@ public class SpeciesProfile extends PortalPersistentImpl {
                 SPECIES_PROFILE_MAP_40x40,
                 
                 SPECIES_PROFILE_SILHOUETTE,
-                SPECIES_PROFILE_SILHOUETTE_40x40
+                SPECIES_PROFILE_SILHOUETTE_40x40,
+                SPECIES_PROFILE_THUMBNAIL, // This is for source that have a custom thumbnail, eg ALA.
+                SPECIES_PROFILE_THUMBNAIL_SMALL
             };
         
         Arrays.sort(imgTypes);

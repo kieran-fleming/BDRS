@@ -1,7 +1,5 @@
 package au.com.gaiaresources.bdrs.controller.admin;
 
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +13,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
-import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.user.User;

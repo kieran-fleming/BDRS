@@ -42,12 +42,12 @@ import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -64,14 +64,12 @@ import au.com.gaiaresources.bdrs.service.web.RedirectionService;
  */
 @Controller
 public class SingleSiteMultiTaxaController extends AbstractController {
-
-    private Logger log = Logger.getLogger(getClass());
     
-    public static final String[] SITE_RECORD_PROPERTY_NAMES = new String[] {
+    private static final String[] SITE_RECORD_PROPERTY_NAMES = new String[] {
             Record.RECORD_PROPERTY_LOCATION, Record.RECORD_PROPERTY_POINT,
             Record.RECORD_PROPERTY_WHEN, Record.RECORD_PROPERTY_TIME,
             Record.RECORD_PROPERTY_NOTES };
-    public static final String[] TAXA_RECORD_PROPERTY_NAMES = new String[] {
+    private static final String[] TAXA_RECORD_PROPERTY_NAMES = new String[] {
             Record.RECORD_PROPERTY_SPECIES, Record.RECORD_PROPERTY_NUMBER };
     
     public static final String PREFIX_TEMPLATE = "%d_";
@@ -196,7 +194,7 @@ public class SingleSiteMultiTaxaController extends AbstractController {
         }
         // Add all property form fields
         for (String propertyName : TAXA_RECORD_PROPERTY_NAMES) {
-            formFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName, null, prefix));
+            formFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName, null, null, prefix));
         }
         Collections.sort(formFieldList);
         
@@ -288,19 +286,19 @@ public class SingleSiteMultiTaxaController extends AbstractController {
             // Number
             record.setNumber(Integer.parseInt(request.getParameter(String.format("%snumber", recordPrefix))));
             
-            Map<Attribute, RecordAttribute> recAttrMap = new HashMap<Attribute, RecordAttribute>();
-            for(RecordAttribute recAttr : record.getAttributes()) {
+            Map<Attribute, AttributeValue> recAttrMap = new HashMap<Attribute, AttributeValue>();
+            for(AttributeValue recAttr : record.getAttributes()) {
                 recAttrMap.put(recAttr.getAttribute(), recAttr);
             }
             
             // Record Attributes
-            RecordAttribute recAttr;
+            AttributeValue recAttr;
             String prefix;
             for(Attribute attribute : survey.getAttributes()) {
                 prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix : recordPrefix;  
                 recAttr = attributeParser.parse(prefix, attribute, record, request.getParameterMap(), request.getFileMap());
                 if(attributeParser.isAddOrUpdateAttribute()) {
-                    recAttr = recordDAO.saveRecordAttribute(recAttr);
+                    recAttr = recordDAO.saveAttributeValue(recAttr);
                     if(attributeParser.getAttrFile() != null) {
                         fileService.createFile(recAttr, attributeParser.getAttrFile());
                     }

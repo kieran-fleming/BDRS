@@ -51,10 +51,18 @@ public class RecordUpload {
 
     private String scientificName;
     private String commonName;
-
+    
+    private String parentId;
+    private String censusMethodId;
+    
+    private Integer rowNumber;
+    private Integer colNumber;
+    
     private LocationUpload locationUpload = null;
 
     private Map<String, String> record_attribute_map = new HashMap<String, String>();
+    
+    private Map<String, Map<String, String>> named_attribute_map = new HashMap<String, Map<String, String>>(); 
     
     private Logger log = Logger.getLogger(getClass());
 
@@ -314,12 +322,29 @@ public class RecordUpload {
         this.notes = notes;
     }
 
+    /*
     public void setRecordAttribute(String name, String value) {
         record_attribute_map.put(name, value);
     }
 
     public String getRecordAttribute(String name) {
         return record_attribute_map.get(name);
+    }
+    */
+    
+    public void setNamedAttribute(String namespace, String name, String value) {
+        //named_attribute_map.get(name)
+        if (named_attribute_map.get(namespace) == null) {
+            named_attribute_map.put(namespace, new HashMap<String, String>());
+        }
+        named_attribute_map.get(namespace).put(name, value);
+    }
+    
+    public String getNamedAttribute(String namespace, String name) {
+        if (named_attribute_map.get(namespace) == null) {
+            return null;
+        }
+        return named_attribute_map.get(namespace).get(name);
     }
 
     public boolean isError() {
@@ -353,6 +378,41 @@ public class RecordUpload {
 
     public boolean hasLatitudeLongitude() {
         return !Double.isNaN(latitude) && !Double.isNaN(longitude);
+    }
+    
+    public String getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
+    
+    public Integer getRowNumber() {
+        return rowNumber;
+    }
+    
+    public void setRowNumber(Integer val) {
+        rowNumber = val;
+    }
+    
+    public Integer getColNumber() {
+        return colNumber;
+    }
+    
+    public void setColNumber(Integer val) {
+        colNumber = val;
+    }
+
+    /*
+     * Is actually the string in the census method column
+     */
+    public String getCensusMethodId() {
+        return censusMethodId;
+    }
+
+    public void setCensusMethodId(String censusMethodId) {
+        this.censusMethodId = censusMethodId;
     }
 
     @Override

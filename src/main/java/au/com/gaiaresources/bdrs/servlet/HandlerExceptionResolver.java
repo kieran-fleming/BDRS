@@ -1,5 +1,7 @@
 package au.com.gaiaresources.bdrs.servlet;
 
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,14 +45,36 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
             String exceptionText = StringUtils.prettyPrintThrowable(ex);
 
             // Send the e-mail
+            Map<String, Object> params = new HashMap<String, Object>();
+           
+            Map<String, String> parameters = new HashMap<String, String>();
+            Enumeration en = request.getParameterNames();
+            while (en.hasMoreElements()) {
+            	String key = en.nextElement().toString();
+            	String[] values = request.getParameterValues(key);
+            	parameters.put(key, Arrays.toString(values));
+            }
+            params.put("parameters", parameters);
+            
+            Map<String, String> headers = new HashMap<String, String>();
+            en = request.getHeaderNames();
+            while (en.hasMoreElements()) {
+            	String key = en.nextElement().toString();
+            	headers.put(key, request.getHeader(key).toString());
+            }
+            params.put("headers", headers.toString());
+            
+            params.put("stacktrace", exceptionText);
+            params.put("requesturi", request.getRequestURI());
+            params.put("userName", request.getRemoteUser());
             try {
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put("stacktrace", exceptionText);
-                params.put("requesturi", request.getRequestURI());
                 emailService.sendMessage(emailService.getErrorToAddress(), "Unhandled Error", "UnhandledError.vm",
                                          params);
             } catch (Throwable t) {
                 logger.error("Failed to send error e-mail.", t);
+                logger.error("RequestURI : " + request.getRequestURI());
+                logger.error("Headers : " + headers.toString());
+                logger.error("Parameters : " + parameters.toString());
             }
 
             mv = new ModelAndView(new RedirectView("/error/500.htm", true));

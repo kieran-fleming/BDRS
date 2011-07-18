@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -20,15 +22,20 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.survey.SurveyService;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 
 public class XlsRecordRow implements RecordRow {
@@ -37,17 +44,29 @@ public class XlsRecordRow implements RecordRow {
 
     private LinkedHashMap<String, String> headerMap;
 
+    // must be a tree map so we can order the keys
+    private TreeMap<Integer, String> namespaceHeaderIdx = new TreeMap<Integer, String>();
     private List<String> attributeHeader = new ArrayList<String>();
 
     private List<String> completeHeader = null;
 
     private Map<String, CellStyle> cellStyleMap = new HashMap<String, CellStyle>();
+    
+    private SurveyService surveyService;
+    
+    private BulkDataReadWriteService bdrws;
+    
+    private Set<CensusMethod> censusMethods;
 
-    public XlsRecordRow(PropertyService propertyService) {
-
+    public XlsRecordRow(PropertyService propertyService, SurveyService surveyService, BulkDataReadWriteService bulkDataReadWriteService) {
+        this.surveyService = surveyService;
+        this.bdrws = bulkDataReadWriteService;
+        
         LinkedHashMap<String, String> headerMap = new LinkedHashMap<String, String>();
         
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.id", "ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.id", ""));
+        headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.parentId", "Parent ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.parentId", ""));
+        headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.censusMethod", "Census Method"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.CensusMethod", ""));
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.scientificName", "SCIENTIFIC NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.scientificName", ""));
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.commonName", "COMMON NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.commonName", ""));
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.locationName", "LOCATION NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.locationName", ""));
@@ -65,44 +84,73 @@ public class XlsRecordRow implements RecordRow {
         this.headerMap = headerMap;
     }
 
-    public void writeHeader(Row row, Survey survey) {
+    public void writeHeader(Row superHeaderRow, Row row, Survey survey) {
+        
+        censusMethods = surveyService.catalogCensusMethods(survey);
 
         Cell headerCell;
         CellStyle recordHeaderStyle = getCellStyleByKey(STYLE_RECORD_HEADER);
 
         int colIndex = 0;
         for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+            if (superHeaderRow.getCell(colIndex) == null) {
+                Cell superRowCell = superHeaderRow.createCell(colIndex);
+                setCellStyle(superRowCell, recordHeaderStyle);
+            }
+            
             headerCell = row.createCell(colIndex++);
             headerCell.setCellValue(entry.getKey());
-
-            if (recordHeaderStyle != null) {
-                headerCell.setCellStyle(recordHeaderStyle);
-            }
+            setCellStyle(headerCell, recordHeaderStyle);
         }
-
-        String headerName;
-        for (Attribute attrib : survey.getAttributes()) {
+        colIndex = writeAttributeHeader(survey.getAttributes(), superHeaderRow, row, colIndex, recordHeaderStyle);
+        
+        for (CensusMethod cm : censusMethods) {
+            Cell censusMethodTitleCell = superHeaderRow.createCell(colIndex);
+            censusMethodTitleCell.setCellValue(bdrws.formatCensusMethodNameId(cm));
+            setCellStyle(censusMethodTitleCell, recordHeaderStyle);
+            colIndex = writeAttributeHeader(cm.getAttributes(), superHeaderRow, row, colIndex, recordHeaderStyle);
+        }
+    }
+    
+    private int writeAttributeHeader(List<Attribute> attrList, Row superHeaderRow, Row row, int colIndex, CellStyle recordHeaderStyle) {
+        for (Attribute attrib : attrList) {
             if (!AttributeType.FILE.equals(attrib.getType())
                     && !AttributeType.IMAGE.equals(attrib.getType())) {
-                headerName = attrib.getDescription();
-                headerCell = row.createCell(colIndex++);
-                headerCell.setCellValue(headerName);
-
-                if (recordHeaderStyle != null) {
-                    headerCell.setCellStyle(recordHeaderStyle);
+                
+                if (superHeaderRow.getCell(colIndex) == null) {
+                    Cell superRowCell = superHeaderRow.createCell(colIndex);
+                    setCellStyle(superRowCell, recordHeaderStyle);
                 }
-
+                
+                String headerName = attrib.getDescription();
+                Cell headerCell = row.createCell(colIndex++);
+                headerCell.setCellValue(headerName);
+                setCellStyle(headerCell, recordHeaderStyle);
                 attributeHeader.add(headerName);
             }
         }
+        return colIndex;
     }
+    
+    private void setCellStyle(Cell cell, CellStyle style) {
+        if (style != null) {
+            cell.setCellStyle(style);
+        }
+    }
+
 
     public void writeRow(LSIDService lsidService, Row row, Record rec) {
         int colIndex = 0;
 
         colIndex = writeRowId(lsidService, row, rec, colIndex);
+        colIndex = writeRowParentId(lsidService, row, rec, colIndex);
+        colIndex = writeRowCensusMethod(row, rec, colIndex);
 
-        colIndex = writeRowTaxonomy(row, rec, colIndex);
+        if (rec.getSpecies() != null) {
+            colIndex = writeRowTaxonomy(row, rec, colIndex);
+        } else {
+            colIndex = writeRowBlank(row, colIndex);
+        }
 
         // Location, lat, long
         colIndex = writeRowLocation(row, rec, colIndex);
@@ -112,14 +160,31 @@ public class XlsRecordRow implements RecordRow {
         // Date Time
         colIndex = writeRowDate(row, rec, colIndex);
         colIndex = writeRowTime(row, rec, colIndex);
-
-        colIndex = writeRowCount(row, rec, colIndex);
+        if (rec.getNumber() != null) {
+            colIndex = writeRowCount(row, rec, colIndex);
+        }
         colIndex = writeRowNotes(row, rec, colIndex);
         colIndex = writeRowAttributes(row, rec, colIndex);
     }
 
     protected int writeRowNotes(Row row, Record rec, int colIndex) {
         row.createCell(colIndex++).setCellValue(rec.getNotes());
+        return colIndex;
+    }
+    
+    protected int writeRowParentId(LSIDService lsidService, Row row, Record rec, int colIndex) {
+        String value = rec.getParentRecord() != null ? 
+                lsidService.toLSID(rec.getParentRecord()).toString() :
+                    "";
+        row.createCell(colIndex++).setCellValue(value);
+        return colIndex;
+    }
+    
+    protected int writeRowCensusMethod(Row row, Record rec, int colIndex) {
+        String value = rec.getCensusMethod() != null ?
+                bdrws.formatCensusMethodNameId(rec.getCensusMethod()) :
+                    "";
+        row.createCell(colIndex++).setCellValue(value);
         return colIndex;
     }
 
@@ -151,9 +216,9 @@ public class XlsRecordRow implements RecordRow {
     protected int writeRowLongitude(Row row, Record rec, int colIndex) {
         double longitude;
         if (rec.getLocation() == null) {
-            longitude = rec.getPoint().getY();
+            longitude = rec.getPoint().getX();
         } else {
-            longitude = rec.getLocation().getLocation().getY();
+            longitude = rec.getLocation().getLocation().getX();
         }
         row.createCell(colIndex++).setCellValue(longitude);
         return colIndex;
@@ -162,9 +227,9 @@ public class XlsRecordRow implements RecordRow {
     protected int writeRowLatitude(Row row, Record rec, int colIndex) {
         double latitude;
         if (rec.getLocation() == null) {
-            latitude = rec.getPoint().getX();
+            latitude = rec.getPoint().getY();
         } else {
-            latitude = rec.getLocation().getLocation().getX();
+            latitude = rec.getLocation().getLocation().getY();
         }
         row.createCell(colIndex++).setCellValue(latitude);
         return colIndex;
@@ -193,16 +258,21 @@ public class XlsRecordRow implements RecordRow {
         row.createCell(colIndex++).setCellValue(lsidService.toLSID(rec).toString());
         return colIndex;
     }
+    
+    protected int writeRowBlank(Row row, int colIndex) {
+        row.createCell(colIndex++).setCellValue("");
+        return colIndex;
+    }
 
     protected int writeRowAttributes(Row row, Record rec, int colIndex) {
 
-        Map<String, RecordAttribute> recordAttributeMap = new HashMap<String, RecordAttribute>();
-        for (RecordAttribute attr : rec.getAttributes()) {
+        Map<String, AttributeValue> recordAttributeMap = new HashMap<String, AttributeValue>();
+        for (AttributeValue attr : rec.getAttributes()) {
             recordAttributeMap.put(attr.getAttribute().getDescription(), attr);
         }
 
         Cell cell;
-        AttributeValue attr;
+        TypedAttributeValue attr;
         for (String header : attributeHeader) {
             cell = row.createCell(colIndex++);
             attr = recordAttributeMap.get(header);
@@ -210,6 +280,7 @@ public class XlsRecordRow implements RecordRow {
                 //val = attr.getStringValue();
                 switch (attr.getAttribute().getType()) {
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                 case DECIMAL:
                     if (attr.getNumericValue() != null) {
                         cell.setCellValue(attr.getNumericValue().doubleValue());
@@ -239,9 +310,11 @@ public class XlsRecordRow implements RecordRow {
         return colIndex;
     }
 
-    public void readHeader(Survey survey, Row row) throws ParseException {
+    public void readHeader(Survey survey, Row superHeaderRow, Row row) throws ParseException {
         int colIndex = 0;
 
+        censusMethods = surveyService.catalogCensusMethods(survey);
+        
         String headerName;
         String cellValue;
         completeHeader = new ArrayList<String>();
@@ -264,6 +337,14 @@ public class XlsRecordRow implements RecordRow {
         for (Attribute attrib : survey.getAttributes()) {
             if (!AttributeType.FILE.equals(attrib.getType())
                     && !AttributeType.IMAGE.equals(attrib.getType())) {
+                
+                Cell namespaceCell = superHeaderRow.getCell(colIndex);
+                if (namespaceCell != null) {
+                    String value = namespaceCell.getStringCellValue();
+                    if (StringUtils.hasLength(value)) {
+                        namespaceHeaderIdx.put(colIndex, namespaceCell.getStringCellValue());
+                    }
+                }
 
                 headerName = attrib.getDescription();
                 cellValue = row.getCell(colIndex++).getStringCellValue();
@@ -274,6 +355,29 @@ public class XlsRecordRow implements RecordRow {
                 }
                 attributeHeader.add(headerName);
                 completeHeader.add(headerName);
+            }
+        }
+        
+        for (CensusMethod cm : censusMethods) {
+            for (Attribute attrib : cm.getAttributes()) {
+                if (!AttributeType.FILE.equals(attrib.getType())
+                        && !AttributeType.IMAGE.equals(attrib.getType())) {
+                    
+                    Cell namespaceCell = superHeaderRow.getCell(colIndex);
+                    if (namespaceCell != null) {
+                        namespaceHeaderIdx.put(colIndex, namespaceCell.getStringCellValue());
+                    }
+
+                    headerName = attrib.getDescription();
+                    cellValue = row.getCell(colIndex++).getStringCellValue();
+                    if (!headerName.equals(cellValue)) {
+                        // The header does not exactly match what we expect
+                        throw new ParseException("Unexpected header value \""
+                                + cellValue + "\"", colIndex);
+                    }
+                    attributeHeader.add(headerName);
+                    completeHeader.add(headerName);
+                }
             }
         }
     }
@@ -293,12 +397,16 @@ public class XlsRecordRow implements RecordRow {
     public RecordUpload readRow(Survey survey, Row row) {
         RecordUpload recUpload = new RecordUpload();
 
+        recUpload.setRowNumber(row.getRowNum());
+        
+        censusMethods = surveyService.catalogCensusMethods(survey);
+        
         // Set the defaults
         recUpload.setHeld(false);
         recUpload.setFirstAppearance(false);
         recUpload.setLastAppearance(false);
-        recUpload.setBehaviour(new String());
-        recUpload.setHabitat(new String());
+        recUpload.setBehaviour("");
+        recUpload.setHabitat("");
 
         int colIndex = 0;
 
@@ -306,6 +414,8 @@ public class XlsRecordRow implements RecordRow {
             colIndex = 0;
 
             colIndex = readRowId(row, recUpload, colIndex);
+            colIndex = readRowParentId(row, recUpload, colIndex);
+            colIndex = readRowCensusMethodId(row, recUpload, colIndex);
             colIndex = readRowTaxonomy(row, recUpload, colIndex);
             colIndex = readRowLocation(survey, row, recUpload, colIndex);
 
@@ -326,33 +436,71 @@ public class XlsRecordRow implements RecordRow {
         } catch (Exception e) {
             recUpload.setError(true);
             String msg = e.getMessage() == null ? e.toString() : e.getMessage();
-            recUpload.setErrorMessage("Column " + colIndex + " [ "
-                    + getCompleteHeader().get(colIndex - 1) + " ]: " + msg);
+            
+            log.debug(" ------ ");
+            log.debug(msg);
+            log.debug(e.toString());
+            
+            recUpload.setErrorMessage("Column " + colIndex + " Row " + row.getRowNum() + " [ "
+                    + getCompleteHeader().get(colIndex) + " ]: " + msg);
+            
+            log.debug(recUpload.getErrorMessage());
+            
             log.warn(e.toString(), e);
         }
+        //log.debug(recUpload);
+        log.debug(recUpload.isError());
         return recUpload;
     }
 
+    public static final String SURVEY_ATTR_NAMESPACE = "survey";
+    
     protected int readRowAttributes(Survey survey, Row row,
             RecordUpload recUpload, int colIndex) {
+        
         Cell cell;
-        Map<String, Attribute> attributeMap = new HashMap<String, Attribute>();
+        Map<String, Map<String, Attribute>> namedAttributeMap = new HashMap<String, Map<String, Attribute>>();
+        
+        //Map<String, Attribute> attributeMap = new HashMap<String, Attribute>();
+        namedAttributeMap.put(SURVEY_ATTR_NAMESPACE, new HashMap<String, Attribute>());
         for (Attribute attr : survey.getAttributes()) {
-            attributeMap.put(attr.getDescription(), attr);
+            //attributeMap.put(attr.getDescription(), attr);
+            //namedAttributeMap.put()
+            namedAttributeMap.get(SURVEY_ATTR_NAMESPACE).put(attr.getDescription(), attr);
         }
+        
+        for (CensusMethod cm : censusMethods) {
+            String namespace = bdrws.formatCensusMethodNameId(cm);
+            namedAttributeMap.put(namespace, new HashMap<String, Attribute>());
+            for (Attribute attr : cm.getAttributes()) {
+                //attributeMap.put(attr.getDescription(), attr);
+                namedAttributeMap.get(namespace).put(attr.getDescription(), attr);
+            }
+        }
+        
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
         String attrValue;
         Attribute attr;
+        
+        String attributeNamespace = SURVEY_ATTR_NAMESPACE;
         for (String recordAttributeName : attributeHeader) {
-            attrValue = new String();
+            
+            // set namespace
+            if (StringUtils.hasLength(namespaceHeaderIdx.get(colIndex))) {
+                attributeNamespace = namespaceHeaderIdx.get(colIndex);
+            }
+            
+            attrValue = "";
             cell = row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK);
-            //log.debug("Adding attribute: "+recordAttributeName+" with value "+cell.getStringCellValue());
-            attr = attributeMap.get(recordAttributeName);
+            
+            attr = namedAttributeMap.get(attributeNamespace).get(recordAttributeName);
+            
             if (Cell.CELL_TYPE_BLANK != cell.getCellType()) {
                 switch (attr.getType()) {
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                 case DECIMAL:
                     attrValue = new Double(cell.getNumericCellValue()).toString();
                     break;
@@ -372,7 +520,8 @@ public class XlsRecordRow implements RecordRow {
                 }
             }
 
-            recUpload.setRecordAttribute(recordAttributeName, attrValue);
+            //recUpload.setRecordAttribute(recordAttributeName, attrValue);
+            recUpload.setNamedAttribute(attributeNamespace, recordAttributeName, attrValue);
         }
         return colIndex;
     }
@@ -455,21 +604,71 @@ public class XlsRecordRow implements RecordRow {
     }
 
     protected int readRowId(Row row, RecordUpload recUpload, int colIndex) {
-        recUpload.setId(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK).getStringCellValue());
+        recUpload.setId(readStringFromCell(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK)));
         if (recUpload.getId().isEmpty()) {
             recUpload.setId(String.format("Row %d", row.getRowNum() + 1));
         }
         return colIndex;
     }
+    
+    
+    private String readStringFromCell(Cell cell) {
+        switch (cell.getCellType()) {
+            case Cell.CELL_TYPE_NUMERIC:
+                // convert double to int, to Integer, to string lulz...
+                return new Integer(((int)cell.getNumericCellValue())).toString();
+            // some of these will still throw errors. I was only aiming at catching the
+            // numeric case. Note we always cast it to an int.
+            case Cell.CELL_TYPE_BLANK:
+            case Cell.CELL_TYPE_BOOLEAN:
+            case Cell.CELL_TYPE_ERROR:
+            case Cell.CELL_TYPE_FORMULA:
+            case Cell.CELL_TYPE_STRING:
+            default:
+            return cell.getStringCellValue();
+        }
+    }
+    
+    protected int readRowParentId(Row row, RecordUpload recUpload, int colIndex) {
+        recUpload.setParentId(readStringFromCell(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK)));
+        return colIndex;        
+    }
+    
+    protected int readRowCensusMethodId(Row row, RecordUpload recUpload, int colIndex) {
+        recUpload.setCensusMethodId(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK).getStringCellValue());
+        return colIndex; 
+    }
 
     protected int readRowTaxonomy(Row row, RecordUpload recUpload, int colIndex) {
         recUpload.setScientificName(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK).getStringCellValue());
         recUpload.setCommonName(row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK).getStringCellValue());
-        if (!((recUpload.getScientificName() != null && !recUpload.getScientificName().isEmpty()) || (recUpload.getCommonName() != null && !recUpload.getCommonName().isEmpty()))) {
-            throw new IllegalArgumentException(
-                    "The scientific name or common name is required.");
+        
+        CensusMethod cm = findCensusMethod(recUpload.getCensusMethodId(), censusMethods);
+        
+        if (cm == null || Taxonomic.TAXONOMIC.equals(cm.getTaxonomic())) {
+            if (!((recUpload.getScientificName() != null && !recUpload.getScientificName().isEmpty()) || (recUpload.getCommonName() != null && !recUpload.getCommonName().isEmpty()))) {
+                throw new IllegalArgumentException(
+                        "The scientific name or common name is required.");
+            }
         }
         return colIndex;
+    }
+    
+    private CensusMethod findCensusMethod(String censusMethodIdString, Set<CensusMethod> cmSet) {
+        for (CensusMethod cm : cmSet) {
+            if (StringUtils.hasLength(censusMethodIdString)) {
+                if (cm.getId().equals(bdrws.parseCensusMethodId(censusMethodIdString))
+                        && cm.getName().equals(bdrws.parseCensusMethodName(censusMethodIdString))) {
+                    return cm;
+                } 
+            }
+        }
+        if (StringUtils.hasLength(censusMethodIdString)) {
+                // no match but the string has length / is not null. invalid name or id
+                throw new IllegalArgumentException(
+                "The census method identifier: '" + censusMethodIdString + "' is invalid.");
+        }
+        return null;
     }
 
     @Override

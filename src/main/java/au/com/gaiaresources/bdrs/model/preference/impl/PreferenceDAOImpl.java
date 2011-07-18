@@ -1,18 +1,22 @@
 package au.com.gaiaresources.bdrs.model.preference.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
@@ -24,6 +28,9 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
     public static final String DEFAULT_PREFERENCES = "preferences.json";
 
     private Logger log = Logger.getLogger(getClass());
+    
+    @Autowired
+    private PortalDAO portalDAO;  
 
     // { portal : { prefKey : pref } }
     private Map<Portal, Map<String, Preference>> prefCache;
@@ -38,6 +45,11 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
     public void init(Session sesh) {
         // Insert all existing preferences into the cache
         prefCache = new HashMap<Portal, Map<String, Preference>>();
+        
+        // Fill with the list of portals
+        for (Portal portal : portalDAO.getPortals(sesh)) {
+            prefCache.put(portal, new HashMap<String, Preference>());
+        }
         prefCache.put(null, new HashMap<String, Preference>());
         for (Preference pref : getAllPreferences(sesh)) {
             cachePreference(pref);
@@ -273,5 +285,49 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
         for (Map.Entry<String, Preference> prefEntry : prefMap.entrySet()) {
             log.info(String.format("    %d:%s=%s", prefEntry.getValue().getId(), prefEntry.getKey(), prefEntry.getValue().getValue()));
         }
+    }
+    
+    /*
+     * Note that these entries are not actually linked to hibernate in
+     * a deployed scenario. If you try WRITE to this preference prepare
+     * to have your changes totally ignored.
+     * 
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.model.preference.PreferenceDAO#getPreferenceByKeyPrefix(java.lang.String)
+     */
+    @Override
+    public List<Preference> getPreferenceByKeyPrefix(String prefix) {
+        Portal portal = RequestContextHolder.getContext().getPortal();
+        if (prefCache.containsKey(portal)) {
+            // Note that these entries are not actually linked to hibernate in
+            // a deployed scenario. If you try WRITE to this preference prepare
+            // to have your changes totally ignored.
+            List<Preference> result = new ArrayList<Preference>();
+            for (Entry<String, Preference> entry : prefCache.get(portal).entrySet()) {
+                if (entry.getKey().startsWith(Preference.GOOGLE_MAP_KEY_PREFIX)) {
+                    result.add(entry.getValue());
+                }
+            }
+            return result;
+        } else {
+
+            log.error("Unknown portal returned by the Portal Service: "
+                    + portal.getName());
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    @Override
+    public PreferenceCategory save(Session sesh, PreferenceCategory cat) {
+        if (sesh == null) {
+            sesh = getSessionFactory().getCurrentSession();
+        }
+        return super.save(sesh, cat);
+    }
+    
+    @Override
+    public List<PreferenceCategory> getPreferenceCategories() {
+        Session sesh = getSessionFactory().getCurrentSession();
+        return (List<PreferenceCategory>)sesh.createQuery("from PreferenceCategory").list();
     }
 }

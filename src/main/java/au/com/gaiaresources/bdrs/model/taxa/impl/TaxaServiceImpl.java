@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.region.RegionDAO;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
@@ -111,12 +111,12 @@ public class TaxaServiceImpl implements TaxaService {
     	return taxaDAO.createAttributeOption(attribute, value);
     }
     
-    public AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value)
+    public TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value)
     {
     	return taxaDAO.createIndicatorSpeciesAttribute(species, attr, value);
     }
 
-    public AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc)
+    public TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc)
     {
     	return taxaDAO.createIndicatorSpeciesAttribute(species, attr, value, desc);
     }

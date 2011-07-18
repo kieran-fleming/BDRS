@@ -1,10 +1,13 @@
 <html>
     <body>
-        <p style="font-weight: bold">An unexpected error occured.</p>
+        <p style="font-weight: bold">An unexpected error occurred.</p>
         
-        <p><b>User:</b>&nbsp;${user.name}</p>
+        <p><b>User:</b>&nbsp;${userName}</p>
         <p><b>URL:</b>&nbsp;${requesturi}</p>
-        
+        <p>Request Headers:</p>
+        <p>${headers}</p>
+        <p>Request Parameters:</p>
+        <p>${parameters}</p>
         <p>Stack trace of the error is:</p>
         <p>${stacktrace}</p>
     </body>

@@ -18,6 +18,8 @@
     </c:if>
     <input type="hidden" name="portalPk" value="${ portalId }"/>
     
+    <c:if test="${editAsRoot}">
+    <!-- These items should only be changable root...? -->
     <table class="form_table">
         <tbody>
             <tr>
@@ -40,6 +42,7 @@
             </tr>
         </tbody>
     </table>
+    </c:if>
     
     <c:if test="${ not empty editTheme.themeElements }">
         <h3 class="sep">Theme Elements</h3>
@@ -91,7 +94,8 @@
 	                       <td>
 	                           <c:choose>
 	                               <c:when test="<%= themeFile.canEdit() %>">
-	                                   <a href="${pageContext.request.contextPath}/bdrs/root/theme/editThemeFile.htm?themeId=${ editTheme.id }&themeFileName=<%= themeFile.getFileName() %>">
+	                               
+	                                   <a href="${pageContext.request.contextPath}/bdrs/<c:if test="${editAsRoot}">root</c:if><c:if test="${editAsAdmin}">admin</c:if>/theme/editThemeFile.htm?themeId=${ editTheme.id }&themeFileName=<%= themeFile.getFileName() %>">
                                            <c:out value="<%= themeFile.getDisplayName() %>"/>
                                        </a>
 	                               </c:when>

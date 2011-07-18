@@ -8,6 +8,9 @@
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
 
 <h1><c:out value="${survey.name}"/></h1>
+<c:if test="${censusMethod != null}">
+<h2><c:out value="${censusMethod.name}"/></h2>
+</c:if>
 <p>
     Click on the map to enter the location of the sighting.
 </p>
@@ -16,12 +19,16 @@
 <div id="record_base_map_hover_tip">&nbsp;</div>
 <div class="map_wrapper" id="map_wrapper">
     <div id="base_map" class="defaultmap tracker_map"></div>
+    <div id="geocode" class="geocode"></div>
 </div>
 
 <c:if test="${ not preview }">
     <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/tracker.htm" enctype="multipart/form-data">
 </c:if>
     <input type="hidden" name="surveyId" value="${survey.id}"/>
+    <c:if test="${censusMethod != null}">
+    <input type="hidden" name="censusMethodId" value="${censusMethod.id}"/>
+    </c:if>
     <c:if test="${record != null}">
         <input type="hidden" name="recordId" value="${record.id}"/>
     </c:if>
@@ -36,7 +43,17 @@
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
                 </tiles:insertDefinition>
             </c:forEach>
+            
             <c:forEach items="${taxonGroupFormFieldList}" var="formField">
+                <tiles:insertDefinition name="formFieldRenderer">
+                    <tiles:putAttribute name="formField" value="${ formField }"/>
+                    <tiles:putAttribute name="locations" value="${ locations }"/>
+                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
+                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+                </tiles:insertDefinition>
+            </c:forEach>
+            
+            <c:forEach items="${censusMethodFormFieldList}" var="formField">
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="locations" value="${ locations }"/>
@@ -94,7 +111,7 @@
 
     jQuery(function() {
         var layerName = bdrs.survey.location.LAYER_NAME;
-        bdrs.map.initBaseMap('base_map');
+        bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
         
         <c:choose>
             <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
@@ -155,7 +172,7 @@
             },
             select: function(event, ui) {
                 var taxon = ui.item.data;
-                jQuery("[name=species]").val(taxon.id);
+                jQuery("[name=species]").val(taxon.id).trigger("blur");
                 
                 // Load Taxon Group Attributes
                 // Clear the group attribute rows
@@ -174,11 +191,26 @@
                     jQuery(".form_table").find("tbody").append(data);
                 });
             },
+            change: function(event, ui) {
+            console.log("change");
+            console.log(jQuery(event.target));
+            console.log(jQuery(event.target).val().length);
+                if(jQuery(event.target).val().length === 0) {
+                    jQuery("[name=species]").val("").trigger("blur");
+                
+                    // Clear the group attribute rows
+                    jQuery("[name^=taxonGroupAttr_]").parents("tr").remove();
+                }
+            },
             minLength: 2,
             delay: 300,
             html: true
         });
-    
+        
+        jQuery("#number").change(function(data) {
+            jQuery("#survey_species_search").trigger("blur");
+        });
+            
         jQuery(".acomplete").autocomplete({
             source: function(request, callback) {
                 var params = {};

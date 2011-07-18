@@ -17,6 +17,8 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Filter;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -27,13 +29,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.servlet.RequestContext;
+import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
 
 
 /**
@@ -57,6 +64,9 @@ public class UserService extends AbstractController {
     
     @Autowired
     private LocationDAO locationDAO;
+    
+    @Autowired
+    private PortalDAO portalDAO;
 
 
     /**
@@ -302,31 +312,45 @@ public class UserService extends AbstractController {
      */
     @RequestMapping(value="/webservice/user/validate.htm")
     public void validateUser(
-    		@RequestParam(value = "username", defaultValue = "") String userName,
+    		        @RequestParam(value = "username", defaultValue = "") String userName,
 			@RequestParam(value = "password", defaultValue = "") String password,
-    		HttpServletRequest request, HttpServletResponse response)
+			@RequestParam(value = "portalName", required=false) String portalName,
+    		        HttpServletRequest request, HttpServletResponse response)
         throws IOException, NoSuchAlgorithmException, InterruptedException {
-    	
     	// This is a precaution to stop people using this service to brute force passwords.
     	Thread.sleep(1000);
+    	
+    	RequestContext requestContext = getRequestContext();
+    	if(portalName != null) {
+    	    Portal portal = portalDAO.getPortalByName(getRequestContext().getHibernate(), 
+    	                                              portalName);
+    	    if(portal != null) {
+    	        requestContext.setPortal(portal);
+
+    	        Session sesh = requestContext.getHibernate();
+    	        Filter filter = sesh.getEnabledFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
+    	        filter.setParameter(PortalPersistentImpl.PORTAL_FILTER_PORTALID_PARAMETER_NAME, portal.getId());
+    	        
+    	        request.getSession().setAttribute(PortalSelectionFilter.PORTAL_ID_KEY, portal.getId());
+    	    }
+    	}
 
     	JSONObject validationResponse = new JSONObject();
-		User user = userDAO.getUser(userName);
-
-		Md5PasswordEncoder encoder = new Md5PasswordEncoder();
-		
+	User user = userDAO.getUser(userName);
+	Md5PasswordEncoder encoder = new Md5PasswordEncoder();
+	
     	if (user != null && encoder.isPasswordValid(user.getPassword(), password, null)) {
-    		validationResponse.put("user", user.flatten(1, true, true));
-    		validationResponse.put("ident", user.getRegistrationKey());
-    		JSONArray locations = new JSONArray();
-    		for(Location l : locationDAO.getUserLocations(user)){
-    			locations.add(l.flatten(true, true));
-    		}
-    		validationResponse.put("location",locations);
-    	}
-    	else {
-    		response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-    		return;
+    	    validationResponse.put("user", user.flatten(1, true, true));
+    	    validationResponse.put("ident", user.getRegistrationKey());
+    	    validationResponse.put("portal_id", user.getPortal().getId());
+    	    JSONArray locations = new JSONArray();
+    	    for(Location l : locationDAO.getUserLocations(user)){
+    	        locations.add(l.flatten(true, true));
+    	    }
+    	    validationResponse.put("location",locations);
+    	} else {
+    	    response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+    	    return;
     	}
     	
     	// support for JSONP
@@ -358,6 +382,19 @@ public class UserService extends AbstractController {
             User user = userDAO.getUserByRegistrationKey(ident);
             if(user != null) {
             	log.debug(user.getName() + " : " + message);
+            	
+                // support for JSONP
+                if (request.getParameter("callback") != null) {
+                        response.setContentType("application/javascript");              
+                        response.getWriter().write(request.getParameter("callback") + "(");
+                } else {
+                        response.setContentType("application/json");
+                }
+
+                response.getWriter().write("{}");
+                if (request.getParameter("callback") != null) {
+                        response.getWriter().write(");");
+                }
             }
             else {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -366,19 +403,6 @@ public class UserService extends AbstractController {
         else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
-        
-    	// support for JSONP
-    	if (request.getParameter("callback") != null) {
-    		response.setContentType("application/javascript");        	
-    		response.getWriter().write(request.getParameter("callback") + "(");
-    	} else {
-    		response.setContentType("application/json");
-    	}
-
-        response.getWriter().write("{}");
-    	if (request.getParameter("callback") != null) {
-    		response.getWriter().write(");");
-    	}
     }
     
     @RequestMapping(value="/webservice/user/searchUsers.htm", method=RequestMethod.GET)

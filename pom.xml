@@ -26,6 +26,10 @@
             <url>http://nexus.openqa.org/content/repositories/releases</url>
         </repository>
         <repository>
+            <id>Tartarus</id>
+            <url>http://tartarus:8080/artifactory/repo/</url>
+        </repository>
+        <repository>
             <id>ALA</id>
             <url>http://maven.ala.org.au/repository</url>
         </repository>
@@ -71,7 +75,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <version>1.2</version>
-            <scope>provided</scope>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -316,6 +320,12 @@
             <version>2.5.3</version>
             <scope>compile</scope>
         </dependency>
+		<dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-jai-tools</artifactId>
+            <version>2.5.5-jai-tools</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-shapefile</artifactId>
@@ -535,6 +545,8 @@
                     <encoding>UTF-8</encoding>
                     <nonFilteredFileExtensions>
 			            <nonFilteredFileExtension>xls</nonFilteredFileExtension>
+						<nonFilteredFileExtension>zip</nonFilteredFileExtension>
+						<nonFilteredFileExtension>apk</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
                 </configuration>
             </plugin>
@@ -544,6 +556,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                	<encoding>UTF-8</encoding>
+                    <nonFilteredFileExtensions>
+                        <nonFilteredFileExtension>xls</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>zip</nonFilteredFileExtension>
+                    </nonFilteredFileExtensions>
                     <excludes>
                         <!--exclude>**/*Client.java</exclude-->
                     </excludes>
@@ -845,6 +862,7 @@
                     <findbugsXmlOutput>true</findbugsXmlOutput>
                     <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
                     <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
                 </configuration>
             </plugin>
         </plugins>
@@ -860,7 +878,7 @@
                 <!-- Mail properties -->
                 <bdrs.default.mail.server>localhost</bdrs.default.mail.server>
                 <bdrs.default.mail.port>25</bdrs.default.mail.port>
-                <bdrs.default.mail.from>Your Email Here</bdrs.default.mail.from>
+                <bdrs.default.mail.from>bdrs-core@gaiaresources.com.au</bdrs.default.mail.from>
                 <bdrs.error.mail.to></bdrs.error.mail.to>
                 <bdrs.mail.subject.prefix>[BDRS-Core - Dev]</bdrs.mail.subject.prefix>
                 <!-- Application address properties -->
@@ -878,8 +896,8 @@
                 <bdrs.tomcat.manager.username>tomcat</bdrs.tomcat.manager.username>
                 <bdrs.tomcat.manager.password>tomcat</bdrs.tomcat.manager.password>
                 <!-- reCAPTCHA properties -->
-                <bdrs.recaptcha.public.key>Your Key Here</bdrs.recaptcha.public.key>
-                <bdrs.recaptcha.private.key>Your Key Here</bdrs.recaptcha.private.key>
+                <bdrs.recaptcha.public.key>6LfbwwQAAAAAAEiDp_pgbdLzIOgVLpTpA3kqUfXF</bdrs.recaptcha.public.key>
+                <bdrs.recaptcha.private.key>6LfbwwQAAAAAAF5wVuk8nLcOanKCwvA_-rmtvNIL</bdrs.recaptcha.private.key>
                 <!-- File storage location -->
                 <bdrs.file.store.location>/tmp</bdrs.file.store.location>
             </properties>

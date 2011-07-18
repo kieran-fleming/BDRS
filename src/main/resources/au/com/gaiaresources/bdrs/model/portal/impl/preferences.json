@@ -1,5 +1,11 @@
 [
     {
+	    classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.apikey",
+        displayName: "API Keys",
+        description: "Any keys for third party APIS that may be used with the BDRS e.g. Google Maps API."
+	},
+	{
         classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
         name: "category.storage",
         displayName: "Storage",

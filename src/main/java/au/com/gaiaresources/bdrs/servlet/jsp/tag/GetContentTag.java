@@ -41,7 +41,7 @@ public class GetContentTag extends TagSupport {
        
         String value = contentDAO.getContentValue(key);
         if (value == null) {
-            value = new String("Error: Could not fetch content for key: " + key + ". Inform the webmaster");
+            value = "Error: Could not fetch content for key: " + key + ". Inform the webmaster";
         }
         
         Portal portal = RequestContextHolder.getContext().getPortal();

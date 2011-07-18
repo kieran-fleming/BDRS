@@ -29,6 +29,7 @@ import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 public class Preference extends PortalPersistentImpl {
     
     public static final String TAXON_PROFILE_TEMPLATE = "taxon.profile.template";
+    public static final String GOOGLE_MAP_KEY_PREFIX = "google.map.key.";
 
     @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());

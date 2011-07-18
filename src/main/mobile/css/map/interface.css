@@ -1,0 +1,242 @@
+html,body, {
+margin:0;
+padding:0;
+height:100%;
+}
+
+#card {
+	position:absolute;
+	bottom:0;
+	left:0;
+	right:0;
+	top:0;
+}
+
+body.witheffects #card{
+	-webkit-transform-style:preserve-3d;
+	-webkit-transition-duration:0.7s;
+	-webkit-transition-property:0;
+	-webkit-transition-timing-function:ease-in-out;
+}
+
+#container {
+	position:absolute;
+	top:0;
+	left:0;
+	bottom:0;
+	right:0;
+	background: #dddddd 
+}
+
+body.witheffects #container {
+	-webkit-perspective:780;
+}
+
+#map {
+	background: #dddddd url(../../images/map/loading.gif) center no-repeat;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	z-index: 100;
+	top: 0;
+	left: 0;
+}
+
+body.witheffects #map {
+	-webkit-backface-visibility:hidden;
+}
+
+/**
+ * #map * {
+ *	-webkit-user-select:ignore;
+ * }
+ */
+
+
+#map .controls {
+	position:absolute;
+	right:15px;
+	top:15px;
+	z-index:1900;
+}
+
+#map .controls span {
+	background-image:url(../../images/map/buttons.png);
+	border:none;
+	display:block;
+	height:36px;
+	width:36px;
+	margin:0;
+	opacity:0.8;
+	padding:4px 2px 2px;
+	text-indent:-999em;
+	-webkit-border-radius:20px;
+
+}
+
+#map .controls span.findLocation {
+	background-position:0 -153px;
+}
+
+#map .controls span.info {
+	background-position:0 -203px;
+}
+
+#map .controls span.settings {
+	background-position:0 2px;
+}
+
+#map .controls span.zoomIn {
+	background-position:0 -102px;
+}
+
+#map .controls span.zoomOut {
+	background-position: 0px -50px;
+}
+
+
+#map .copyright {
+	position: absolute;
+	bottom:0;
+	left:0;
+	margin:0;
+	padding: 5px;
+	z-index:2000;
+	opacity: 0.5;
+}
+
+
+
+#map .well, #map .surface {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	/* FIXME: let's apply this in GSV.js */
+	/*cursor: grab;*/
+	cursor: -moz-grab;
+}
+#map .surface {
+	z-index: 20;
+}
+#map .well {
+	overflow: hidden;
+	z-index: 10;
+}
+#map .well .tile
+{
+	border: 0;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	display: block;
+}
+
+
+
+#meta {
+	background:#eee;
+	border:1px solid #aaa;
+	bottom:15px;
+	color:#000;
+	left:15px;
+	padding:120px 20px 0;
+	position:absolute;
+	right:15px;
+	top:15px;
+	z-index:150;
+	-webkit-border-radius:10px;
+	display: none;
+}
+
+body.witheffects #meta {
+	display: block;
+	-webkit-backface-visibility:hidden;
+	-webkit-transform:rotateY(-180deg);
+	-webkit-transition-duration:0.4s;
+	-webkit-transition-property:opacity;
+
+}
+
+.button {
+	background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#bbb));
+	border:1px solid #aaa;
+	color:#000;
+	font-size:17px;
+	height:43px;
+	left:15px;
+	line-height:43px;
+	margin-top:30px;
+	padding:0 20px;
+	right:15px;
+	text-align:center;
+	white-space:nowrap;
+	-webkit-border-radius:7px;
+}
+
+.button.close {
+	bottom:15px;
+	position:absolute;
+	right:auto;
+}
+
+.button.find {
+	padding:0;
+	position:absolute;
+	top:35px;
+}
+
+.button.mail {
+	bottom:15px;
+	left:auto;
+	position:absolute;
+	right:15px;
+}
+
+.button.clear {
+	bottom:75px;
+	left:15px;
+	position:absolute;
+	right:15px;
+	display: none;
+}
+
+#meta.standalone .button.clear {
+	display: block;
+}
+
+.flipped {
+	-webkit-transform:rotateY(-180deg);
+}
+
+a {
+	color:#000;
+	font-weight:700;
+}
+
+p {
+	color:#000;
+	font-size:14px;
+	margin:0 0 1em;
+	text-align:left;
+}
+
+body.witheffects #meta p{
+	font-size: 16px;
+	line-height: 1.4em;
+}
+#search {
+	border:2px solid #aaa;
+	font-size:17px;
+	height:33px;
+	left:15px;
+	padding:0 5px;
+	position:absolute;
+	right:15px;
+	top:15px;
+}

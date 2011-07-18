@@ -1,6 +1,5 @@
 package au.com.gaiaresources.bdrs.security;
 
-import org.springframework.util.StringUtils;
 
 public class Role {
     public static final String ROOT = "ROLE_ROOT";

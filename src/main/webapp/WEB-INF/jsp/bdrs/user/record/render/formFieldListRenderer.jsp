@@ -24,7 +24,8 @@
 	            });
 	        },
 	        minLength: 2,
-	        delay: 300
+	        delay: 300,
+	        html:true
 	    });
 	    jQuery('form').ketchup();
 	    bdrs.initDatePicker();

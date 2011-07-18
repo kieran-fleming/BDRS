@@ -17,7 +17,7 @@
         <tr>
             <th>Widget</th>
             <td>
-                <select id="feature">
+                <select id="feature" name="feature">
                     <c:forEach items="<%= EmbeddedFeature.values() %>" var="feature">
                         <jsp:useBean id="feature" type="au.com.gaiaresources.bdrs.controller.embedded.EmbeddedFeature"/>
                         <option value="<c:out value="<%= feature.toString() %>"/>">   
@@ -27,25 +27,42 @@
                 </select>
             </td>
         </tr>
+		<tr class="gallerySection customWidgetSection">
+			<th>Gallery</th>
+			<td>
+				<select name="galleryId" class="widgetParameter">
+					<c:forEach items="${galleryList}" var="gallery">
+						<option value="${gallery.id}">${gallery.name}</option>
+					</c:forEach>
+				</select>
+			</td>
         <tr>
-            <th>Width</th>
-            <td><input id="width" type="text" value="300" class="validate(positiveInteger)"/></td>
+        <tr class="gallerySection customWidgetSection">
+        	<th>Image Width</th>
+            <td><input type="text" value="250" name="slideshowWidth" class="validate(positiveInteger) widgetParameter"/></td>
+        </tr>
+        <tr class="gallerySection customWidgetSection">
+            <th>Image Height</th>
+            <td><input type="text" value="154" name="slideshowHeight" class="validate(positiveInteger) widgetParameter"/></td>
+        </tr>
+            <th>Widget Width</th>
+            <td><input type="text" value="300" name="width" class="validate(positiveInteger) widgetParameter"/></td>
         </tr>
         <tr>
-            <th>Height</th>
-            <td><input id="height" type="text" value="250"/></td>
+            <th>Widget Height</th>
+            <td><input type="text" value="250" name="height" class="validate(positiveInteger) widgetParameter" /></td>
         </tr>
         <tr>
             <th>Show Footer</th>
-            <td><input id="footer" type="checkbox" value="true" checked="checked"/></td>
+            <td><input type="checkbox" value="true" checked="checked" class="widgetParameter" /></td>
         </tr>
         <tr>
             <th>Background Color</th>
-            <td><input class="css validate(required)" type="text" name="backgroundColor" value="#FFFFFF"/></td>
+            <td><input class="css validate(required)" type="text" name="backgroundColor" value="#FFFFFF" /></td>
         </tr>
         <tr>
             <th>Header Color</th>
-            <td><input class="css validate(required)" type="text" name="headerColor" value="#F69900"/></td>
+            <td><input class="css validate(required)" type="text" name="headerColor" value="#F69900" /></td>
         </tr>
         <tr>
             <th>Font Size</th>
@@ -63,10 +80,27 @@
 <div class="hr"/>
 <div id="preview"></div>
 
-
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.embed.widgetBuilder.init("#feature", "#width", "#height", "#footer:checked", ".css", "#embed_src", "#preview", "${ domain }", "${ port }");
+		var widgetMap = {
+			"LATEST_STATISTICS": "",
+			"IMAGE_SLIDESHOW": ".gallerySection"
+		};
+		
+		var widgetBuilderArgs = {
+            widgetMap: widgetMap,
+            featureSelector: "#feature",
+            widgetParamSelector: ".widgetParameter",
+            customSectionSelector: ".customWidgetSection",
+            cssStylesSelector: ".css",
+			embedSrcSelector: "#embed_src",
+			previewSelector: "#preview",
+			domain: "${ domain }",
+			port: "${ port }"
+        };
+		
+		bdrs.embed.widgetBuilder.init(widgetBuilderArgs)
+		
         jQuery("#feature").change();
     });
 </script>

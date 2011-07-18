@@ -6,12 +6,14 @@ import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
 
+import au.com.gaiaresources.bdrs.db.FilterManager;
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 @Repository
 public class ThemeDAOImpl extends AbstractDAOImpl implements ThemeDAO {
@@ -19,22 +21,29 @@ public class ThemeDAOImpl extends AbstractDAOImpl implements ThemeDAO {
     
     @Override
     public Theme getActiveTheme(Portal portal) {
-        getSession().disableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
-        Query q = getSession().createQuery("from Theme where portal = :portal and active = :active order by id asc");
-        q.setParameter("portal", portal);
-        q.setParameter("active", true);
-        
-        List<Theme> themeList = q.list();
-        if(themeList.size() > 1){
-            log.warn(String.format("More than one active theme returned for portal with ID: %d. Returning the first theme.",portal.getId()));
-        } 
-        return themeList.isEmpty() ? null : themeList.get(0);    
+        try {
+            disablePortalFilter();
+            
+            Query q = getSession().createQuery("from Theme where portal = :portal and active = :active order by id asc");
+            q.setParameter("portal", portal);
+            q.setParameter("active", true);
+            
+            List<Theme> themeList = q.list();
+            if(themeList.size() > 1){
+                log.warn(String.format("More than one active theme returned for portal with ID: %d. Returning the first theme.",portal.getId()));
+            } 
+            Theme theme = themeList.isEmpty() ? null : themeList.get(0);
+            return theme;
+        } catch(Error e) {
+            throw e;
+        } finally {
+            enablePortalFilter();
+        }
     }
 
     @Override
     public Theme getTheme(int themeId) {
         return (Theme)getSession().get(Theme.class, themeId);
-        //return getByID(Theme.class, themeId);
     }
     
     @Override
@@ -44,8 +53,15 @@ public class ThemeDAOImpl extends AbstractDAOImpl implements ThemeDAO {
 
     @Override
     public List<Theme> getThemes(Portal portal) {
-        getSession().disableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
-        return find("from Theme where portal = ?", portal);
+        try {
+            disablePortalFilter();
+            return find("from Theme where portal = ?", portal);
+        }
+        catch(Error e) {
+            throw e;
+        } finally {
+            enablePortalFilter();
+        }
     }
 
     @Override
@@ -66,5 +82,14 @@ public class ThemeDAOImpl extends AbstractDAOImpl implements ThemeDAO {
     @Override
     public void delete(ThemeElement themeElement) {
         super.deleteByQuery(themeElement);
+    }
+    
+    private void enablePortalFilter() {
+        Portal portal = RequestContextHolder.getContext().getPortal();
+        FilterManager.setPortalFilter(getSession(), portal);
+    }
+    
+    private void disablePortalFilter() {
+        getSession().disableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
     }
 }

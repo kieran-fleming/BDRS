@@ -7,13 +7,13 @@ import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.service.threshold.ConditionOperatorHandler;
 import au.com.gaiaresources.bdrs.service.threshold.OperatorHandler;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
 
 /**
- * Checks that at least one {@link RecordAttribute} from an iterable of
- * {@link RecordAttribute} objects matches the {@link Condition}. This handler
+ * Checks that at least one {@link AttributeValue} from an iterable of
+ * {@link AttributeValue} objects matches the {@link Condition}. This handler
  * is attribute type aware and will appropriately convert the attribute
  * value before comparison.
  */
@@ -30,14 +30,14 @@ public class RecordAttributeHandler implements OperatorHandler {
             ClassNotFoundException {
         
         @SuppressWarnings("unchecked")
-        Iterable<RecordAttribute> attributes = (Iterable<RecordAttribute>) condition.getPropertyForPath(entity);
+        Iterable<AttributeValue> attributes = (Iterable<AttributeValue>) condition.getPropertyForPath(entity);
         if (attributes == null) {
             return false;
         }
         
         String expectedKey = condition.getKey();
         boolean returnValue = false;
-        for (AttributeValue recAttr : attributes) {
+        for (TypedAttributeValue recAttr : attributes) {
             String actualKey = recAttr.getAttribute().getName();
             boolean match = false;
             
@@ -55,6 +55,7 @@ public class RecordAttributeHandler implements OperatorHandler {
                     match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getStringValue(), condition.stringValue());
                     break;
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().intValue(), condition.intValue());
                     break;
                 case DECIMAL:

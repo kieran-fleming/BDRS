@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.util;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -30,7 +31,6 @@ public final class DateUtils {
      * The number of milliseconds in a hour.
      */
     public static final long MILLISECONDS_IN_HOUR = SECONDS_IN_HOUR * MILLISECONDS_IN_SECOND;
-    
     /**
      * Convert the given number of hours, minutes and seconds to milliseconds.
      * @param hours The number of hours.
@@ -51,5 +51,22 @@ public final class DateUtils {
         Calendar c = Calendar.getInstance();
         c.setTime(d);
         return (c.get(Calendar.HOUR_OF_DAY) > 0 || c.get(Calendar.MINUTE) > 0 || c.get(Calendar.SECOND) > 0);
+    }
+
+    /**
+     * Convert the string to a Date object using the constant date format.
+     * 
+     * @param string
+     *            The string to convert
+     * @return A Date object representation of the passed string
+     */
+    public static Date getDate(String string) {
+        Date date = null;
+        try {
+            date = DateFormatter.parse(string, DateFormatter.DAY_MONTH_YEAR);
+        } catch (Exception e) {
+
+        }
+        return date;
     }
 }

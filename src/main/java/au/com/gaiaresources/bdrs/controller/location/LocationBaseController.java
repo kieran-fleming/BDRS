@@ -35,6 +35,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 
 import com.vividsolutions.jts.geom.Point;
@@ -42,7 +43,6 @@ import com.vividsolutions.jts.geom.Point;
 @Controller
 public class LocationBaseController extends AbstractController {
 
-    @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
 
     @Autowired
@@ -53,6 +53,9 @@ public class LocationBaseController extends AbstractController {
 
     @Autowired
     private MetadataDAO metadataDAO;
+    
+    @Autowired
+    private UserDAO userDAO;
 
     @Autowired
     private LocationService locationService;
@@ -64,8 +67,19 @@ public class LocationBaseController extends AbstractController {
             @RequestParam(value="redirect", defaultValue="/bdrs/location/editUserLocations.htm") String redirect) {
 
         User user = getRequestContext().getUser();
+        
+        Metadata defaultLocId = user.getMetadataObj(Metadata.DEFAULT_LOCATION_ID);
+        Location defaultLocation;
+        if(defaultLocId == null) {
+            defaultLocation = null;
+        } else {
+            int defaultLocPk = Integer.parseInt(defaultLocId.getValue());
+            defaultLocation = locationDAO.getLocation(defaultLocPk);
+        }
+        
         ModelAndView mv = new ModelAndView("userEditLocations");
         mv.addObject("locations", locationDAO.getUserLocations(user));
+        mv.addObject("defaultLocationId", defaultLocation == null ? -1 : defaultLocation.getId());
         mv.addObject("redirect", redirect);
         return mv;
     }
@@ -76,8 +90,9 @@ public class LocationBaseController extends AbstractController {
             HttpServletResponse response,
             @RequestParam(value="add_location", required=false) int[] addLocationIndexes,
             @RequestParam(value="location", required=false) int[] locationIds,
+            @RequestParam(value="defaultLocationId", required=false) String defaultLocationId,
             @RequestParam(value="redirect", defaultValue="/bdrs/location/editUserLocations.htm") String redirect) {
-
+        
         addLocationIndexes = addLocationIndexes == null ? new int[]{} : addLocationIndexes;
         locationIds = locationIds == null ? new int[]{} : locationIds;
         User user = getRequestContext().getUser();
@@ -92,6 +107,7 @@ public class LocationBaseController extends AbstractController {
         }
 
         // Added Locations
+        Map<Integer, Location> addedLocationMap = new HashMap<Integer, Location>();
         for(int rawIndex : addLocationIndexes) {
             double latitude = Double.parseDouble(request.getParameter("add_latitude_"+rawIndex));
             double longitude = Double.parseDouble(request.getParameter("add_longitude_"+rawIndex));
@@ -101,7 +117,9 @@ public class LocationBaseController extends AbstractController {
             location.setName(request.getParameter("add_name_"+rawIndex));
             location.setLocation(point);
             location.setUser(user);
-            locationDAO.save(location);
+            location = locationDAO.save(location);
+            
+            addedLocationMap.put(rawIndex, location);
         }
 
         // Updated Locations
@@ -117,8 +135,50 @@ public class LocationBaseController extends AbstractController {
             locationDAO.save(location);
         }
 
+        // Location to be Deleted
+        // We cannot actually delete the location object because it may be
+        // connected to an Record. Instead we are going to unlink it from the
+        // User. This means that it is possible for orphan locations to be 
+        // created.
         for(Map.Entry<Integer, Location> tuple : locationMap.entrySet()) {
-            locationDAO.delete(tuple.getValue());
+            //locationDAO.delete(tuple.getValue());
+        	Location loc = tuple.getValue();
+        	loc.setUser(null);
+        	loc = locationDAO.save(loc);
+        }
+        
+        try{
+            if(defaultLocationId != null) {
+                Metadata defaultLocMD = user.getMetadataObj(Metadata.DEFAULT_LOCATION_ID);
+                if(defaultLocMD == null) {
+                    defaultLocMD = new Metadata();
+                    defaultLocMD.setKey(Metadata.DEFAULT_LOCATION_ID);
+                }
+                
+                String[] split = defaultLocationId.split("_");
+                if(split.length == 2) {
+                    Integer val = new Integer(split[1]);
+                    if(defaultLocationId.startsWith("id_")) {
+                        defaultLocMD.setValue(val.toString());
+                    } else if(addedLocationMap.containsKey(val)) {
+                        defaultLocMD.setValue(addedLocationMap.get(val).getId().toString());
+                    } else {
+                        throw new IllegalArgumentException("Unable to match default location with an id or an index."+defaultLocationId);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid default location id format received: "+ defaultLocationId);
+                }
+                
+                metadataDAO.save(defaultLocMD);
+                
+                user.getMetadata().add(defaultLocMD);
+                userDAO.updateUser(user);
+            }
+        } catch(NumberFormatException nfe) {
+            // Do nothing. Bad data.
+            log.error("Invalid location PK or index received: "+defaultLocationId, nfe);
+        } catch(IllegalArgumentException iae) {
+            log.error(iae.getMessage(), iae);
         }
 
         ModelAndView mv = new ModelAndView(new RedirectView(redirect, true));
@@ -126,16 +186,37 @@ public class LocationBaseController extends AbstractController {
     }
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
-    @RequestMapping(value = "/bdrs/location/ajaxAddLocationRow.htm", method = RequestMethod.GET)
-    public ModelAndView ajaxAddLocationRow(HttpServletRequest request, HttpServletResponse response) {
-        ModelAndView mv = new ModelAndView("locationRow");
+    @RequestMapping(value = "/bdrs/location/ajaxAddUserLocationRow.htm", method = RequestMethod.GET)
+    public ModelAndView ajaxAddUserLocationRow(HttpServletRequest request, HttpServletResponse response) {
+        
+        Location defaultLocation = null;
+        User user = getRequestContext().getUser();
+        Metadata defaultLocId = user.getMetadataObj(Metadata.DEFAULT_LOCATION_ID);
+        if(defaultLocId == null) {
+            defaultLocation = null;
+        } else {
+            int defaultLocPk = Integer.parseInt(defaultLocId.getValue());
+            defaultLocation = locationDAO.getLocation(defaultLocPk);
+        }
+        
+        ModelAndView mv = new ModelAndView("userLocationRow");
         mv.addObject("index", Integer.parseInt(request.getParameter("index")));
+        mv.addObject("defaultLocationId", defaultLocation == null ? -1 : defaultLocation.getId());
         return mv;
     }
-
+    
     // ----------------------------------------
     // Admin Functionality
     // ----------------------------------------
+    
+    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RequestMapping(value = "/bdrs/location/ajaxAddSurveyLocationRow.htm", method = RequestMethod.GET)
+    public ModelAndView ajaxAddSurveyLocationRow(HttpServletRequest request, HttpServletResponse response) {
+        
+        ModelAndView mv = new ModelAndView("surveyLocationRow");
+        mv.addObject("index", Integer.parseInt(request.getParameter("index")));
+        return mv;
+    }
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editLocations.htm", method = RequestMethod.GET)

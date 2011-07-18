@@ -8,16 +8,17 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.service.db.DeleteCascadeHandler;
 import au.com.gaiaresources.bdrs.service.db.DeletionService;
 
@@ -54,9 +55,9 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
         Object[] obs = new Object[2];
         obs[0] = attr;
         obs[1] = "%" + searchString.toLowerCase() + "%";
-        List<RecordAttribute> attrs = find("from RecordAttribute r where r.attribute = ? and lower(r.stringValue) like ?", obs);
+        List<AttributeValue> attrs = find("from AttributeValue r where r.attribute = ? and lower(r.stringValue) like ?", obs);
         HashSet<String> values = new HashSet<String>();
-        for (AttributeValue ra : attrs) {
+        for (TypedAttributeValue ra : attrs) {
             values.add(ra.getStringValue());
         }
         List<String> sorted = new ArrayList<String>(values);
@@ -78,9 +79,9 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
      */
     @Override
     public List<String> getAttributeValues(Attribute attr) {
-        List<RecordAttribute> attrs = find("from RecordAttribute r where r.attribute = ?", attr);
+        List<AttributeValue> attrs = find("from AttributeValue r where r.attribute = ?", attr);
         HashSet<String> values = new HashSet<String>();
-        for (AttributeValue ra : attrs) {
+        for (TypedAttributeValue ra : attrs) {
             values.add(ra.getStringValue());
         }
         List<String> sorted = new ArrayList<String>(values);
@@ -125,5 +126,58 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
         }
         
         deleteByQuery(attr);
+    }
+    
+    @Override
+    public Attribute get(Integer pk) {
+        return this.getByID(Attribute.class, pk);
+    }
+    
+    @Override
+    public AttributeValue save(AttributeValue av) {
+        return super.save(av);
+    }
+    
+    @Override
+    public AttributeValue update(AttributeValue av) {
+        return super.update(av);
+    }
+    
+    @Override
+    public void delete(AttributeValue av) {
+        super.delete(av);
+    }
+    
+    @Override
+    public List<AttributeValue> getAttributeValueObjects(Attribute attr) {
+        return getAttributeValueObjects(getSession(), attr);
+    }
+
+    @Override
+    public void delete(Session sesh, Attribute attr) {
+        super.delete(sesh, attr);
+        
+    }
+
+    @Override
+    public void delete(Session sesh, AttributeValue av) {
+        super.delete(sesh, av);
+        
+    }
+
+    @Override
+    public List<AttributeValue> getAttributeValueObjects(Session sesh,
+            Attribute attr) {
+        return find(sesh, "from AttributeValue r where r.attribute = ?", attr);
+    }
+
+    @Override
+    public Attribute save(Session sesh, Attribute attr) {
+        return super.save(sesh, attr);
+    }
+
+    @Override
+    public AttributeValue save(Session sesh, AttributeValue av) {
+        return super.save(sesh, av);
     }
 }

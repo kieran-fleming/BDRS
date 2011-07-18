@@ -1,0 +1,7 @@
+<wurfl_patch>
+  <devices>
+   	<device id="samsung_gt_i9000_ver1_ECLAIR.HVJH1" user_agent="Mozilla/5.0 (Linux; U; Android 2.1-update1; en-au; GT-I9000 Build/ECLAIR) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.0 Mobile Safari/530.17" fall_back="samsung_gt_i9000_ver1"/>
+   	<device id="samsung_galaxy_tab_FROYO.DVJJ3" user_agent="Mozilla/5.0 (Linux; U; Android 2.2; en-au; GT-P1000T Build/FROYO) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1" fall_back="samsung_galaxy_tab_ver1"/>
+  </devices>
+</wurfl_patch>
+

@@ -127,6 +127,13 @@ public interface LocationDAO extends TransactionDAO {
     Location getLocation(int pk);
 
     /**
+     * Retrieves a list of locations with the specified primary keys
+     * @param pk primary key of the location
+     * @return the location associated with the specified primary key.
+     */
+    public List<Location> getLocations(List<Integer> ids);
+
+    /**
      * Retrieves the location associated with the specified user and survey.
      * @param survey the survey containing the user and location.
      * @param user the user associated with the location.

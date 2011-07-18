@@ -12,6 +12,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockFilterChain;
+import org.springframework.test.web.ModelAndViewAssert;
+import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
@@ -219,7 +221,7 @@ public class PortalSelectionFilterTest extends AbstractControllerTest {
         for(Portal p : portalDAO.getPortals(null)) {
             PortalEntryPoint entryPoint = new PortalEntryPoint();
             entryPoint.setPattern(".*");
-            entryPoint.setRedirect(new String());
+            entryPoint.setRedirect("");
             entryPoint.setPortal(p);
             entryPoint = portalDAO.save(entryPoint);
         }
@@ -259,6 +261,32 @@ public class PortalSelectionFilterTest extends AbstractControllerTest {
 
         Assert.assertNull(metadataDAO.get(otherMd.getId()));
         Assert.assertEquals(1, metadataDAO.getMetadata().size());
+    }
+    
+    @Test
+    public void testRESTfulPortalSelection() throws Exception {
+        createTestPortals(true, "");
+        Portal currentPortal = RequestContextHolder.getContext().getPortal();
+        
+        request.setMethod("GET");
+        request.setRequestURI(String.format("/portal/%d/home.htm", currentPortal.getId()));
+        filter.doFilter(request, response, chain);
+        
+        Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
+        Assert.assertEquals(currentPortal.getId(), new Integer(portalId.toString()));
+    }
+    
+    @Test
+    public void testRESTfulPortalSelectionWithAuthentication() throws Exception {
+        createTestPortals(true, "");
+        Portal currentPortal = RequestContextHolder.getContext().getPortal();
+        
+        request.setMethod("GET");
+        request.setRequestURI(String.format("/portal/%d/map/mySightings.htm", currentPortal.getId()));
+        filter.doFilter(request, response, chain);
+        
+        Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
+        Assert.assertEquals(currentPortal.getId(), new Integer(portalId.toString()));
     }
     
     private void createTestPortals(boolean includeDefault, String redirectUrl) throws Exception {

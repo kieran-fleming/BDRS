@@ -19,7 +19,7 @@
         <meta name="keywords" content="<tiles:getAsString name="metaKeywords"/>"/>
         <meta name="description" content="<tiles:getAsString name="metaDescription"/>"/>
         
-        <script src="${pageContext.request.contextPath}/js/jquery-1.5.1.min.js" type="text/javascript"></script>
+        <script src="${pageContext.request.contextPath}/js/jquery-1.6.2.min.js" type="text/javascript"></script>
         
         <c:choose>
             <c:when test="${ theme != null }">
@@ -41,7 +41,6 @@
 		        
 		        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.8.11.custom.min.js"></script>
 		        <link type="text/css" href="${pageContext.request.contextPath}/css/redmond/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
-		        <link rel="stylesheet" type="text/css" media="screen" href="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/css/ui.jqgrid.css" />
             </c:otherwise>
         </c:choose>
         
@@ -60,14 +59,18 @@
         
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.cj-simple-slideshow.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.tablednd_0_5.js"></script>
+        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-blockui/jquery.blockUI.js"></script>
         
         <!--  JqGrid stuff the grid.local-en.js file needs t come before the jqGrid.min.js file -->
+        <link rel="stylesheet" type="text/css" media="screen" href="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/css/ui.jqgrid.css" />
         <script src="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/js/i18n/grid.locale-en.js" type="text/javascript"></script> 
         <script src="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/js/jquery.jqGrid.min.js" type="text/javascript"></script>
+        
+        <script src="${pageContext.request.contextPath}/js/jquery-tmpl/jquery.tmpl.js" type="text/javascript"></script>
                 
         <c:if test="${maps == true}">
             <script src="${pageContext.request.contextPath}/js/ol/OpenLayers.js" type="text/javascript"></script>
-            <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;&amp;sensor=false&amp;key=${bdrs.google.maps.key}" type="text/javascript"></script>
+            <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;&amp;sensor=false&amp;key=${bdrsGoogleMapsKey}" type="text/javascript"></script>
             <script src="${pageContext.request.contextPath}/js/BdrsCluster.js" type="text/javascript"></script>
         </c:if>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs.js"></script>
@@ -94,19 +97,26 @@
             </sec:authorize>
 
             <cw:getThemeTemplate key="template.header" fallback="../vanilla/header.jsp"/>
-            <cw:getThemeTemplate key="template.menu" fallback="../vanilla/menu.jsp"/>
             
-            <div class="contentwrapper" id="contentwrapper">
-                <div class="messages">
-                    <c:forEach items="${context.messageContents}" var="message">
-                       <p class="message"><c:out value="${message}"/></p>
-                    </c:forEach>
-                </div>
-                <div class="content" id="content">
-                    <tiles:insertAttribute name="content"/>
-                </div>
+			<div class="dashboardContainer">
+				<cw:getThemeTemplate key="template.menu" fallback="../vanilla/menu.jsp"/>
+				
+				<cw:getThemeTemplate key="template.dashboard" fallback="../vanilla/dashboard_default.jsp"/>
+			    
+	            <div class="contentwrapper" id="contentwrapper">
+	                <div class="messages">
+	                    <c:forEach items="${context.messageContents}" var="message">
+	                       <p class="message"><c:out value="${message}"/></p>
+	                    </c:forEach>
+	                </div>
+	                <div class="content" id="content">
+	                    <tiles:insertAttribute name="content"/>
+	                </div>
+	            </div>
+				
+				<div class="dashboardFooter"></div>
             </div>
-            
+			
             <cw:getThemeTemplate key="template.footer" fallback="../vanilla/footer.jsp"/>
         </div>
     </body>

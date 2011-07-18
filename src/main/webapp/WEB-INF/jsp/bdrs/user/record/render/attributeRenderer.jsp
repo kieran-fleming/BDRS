@@ -2,11 +2,11 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<tiles:useAttribute name="formField" classname="au.com.gaiaresources.bdrs.controller.attribute.formfield.AttributeValueFormField"/>
+<tiles:useAttribute name="formField" classname="au.com.gaiaresources.bdrs.controller.attribute.formfield.TypedAttributeValueFormField"/>
 <tiles:useAttribute name="errorMap" classname="java.util.Map" ignore="true"/>
 <tiles:useAttribute name="valueMap" classname="java.util.Map" ignore="true"/>
 
-<%@page import="au.com.gaiaresources.bdrs.model.record.RecordAttribute"%>
+<%@page import="au.com.gaiaresources.bdrs.model.taxa.AttributeValue"%>
 
 <c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>">
     <p class="error">
@@ -103,6 +103,29 @@
                 </c:otherwise>
             </c:choose>
         />
+    </c:when>
+     <c:when test="${ formField.attribute.type == 'INTEGER_WITH_RANGE'}">
+        <input type="text"
+            id="${ formField.prefix }attribute_${ formField.attribute.id }"
+            name="${ formField.prefix }attribute_${ formField.attribute.id }"
+            <c:choose>
+			    <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>">
+			       value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>"/>"
+			    </c:when>
+			    <c:when test="${ formField.attributeValue != null && formField.attributeValue.numericValue != null}">
+			       value="<c:out value="<%= formField.getAttributeValue().getNumericValue().intValue() %>"/>"
+			    </c:when>
+			</c:choose>
+            <c:choose>
+                <c:when test="${ formField.attribute.required }">
+                    class="validate(range(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), number)"
+                </c:when>
+                <c:otherwise>
+                     class="validate(rangeOrBlank(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), numberOrBlank)"
+                </c:otherwise>
+            </c:choose>
+        />
+        
     </c:when>
     <c:when test="${ formField.attribute.type == 'DECIMAL'}">
         <input type="text"

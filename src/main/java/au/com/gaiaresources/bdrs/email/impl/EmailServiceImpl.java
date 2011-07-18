@@ -13,6 +13,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 
 import au.com.gaiaresources.bdrs.email.EmailService;
+import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
@@ -21,7 +22,8 @@ public class EmailServiceImpl implements EmailService {
     private JavaMailSender mailSender;
     @Autowired
     private TemplateService templateService;
-
+    @Autowired
+    private ContentDAO contentDAO;
     
     private Properties emailProperties;
     
@@ -47,10 +49,20 @@ public class EmailServiceImpl implements EmailService {
     public void sendMessage(final String to, final String subject, String templateName, 
                             Map<String, Object> subsitutionParams) 
     {
-        final String text = templateService.transformToString(templateName, EmailService.class, subsitutionParams);
+        // first check the contentDAO for the template
+        // if it is not found, use the file system template
+        String templateString = contentDAO.getContentValue(
+            "email/"+templateName.substring(0, templateName.indexOf(".")));
+        String text = "";
+        if (!StringUtils.nullOrEmpty(templateString)) {
+            text = templateService.evaluate(templateString, subsitutionParams);
+        } else {
+            text = templateService.transformToString(templateName, EmailService.class, subsitutionParams);
+        }
         
         mailSender.send(createPreparator(to, getDefaultFromAddress(), subject, text));
     }
+
     
     private MimeMessagePreparator createPreparator(final String to, final String from, 
                                                    final String subject, final String text) 

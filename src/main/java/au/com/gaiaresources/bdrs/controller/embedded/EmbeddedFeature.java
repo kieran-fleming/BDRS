@@ -1,7 +1,8 @@
 package au.com.gaiaresources.bdrs.controller.embedded;
 
 public enum EmbeddedFeature {
-    LATEST_STATISTICS("Latest Statistics");
+    LATEST_STATISTICS("Latest Statistics"),
+    IMAGE_SLIDESHOW("Image Slideshow");
     
     private String name;
 

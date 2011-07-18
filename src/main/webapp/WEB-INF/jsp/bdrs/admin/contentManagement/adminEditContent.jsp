@@ -25,7 +25,10 @@
 	</select>
 </div>
 <textarea id="markItUp"></textarea>
-<div class="markItUpSubmitButton buttonpanel textright"><input id="submitEditContent" type="button" class="form_action"  value="Save" /> </div>
+<div class="markItUpSubmitButton buttonpanel textright">
+    <input id="resetContent" type="button" class="form_action"  value="Reset Current Content Default" onclick="adminEditContent.resetCurrentContent()"/>
+    <input id="submitEditContent" type="button" class="form_action"  value="Save" />
+</div>
 </div>
 
 <script type="text/javascript">
@@ -33,14 +36,14 @@
 	adminEditContent =  {
 		originalText: "",
 		loadContent: function(key) {
-			jQuery.ajax(bdrs.contextPath + "/webservice/content/loadContent.htm", 
+		    jQuery.ajax(bdrs.contextPath + "/webservice/content/loadContent.htm", 
       		{
 	      		type: "GET",
 				data: {key: key}
       		})
       		.success(function(data) { 
       			adminEditContent.getTextarea().value = data.content; 
-      			adminEditContent.originalText = data.content; 
+      			adminEditContent.originalText = adminEditContent.getTextarea().value; 
       		})
     		.error(function(data) { bdrs.message.set("error loading content to edit"); });
 		},
@@ -58,7 +61,7 @@
 		},
 		isChanged: function() {	  
 		  	var mytext = adminEditContent.getTextarea().value;
-			return mytext != adminEditContent.originalText;
+			return mytext != adminEditContent.originalText && adminEditContent.originalText != "";
 		},
 		getKey: function() {
 			return $("#selectContentToEdit")[0].value;
@@ -74,9 +77,15 @@
 		    if (answer) {
 		        window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm";
 		    }
-		}
+		},
+		resetCurrentContent: function() {
+            var answer = confirm("Are you sure? The current content will be reset and any changes will be lost!")
+            if (answer) {
+                window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm&key=" + getKey();
+            }
+        }
 	};
-
+	
     jQuery(document).ready(function() {
       
       myHtmlSettings = {
@@ -116,7 +125,7 @@
       	$("#selectContentToEdit").change(function() {
 		  	if (adminEditContent.isChanged())
 		  	{
-		  		if (!confirm("Changes will be lost. Do you wish to continue?"))
+			  	if (!confirm("Changes will be lost. Do you wish to continue?"))
 		  		{
 		  			return;
 		  		}

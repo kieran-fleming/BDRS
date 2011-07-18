@@ -4,6 +4,7 @@ import java.util.Map;
 
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
 import au.com.gaiaresources.bdrs.controller.record.ValidationType;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 
 /**
  * Implemented by validators to provide a unified interface for the
@@ -23,6 +24,6 @@ public interface Validator {
      * @see RecordFormValidator#validate(Map, ValidationType, String)
      */
     boolean validate(Map<String, String[]> parameterMap,
-            String key, Map<String, String> errorMap);
+            String key, Attribute attribute, Map<String, String> errorMap);
 
 }

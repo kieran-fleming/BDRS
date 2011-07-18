@@ -1,0 +1,14 @@
+<wurfl_patch>
+  <devices>
+   	<device id="samsung_gt_i9000_ver1_ECLAIR.HVJH1" user_agent="Mozilla/5.0 (Linux; U; Android 2.1-update1; en-au; GT-I9000 Build/ECLAIR) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.0 Mobile Safari/530.17" fall_back="samsung_gt_i9000_ver1"/>
+   	<device id="samsung_galaxy_tab_FROYO.DVJJ3" user_agent="Mozilla/5.0 (Linux; U; Android 2.2; en-au; GT-P1000T Build/FROYO) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1" fall_back="samsung_galaxy_tab_ver1"/>
+   	<device id="acer_iconia_tab_a500_1.139.4" user_agent="Mozilla/5.0 (Linux; U; Android 3.0.1; en-us; A500 Build/HRI66) AppleWebKit/534.13 (KHTML, like Gecko) Version/4.0 Safari/534.13" fall_back="acer_iconia_tab_a500_ver1"/>
+   	<device id="htc_desire_a8183_work" user_agent="Mozilla/5.0 (Linux; U; Android 2.2; en-au; HTC_Desire_A8183 V2.26.841.2 Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1" fall_back="htc_desire_a8183_ver1">
+	   	<group id="product_info">
+			<capability name="device_os_version" value="2.2"/>
+		</group>
+   	</device>
+   	
+  </devices>
+</wurfl_patch>
+

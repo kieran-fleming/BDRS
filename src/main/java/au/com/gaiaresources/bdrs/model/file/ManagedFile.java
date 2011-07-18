@@ -17,8 +17,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Type;
 

@@ -255,7 +255,8 @@
                        return false;
                    },
                    minLength: 2,
-                   delay: 300
+                   delay: 300,
+                   html:true
                 });
             </script>
 

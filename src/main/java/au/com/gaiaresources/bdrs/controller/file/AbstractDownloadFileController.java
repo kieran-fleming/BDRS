@@ -19,12 +19,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
+import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.Persistent;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.servlet.view.FileView;
 
 @Component
-public class AbstractDownloadFileController {
+public class AbstractDownloadFileController extends AbstractController {
     @Autowired
     private FileService fileService;
 

@@ -168,7 +168,6 @@ public abstract class PersistentImpl implements Persistent,
     @Transient
     public Map<String, Object> flatten(int depth, boolean compact, boolean mobileFields) {
     	Map<String, Object> map = new HashMap<String, Object>();
-
         try {
             Object value;
             
@@ -178,7 +177,6 @@ public abstract class PersistentImpl implements Persistent,
             PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(getClass());
             
             for (PropertyDescriptor pd : descriptors) {
-            	
                 // Skip the attributes marked as sensitive.
                 readMethod = pd.getReadMethod();
                 String name;

@@ -47,11 +47,11 @@ public interface RecordRow {
      */
     public CellStyle getCellStyleByKey(String styleKey);
 
-    public void writeHeader(Row headerRow, Survey survey);
+    public void writeHeader(Row superHeaderRow, Row headerRow, Survey survey);
 
     public void writeRow(LSIDService lsidService, Row createRow, Record r);
 
-    public void readHeader(Survey survey, Row row) throws ParseException;
+    public void readHeader(Survey survey, Row superHeaderRow, Row row) throws ParseException;
 
     public RecordUpload readRow(Survey survey, Row row);
     

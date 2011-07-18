@@ -10,9 +10,12 @@ public enum ValidationType {
     
     INTEGER, 
     REQUIRED_INTEGER,
+    INTEGER_RANGE,
+    REQUIRED_INTEGER_RANGE,
     PRIMARYKEY, 
     REQUIRED_POSITIVE_INT,
     // LT = less than
+    POSITIVE_LESSTHAN,
     REQUIRED_POSITIVE_LESSTHAN,
     
     DOUBLE,
@@ -24,6 +27,8 @@ public enum ValidationType {
     REQUIRED_DATE, 
     REQUIRED_HISTORICAL_DATE, 
     
-    REQUIRED_TAXON;
+    REQUIRED_TAXON,
+    TAXON, 
+    DATE_WITHIN_RANGE;
     
 }

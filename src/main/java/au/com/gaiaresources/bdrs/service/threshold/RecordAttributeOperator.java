@@ -6,12 +6,12 @@ import au.com.gaiaresources.bdrs.model.threshold.Operator;
 /**
  * <p>
  * Represents the comparison of a key/value pair against an {@link Attribute}/
- * {@link RecordAttribute} pair.
+ * {@link AttributeValue} pair.
  * </p>
  * 
  * <p>
  * The key must match the <code>name</code> property of the {@link Attribute}
- * and the value must match the value attribute of the {@link RecordAttribute}.
+ * and the value must match the value attribute of the {@link AttributeValue}.
  * </p>
  */
 public class RecordAttributeOperator implements ComplexTypeOperator {

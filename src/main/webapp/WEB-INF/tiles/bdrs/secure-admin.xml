@@ -164,8 +164,14 @@
         </put-list-attribute>
     </definition>
 
-    <definition name="locationRow" template="/WEB-INF/jsp/bdrs/admin/survey/locationRow.jsp">
+    <definition name="surveyLocationRow" template="/WEB-INF/jsp/bdrs/admin/survey/locationRow.jsp">
         <put-attribute name="location"/>
+        <put-attribute name="index"/>
+    </definition>
+    
+    <definition name="userLocationRow" template="/WEB-INF/jsp/bdrs/admin/survey/userLocationRow.jsp">
+        <put-attribute name="location"/>
+        <put-attribute name="defaultLocation"/>
         <put-attribute name="index"/>
     </definition>
 
@@ -294,4 +300,59 @@
         <put-list-attribute name="customJavaScript"></put-list-attribute>
     </definition>
     
+    <!-- Census Method management -->
+    <definition name="censusMethodList" extends="admin-template">
+        <put-attribute name="title" value="User Group Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/censusMethod/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    <definition name="censusMethodEdit" extends="admin-template">
+        <put-attribute name="title" value="User Group"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/censusMethod/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+    <definition name="censusMethodEditRow" template="/WEB-INF/jsp/bdrs/admin/censusMethod/censusMethodEditRow.jsp">
+        <put-attribute name="name"/>
+        <put-attribute name="taxonomic"/>
+    </definition>
+    
+    <!-- geo map management -->
+    <definition name="geoMapListing" extends="admin-template">
+        <put-attribute name="title" value="Map Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/map/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+    </definition>
+    <definition name="geoMapEdit" extends="admin-template">
+        <put-attribute name="title" value="Map Editing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/map/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+    </definition>
+    <!--  geo map layer management -->
+    <definition name="geoMapLayerListing" extends="admin-template">
+        <put-attribute name="title" value="Map Layer Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/mapLayer/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+    </definition>
+    <definition name="geoMapLayerEdit" extends="admin-template">
+        <put-attribute name="title" value="Map Editing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/mapLayer/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- gallery management -->
+	<definition name="galleryListing" extends="admin-template">
+        <put-attribute name="title" value="Gallery Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/gallery/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>		
+    </definition>
+	   <definition name="galleryEdit" extends="admin-template">
+        <put-attribute name="title" value="Gallery Editing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/gallery/edit.jsp"/>
+        <put-attribute name="maps" value="false"/>      
+    </definition>
+
 </tiles-definitions>

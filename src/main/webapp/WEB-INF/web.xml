@@ -35,6 +35,7 @@
         <filter-name>portalSelectionFilter</filter-name>
         <filter-class>au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter</filter-class>
     </filter>
+    
     <filter-mapping>
         <filter-name>portalSelectionFilter</filter-name>
         <url-pattern>/*</url-pattern>
@@ -73,14 +74,17 @@
     </filter>
     <filter-mapping>
         <filter-name>hibernateFilter</filter-name>
-		<url-pattern>/map/icon/record_placemark.png</url-pattern>
+		<url-pattern>/bdrs/public/map/icon/record_placemark.png</url-pattern>
 		<url-pattern>/bdrs/public/embedded/bdrs-embed.js</url-pattern>
 		<url-pattern>/bdrs/public/embedded/bdrs-embed.css</url-pattern>
 		<url-pattern>/js/mobile/bdrs-mobile-database-content.js</url-pattern>
 		<url-pattern>/js/mobile/bdrs-mobile.js</url-pattern>
 		<url-pattern>/js/mobile/bdrs-mobile-micro-templates.js</url-pattern>
+		<url-pattern>/mobile/application.htm</url-pattern>
+		<!--
 		<url-pattern>/bdrs/mobile/mobile.manifest</url-pattern>
 		<url-pattern>/bdrs/mobile/offline.html</url-pattern>
+		-->
 		<url-pattern>*.htm</url-pattern>
     </filter-mapping>
 
@@ -109,7 +113,12 @@
     
     <servlet-mapping>
         <servlet-name>climatewatch</servlet-name>
-        <url-pattern>/map/icon/record_placemark.png</url-pattern>
+        <url-pattern>/index.html</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>climatewatch</servlet-name>
+        <url-pattern>/bdrs/public/map/icon/record_placemark.png</url-pattern>
     </servlet-mapping>
     
     <servlet-mapping>
@@ -136,7 +145,12 @@
         <url-pattern>/js/mobile/bdrs-mobile-micro-templates.js</url-pattern>
     </servlet-mapping>
     
-     <servlet-mapping>
+   <servlet-mapping>
+        <servlet-name>climatewatch</servlet-name>
+        <url-pattern>/mobile/application.htm</url-pattern>
+    </servlet-mapping>
+    
+   <!--   <servlet-mapping>
         <servlet-name>climatewatch</servlet-name>
         <url-pattern>/bdrs/mobile/mobile.manifest</url-pattern>
     </servlet-mapping>
@@ -149,6 +163,6 @@
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>/html/*</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping>-->
 
 </web-app>

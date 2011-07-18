@@ -11,6 +11,7 @@
     </c:otherwise>
 </c:choose>
 
+<cw:getContent key="admin/groupEdit" />
 
 <form method="POST">
     <input type="hidden" name="group_pk" value="${group.id}" />
@@ -32,29 +33,7 @@
 
 <h3>Users</h3>
 
-<%-- 
-<cw:getContent key="admin/groupEdit" />
- --%>
-
-<%-- 
-
-<c:if test="${pagedUserResult != null}">
-    <display:table name="pagedUserResult.list" id="usersInGroup" 
-        decorator="au.com.gaiaresources.bdrs.controller.admin.AdminUserSearchTableDecorator"
-        style="width:100%" 
-        pagesize="10" sort="external" partialList="true" size="pagedUserResult.count"
-        class="datatable">
-        <display:column property="selection" title="" class="textcenter"/>
-        <display:column property="name" title="Login" sortable="true" sortName="name" escapeXml="true" />
-        <display:column property="emailAddress" title="Email" sortable="true" sortName="emailAddress" />
-        <display:column title="Name" sortable="true" sortName="firstName"  escapeXml="true">
-            <c:out value="${usersearchresults.firstName} ${usersearchresults.lastName}" />
-        </display:column>
-    </display:table>
-</c:if>
- --%>
-
-<tiles:insertDefinition name="userSearch">
+<tiles:insertDefinition name="userGrid">
        <tiles:putAttribute name="widgetId" value="users"/>
        <tiles:putAttribute name="multiselect" value="true"/>
        <tiles:putAttribute name="scrollbars" value="false" />
@@ -71,26 +50,13 @@
 
 <h3>Groups</h3>
 
-<tiles:insertDefinition name="groupSearch">
+<tiles:insertDefinition name="groupGrid">
        <tiles:putAttribute name="widgetId" value="groups"/>
        <tiles:putAttribute name="multiselect" value="true"/>
        <tiles:putAttribute name="scrollbars" value="false" />
        <tiles:putAttribute name="baseQueryString" value="parentGroupId=${group.id}" />
 </tiles:insertDefinition>
 
-<%-- 
-<c:if test="${pagedGroupResult != null}">
-    <display:table name="pagedGroupResult.list" id="groupsInGroup" 
-        style="width:100%" 
-        pagesize="10" sort="external" partialList="true" size="pagedGroupResult.count"
-        class="datatable">
-        <display:column property="selection" title="" class="textcenter"/>
-        <display:column property="name" title="Group name" sortable="true" sortName="name" escapeXml="true" />
-        <display:column property="description" title="Description" sortable="false" escapeXml="true" />
-        <display:column property="actionLinks" title="Actions" />
-    </display:table>
-</c:if>
- --%>
 <div class="buttonpanel textright">
     <a href="javascript: bdrs.util.confirmExec('Are you sure you want to remove the selected groups', removeGroupsCallback);" class="delete"/>Remove</a>
     &nbsp;|&nbsp;
@@ -100,7 +66,7 @@
 
 <!--  DIALOGS GO HERE  ! -->
 <div id="addUsersDialog" title="Add Users">
-    <tiles:insertDefinition name="userSearch">
+    <tiles:insertDefinition name="userGrid">
            <tiles:putAttribute name="widgetId" value="addUsersGrid"/>
            <tiles:putAttribute name="multiselect" value="true"/>
            <tiles:putAttribute name="scrollbars" value="true" />
@@ -108,7 +74,7 @@
 </div>
 
 <div id="addGroupsDialog" title="Add Groups">
-    <tiles:insertDefinition name="groupSearch">
+    <tiles:insertDefinition name="groupGrid">
            <tiles:putAttribute name="widgetId" value="addGroupsGrid"/>
            <tiles:putAttribute name="multiselect" value="true"/>
            <tiles:putAttribute name="scrollbars" value="true" />
@@ -124,11 +90,13 @@
             buttons: {
                 "Ok": function() {
                     var selected = addUsersGridGrid.getSelected();
-                    var postParam = {
-                        groupId: ${group.id},
-                        userIds: selected.join(',')
-                    };
-                    bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/addUsers.htm', postParam);
+                    if (selected && selected.length > 0) {
+	                    var postParam = {
+	                        groupId: ${group.id},
+	                        userIds: selected.join(',')
+	                    };
+	                    bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/addUsers.htm', postParam);
+	                }
                     $( this ).dialog( "close" );
                 },
                 Cancel: function() {
@@ -144,11 +112,13 @@
             buttons: {
                 "Ok": function() {
                     var selected = addGroupsGridGrid.getSelected();
-                    var postParam = {
-                        groupId: ${group.id},
-                        groupIds: selected.join(',')
-                    };
-                    bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/addGroups.htm', postParam);
+                    if (selected && selected.length > 0) {
+	                    var postParam = {
+	                        groupId: ${group.id},
+	                        groupIds: selected.join(',')
+	                    };
+	                    bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/addGroups.htm', postParam);
+	                }
                     $( this ).dialog( "close" );
                 },
                 Cancel: function() {
@@ -175,20 +145,24 @@
     
     var removeGroupsCallback = function() {
         var selected = groupsGrid.getSelected();
-        var postParam = {
-            groupId: ${group.id},
-            groupIds: selected.join(',')
-        };
-        bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/removeGroups.htm', postParam);
+        if (selected && selected.length > 0) {
+	        var postParam = {
+	            groupId: ${group.id},
+	            groupIds: selected.join(',')
+	        };
+	        bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/removeGroups.htm', postParam);
+	    }
     };
     
     var removeUsersCallback = function() {
         var selected = usersGrid.getSelected();
-        var postParam = {
-            groupId: ${group.id},
-            userIds: selected.join(',')
-        };
-        bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/removeUsers.htm', postParam);
+        if (selected && selected.length > 0) {
+	        var postParam = {
+	            groupId: ${group.id},
+	            userIds: selected.join(',')
+	        };
+	        bdrs.postWith('${pageContext.request.contextPath}/bdrs/admin/group/removeUsers.htm', postParam);
+	    }
     };
 </script>
 

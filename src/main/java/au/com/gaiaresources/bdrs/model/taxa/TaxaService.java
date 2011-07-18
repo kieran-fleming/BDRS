@@ -103,9 +103,9 @@ public interface TaxaService {
      */
     AttributeOption createAttributeOption(Attribute attr, String value);
 
-    AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value);
+    TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value);
     
-    AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc);
+    TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc);
     
     /**
      * Update a <code>TaxonGroupAttribute</code>.

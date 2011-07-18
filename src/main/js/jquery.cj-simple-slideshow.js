@@ -1,10 +1,10 @@
-/*globals clearTimeout,jQuery,setTimeout */
 /* ***********************************************************************************
 
-	CJ Simple Slideshow JavaScript framework
-
-	Copyright (c) 2008, Doug Jones. All rights reserved.
-
+	CJ Simple Slideshow jQuery Plugin
+	Written by: Doug Jones (www.cjboco.com)
+	
+	Copyright (c) 2011, Creative Juices Bo. Co. All rights reserved.
+	
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions
 	are met:
@@ -31,254 +31,245 @@
 	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	For further information, visit the Creative Juices website: www.cjboco.com.
 	
 	Version History
 	
-	2.1.1 (06-27-2009) - Fixed the IE bugs.
-	2.1 (06-24-2009) - Stripped out a lot of the style features.
-			It really didn't make sense to do it here, since it
-			could be done easily with CSS. Plus is was causing
-			issues with IE.
-	2.0 (06-14-2009) - Converted it to a JQuery plug-in.
-	1.0 (10-02-2006) - Initial release.
+	3.0 	(01-08-2011) - Complete rewrite of the plugin structure. 
+				Added better link detection.
+				Using jQuery to handle dissolves now (Dissolve amount
+				is now tied in directly with fadeIn/fadeOut).
+				Added pause options.
+	2.1.1 	(06-27-2009) - Fixed the IE bugs.
+	2.1 	(06-24-2009) - Stripped out a lot of the style features.
+				It really didn't make sense to do it here, since it
+				could be done easily with CSS. Plus is was causing
+				issues with IE.
+	2.0 	(06-14-2009) - Converted it to a JQuery plug-in.
+	1.0 	(10-02-2006) - Initial release.
 
 *********************************************************************************** */
-(function($) {
-	$.fn.cjSimpleSlideShow = function(options) {
+(function ($) {
+	$.fn.extend({
 
-		var settings = {
-			// user editable settings
-			autoRun: true,
-			delay: 3000,
-			dissolve: 70,
-			showCaptions: false,
-			centerImage: false
-		};
+		cjSimpleSlideShow: function (opts) {
 
-		var sys = {
-			// function parameters
-			version: '2.1.1',
-			elem: null,
-			slides: [],
-			captions: [],
-			current: 0,
-			timer: null,
-			pause: false
-		};
+			var methods = {
 
-		/* 
-			sets a slides opacity
-		***************************************/
-		function setOpacity(o) {
-			if (parseFloat(o.t) > 1) {
-				o.t = 1.0;
-				return;
-			}
-			$(o).css({
-				"opacity": parseFloat(o.t),
-				"MozOpacity": parseFloat(o.t),
-				"filter": "alpha(opacity=" + (parseFloat(o.t) * 100) + ")"
-			});
-		}
+				// sets the slide and handle the dissolve
+				setSlide: function ($obj) {
+					var data = $obj.data('cj'),
+						o = data.options,
+						s = data.sys,
+						$show = $obj.find(".cj_slideshow_slide"),
+						$slide = $show.eq(s.current),
+						$slideNext = $show.eq(s.current + 1).length > 0 ? $show.eq(s.current + 1) : $show.eq(0);
+					if (s.inited && s.started) {
+						$slide.stop().fadeOut(o.dissolve);
+						$slideNext.stop().fadeIn(o.dissolve, function () {
+							s.current = $show.eq(s.current + 1).length > 0 ? s.current + 1 : 0;
+							if (!s.paused) {
+								s.timer = window.setTimeout(function () {
+									methods.setSlide($obj);
+								}, o.delay);
+							}
+						});
+					}
+				},
 
-		/* 
-			sets the slide and handles dissolves
-		***************************************/
-		function setSlide() {
-			var o = parseFloat(sys.slides[sys.current].t);
-			var x = sys.slides[sys.current + 1] ? sys.current + 1 : 0;
-			var no = parseFloat(sys.slides[x].t);
-			o -= 0.05;
-			no += 0.05;
-			$(sys.slides[x]).css({
-				"display": "block"
-			});
-			sys.slides[sys.current].t = parseFloat(o);
-			sys.slides[x].t = parseFloat(no);
-			setOpacity(sys.slides[sys.current]);
-			setOpacity(sys.slides[x]);
-			if (sys.captions[sys.current] && sys.captions[x]) {
-				$(sys.captions[x]).css({
-					"display": "block"
-				});
-				sys.captions[sys.current].t = parseFloat(o);
-				sys.captions[x].t = parseFloat(no);
-				setOpacity(sys.captions[sys.current]);
-				setOpacity(sys.captions[x]);
-			}
-			if (o <= 0) {
-				$(sys.slides[sys.current]).css({
-					"display": "none"
-				});
-				if (sys.captions[x]) {
-					$(sys.captions[x]).css({
-						"display": "block"
-					});
-					$(sys.captions[sys.current]).css({
-						"display": "none"
-					});
-				}
-				sys.current = x;
-				if (!sys.pause) {
-					sys.timer = setTimeout(setSlide, settings.delay);
-				}
-			} else {
-				if (!sys.pause) {
-					sys.timer = setTimeout(setSlide, settings.dissolve);
-				}
-			}
-		}
+				// pauses the slideshow
+				pause: function ($obj) {
+					var data = $obj.data('cj'),
+						s = data.sys;
+					if (s.started) {
+						if (s.timer) {
+							window.clearTimeout(s.timer);
+							s.timer = null;
+						}
+						$obj.find(".cj_slideshow_pause").stop().fadeIn("fast");
+						s.paused = true;
+					}
+				},
 
-		/* 
-			pauses the slideshow
-		***************************************/
-		function pause() {
-			sys.pause = true;
-			if (sys.timer) {
-				clearTimeout(sys.timer);
-				sys.timer = null;
-			}
-			$(sys.elem).find("div.cj_slideshow_pause_wrapper").fadeIn("fast");
-		}
+				// resumes the slideshow
+				resume: function ($obj) {
+					var data = $obj.data('cj'),
+						o = data.options,
+						s = data.sys;
+					if (s.started) {
+						$obj.find(".cj_slideshow_pause").stop().fadeOut("fast");
+						s.timer = window.setTimeout(function () {
+							methods.setSlide($obj);
+						}, o.delay);
+						s.paused = false;
+					}
+				},
 
-		/* 
-			resumes the slideshow
-		***************************************/
-		function resume() {
-			sys.pause = false;
-			$(sys.elem).find("div.cj_slideshow_pause_wrapper").fadeOut("fast");
-			sys.timer = setTimeout(setSlide, 0);
-		}
-
-		/* 
-			initialize the slideshow & slides
-		***************************************/
-		function init() {
-
-			// need to make sure the positioning is set for the main container.
-			// it needs to be set to anything other than STATIC
-			if ($(sys.elem).css("position") === "" || $(sys.elem).css("position") === "static") {
-				$(sys.elem).css("position", "relative");
-			}
-
-			// create our main slideshow wrapper
-			var i, wrapper = $("<div>").css({
-				"display": "block",
-				"width": "0px",
-				"height": "0px",
-				"overflow": "hidden",
-				"cursor": "pointer"
-			}).addClass("cj_slideshow_wrapper"),
-			pauseBlock = $("<div>").css({
-				"display": "none",
-				"position": "relative",
-				"z-index": "10"
-			}).html("Paused").addClass("cj_slideshow_pause_wrapper");
-
-			// loop through the images and initialize some settings
-			$(sys.elem).find("img").each(function() {
-				sys.slides.push($(this).get(0));
-			}).css({
-				"position": "absolute",
-				"top": "0px",
-				"left": "0px"
-			}).wrapAll($(wrapper));
-			$(sys.elem).find("div.cj_slideshow_wrapper").append(pauseBlock).bind("mouseenter", function() {
-				pause();
-			}).bind("mouseleave", function() {
-				resume();
-			});
-			$(sys.elem).find("br").css({
-				"display": "none"
-			});
-
-			$(sys.elem).css({
-				"display": "block"
-			});
-
-			// center the image? we need the images to have the display set to none in order to start the transitions
-			// but in order to get the width and height in Internet Explorer, they need to be visible... (or display=block)
-			$(sys.elem).find("img").each(function() {
-				var i = this;
-				if (settings.centerImage) {
-					$(i).css({
-						"display": "none",
-						"top": settings.centerImage ? parseInt(($(sys.elem).height() - $(i).attr("height")) / 2, 10) + "px": "0px",
-						"left": settings.centerImage ? parseInt(($(sys.elem).width() - $(i).attr("width")) / 2, 10) + "px": "0px"
-					});
-				} else {
-					$(i).css({
-						"display": "none"
-					});
-				}
-			});
-
-			// captions?
-			for (i = 0; i < sys.slides.length; i++) {
-				sys.slides[i].t = 0.0;
-				if (settings.showCaptions) {
-					if ($(sys.slides[i]).attr("alt") !== "") {
-						var cap = $("<span>").css({
-							"position": "absolute",
-							"left":"0",
-							"display": "none",
-							"width": "100%",
-							"height": "auto"
-						}).addClass("cj_slideshow_caption_wrapper").html($(sys.slides[i]).attr("alt"));
-						$(sys.slides[i]).after(cap);
-						sys.captions.push($(sys.slides[i]).next("span"));
-						sys.captions[i].t = 0.0;
-					} else {
-						sys.captions.push(null);
-						sys.captions[i].t = 0.0;
+				// starts the slideshow
+				start: function ($obj) {
+					var data = $obj.data('cj'),
+						o = data.options,
+						s = data.sys;
+					if (s.inited) {
+						s.timer = window.setTimeout(function () {
+							methods.setSlide($obj);
+						}, o.delay);
+						s.started = true;
 					}
 				}
-			}
 
-			// make the first slide and/or caption visable
-			if (sys.slides.length > 0) {
-				$(sys.slides[0]).css({
-					"display": "block"
-				});
-				sys.slides[0].t = 1.0;
-				if (sys.captions[0]) {
-					$(sys.captions[0]).css({
-						"display": "block"
-					});
-					sys.captions[0].t = 1.0;
+			};
+
+			// handle calls to our methods
+			if (typeof opts === "string" && methods[opts]) {
+
+				var $obj = $(this),
+					data = $obj.data('cj'),
+					s = data.sys;
+
+				// accessible methods
+				if (s.inited) {
+					return methods[opts]($obj);
 				}
-				// show our main elem, if it was hidden
-				$(sys.elem).find(".cj_slideshow_wrapper").css({
-					"width": $(sys.elem).width(),
-					"height": $(sys.elem).height()
+
+			// call to initialize
+			} else if (typeof opts === "object" || !opts) {
+
+				// plugin main
+				return this.each(function () {
+
+					var $obj = $(this),
+						data = $obj.data('cj'),
+						o, s;
+
+					// set our options (if not set)
+					if (!data) {
+						$obj.data('cj', {
+							sys: {
+								version: '3.0',
+								timer: null,
+								current: 0,
+								paused: false,
+								inited: false,
+								started: false
+							},
+							options: {
+								autoRun: true,
+								delay: 5000,
+								dissolve: 500,
+								showCaptions: false,
+								centerImage: false,
+								allowPause: false,
+								pauseText: "Paused"
+							}
+						});
+						data = $obj.data('cj');
+					}
+
+					// make sure we aren't already inited and started
+					if (!data.sys.inited && !data.sys.started) {
+
+						// user defined options
+						if (opts) {
+							data.options = $.extend(data.options, opts);
+						}
+						// simplify our data variables
+						o = data.options;
+						s = data.sys;
+						// the dissolve can't be greater than the delay.
+						if (typeof o.dissolve === "number" && typeof o.delay === "number" && o.dissolve > o.delay) {
+							o.dissolve = o.delay;
+						}
+						// init: do a check of the slide count, no slideshows of 1!
+						if ($obj.find("img").length > 1) {
+							var $wrap = $("<div>").css({
+								"position": "absolute",
+								"display": "block",
+								"width": $obj.width() + "px",
+								"height": $obj.height() + "px",
+								"overflow": "hidden",
+								"cursor": "pointer"
+							}).addClass("cj_slideshow_wrapper");
+							// find all the IMG tags (plus A tags)
+							$obj.find("img").each(function (a, b) {
+								var $img = $(b),
+									$slide = $('<div>').css({
+										"position": "absolute",
+										"top": "0px",
+										"left": "0px",
+										"display": a > 0 ? "none" : "block",
+										"width": $obj.width() + "px",
+										"height": $obj.height() + "px"
+									}).addClass("cj_slideshow_slide");
+								// handle any links wrapping out image
+								if ($img.parent().get(0).nodeName === "A") {
+									var url = $img.parent().attr("href");
+									$slide.bind("click", function () {
+										document.location.href = url;
+										return false;
+									});
+								}
+								// set up pause?
+								if (o.allowPause) {
+									$slide.bind("mouseenter", function () {
+										methods.pause($obj);
+									}).bind("mouseleave", function () {
+										methods.resume($obj);
+									});
+								}
+								// center our image?
+								if (o.centerImage) {
+									$img.css({
+										"position": "absolute",
+										"top": o.centerImage ? parseInt(($obj.height() - $img.height()) / 2, 10) + "px" : "0px",
+										"left": o.centerImage ? parseInt(($obj.width() - $img.width()) / 2, 10) + "px" : "0px"
+									});
+								}
+								// apppend the image to our slide
+								$slide.append($img);
+								// do we need to show captions?
+								if (o.showCaptions && $img.attr("alt").length > 0) {
+									var $caption = $("<span>").css({
+										"position": "absolute",
+										"width": "100%",
+										"height": "auto",
+										"z-index": "5"
+									}).addClass("cj_slideshow_caption").html($img.attr("alt"));
+									$slide.append($caption);
+								}
+								// add the slide to the wrapper
+								$wrap.append($slide);
+							});
+							// prepare the elemnt to show the slides
+							$obj.html("").append($wrap);
+							// do we need to add the pause?
+							if (o.allowPause && o.pauseText.length > 0) {
+								var $pause = $("<div>").css({
+									"position": "absolute",
+									"top": "5px",
+									"left": "5px",
+									"display": "none",
+									"z-index": "10"
+								}).addClass("cj_slideshow_pause").html(o.pauseText);
+								$obj.append($pause);
+							}
+							s.inited = true;
+						} else {
+							s.inited = false;
+						}
+						// autostart if option set and we are inited
+						if (s.inited && o.autoRun) {
+							methods.start($obj);
+						}
+
+					}
 				});
+
+			// unknown call to our plugin
+			} else {
+			
+				$.error('Method ' + opts + ' does not exist on jQuery.cjSimpleSlideShow');
+
 			}
-
 		}
-
-		function start() {
-			sys.timer = setTimeout(setSlide, settings.delay);
-		}
-
-		/* 
-			set up any user passed variables
-		***************************************/
-		if (options) {
-			$.extend(settings, options);
-		}
-
-		/* 
-			begin
-		***************************************/
-		return this.each(function() {
-			sys.elem = this;
-			init();
-			if (settings.autoRun) {
-				start();
-			}
-		});
-
-	};
-})(jQuery);
+	});
+}(jQuery));

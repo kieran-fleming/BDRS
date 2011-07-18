@@ -48,8 +48,8 @@
     <!-- Multi part handler -->
     <bean id="multipartResolver"
         class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-        <!-- 25 megabytes = 26 214 400 bytes -->
-        <property name="maxUploadSize" value="26214400" />
+        <!-- 100 megabytes = 104 857 600 bytes -->
+        <property name="maxUploadSize" value="104857600" />
     </bean>
 
     <security:global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>

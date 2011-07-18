@@ -27,7 +27,7 @@
 		                <input type="text" name="add_name_${index}" class="uniqueName validate(uniqueOrBlank(.uniqueName))"/>
 		            </td>
 		            <td>
-		                <select name="add_typeCode_${index}" onchange="bdrs.attribute.enableOptionInput('<%= AttributeType.STRING_WITH_VALID_VALUES.getCode() %>' == jQuery(this).val(), '[name=add_option_${index}]');">
+		                <select name="add_typeCode_${index}" onchange="bdrs.attribute.enableOptionInput(('<%= AttributeType.STRING_WITH_VALID_VALUES.getCode() %>' == jQuery(this).val())||('<%= AttributeType.INTEGER_WITH_RANGE.getCode() %>' == jQuery(this).val()), '[name=add_option_${index}]');">
 		                    <c:forEach items="<%=AttributeType.values()%>" var="add_type">
 		                        <jsp:useBean id="add_type" type="au.com.gaiaresources.bdrs.model.taxa.AttributeType" />
 		                        <option value="<%= add_type.getCode() %>">
@@ -77,7 +77,7 @@
 	                    />
 	                </td>
 		            <td>
-		                <select name="typeCode_${formField.attribute.id}" onchange="bdrs.attribute.enableOptionInput('<%= AttributeType.STRING_WITH_VALID_VALUES.getCode() %>' == jQuery(this).val(), '[name=option_${formField.attribute.id}]');">
+		                <select name="typeCode_${formField.attribute.id}" onchange="bdrs.attribute.enableOptionInput(('<%= AttributeType.STRING_WITH_VALID_VALUES.getCode() %>' == jQuery(this).val())||('<%= AttributeType.INTEGER_WITH_RANGE.getCode() %>' == jQuery(this).val()), '[name=option_${formField.attribute.id}]');">
 		                    <c:forEach items="<%=AttributeType.values()%>" var="type">
 		                        <jsp:useBean id="type" type="au.com.gaiaresources.bdrs.model.taxa.AttributeType" />
 		                        <option value="<%= type.getCode() %>"
@@ -116,7 +116,8 @@
 		            <td>
 		                <input type="text" name="option_${formField.attribute.id}"
 		                    value="<c:forEach items="${formField.attribute.options}" var="opt"><c:out value="${opt.value}"/>, </c:forEach>"
-		                    <c:if test="<%= !AttributeType.STRING_WITH_VALID_VALUES.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) %>">
+		                    <c:if test="<%= !(AttributeType.STRING_WITH_VALID_VALUES.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) 
+			                    || AttributeType.INTEGER_WITH_RANGE.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()))%>">
 		                        disabled="disabled"
 		                    </c:if>
 		                />

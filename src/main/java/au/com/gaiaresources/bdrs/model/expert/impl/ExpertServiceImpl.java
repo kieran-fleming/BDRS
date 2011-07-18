@@ -63,7 +63,9 @@ public class ExpertServiceImpl implements ExpertService {
     public ReviewRequest requestReview(Record record, String reasonForRequest) {
         List<Expert> experts = new ArrayList<Expert>();
         for (Region r : record.getLocation().getRegions()) {
-            experts.addAll(expertDAO.findExperts(record.getSpecies().getTaxonGroup(), r));
+            if (record.getSpecies() != null) {
+                experts.addAll(expertDAO.findExperts(record.getSpecies().getTaxonGroup(), r));
+            }
         }
         
         if (experts.size() > 0) {

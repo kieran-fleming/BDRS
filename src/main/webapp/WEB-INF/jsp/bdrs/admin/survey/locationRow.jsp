@@ -4,6 +4,7 @@
 <%@page import="au.com.gaiaresources.bdrs.model.location.Location"%>
 
 <tiles:useAttribute name="location" classname="au.com.gaiaresources.bdrs.model.location.Location" ignore="true"/>
+<tiles:useAttribute name="defaultLocation" classname="au.com.gaiaresources.bdrs.model.location.Location" ignore="true"/>
 <tiles:useAttribute name="index" ignore="true"/>
 
 <c:choose>

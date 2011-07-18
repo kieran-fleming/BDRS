@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.model.record.impl;
 
+import java.beans.PropertyDescriptor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -13,31 +14,42 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernatespatial.GeometryUserType;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.QueryCriteria;
 import au.com.gaiaresources.bdrs.db.QueryOperation;
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
+import au.com.gaiaresources.bdrs.db.impl.Predicate;
+import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
 import au.com.gaiaresources.bdrs.geometry.GeometryBuilder;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.db.DeleteCascadeHandler;
 import au.com.gaiaresources.bdrs.service.db.DeletionService;
+import au.com.gaiaresources.bdrs.util.Pair;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -60,10 +72,10 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
                 delete((Record)instance);
             }
         });
-        delService.registerDeleteCascadeHandler(RecordAttribute.class, new DeleteCascadeHandler() {
+        delService.registerDeleteCascadeHandler(AttributeValue.class, new DeleteCascadeHandler() {
             @Override
             public void deleteCascade(PersistentImpl instance) {
-                delete((RecordAttribute)instance);
+                delete((AttributeValue)instance);
             }
         });
     }
@@ -128,7 +140,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
 
         r = save(r);
 
-        r.setAttributes(this.saveRecordAttributes(r, attributes));
+        r.setAttributes(this.saveAttributeValues(r, attributes));
 
         return update(r);
     }
@@ -227,6 +239,13 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         Integer count = Integer.parseInt(q.list().get(0).toString(),10);
         return count;
     }
+    
+    @Override
+    public Integer countNullCensusMethodRecords() {
+        Query q = getSession().createQuery("select count(*) from Record where censusMethod = null");
+        Integer count = Integer.parseInt(q.list().get(0).toString(),10);
+        return count;
+    }
 
     @Override
     public Integer countRecordsForSpecies(IndicatorSpecies species) {
@@ -297,18 +316,18 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         r.setBehaviour(behaviour);
         r.setHabitat(habitat);
         r.setNumber(number);
-        Set<RecordAttribute> atts = this.saveRecordAttributes(r, attributes);
+        Set<AttributeValue> atts = this.saveAttributeValues(r, attributes);
         r.setAttributes(atts);
         save(r);
         return r;
     }
     @Override
-    public  Set<RecordAttribute> saveRecordAttributes(Record r, Map<Attribute, Object> attributeMap){
-        Set<RecordAttribute> atts = new HashSet<RecordAttribute>();
+    public  Set<AttributeValue> saveAttributeValues(Record r, Map<Attribute, Object> attributeMap){
+        Set<AttributeValue> atts = new HashSet<AttributeValue>();
         for (Map.Entry<Attribute, Object> attValue : attributeMap
                 .entrySet()) {
             if (attValue != null) {
-                RecordAttribute attribute = new RecordAttribute();
+                AttributeValue attribute = new AttributeValue();
                 attribute.setAttribute(attValue
                         .getKey());
                 // attribute.setRecord(r);
@@ -339,6 +358,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
                     attribute.setNumericValue((BigDecimal) attValue.getValue());
                     break;
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     attribute.setNumericValue(new BigDecimal((Integer) attValue
                             .getValue()));
                     break;
@@ -382,6 +402,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         return q.list();
     }
     /**
+     * Warning: untested and currently unused method!
      * {@inheritDoc}
      */
     @Override
@@ -412,8 +433,12 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         QueryCriteria<Record> queryCriterea = newQueryCriteria(Record.class).add("point", QueryOperation.INTERSECTS, buffer)
             .add("when", QueryOperation.GREATER_THAN_OR_EQUAL, timeFrom)
             .add("when", QueryOperation.LESS_THAN_OR_EQUAL, timeUntil)
-            .add("id", QueryOperation.NOT_EQUAL, record.getId())
-            .add("species", QueryOperation.EQUAL, record.getSpecies());
+            .add("id", QueryOperation.NOT_EQUAL, record.getId());
+        if (record.getSpecies() != null) {
+            queryCriterea.add("species", QueryOperation.EQUAL, record.getSpecies());
+        } else {
+            queryCriterea.add("species", QueryOperation.IS_NULL, record.getSpecies());
+        }
         if(excludeRecordIds != null && excludeRecordIds.length > 0) {
             queryCriterea.add("id", QueryOperation.NOT_IN, (Object[])excludeRecordIds);
         }
@@ -496,13 +521,11 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         }
         builder.append(" order by r.when desc");
 
-        log.debug(builder.toString());
         Query q = getSession().createQuery(builder.toString());
         for(Map.Entry<String,Object> entry: paramMap.entrySet()) {
             q.setParameter(entry.getKey(), entry.getValue());
         }
         q.setMaxResults(limit);
-        log.debug("Limiting to "+limit+" records");
 
         return q.list();
     }
@@ -530,9 +553,9 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
      * {@inheritDoc}
      */
     @Override
-    public AttributeValue updateAttribute(Integer id, BigDecimal numeric,
+    public TypedAttributeValue updateAttribute(Integer id, BigDecimal numeric,
             String value, Date date) {
-        RecordAttribute att = getByID(RecordAttribute.class, id);
+        AttributeValue att = getByID(AttributeValue.class, id);
         att.setStringValue(value);
         att.setNumericValue(numeric);
         att.setDateValue(date);
@@ -545,9 +568,15 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
 
     @Override
-    public RecordAttribute saveRecordAttribute(RecordAttribute recAttr) {
+    public AttributeValue saveAttributeValue(AttributeValue recAttr) {
         return save(recAttr);
     }
+    
+    @Override
+    public AttributeValue updateAttributeValue(AttributeValue recAttr) {
+        return update(recAttr);
+    }
+    
     @Override
     public void saveRecordList(List<Record> records) {
         for(Record r : records) {
@@ -573,12 +602,12 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
     
     @Override
-    public RecordAttribute getRecordAttribute(int recordAttributePk) {
-        return getByID(RecordAttribute.class, recordAttributePk);
+    public AttributeValue getAttributeValue(int recordAttributePk) {
+        return getByID(AttributeValue.class, recordAttributePk);
     }
     
     @Override
-    public PersistentImpl getRecordForRecordAttributeId(
+    public PersistentImpl getRecordForAttributeValueId(
             Session sesh, Integer id) {
         
         String queryString = "select distinct r from Record r left join r.attributes a where a.id = :id";
@@ -617,22 +646,204 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     
     @Override
     public void delete(Record record) {
-        Set<RecordAttribute> attributeList = new HashSet<RecordAttribute>(record.getAttributes());
+        Set<AttributeValue> attributeList = new HashSet<AttributeValue>(record.getAttributes());
         record.getAttributes().clear();
         record = save(record);
         
         DeleteCascadeHandler cascadeHandler = 
-            delService.getDeleteCascadeHandlerFor(RecordAttribute.class);
-        for(RecordAttribute recAttr : attributeList) {
-            recAttr = saveRecordAttribute(recAttr);
+            delService.getDeleteCascadeHandlerFor(AttributeValue.class);
+        for(AttributeValue recAttr : attributeList) {
+            recAttr = saveAttributeValue(recAttr);
             cascadeHandler.deleteCascade(recAttr);
         }
         deleteByQuery(record);
     }
     
     @Override
-    public void delete(RecordAttribute recordAttribute) {
+    public void delete(AttributeValue recordAttribute) {
         deleteByQuery(recordAttribute);
+    }
+    
+    @Override
+    public PagedQueryResult<Record> search(PaginationFilter filter, Integer surveyPk, List<Integer> userIdList) {
+        HqlQuery q;
+        String sortTargetAlias = "r";
+        q = new HqlQuery("select r from Record r");
+        
+        if (surveyPk != null) {
+            q.join("r.survey", "survey");
+            q.and(Predicate.eq("survey.id", surveyPk));
+        }
+        if (userIdList != null) {
+            if (userIdList.size() > 0) {
+                q.join("r.user", "user");
+                q.and(Predicate.in("user.id", userIdList.toArray()));
+            } else {
+                // return empty result
+                q.and(Predicate.eq("r.id", 0));
+            }
+        }
+        return new QueryPaginator<Record>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter, sortTargetAlias);
+    }
+    
+    @Override
+    public List<Pair<TaxonGroup, Long>> getDistinctTaxonGroups(Session sesh) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select g, count(r)");
+        b.append(" from Record as r join r.species as s join s.taxonGroup as g");
+        b.append(" group by g.id");
+        for(PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(TaxonGroup.class)) {
+            if(!"class".equals(pd.getName()) && 
+                !"id".equals(pd.getName()) && 
+                (pd.getReadMethod().getAnnotation(Transient.class) == null) &&
+                !(Iterable.class.isAssignableFrom((pd.getReadMethod().getReturnType())))) {
+                b.append(", g."+pd.getName());
+            }
+        }
+        b.append(" order by g.weight asc, g.name asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+
+        // Should get back a list of Object[]
+        // Each Object[] has 2 items. Object[0] == taxon group, Object[1] == record count
+        List<Pair<TaxonGroup, Long>> results = 
+            new ArrayList<Pair<TaxonGroup, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<TaxonGroup, Long>((TaxonGroup)row[0], (Long)row[1]));
+        }
+        return results;
+    }
+
+    @Override
+    public List<Pair<Survey, Long>> getDistinctSurveys(Session sesh) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select s, count(r)");
+        b.append(" from Record as r join r.survey as s");
+        b.append(" group by s.id");
+        for(PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(Survey.class)) {
+            if(!"class".equals(pd.getName()) && 
+                !"id".equals(pd.getName()) && 
+                (pd.getReadMethod().getAnnotation(Transient.class) == null) &&
+                !(Iterable.class.isAssignableFrom((pd.getReadMethod().getReturnType())))) {
+                b.append(", s."+pd.getName());
+            }
+        }
+        b.append(" order by s.weight asc, s.name asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+
+        // Should get back a list of Object[]
+        // Each Object[] has 2 items. Object[0] == taxon group, Object[1] == record count
+        List<Pair<Survey, Long>> results = 
+            new ArrayList<Pair<Survey, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<Survey, Long>((Survey)row[0], (Long)row[1]));
+        }
+        return results;
+    }
+    
+    @Override
+    public List<Pair<Date, Long>> getDistinctMonths(Session sesh) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select distinct year(r.when), month(r.when), count(r)");
+        b.append(" from Record as r");
+        b.append(" group by year(r.when), month(r.when)");
+        b.append(" order by year(r.when) asc, month(r.when) asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+
+        Calendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(0);
+        // Should get back a list of Object[]
+        List<Pair<Date, Long>> results = 
+            new ArrayList<Pair<Date, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            // Month is zero based so we need to subtract by one.
+            cal.set(Integer.parseInt(row[0].toString(), 10), 
+                    Integer.parseInt(row[1].toString(), 10)-1, 1);
+            results.add(new Pair<Date, Long>(cal.getTime(), (Long)row[2]));
+        }
+        return results;
+    }
+
+    @Override
+    public List<Pair<String, Long>> getDistinctCensusMethodTypes(Session sesh) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select distinct r.censusMethod.type, count(r)");
+        b.append(" from Record as r");
+        b.append(" group by r.censusMethod.type");
+        b.append(" order by r.censusMethod.type asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+
+        // Should get back a list of Object[]
+        List<Pair<String, Long>> results =  new ArrayList<Pair<String, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<String, Long>(row[0].toString(), (Long)row[1]));
+        }
+        return results;
+    }
+
+    @Override
+    public List<Pair<String, Long>> getDistinctAttributeTypes(Session sesh,
+            AttributeType[] attributeTypes) {
+        
+        StringBuilder b = new StringBuilder();
+        b.append(" select distinct a.typeCode, count(distinct r)");
+        b.append(" from Record as r join r.attributes as ra join ra.attribute as a");
+        b.append(" where length(trim(ra.stringValue)) > 0 and (1 = 2");
+        for(AttributeType type : attributeTypes) {
+            b.append(String.format(" or a.typeCode = '%s'", type.getCode()));
+        }
+        b.append(" )");
+        b.append(" group by a.typeCode");
+        b.append(" order by a.typeCode asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        log.debug("Count query is : " + b.toString());
+        Query q = sesh.createQuery(b.toString());
+
+        // Should get back a list of Object[]
+        List<Pair<String, Long>> results =  new ArrayList<Pair<String, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<String, Long>(row[0].toString(), (Long)row[1]));
+        }
+        return results;
+    }
+
+    @Override
+    public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom) {
+        StringBuilder hb = new StringBuilder();
+        hb.append("select rec from Record rec inner join rec.survey survey where survey.id in ");
+        hb.append(" (select s.id from GeoMapLayer layer inner join layer.survey s where layer.id in (:layerIds)) ");
+        if (intersectGeom != null) {
+            hb.append(" and intersects(:geom, rec.geometry) = true");
+        }
+        Query q = getSession().createQuery(hb.toString());
+        q.setParameterList("layerIds", mapLayerId);
+        if (intersectGeom != null) {
+            q.setParameter("geom", intersectGeom, GeometryUserType.TYPE);
+        }
+        return (List<Record>)q.list();
     }
 }
 

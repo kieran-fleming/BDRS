@@ -7,7 +7,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Map;
 
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.util.DateFormatter;
+import au.com.gaiaresources.bdrs.util.DateUtils;
 
 /**
  * Validates that the input is a parseable date and if specified, is between
@@ -35,8 +38,6 @@ public class DateValidator extends AbstractValidator {
     
     protected Date latest = new Date(Long.MAX_VALUE);
     protected Date earliest = new Date(0);
-    
-    protected SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
 
     /**
      * Creates a new <code>DateValidator</code>.
@@ -60,6 +61,22 @@ public class DateValidator extends AbstractValidator {
      * @param propertyService used to access configurable messages displayed to the user.
      * @param required true if the input is mandatory, false otherwise.
      * @param blank true if the value can be an empty string, false otherwise.
+     * @param earliest the earliest valid date as a String.
+     * @param latest the latest valid date as a String.
+     */
+    public DateValidator(PropertyService propertyService, boolean required,
+            boolean blank, String earliest, String latest) {
+        super(propertyService, required, blank);
+        this.earliest = DateUtils.getDate(earliest);
+        this.latest = DateUtils.getDate(latest);
+    }
+    
+    /**
+     * Creates a new <code>DateValidator</code>.
+     * 
+     * @param propertyService used to access configurable messages displayed to the user.
+     * @param required true if the input is mandatory, false otherwise.
+     * @param blank true if the value can be an empty string, false otherwise.
      */
     public DateValidator(PropertyService propertyService, boolean required,
             boolean blank) {
@@ -70,15 +87,27 @@ public class DateValidator extends AbstractValidator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
-
-        boolean isValid = super.validate(parameterMap, key, errorMap);
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
+        boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
         if (isValid) {
             String value = getSingleParameter(parameterMap, key);
             if (value != null && !value.isEmpty()) {
-                try {
-                    Date date = dateFormat.parse(value);
-                    if(date.after(latest)) {
+                Date date = DateFormatter.parse(value, DateFormatter.DAY_MONTH_YEAR);
+                if (date != null) {
+                    if (earliest != null && date.before(earliest)) {
+                        
+                        Calendar cal = new GregorianCalendar();
+                        cal.setTime(earliest);
+                        String template;
+                        
+                        if(blank) {
+                            template = propertyService.getMessage(DATE_AFTER_OR_BLANK_MESSAGE_KEY, DATE_AFTER_OR_BLANK_MESSAGE);
+                            
+                        } else {
+                            template = propertyService.getMessage(DATE_AFTER_MESSAGE_KEY, DATE_AFTER_MESSAGE);
+                        }
+                        errorMap.put(key, String.format(template, cal, cal, cal));
+                    } else if (latest != null && date.after(latest)) {
                         
                         Calendar cal = new GregorianCalendar();
                         cal.setTime(latest);
@@ -92,23 +121,10 @@ public class DateValidator extends AbstractValidator {
                         }
                         errorMap.put(key, String.format(template, cal, cal, cal));
                         
-                    } else if(date.before(earliest)) {
-                        
-                        Calendar cal = new GregorianCalendar();
-                        cal.setTime(earliest);
-                        String template;
-                        
-                        if(blank) {
-                            template = propertyService.getMessage(DATE_AFTER_OR_BLANK_MESSAGE_KEY, DATE_AFTER_OR_BLANK_MESSAGE);
-                            
-                        } else {
-                            template = propertyService.getMessage(DATE_AFTER_MESSAGE_KEY, DATE_AFTER_MESSAGE);
-                        }
-                        errorMap.put(key, String.format(template, cal, cal, cal));
                     }
                     // Otherwise it is valid.
-                    
-                } catch (ParseException e) {
+                } else {
+                    // date is null, invalid parse exception
                     Calendar cal = new GregorianCalendar();
                     String template;
                     if(blank) {

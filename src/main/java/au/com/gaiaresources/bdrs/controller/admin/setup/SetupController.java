@@ -183,10 +183,10 @@ public class SetupController extends AbstractController {
             userSet.add(getRequestContext().getUser());
 
     	    Survey s = new Survey();
-        	s.setDate(new Date(System.currentTimeMillis()));
-        	s.setDescription("Test Survey Description");
-        	s.setName("Test Roundtrip Survey");
-        	s.setLocations(locationSet);
+            s.setStartDate(new Date(System.currentTimeMillis()));
+            s.setDescription("Test Survey Description");
+            s.setName("Test Roundtrip Survey");
+            s.setLocations(locationSet);
             s.setUsers(userSet);
             s.setSpecies(new HashSet<IndicatorSpecies>(taxaDAO.getIndicatorSpecies()));
             s.setGroups(classSet);

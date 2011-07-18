@@ -32,7 +32,7 @@ import au.com.gaiaresources.bdrs.file.FileService;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "INDICATOR_SPECIES_ATTRIBUTE")
 @AttributeOverride(name = "id", column = @Column(name = "INDICATOR_SPECIES_ATTRIBUTE_ID"))
-public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements AttributeValue {
+public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements TypedAttributeValue {
     private Attribute attribute;
     private BigDecimal numericValue;
     private String stringValue = "Not recorded";

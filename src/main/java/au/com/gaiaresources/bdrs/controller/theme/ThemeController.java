@@ -43,6 +43,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.admin.AdminHomePageController;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
@@ -53,6 +54,7 @@ import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -72,6 +74,10 @@ public class ThemeController extends AbstractController {
     public static final String KEY_REPLACE_REGEX_TEMPLATE = "\\$\\{(\\s*)%s(\\s*)\\}";
     public static final String CSS_CONTENT_TYPE = "text/css";
     public static final String CSS_EXTENSION = "css";
+    
+    public static final String ROOT_EDIT_URL = "/bdrs/root/theme/edit.htm";
+    public static final String ADMIN_EDIT_URL = "/bdrs/admin/theme/edit.htm";
+    public static final String ADMIN_EDIT_FILE_URL = "/bdrs/admin/theme/editThemeFile.htm";
     
     /**
      * The set of content types that should be passed through the search and 
@@ -96,6 +102,8 @@ public class ThemeController extends AbstractController {
     private ManagedFileDAO managedFileDAO;
     @Autowired
     private FileService fileService;
+    @Autowired
+    private RedirectionService redirService;
 
     /**
      * Returns true if the specified content type starts with text or
@@ -135,12 +143,32 @@ public class ThemeController extends AbstractController {
      */
     @RolesAllowed({ Role.ROOT })
     @RequestMapping(value = "/bdrs/root/theme/editThemeFile.htm", method = RequestMethod.GET)
-    public ModelAndView editThemeFile(HttpServletRequest request,
+    public ModelAndView root_editThemeFile(HttpServletRequest request,
                              HttpServletResponse response,
                              @RequestParam(value="themeId", required=true) int themeId,
                              @RequestParam(value="themeFileName", required=true) String themeFileName) throws IOException {
         
         Theme theme = themeDAO.getTheme(themeId);
+        return editThemeFile(request, response, theme, themeFileName);
+    }
+    
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.GET)
+    public ModelAndView admin_editThemeFile(HttpServletRequest request,
+                             HttpServletResponse response,
+                             @RequestParam(value="themeFileName", required=true) String themeFileName) throws IOException {
+        Theme theme = themeDAO.getActiveTheme(getRequestContext().getPortal());
+        if (theme == null) {
+            getRequestContext().addMessage("No active theme to edit.");
+            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+        }
+        return editThemeFile(request, response, theme, themeFileName);
+    }
+    
+    private ModelAndView editThemeFile(HttpServletRequest request,
+            HttpServletResponse response,
+            Theme theme,
+            String themeFileName) throws IOException {
         File rawTargetDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_RAW, false);
         File template = new File(rawTargetDir, themeFileName);
         // Floor the value if required.
@@ -178,7 +206,7 @@ public class ThemeController extends AbstractController {
      */
     @RolesAllowed({ Role.ROOT })
     @RequestMapping(value = "/bdrs/root/theme/editThemeFile.htm", method = RequestMethod.POST)
-    public ModelAndView editThemeFileSubmit(HttpServletRequest request,
+    public ModelAndView root_editThemeFileSubmit(HttpServletRequest request,
                              HttpServletResponse response,
                              @RequestParam(value="themePk", required=true) int themeId,
                              @RequestParam(value="themeFileName", required=true) String themeFileName,
@@ -186,7 +214,32 @@ public class ThemeController extends AbstractController {
                              @RequestParam(value="revert", required=false) String revert) {
         
         Theme theme = themeDAO.getTheme(themeId);
-
+        return editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ROOT_EDIT_URL);
+    }
+    
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.POST)
+    public ModelAndView admin_editThemeFileSubmit(HttpServletRequest request,
+                             HttpServletResponse response,
+                             @RequestParam(value="themeFileName", required=true) String themeFileName,
+                             @RequestParam(value="themeFileContent", required=true) String themeFileContent,
+                             @RequestParam(value="revert", required=false) String revert) {
+        Theme theme = themeDAO.getActiveTheme(getRequestContext().getPortal());
+        if (theme == null) {
+            getRequestContext().addMessage("No active theme to edit.");
+            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+        }
+        return editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ADMIN_EDIT_URL);
+    }
+    
+    private ModelAndView editThemeFileSubmit(HttpServletRequest request,
+            HttpServletResponse response,
+            Theme theme,
+            String themeFileName,
+            String themeFileContent,
+            String revert,
+            String redirectUrl) {
+        
         FileOutputStream fos = null;
         InputStream is = null;
         try {
@@ -241,12 +294,13 @@ public class ThemeController extends AbstractController {
             }
         }
         
-        ModelAndView mv = new ModelAndView(new RedirectView("/bdrs/root/theme/edit.htm", true));
+        ModelAndView mv = new ModelAndView(new RedirectView(redirectUrl, true));
         mv.addObject("portalId", theme.getPortal().getId());
         mv.addObject("themeId", theme.getId());
         
         return mv;
     }
+
     
     /**
      * Presents a view where a theme may be edited or updated.
@@ -256,13 +310,42 @@ public class ThemeController extends AbstractController {
      * @throws IOException 
      */
     @RolesAllowed({ Role.ROOT })
-    @RequestMapping(value = "/bdrs/root/theme/edit.htm", method = RequestMethod.GET)
-    public ModelAndView edit(HttpServletRequest request,
+    @RequestMapping(value = ROOT_EDIT_URL, method = RequestMethod.GET)
+    public ModelAndView root_edit(HttpServletRequest request,
                              HttpServletResponse response,
                              @RequestParam(value="portalId", required=true) int portalId,
                              @RequestParam(value="themeId", required=false, defaultValue="0") int themeId) throws IOException {
         Portal portal = portalDAO.getPortal(portalId);
         Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
+        if(theme.getPortal() == null) {
+            theme.setPortal(portal);
+        }
+        ModelAndView mv = edit(request, response, portal, theme);
+        mv.addObject("editAsRoot", true);
+        return mv;
+    }
+    
+    // The admin can only edit the active theme for the portal.
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.GET)
+    public ModelAndView admin_edit(HttpServletRequest request,
+                             HttpServletResponse response) throws Exception {
+        Portal portal = getRequestContext().getPortal();
+        Theme theme = themeDAO.getActiveTheme(portal);
+        if (theme == null) {
+            getRequestContext().addMessage("No active theme to edit.");
+            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+        }
+        ModelAndView mv =  edit(request, response, portal, theme);
+        mv.addObject("editAsAdmin", true);
+        return mv;
+    }
+    
+    private ModelAndView edit(HttpServletRequest request,
+            HttpServletResponse response,
+            Portal portal,
+            Theme theme) throws IOException {
+
         if(theme.getPortal() == null) {
             theme.setPortal(portal);
         }
@@ -283,7 +366,7 @@ public class ThemeController extends AbstractController {
         
         ModelAndView mv = new ModelAndView("themeEdit");
         mv.addObject("editTheme", theme);
-        mv.addObject("portalId", portalId);
+        mv.addObject("portalId", portal.getId().intValue());
         mv.addObject("themeFileList", themeFiles);
         
         return mv;
@@ -322,8 +405,8 @@ public class ThemeController extends AbstractController {
      *            themeFileUUID.
      */
     @RolesAllowed({ Role.ROOT })
-    @RequestMapping(value = "/bdrs/root/theme/edit.htm", method = RequestMethod.POST)
-    public ModelAndView editSubmit(HttpServletRequest request,
+    @RequestMapping(value = ROOT_EDIT_URL, method = RequestMethod.POST)
+    public ModelAndView root_editSubmit(HttpServletRequest request,
                                    HttpServletResponse response,
                                    @RequestParam(value="portalPk", required=true) int portalId,
                                    @RequestParam(value="themePk", required=false, defaultValue="0") int themeId,
@@ -333,7 +416,37 @@ public class ThemeController extends AbstractController {
                                    @RequestParam(value="revert", required=false) String revert){
 
         Portal portal = portalDAO.getPortal(portalId);
-        
+        Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
+        return editSubmit(request, response, portal, theme, name, themeFileUUID, active, revert, ROOT_EDIT_URL);
+    }
+    
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.POST)
+    public ModelAndView admin_editSubmit(HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   //@RequestParam(value="name", required=true) String name,
+                                   //@RequestParam(value="themeFileUUID", required=true) String themeFileUUID,
+                                   @RequestParam(value="revert", required=false) String revert){
+        Portal portal = getRequestContext().getPortal();
+        Theme theme = themeDAO.getActiveTheme(portal);
+        if (theme == null) {
+            getRequestContext().addMessage("No active theme to edit.");
+            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+        }
+        // the theme is already active
+        return editSubmit(request, response, portal, theme, theme.getName(), theme.getThemeFileUUID(), true, revert, ADMIN_EDIT_URL);
+    }
+    
+    private ModelAndView editSubmit(HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   Portal portal,
+                                   Theme theme,
+                                   String name,
+                                   String themeFileUUID,
+                                   boolean active,
+                                   String revert,
+                                   String redirectUrl) {
+               
         if(active) {
             // Ensure that only a single theme is active at a time.
             for(Theme t : themeDAO.getThemes(portal)) {
@@ -342,7 +455,6 @@ public class ThemeController extends AbstractController {
             }
         }
         
-        Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
         boolean revertRequired = revert != null || (!themeFileUUID.equals(theme.getThemeFileUUID()));
 
         // Save the theme
@@ -412,8 +524,8 @@ public class ThemeController extends AbstractController {
             getRequestContext().addMessage(theme.getName() + " has not been updated.");
         }
         
-        ModelAndView mv = new ModelAndView(new RedirectView("/bdrs/root/theme/edit.htm", true));
-        mv.addObject("portalId", portalId);
+        ModelAndView mv = new ModelAndView(new RedirectView(redirectUrl, true));
+        mv.addObject("portalId", portal.getId().intValue());
         mv.addObject("themeId", theme.getId());
         
         return mv;
@@ -438,7 +550,7 @@ public class ThemeController extends AbstractController {
                         throw new IOException("Unable to create directory (including parents): "+target.getAbsolutePath());
                     }
                 }
-                log.debug("Make Dir: "+target.getAbsolutePath());
+                //log.debug("Make Dir: "+target.getAbsolutePath());
                 processThemeData(theme, f, target, assetContext, baseTargetDir);
             } else {
                 
@@ -464,7 +576,7 @@ public class ThemeController extends AbstractController {
                     
                     if(ThemeController.isTextContent(contentType)) {
                         // Read the file into memory
-                        log.debug("Process: "+target.getAbsolutePath());
+                        //log.debug("Process: "+target.getAbsolutePath());
                         BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
                         StringBuilder builder = new StringBuilder();
                         for(String line = reader.readLine(); line != null; line = reader.readLine()) {
@@ -480,21 +592,10 @@ public class ThemeController extends AbstractController {
                             regex = String.format(KEY_REPLACE_REGEX_TEMPLATE, Pattern.quote(themeElement.getKey()));
                             content = content.replaceAll(regex, Matcher.quoteReplacement(themeElement.getCustomValue()));
                         }
-                        
-                        // Special handling for CSS files to account for background images.
-                        // Checking for CSS file types in two different ways here
-                        // because depending on the OS/JVM the content type is
-                        // sometimes reported as text/css and sometimes as text/plain.
-                        if(CSS_CONTENT_TYPE.equals(contentType) || 
-                                CSS_EXTENSION.equals(FileUtils.getExtension(target.getAbsolutePath()).toLowerCase())) {
-                            // Now for the assets
-                            // Cut off an extra path separator (slash)
-                            String relativePathFromBaseTargetDir = target.getAbsolutePath().substring(baseTargetDir.getAbsolutePath().length()+1);
-                            relativePathFromBaseTargetDir = FileUtils.dirname(relativePathFromBaseTargetDir);
-                            
-                            regex = String.format(KEY_REPLACE_REGEX_TEMPLATE, Pattern.quote(Theme.ASSET_KEY));
-                            content = content.replaceAll(regex, Matcher.quoteReplacement(assetContext + relativePathFromBaseTargetDir + File.separatorChar));
-                        }
+                                            
+                        // Now for the assets
+                        regex = String.format(KEY_REPLACE_REGEX_TEMPLATE, Pattern.quote(Theme.ASSET_KEY));
+                        content = content.replaceAll(regex, Matcher.quoteReplacement(assetContext));
                         
                         // Write the file to disk
                         Writer writer = new OutputStreamWriter(fos);
@@ -503,7 +604,7 @@ public class ThemeController extends AbstractController {
                         writer.close();
                         
                     } else {
-                        log.debug("File Copy: "+target.getAbsolutePath());
+                        //log.debug("File Copy: "+target.getAbsolutePath());
                         fis = new FileInputStream(f);
                         for(int read = fis.read(buffer); read > -1; read = fis.read(buffer)) {
                             fos.write(buffer, 0, read);

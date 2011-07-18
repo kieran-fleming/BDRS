@@ -2,6 +2,8 @@ package au.com.gaiaresources.bdrs.model.taxa;
 
 import java.util.List;
 
+import org.hibernate.Session;
+
 /**
  * Data Access Object for dealing with Attributes.
  * 
@@ -70,4 +72,77 @@ public interface AttributeDAO {
      */
     public void delete(Attribute attr);
     
+    /**
+     * Removes the specified attribute from the persistent store.
+     * 
+     * @param sesh
+     * @param attr
+     */
+    public void delete(Session sesh, Attribute attr);
+    
+    /**
+     * Creates or updates the specified attribute.
+     * 
+     * @param sesh
+     * @param attr
+     */
+    public Attribute save(Session sesh, Attribute attr);
+    
+    
+    
+    /**
+     * Get all of the attribute values for an attribute
+     * @param attr
+     * @return
+     */
+    public List<AttributeValue> getAttributeValueObjects(Attribute attr);
+
+    /**
+     * Get all of the attribute values for an attribute
+     * 
+     * @param sesh
+     * @param attr
+     * @return
+     */
+    public List<AttributeValue> getAttributeValueObjects(Session sesh, Attribute attr);
+    
+    /**
+     * Gets the attribute by primary key
+     */
+    public Attribute get(Integer pk);
+    
+    /**
+     * Save an AttributeValue
+     * @param av
+     * @return
+     */
+    public AttributeValue save(AttributeValue av);
+    
+    /**
+     * Save an AttributeValue
+     * @param sesh
+     * @param av
+     * @return
+     */
+    public AttributeValue save(Session sesh, AttributeValue av);
+    
+    /**
+     * Update an AttributeValue
+     * @param av
+     * @return
+     */
+    public AttributeValue update(AttributeValue av);
+    
+    /**
+     * Delete an AttributeValue
+     * @param av
+     */
+    public void delete(AttributeValue av);
+    
+    /**
+     * Delete an AttributeValue
+     * @param sesh
+     * @param av
+     */
+    public void delete(Session sesh, AttributeValue av);
 }

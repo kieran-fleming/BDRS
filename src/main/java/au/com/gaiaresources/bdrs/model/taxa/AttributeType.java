@@ -7,6 +7,7 @@ package au.com.gaiaresources.bdrs.model.taxa;
  */
 public enum AttributeType implements E {
     INTEGER("IN", "Integer"),
+    INTEGER_WITH_RANGE("IR", "Integer Range"),
     DECIMAL("DE", "Decimal"),
 
     DATE("DA", "Date"),

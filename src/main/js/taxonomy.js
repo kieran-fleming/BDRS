@@ -64,6 +64,7 @@ bdrs.taxonomy.initListing = function(taxonAutocompleteSelector,
                                                  taxonPropertiesContainerSelector,
                                                  editTaxonSelector);
         },
+        html: true,
         minLength: 2,
         delay: 300
     });
@@ -312,6 +313,7 @@ bdrs.taxonomy.initEditTaxon = function(parentAutocompleteSelector, parentPkSelec
                 jQuery(parentAutocompleteSelector).val('');
             }
         },
+        html: true,
         minLength: 2,
         delay: 300
     });
@@ -371,6 +373,7 @@ bdrs.taxonomy.initEditTaxon = function(parentAutocompleteSelector, parentPkSelec
                             callback(data);
                         });
                     },
+                    html: true,
                     minLength: 2,
                     delay: 300
                 });
@@ -481,6 +484,7 @@ bdrs.taxonomy.initEditTaxon = function(parentAutocompleteSelector, parentPkSelec
                 jQuery(taxonAttributeWrapperSelector).empty();
             }
         },
+        html: true,
         minLength: 2,
         delay: 300
     });

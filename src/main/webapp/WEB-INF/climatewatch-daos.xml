@@ -10,6 +10,9 @@
 
     <context:annotation-config/>
 
+ 	<!-- Scan for group dao / service -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.detect.impl"/>
+    
     <!-- Scan for location dao / service -->
     <context:component-scan base-package="au.com.gaiaresources.bdrs.model.location.impl"/>
 
@@ -60,6 +63,15 @@
     
     <!-- Scan for theme dao / service -->
     <context:component-scan base-package="au.com.gaiaresources.bdrs.model.theme.impl"/>
+    
+    <!-- Scan for the census method dao -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.method.impl"/>
+    
+    <!-- Scan for the map and maplayer dao -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.map.impl"/>
+	
+	<!-- Scan for the showcase DAOS -->
+	<context:component-scan base-package="au.com.gaiaresources.bdrs.model.showcase.impl"/>
 
     <!-- Scan for xls service -->
     <context:component-scan base-package="au.com.gaiaresources.mv.service.xls"/>

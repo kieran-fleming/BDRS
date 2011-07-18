@@ -14,10 +14,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,8 +23,6 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
-
-import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,21 +40,16 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.kml.KMLWriter;
+import au.com.gaiaresources.bdrs.util.KMLUtils;
+
 
 @Controller
 public class RecordMapController extends AbstractController {
-
-    public static final String KML_RECORD_FOLDER = "Record";
-    public static final String KML_POINT_ICON_ID = "pointIcon";
 
     public static final int DEFAULT_LIMIT = 300;
 
@@ -180,7 +171,7 @@ public class RecordMapController extends AbstractController {
                                       @RequestParam(value="limit", defaultValue="300") int limit)
         throws JAXBException, IOException, ParseException {
 
-        response.setContentType("application/vnd.google-earth.kml+xml");
+        response.setContentType(KMLUtils.KML_CONTENT_TYPE);
         response.setHeader("Content-Disposition", "attachment;filename=layer_"+System.currentTimeMillis()+".kml");
 
         try {
@@ -191,60 +182,10 @@ public class RecordMapController extends AbstractController {
                     surveyPk, taxonGroupPk, startDate, endDate,
                     speciesScientificNameSearch, limit);
 
-            KMLWriter writer = new KMLWriter();
-            String placemark = request.getContextPath()+"/map/icon/record_placemark.png?color=";
-            if(request.getParameter("placemark_color") == null) {
-                placemark = placemark + "EE9900";
-            } else {
-                placemark = placemark + request.getParameter("placemark_color");
-            }
-            writer.createStyleIcon(KML_POINT_ICON_ID, placemark, 16, 16);
-            writer.createFolder(KML_RECORD_FOLDER);
-            String label;
-            String description;
-            Map<String, Object> descMap = new HashMap<String, Object>(7);
-            Map<Attribute, RecordAttribute> recAttrMap = new HashMap<Attribute, RecordAttribute>();
-
-            IndicatorSpecies species;
-            for(Record record : recordList) {
-                species = record.getSpecies();
-                label = String.format("%d x %s @ %s", record.getNumber(), species.getScientificName(), dateFormat.format(record.getWhen()));
-                descMap.clear();
-
-                // Create a map that will be converted to a JSON object
-                // { record_attribute_name: record_attribute_value,
-                //   attributes: [ { attribute_description: record_attribute_value,
-                //                 ... }]
-                // }
-                descMap.put("species", species.getScientificName());
-                descMap.put("common_name", species.getCommonName());
-                descMap.put("number", record.getNumber());
-                descMap.put("notes", record.getNotes());
-                descMap.put("habitat", record.getHabitat());
-                descMap.put("when", record.getWhen().getTime());
-                descMap.put("behaviour", record.getBehaviour());
-
-                List<Map<String, Object>> orderedAttr = new ArrayList<Map<String,Object>>();
-                for(RecordAttribute recAttr: record.getAttributes()) {
-                    String value = recAttr.getStringValue();
-                    Map<String, Object> tuple = new HashMap<String, Object>(1);
-                    tuple.put(recAttr.getAttribute().getDescription(), value);
-                    orderedAttr.add(tuple);
-                }
-                descMap.put("attributes", orderedAttr);
-
-                description = JSONObject.fromObject(descMap).toString();
-
-                if(record.getPoint() != null) {
-                    writer.createPlacemark(KML_RECORD_FOLDER, label, description, record.getPoint(), KML_POINT_ICON_ID);
-                } else if(record.getLocation() != null && record.getLocation().getLocation() != null) {
-                    writer.createPlacemark(KML_RECORD_FOLDER, label, description, record.getLocation().getLocation(), KML_POINT_ICON_ID);
-                } else {
-                    log.info("Cannot find coordinate for record");
-                }
-            }
-
-            writer.write(false, response.getOutputStream());
+            KMLUtils.writeRecordsToKML(request.getContextPath(), 
+                                       request.getParameter("placemark_color"), 
+                                       recordList, 
+                                       response.getOutputStream());
 
         } catch (JAXBException e) {
             log.error(e);
@@ -255,7 +196,7 @@ public class RecordMapController extends AbstractController {
         }
     }
 
-    @RequestMapping(value = "/map/icon/record_placemark.png", method = RequestMethod.GET)
+    @RequestMapping(value = KMLUtils.GET_RECORD_PLACEMARK_PNG_URL, method = RequestMethod.GET)
     public void renderRecordPlacemark(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
         BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);

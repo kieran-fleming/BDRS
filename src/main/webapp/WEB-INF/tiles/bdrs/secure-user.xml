@@ -51,12 +51,39 @@
         <put-attribute name="title" value="Records Map"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/mySightings.jsp"/>
         <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+    
+    <!-- Advanced Review Sightings -->
+    <definition name="advancedReview" extends="user-template">
+        <put-attribute name="title" value="Sightings"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReview.jsp"/>
+        <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
             <add-attribute>bdrs/bdrs.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
-            
+            <add-attribute>advancedReviewSightings.js</add-attribute>
         </put-list-attribute>
+    </definition>
+    
+    <definition name="advancedReviewFacet" template="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReviewFacet.jsp">
+        <put-attribute name="facet" type="object"/>
+    </definition>
+    
+    <definition name="advancedReviewMapView" template="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReviewMapView.jsp">
+        <put-attribute name="sortBy" type="object"/>
+        <put-attribute name="sortOrder" type="object"/>
+        <put-attribute name="resultsPerPage" type="object"/>
+        <put-attribute name="pageCount" type="object"/>
+        <put-attribute name="pageNumber" type="object"/>
+    </definition>
+    
+    <definition name="advancedReviewTableView" template="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReviewTableView.jsp">
+        <put-attribute name="sortBy" type="object"/>
+        <put-attribute name="sortOrder" type="object"/>
     </definition>
 
     <!-- Record Listing -->
@@ -124,6 +151,29 @@
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
+    </definition>
+    
+    <!-- Atlas -->
+    <definition name="atlas" extends="user-template">
+        <put-attribute name="title" value="Record a Sighting"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/atlas/atlas.jsp"/>
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customCss">
+            <add-attribute>bdrs/bdrs.css</add-attribute>
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="atlasVerticalFormFieldRenderer" template="/WEB-INF/jsp/bdrs/user/record/render/atlas/atlasVerticalFormFieldRenderer.jsp">
+        <put-attribute name="formField" type="object"/>
+        <put-attribute name="label" type="object"/>
+        <put-attribute name="sublabel" type="object"/>
+        <put-attribute name="isLatitude" type="object" value="false"/>
+        <put-attribute name="isLongitude" type="object" value="false"/>
+        <put-attribute name="errorMap" type="object"/>
+        <put-attribute name="valueMap" type="object"/>
     </definition>
 
     <!-- Yearly Sightings -->
@@ -279,7 +329,5 @@
             <add-attribute>ketchup/jquery.ketchup.basic.min.js</add-attribute>
         </put-list-attribute>
     </definition>
-    
-    
     
 </tiles-definitions>

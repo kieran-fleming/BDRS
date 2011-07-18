@@ -22,11 +22,12 @@
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.TaxonGroup"/>
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.Attribute"/>
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
+		<mapping class="au.com.gaiaresources.bdrs.model.taxa.AttributeValue"/>
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies"/>
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute"/>
         <mapping class="au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile"/>
         <mapping class="au.com.gaiaresources.bdrs.model.record.Record"/>
-        <mapping class="au.com.gaiaresources.bdrs.model.record.RecordAttribute"/>
+        
         <mapping class="au.com.gaiaresources.bdrs.model.survey.Survey"/>
         <mapping class="au.com.gaiaresources.bdrs.model.project.Project"/>
         <mapping class="au.com.gaiaresources.bdrs.model.metadata.Metadata"/>
@@ -52,6 +53,18 @@
         
         <mapping class="au.com.gaiaresources.bdrs.model.theme.Theme"/>
         <mapping class="au.com.gaiaresources.bdrs.model.theme.ThemeElement"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.method.CensusMethod"/>
+        
+		<mapping class="au.com.gaiaresources.bdrs.model.map.GeoMapFeature"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.map.GeoMapLayer"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.map.GeoMap"/>
+		<mapping class="au.com.gaiaresources.bdrs.model.map.AssignedGeoMapLayer"/>
+
+        <mapping class="au.com.gaiaresources.bdrs.model.showcase.Gallery"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.detect.BDRSWurflDevice"/>
 
         <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.region.Region"/>
         <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.taxa.TaxonGroup"/>

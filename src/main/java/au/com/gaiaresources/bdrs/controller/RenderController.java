@@ -69,7 +69,7 @@ public class RenderController extends AbstractController {
         SurveyFormRendererType renderer = survey.getFormRendererType();
 
         renderer = renderer == null ? SurveyFormRendererType.DEFAULT : renderer;
-        String redirectURL;;
+        String redirectURL;
         switch(renderer) {
             case YEARLY_SIGHTINGS:
                 redirectURL = "yearlySightings.htm";
@@ -83,6 +83,9 @@ public class RenderController extends AbstractController {
                 } else {
                     redirectURL = "tracker.htm";
                 }
+                break;
+            case ATLAS:
+                redirectURL = "atlas.htm";
                 break;
             case DEFAULT:
                 // Fall through

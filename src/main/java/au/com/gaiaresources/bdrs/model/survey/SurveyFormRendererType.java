@@ -5,6 +5,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 
 public enum SurveyFormRendererType {
     DEFAULT("Default"),
+    ATLAS("Atlas of Living Australia"),
     YEARLY_SIGHTINGS("Yearly Sightings"),
     SINGLE_SITE_MULTI_TAXA("Single-Site Multi-Species");
 
@@ -29,6 +30,7 @@ public enum SurveyFormRendererType {
         boolean isEligible = false;
         switch(this) {
             case DEFAULT:
+            case ATLAS:
                 isEligible = true;
                 break;
             case YEARLY_SIGHTINGS:

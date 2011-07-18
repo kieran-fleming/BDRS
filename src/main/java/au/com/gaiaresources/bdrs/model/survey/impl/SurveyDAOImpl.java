@@ -21,7 +21,11 @@ import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.controller.file.AbstractDownloadFileController;
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
+import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
 import au.com.gaiaresources.bdrs.geometry.GeometryBuilder;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.location.Location;
@@ -188,6 +192,25 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
     	List<Survey> surveys = find("select s from Survey s left outer join fetch s.attributes a left outer join fetch a.options o where s.id=" + pk);
     	return (surveys.size() > 0) ? surveys.get(0) : null;
     }
+
+    @Override
+    public List<IndicatorSpecies> getSpeciesForSurvey(Survey thisSurvey, List<Survey> notTheseSurveys) {
+    	for (Survey s : notTheseSurveys) {
+    		if (s.getSpecies().size() == 0) {
+    			// Device already has all species, so let's get outta here.
+    			return new ArrayList<IndicatorSpecies>();
+    		}
+    	}
+    	if (thisSurvey.getSpecies().size() == 0) {
+    		return find("from IndicatorSpecies");
+    	}
+    	
+    	String query2 = "select a1 from Survey a join a.species a1 where a1 not in (select b1 from Survey b join b.species b1 where b in (:notIds)) and a.id = :id";    	 
+ 	    Query q = getSession().createQuery(query2);
+ 	    q.setParameter("id", thisSurvey.getId());
+ 	    q.setParameterList("notIds", notTheseSurveys);
+ 	    return q.list();
+    }
     
     @Override
     public Survey getSurvey(Session sesh, int pk) {
@@ -196,7 +219,11 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
         } else {
             return (Survey)sesh.get(Survey.class, pk);
         }
-        
+    }
+    
+    @Override 
+    public Survey getSurvey(org.hibernate.Session sesh, int pk) {
+        return super.getByID(sesh, Survey.class, pk);
     }
 
     @Override
@@ -418,5 +445,11 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
     @Override
     public List<Survey> getSurveys(IndicatorSpecies taxon) {
         return super.find("select distinct s from Survey s left join s.species t where t = ?", taxon);
+    }
+    
+    @Override
+    public PagedQueryResult<Survey> search(PaginationFilter filter) {
+        HqlQuery q = new HqlQuery("from Survey s");
+        return new QueryPaginator<Survey>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter);
     }
 }

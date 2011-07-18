@@ -6,7 +6,8 @@
 <table class="datatable textcenter">
     <thead>
         <tr>
-            <th>Date</th>
+            <th>Start Date</th>
+            <th>End Date</th>
             <th>Name</th>
             <th>Taxonomy</th>
             <th>Form</th>
@@ -20,7 +21,12 @@
             <tr>
                 <td>
                     <a href="${pageContext.request.contextPath}/bdrs/admin/survey/edit.htm?surveyId=${survey.id}">
-                        <fmt:formatDate pattern="dd MMM yyyy" value="${survey.date}"/>
+                        <fmt:formatDate pattern="dd MMM yyyy" value="${survey.startDate}"/>
+                    </a>
+                </td>
+                <td>
+                    <a href="${pageContext.request.contextPath}/bdrs/admin/survey/edit.htm?surveyId=${survey.id}">
+                        <fmt:formatDate pattern="dd MMM yyyy" value="${survey.endDate}"/>
                     </a>
                 </td>
                 <td>

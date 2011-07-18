@@ -85,16 +85,25 @@ public class FileService {
 		createFile(p.getClass(), p.getId(), file);
 	}
 	
+	public void createFile(Persistent p, MultipartFile file, String filename) throws IOException {
+            createFile(p.getClass(), p.getId(), file, filename);
+        } 
+
+	
 	/**
-	 * The file is MOVED from source location.
+	 * The file is copied from source location.
 	 * @param p
 	 * @param file
 	 * @throws IOException
 	 */
 	public void createFile(Persistent p, File file) throws IOException {
-		File target = createTargetFile(p.getClass(), p.getId(), file.getName());
-		FileUtils.deleteQuietly(target);
-		FileUtils.moveFile(file, target);
+		createFile(p, file, file.getName());
+	}
+	
+	public void createFile(Persistent p, File file, String filename) throws IOException {
+	    File target = createTargetFile(p.getClass(), p.getId(), filename);
+            FileUtils.deleteQuietly(target);
+            FileUtils.copyFile(file, target);
 	}
 
 	public void createFile(Class<? extends Persistent> clazz, Integer id,
@@ -107,11 +116,14 @@ public class FileService {
 		} else if (originalFileName.indexOf("\\") >= 0) {
 			originalFileName = stripPath(originalFileName, "\\");
 		}
-
-		File writeToFile = createTargetFile(clazz, id, originalFileName);
-		logger.debug("Writing file " + file + " to " + writeToFile);
-		writeToFile(file.getInputStream(), writeToFile);
+		createFile(clazz, id, file, originalFileName);
 	}
+	
+	void createFile(Class<? extends Persistent> clazz, Integer id,
+                MultipartFile file, String filenameToUse) throws IOException {
+            File writeToFile = createTargetFile(clazz, id, filenameToUse);
+            writeToFile(file.getInputStream(), writeToFile);
+        } 
 
 	/**
 	 * 
@@ -131,7 +143,6 @@ public class FileService {
 		}
 
 		File writeToFile = createTempFile(id, originalFileName);
-		logger.debug("Writing file " + file + " to " + writeToFile);
 		writeToFile(file.getInputStream(), writeToFile);
 		return writeToFile.getName();
 	}
@@ -164,21 +175,20 @@ public class FileService {
 	public void createFile(Class<? extends Persistent> clazz, Integer id,
 			String name, byte[] content) throws IOException {
 		File writeToFile = createTargetFile(clazz, id, name);
-		logger.debug("Writing byte array to " + writeToFile);
 		ByteArrayInputStream is = new ByteArrayInputStream(content);
 		writeToFile(is, writeToFile);
 	}
 
 	public File createTargetFile(Class<? extends Persistent> clazz, Integer id,
 			String name) throws IOException {
-		File instanceDir = getPersistentInstanceFolder(clazz, id);
-		File writeToFile = new File(instanceDir, name);
-		if (writeToFile.createNewFile()) {
-		    return writeToFile;
-		} else {
-		    logger.error("File already exists");
-		}
-        return writeToFile;	
+	    File instanceDir = getPersistentInstanceFolder(clazz, id);
+	    File writeToFile = new File(instanceDir, name);
+	    if (writeToFile.createNewFile()) {
+	        return writeToFile;
+	    } else {
+	        logger.error("File already exists");
+	    }
+            return writeToFile;	
 	}
 	
 	public File getTargetDirectory(Persistent p, String name, boolean createIfMissing) throws IOException {

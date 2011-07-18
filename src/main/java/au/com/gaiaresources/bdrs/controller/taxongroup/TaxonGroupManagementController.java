@@ -127,7 +127,7 @@ public class TaxonGroupManagementController extends AbstractController {
             for(int attributePk : attributePkArray) {
                 String attrName = request.getParameter(String.format("name_"+attributePk));
                 if(attrName != null && !attrName.isEmpty()) {
-                    attr = taxaDAO.getAttribute(attributePk);
+                    attr = attributeDAO.get(attributePk);
                     AttributeFormField formField = formFieldFactory.createAttributeFormField(attributeDAO, attr, request.getParameterMap());
                     attr = (Attribute) formField.save();
                     attributeList.add(attr);

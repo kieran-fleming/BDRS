@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
-import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
@@ -23,9 +22,10 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.test.AbstractTransactionalTest;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
-public class UserDAOImplTest extends AbstractControllerTest      {
+public class UserDAOImplTest extends AbstractTransactionalTest      {
 
     @Autowired
     protected UserDAO userDAO;

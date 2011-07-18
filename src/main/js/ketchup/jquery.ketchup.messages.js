@@ -15,6 +15,7 @@ $.fn.ketchup.messages = {
   'positiveIntegerOrBlank':'Must be a positive number or blank.',
   'positiveInteger':    'Must be a positive number.',
   'positiveIntegerLessThanOneMillion':    'Must be a positive number (less than 1 000 000).',
+  'positiveIntegerLessThanOneMillionOrBlank':    'Must be a positive number (less than 1 000 000) or blank.',
   'integerOrBlank':     'Must be a whole number or blank.',
   'integer':            'Must be a whole number.',
   'email':              'Must be a valid E-Mail.',
@@ -30,5 +31,8 @@ $.fn.ketchup.messages = {
   'unique':             'All values must be unique.',
   'uniqueOrBlank':      'All values must be unique.',
   'time':				'Must be of format hh:mm.',
-  'timeOrBlank':		'Must be of format hh:mm or blank.'
+  'timeOrBlank':		'Must be of format hh:mm or blank.',
+  'optionallyTaxonomicSpeciesAndNumber': 'The Species and Number must both be blank, or both filled in.',
+  'color':              'Must be a valid hex color starting with #',
+  'uuid':               'Not a valid file UUID'
 };

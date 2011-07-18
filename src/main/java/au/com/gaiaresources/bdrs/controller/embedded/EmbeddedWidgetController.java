@@ -1,10 +1,15 @@
 package au.com.gaiaresources.bdrs.controller.embedded;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +21,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.model.file.ManagedFile;
+import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.showcase.Gallery;
+import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -36,12 +46,19 @@ public class EmbeddedWidgetController extends AbstractController {
     private UserDAO userDAO;
     @Autowired
     private SurveyDAO surveyDAO;
+    @Autowired
+    private GalleryDAO galleryDAO;
+    @Autowired
+    private ManagedFileDAO mfDAO;
 
     @RequestMapping(value = "/bdrs/public/embedded/widgetBuilder.htm", method = RequestMethod.GET)
     public ModelAndView widgetBuilder(HttpServletRequest request,
             HttpServletResponse response) {
 
         ModelAndView mv = new ModelAndView("widgetBuilder");
+        
+        PagedQueryResult<Gallery> gallerySearchResult = galleryDAO.search(null, null, null); // return all galleries
+        mv.addObject("galleryList", gallerySearchResult.getList());
         mv.addObject("domain", request.getServerName());
         mv.addObject("port", request.getServerPort());
         return mv;
@@ -133,7 +150,7 @@ public class EmbeddedWidgetController extends AbstractController {
         Map<String, Object> params = new HashMap<String, Object>();
         params.putAll(toSimpleParameterMap(request.getParameterMap()));
         params.put("recordCount", recordDAO.countAllRecords());
-        params.put("latestRecord", latestRecord);
+        params.put("latestRecord", latestRecord == null ? "" : latestRecord);
         params.put("uniqueSpeciesCount", recordDAO.countUniqueSpecies());
         params.put("userCount", userDAO.countUsers());
         params.put("publicSurveys", surveyDAO.getActivePublicSurveys(true));
@@ -143,8 +160,32 @@ public class EmbeddedWidgetController extends AbstractController {
         mv.addObject("paramMap", params);
         
         response.setContentType("text/javascript");
-        
 
+        return mv;
+    }
+    
+    @RequestMapping(value = "/bdrs/public/embedded/image_slideshow.htm", method = RequestMethod.GET)
+    public ModelAndView image_slideshow(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value="galleryId", required=true) int galleryId) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.putAll(toSimpleParameterMap(request.getParameterMap()));
+        
+        Gallery gallery = galleryDAO.get(galleryId);
+        
+        Map<String, ManagedFile> mfMap = new HashMap<String, ManagedFile>();
+        for (String uuid : gallery.getFileUUIDS()) {
+            ManagedFile file = mfDAO.getManagedFile(uuid);
+            mfMap.put(uuid, file);
+        }
+
+        params.put("gallery", gallery);
+        params.put("mfMap", mfMap);
+
+        ModelAndView mv = new ModelAndView("image_slideshow");
+        mv.addAllObjects(params);
+        mv.addObject("paramMap", params);
+        
+        response.setContentType("text/javascript");
         return mv;
     }
 

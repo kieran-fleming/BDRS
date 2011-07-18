@@ -3,7 +3,7 @@
 
 <%@page import="au.com.gaiaresources.bdrs.controller.attribute.RecordPropertyAttributeFormField"%>
 
-<h1>Choose Fields</h1>
+<h2>Choose Fields</h2>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
     
@@ -42,6 +42,38 @@
 	    </table>
     </div>
     
+    <h2>Choose Available Census Methods</h2>
+    
+    <p>
+        The table below allows you to define which census methods should be available for your project.
+    </p>
+    
+    <div id="subCensusMethodContainer">
+        <div class="textright buttonpanel">
+            <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#subCensusMethodContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
+            <input id="addCensusMethodBtn" class="form_action" type="button" value="Add Census Method" />
+        </div>
+        <table id="censusMethod_input_table" class="datatable attribute_input_table">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>Census Method Name</th>
+                    <th>Taxonomic</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${ survey.censusMethods }" var="cm">
+                    <tiles:insertDefinition name="censusMethodEditRow">
+                        <tiles:putAttribute name="id" value="${cm.id}"/>
+                        <tiles:putAttribute name="name" value="${cm.name}"/>
+                        <tiles:putAttribute name="taxonomic" value="${cm.taxonomic}" />
+                    </tiles:insertDefinition>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
+    
     <div class="textright buttonpanel">
         <input type="submit" class="form_action" value="Save"/>
         <input type="submit" class="form_action" name="saveAndPreview" value="Save And Preview"/>
@@ -50,8 +82,43 @@
 
 </form>
 
+
+<!--  DIALOGS GO HERE  ! -->
+<div id="addCensusMethodDialog" title="Add Sub Census Methods">
+    <tiles:insertDefinition name="censusMethodGrid">
+           <tiles:putAttribute name="widgetId" value="addCensusMethodGrid"/>
+           <tiles:putAttribute name="multiselect" value="false"/>
+           <tiles:putAttribute name="scrollbars" value="true" />
+    </tiles:insertDefinition>
+</div>
+
 <script type="text/javascript">
     jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
+        
+        bdrs.dnd.attachTableDnD('#censusMethod_input_table');
+        
+        $( "#addCensusMethodDialog" ).dialog({
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                "Ok": function() {
+                    var selected = addCensusMethodGrid_GridHelper.getSelected();                    
+                    // single select so...
+                    bdrs.censusMethod.addCensusMethodRow("#censusMethod_input_table", selected);
+                    $( this ).dialog( "close" );
+                },
+                Cancel: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        
+        $( "#addCensusMethodBtn" )
+            .click(function() {
+                addCensusMethodGrid_GridHelper.reload();
+                $( "#addCensusMethodDialog" ).dialog( "open" );
+        });
     });
 </script>

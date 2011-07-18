@@ -302,7 +302,8 @@ public class TaxonomyManagementController extends AbstractController {
         Map<Integer, SpeciesProfile> profileMap = new HashMap<Integer, SpeciesProfile>();
         for (SpeciesProfile prof : taxon.getInfoItems()) {
             profileMap.put(prof.getId(), prof);
-        }
+        }        
+        
         if(profilePkArray != null) {
             for(int pk : profilePkArray) {
                 profile = profileMap.remove(pk);
@@ -337,6 +338,7 @@ public class TaxonomyManagementController extends AbstractController {
         taxaDAO.save(taxon);
 
         // Taxon Attributes
+        List<IndicatorSpeciesAttribute> taxonAttrsToDelete = new ArrayList<IndicatorSpeciesAttribute>();
         AttributeParser attributeParser = new AttributeParser();
         IndicatorSpeciesAttribute taxonAttribute;
         for (Attribute attribute : taxon.getTaxonGroup().getAttributes()) {
@@ -350,12 +352,18 @@ public class TaxonomyManagementController extends AbstractController {
                     taxon.getAttributes().add(taxonAttribute);
                 } else {
                     taxon.getAttributes().remove(taxonAttribute);
-                    taxaDAO.delete(taxonAttribute);
+                    taxonAttrsToDelete.add(taxonAttribute);
                 }
             }
         }
         
         taxaDAO.save(taxon);
+        for(IndicatorSpeciesAttribute ta : taxonAttrsToDelete) {
+            // Must do a save here to server the link in the join table.
+            taxaDAO.save(ta);
+            // And then delete.
+            taxaDAO.delete(ta);
+        }
         
         // Any profiles left in the map at this stage have been deleted.
         for (SpeciesProfile delProf : profileMap.values()) {

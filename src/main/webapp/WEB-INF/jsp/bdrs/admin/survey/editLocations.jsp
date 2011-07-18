@@ -14,6 +14,7 @@
 
     <div class="map_wrapper" id="map_wrapper">
         <div id="base_map" class="defaultmap tracker_map"></div>
+        <div id="geocode" class="geocode"></div>
     </div>
 
     <table id="locationTable" class="datatable">
@@ -27,7 +28,7 @@
         </thead>
         <tbody>
             <c:forEach items="${survey.locations}" var="loc" varStatus="status">
-                <tiles:insertDefinition name="locationRow">
+                <tiles:insertDefinition name="surveyLocationRow">
                     <tiles:putAttribute name="location" value="${loc}"/>
                     <tiles:putAttribute name="index" value="${status.index}"/>
                 </tiles:insertDefinition>
@@ -57,6 +58,6 @@
 
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.location.initLocationMapAndTable();
+        bdrs.location.initLocationMapAndTable('/bdrs/location/ajaxAddSurveyLocationRow.htm');
     });
 </script>

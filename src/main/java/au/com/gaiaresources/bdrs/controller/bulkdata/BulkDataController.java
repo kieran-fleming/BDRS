@@ -19,14 +19,15 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.service.bulkdata.BulkDataService;
-import au.com.gaiaresources.bdrs.service.bulkdata.BulkUpload;
-import au.com.gaiaresources.bdrs.service.bulkdata.InvalidSurveySpeciesException;
-import au.com.gaiaresources.bdrs.service.bulkdata.MissingDataException;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.service.bulkdata.BulkDataService;
+import au.com.gaiaresources.bdrs.service.bulkdata.BulkUpload;
+import au.com.gaiaresources.bdrs.service.bulkdata.DataReferenceException;
+import au.com.gaiaresources.bdrs.service.bulkdata.InvalidSurveySpeciesException;
+import au.com.gaiaresources.bdrs.service.bulkdata.MissingDataException;
 
 @Controller
 public class BulkDataController extends AbstractController {
@@ -185,6 +186,15 @@ public class BulkDataController extends AbstractController {
                 errorDescription = "Please retry your upload";
             }
             log.warn(pe.toString(), pe);
+        }
+        catch(DataReferenceException dre) {
+            // Thrown if the header does not match what we expect exactly, or
+            // the header cannot be found.
+            dataError = true;
+            errorMessage = dre.getMessage();
+            errorDescription = "Please correct the row in error and retry your upload";
+            // unfortunately no offset information...
+            log.warn(dre.toString(), dre);
         }
         catch(IOException ioe) {
             // Should never be thrown really. Just part of Java IO.

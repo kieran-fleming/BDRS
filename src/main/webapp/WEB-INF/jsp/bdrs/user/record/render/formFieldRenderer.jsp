@@ -72,7 +72,10 @@
                                 Additional&nbsp;Comments                                        
                             </c:when>
                             <c:when test="${ 'number' == formField.propertyName }">
-                                Number                            
+                                Individual Count                            
+                            </c:when>
+                            <c:when test="${ 'accuracyInMeters' == formField.propertyName }">
+                                Accuracy (meters)                            
                             </c:when>
                        </c:choose>
                    </th>

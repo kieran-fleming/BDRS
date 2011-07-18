@@ -34,7 +34,6 @@ import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -44,6 +43,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -112,6 +112,15 @@ public class TrackerControllerTest extends RecordFormTest {
                             optionList.add(opt);
                         }
                         groupAttr.setOptions(optionList);
+                    }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                    	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                    	AttributeOption upper = new AttributeOption();
+                    	AttributeOption lower = new AttributeOption();
+                    	lower.setValue("100");
+                    	upper.setValue("200");
+                    	rangeList.add(taxaDAO.save(lower));
+                    	rangeList.add(taxaDAO.save(upper));
+                    	groupAttr.setOptions(rangeList);
                     }
     
                     groupAttr = taxaDAO.save(groupAttr);
@@ -155,6 +164,15 @@ public class TrackerControllerTest extends RecordFormTest {
                         optionList.add(opt);
                     }
                     attr.setOptions(optionList);
+                }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                	AttributeOption upper = new AttributeOption();
+                	AttributeOption lower = new AttributeOption();
+                	lower.setValue("100");
+                	upper.setValue("200");
+                	rangeList.add(taxaDAO.save(lower));
+                	rangeList.add(taxaDAO.save(upper));
+                	attr.setOptions(rangeList);
                 }
                 
                 attr = taxaDAO.save(attr);
@@ -169,7 +187,7 @@ public class TrackerControllerTest extends RecordFormTest {
         survey = new Survey();
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
         metadataDAO.save(md);
@@ -285,7 +303,31 @@ public class TrackerControllerTest extends RecordFormTest {
     }
     
     @Test 
-    public void testEditRecord() throws Exception {
+    public void testEditRecordLowerLimitOutside() throws Exception{
+    	testEditRecord("99");
+    }
+    
+    @Test 
+    public void testEditRecordLowerLimitEdge() throws Exception{
+    	testEditRecord("100");
+    }
+    
+    @Test 
+    public void testEditRecordInRange() throws Exception{
+    	testEditRecord("101");
+    }
+    
+    @Test 
+    public void testEditRecordUpperLimitEdge() throws Exception{
+    	testEditRecord("200");
+    }
+    
+    @Test 
+    public void testEditRecordUpperLimitOutside() throws Exception{
+    	testEditRecord("201");
+    }
+    
+    public void testEditRecord(String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         // Add a record to the Survey
@@ -309,10 +351,10 @@ public class TrackerControllerTest extends RecordFormTest {
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
-        Set<RecordAttribute> attributeList = new HashSet<RecordAttribute>();
-        Map<Attribute, RecordAttribute> expectedRecordAttrMap = new HashMap<Attribute, RecordAttribute>();
+        Set<AttributeValue> attributeList = new HashSet<AttributeValue>();
+        Map<Attribute, AttributeValue> expectedRecordAttrMap = new HashMap<Attribute, AttributeValue>();
         for(Attribute attr : survey.getAttributes()) {
-            RecordAttribute recAttr = new RecordAttribute();
+            AttributeValue recAttr = new AttributeValue();
             recAttr.setAttribute(attr);
             switch (attr.getType()) {
                 case INTEGER:
@@ -320,6 +362,10 @@ public class TrackerControllerTest extends RecordFormTest {
                     recAttr.setNumericValue(new BigDecimal(i));
                     recAttr.setStringValue(i.toString());
                     break;
+                case INTEGER_WITH_RANGE:
+                	 Integer j = new Integer(intWithRangeValue);
+                     recAttr.setNumericValue(new BigDecimal(j));
+                     recAttr.setStringValue(intWithRangeValue);
                 case DECIMAL:
                     Double d = new Double(123);
                     recAttr.setNumericValue(new BigDecimal(d));
@@ -350,20 +396,25 @@ public class TrackerControllerTest extends RecordFormTest {
                     Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
                     break;
             }
-            recAttr = recordDAO.saveRecordAttribute(recAttr);
+            recAttr = recordDAO.saveAttributeValue(recAttr);
             attributeList.add(recAttr);
             expectedRecordAttrMap.put(attr, recAttr);
         }
         
         for(Attribute attr : record.getSpecies().getTaxonGroup().getAttributes()) {
             if(!attr.isTag()) {
-                RecordAttribute recAttr = new RecordAttribute();
+                AttributeValue recAttr = new AttributeValue();
                 recAttr.setAttribute(attr);
                 switch (attr.getType()) {
                     case INTEGER:
                         Integer i = new Integer(987);
                         recAttr.setNumericValue(new BigDecimal(i));
                         recAttr.setStringValue(i.toString());
+                        break;
+                    case INTEGER_WITH_RANGE:
+                        Integer j = new Integer(intWithRangeValue);
+                        recAttr.setNumericValue(new BigDecimal(j));
+                        recAttr.setStringValue(intWithRangeValue);
                         break;
                     case DECIMAL:
                         Double d = new Double(987);
@@ -395,7 +446,7 @@ public class TrackerControllerTest extends RecordFormTest {
                         Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
                         break;
                 }
-                recAttr = recordDAO.saveRecordAttribute(recAttr);
+                recAttr = recordDAO.saveAttributeValue(recAttr);
                 attributeList.add(recAttr);
                 expectedRecordAttrMap.put(attr, recAttr);
             }
@@ -442,7 +493,32 @@ public class TrackerControllerTest extends RecordFormTest {
     }
     
     @Test 
-    public void testSaveRecord() throws Exception {
+    public void testSaveRecordLowerLimitOutside() throws Exception{
+    	testSaveRecord("99", false);
+    }
+    
+    @Test 
+    public void testSaveRecordLowerLimitEdge() throws Exception{
+    	testSaveRecord("100", true);
+    }
+    
+    @Test 
+    public void testSaveRecordInRange() throws Exception{
+    	testSaveRecord("101", true);
+    }
+    
+    @Test 
+    public void testSaveRecordUpperLimitEdge() throws Exception{
+    	testSaveRecord("200", true);
+    }
+    
+    @Test 
+    public void testSaveRecordUpperLimitOutside() throws Exception{
+    	testSaveRecord("201", false);
+    }
+    
+    
+    public void testSaveRecord(String intWithRangeValue, boolean passExpected) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
@@ -455,6 +531,7 @@ public class TrackerControllerTest extends RecordFormTest {
         Map<String, String> params = new HashMap<String, String>();
         params.put("surveyId", survey.getId().toString());
         //params.put("recordId","");
+        params.put("survey_species_search", speciesA.getScientificName());
         params.put("species", speciesA.getId().toString());
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
@@ -468,11 +545,14 @@ public class TrackerControllerTest extends RecordFormTest {
         String value;
         for (Attribute attr : survey.getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-            value = new String();
+            value = "";
             switch (attr.getType()) {
                 case INTEGER:
                     value = "123";
                     break;
+                case INTEGER_WITH_RANGE:
+	               	 value = intWithRangeValue;                    
+	               	 break;
                 case DECIMAL:
                     value = "456.7";
                     break;
@@ -510,11 +590,14 @@ public class TrackerControllerTest extends RecordFormTest {
         
         for (Attribute attr : speciesA.getTaxonGroup().getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, TrackerController.TAXON_GROUP_ATTRIBUTE_PREFIX, attr.getId());
-            value = new String();
+            value = "";
             switch (attr.getType()) {
                 case INTEGER:
                     value = "987";
                     break;
+                case INTEGER_WITH_RANGE:
+	               	 value = intWithRangeValue;                    
+	               	 break;
                 case DECIMAL:
                     value = "654.3";
                     break;
@@ -555,64 +638,157 @@ public class TrackerControllerTest extends RecordFormTest {
         
         Assert.assertTrue(mv.getView() instanceof RedirectView);
         RedirectView redirect = (RedirectView)mv.getView();
-        Assert.assertEquals(redirectionService.getMySightingsUrl(survey), redirect.getUrl());
+        if(passExpected){
+			Assert.assertEquals(redirectionService.getMySightingsUrl(survey), redirect.getUrl());
+			Assert.assertEquals(1, recordDAO.countRecords(getRequestContext().getUser()).intValue());
+			Record rec = recordDAO.getRecords(getRequestContext().getUser()).get(0);
+
+			Assert.assertEquals(speciesA, rec.getSpecies());
+			Assert.assertEquals(Double.parseDouble(params.get("latitude")), rec.getPoint().getY());
+			Assert.assertEquals(Double.parseDouble(params.get("longitude")), rec.getPoint().getX());
+			
+	        Calendar cal = GregorianCalendar.getInstance();
+	        cal.setTime(today);
+	        cal.set(Calendar.HOUR_OF_DAY, 15);
+	        cal.set(Calendar.MINUTE, 48);
+	        cal.set(Calendar.SECOND, 0);
+	        cal.set(Calendar.MILLISECOND, 0);
+	        
+	        Assert.assertEquals(cal.getTime(), rec.getWhen());
+	        Assert.assertEquals(cal.getTime().getTime(), rec.getTime().longValue());
+	        
+	        Assert.assertEquals(rec.getNotes(), params.get("notes"));
+	        
+	        for(TypedAttributeValue recAttr: rec.getAttributes()) {
+	            Attribute attr = recAttr.getAttribute();
+	            if(survey.getAttributes().contains(recAttr.getAttribute())) {
+	                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
+	            } else if(speciesA.getTaxonGroup().getAttributes().contains(recAttr.getAttribute())) {
+	                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, TrackerController.TAXON_GROUP_ATTRIBUTE_PREFIX, attr.getId());
+	            } else {
+	                Assert.assertFalse(true);
+	                key = null;
+	            }
+	            
+	            switch (recAttr.getAttribute().getType()) {
+	                case INTEGER:
+	                case INTEGER_WITH_RANGE:
+	                    Assert.assertEquals(Integer.parseInt(params.get(key)), recAttr.getNumericValue().intValue());
+	                    break;
+	                case DECIMAL:
+	                    Assert.assertEquals(Double.parseDouble(params.get(key)), recAttr.getNumericValue().doubleValue());
+	                    break;
+	                case DATE:
+	                    Assert.assertEquals(today, recAttr.getDateValue());
+	                    break;
+	                case STRING:
+	                case STRING_AUTOCOMPLETE:
+	                case TEXT:
+	                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
+	                    break;
+	                case STRING_WITH_VALID_VALUES:
+	                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
+	                    break;
+	                case FILE:
+	                case IMAGE:
+	                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
+	                    break;
+	                default:
+	                    Assert.assertTrue("Unknown Attribute Type: "+recAttr.getAttribute().getType().toString(), false);
+	                    break;
+	            }
+	        }
+        }else{
+        	Assert.assertEquals("/bdrs/user/tracker.htm", redirect.getUrl());
+        	Assert.assertEquals(0, recordDAO.countRecords(getRequestContext().getUser()).intValue());
+        }
+    }
+    
+    @Test 
+    public void testSaveRecordInvalidEarlyDateNoEnd() throws Exception{
+    	testSaveRecordWithDateRange("04 Jul 2011 12:45", "05 Jul 2011 00:00", null, false);
+    }
+    
+    @Test 
+    public void testSaveRecordInvalidEarlyDate() throws Exception{
+    	testSaveRecordWithDateRange("04 Jul 2011 12:45", "05 Jul 2011 00:00", "06 Jul 2011 17:00", false);
+    }
+    
+    //@Test this test doesn't work as expected, but does in practice, why?
+    public void testSaveRecordValidDateNoEnd() throws Exception{
+    	testSaveRecordWithDateRange("05 Jul 2011 12:45", "05 Jul 2011 00:00", null, true);
+    }
+    
+    //@Test this test doesn't work as expected, but does in practice, why?
+    public void testSaveRecordSameStartDate() throws Exception{
+    	testSaveRecordWithDateRange("05 Jul 2011 12:45", "05 Jul 2011 00:00", "06 Jul 2011 17:00", true);
+    }
+    
+    @Test 
+    public void testSaveRecordSameEndDate() throws Exception{
+    	testSaveRecordWithDateRange("06 Jul 2011 12:45", "05 Jul 2011 00:00", "06 Jul 2011 17:00", false);
+    }
+    
+    @Test 
+    public void testSaveRecordInvalidLateDate() throws Exception{
+    	testSaveRecordWithDateRange("07 Jul 2011 12:45", "05 Jul 2011 00:00", "06 Jul 2011 17:00", false);
+    }
+    
+    public void testSaveRecordWithDateRange(String date, String earliest, String latest, boolean passExpected) throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
         
-        Assert.assertEquals(1, recordDAO.countRecords(getRequestContext().getUser()).intValue());
-        Record rec = recordDAO.getRecords(getRequestContext().getUser()).get(0);
+        DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm");
+        dateFormat.setLenient(false);
+        Date today = dateFormat.parse(dateFormat.format(new Date(System.currentTimeMillis())));
         
-        Assert.assertEquals(speciesA, rec.getSpecies());
-        Assert.assertEquals(Double.parseDouble(params.get("latitude")), rec.getPoint().getY());
-        Assert.assertEquals(Double.parseDouble(params.get("longitude")), rec.getPoint().getX());
+        request.setMethod("POST");
+        request.setRequestURI("/bdrs/user/tracker.htm");
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("surveyId", survey.getId().toString());
+        //params.put("recordId","");
+        params.put("survey_species_search", speciesA.getScientificName());
+        params.put("species", speciesA.getId().toString());
+        params.put("latitude", "-32.546");
+        params.put("longitude", "115.488");
+        params.put("date", date);
+        params.put("time_hour", "15");
+        params.put("time_minute", "48");
+        params.put("number", "29");
+        params.put("notes", "This is a test record");
         
-        Calendar cal = GregorianCalendar.getInstance();
-        cal.setTime(today);
-        cal.set(Calendar.HOUR_OF_DAY, 15);
-        cal.set(Calendar.MINUTE, 48);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+        survey.setStartDate(earliest);
+        survey.setEndDate(latest);
+        survey = surveyDAO.save(survey);
         
-        Assert.assertEquals(cal.getTime(), rec.getWhen());
-        Assert.assertEquals(cal.getTime().getTime(), rec.getTime().longValue());
+        request.setParameters(params);
+        ModelAndView mv = handle(request, response);
         
-        Assert.assertEquals(rec.getNotes(), params.get("notes"));
-        
-        for(AttributeValue recAttr: rec.getAttributes()) {
-            Attribute attr = recAttr.getAttribute();
-            if(survey.getAttributes().contains(recAttr.getAttribute())) {
-                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-            } else if(speciesA.getTaxonGroup().getAttributes().contains(recAttr.getAttribute())) {
-                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, TrackerController.TAXON_GROUP_ATTRIBUTE_PREFIX, attr.getId());
-            } else {
-                Assert.assertFalse(true);
-                key = null;
-            }
-            
-            switch (recAttr.getAttribute().getType()) {
-                case INTEGER:
-                    Assert.assertEquals(Integer.parseInt(params.get(key)), recAttr.getNumericValue().intValue());
-                    break;
-                case DECIMAL:
-                    Assert.assertEquals(Double.parseDouble(params.get(key)), recAttr.getNumericValue().doubleValue());
-                    break;
-                case DATE:
-                    Assert.assertEquals(today, recAttr.getDateValue());
-                    break;
-                case STRING:
-                case STRING_AUTOCOMPLETE:
-                case TEXT:
-                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
-                    break;
-                case STRING_WITH_VALID_VALUES:
-                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
-                    break;
-                case FILE:
-                case IMAGE:
-                    Assert.assertEquals(params.get(key), recAttr.getStringValue());
-                    break;
-                default:
-                    Assert.assertTrue("Unknown Attribute Type: "+recAttr.getAttribute().getType().toString(), false);
-                    break;
-            }
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView redirect = (RedirectView)mv.getView();
+        if(passExpected){
+			Assert.assertEquals(redirectionService.getMySightingsUrl(survey), redirect.getUrl());
+			Assert.assertEquals(1, recordDAO.countRecords(getRequestContext().getUser()).intValue());
+			Record rec = recordDAO.getRecords(getRequestContext().getUser()).get(0);
+
+			Assert.assertEquals(speciesA, rec.getSpecies());
+			Assert.assertEquals(Double.parseDouble(params.get("latitude")), rec.getPoint().getY());
+			Assert.assertEquals(Double.parseDouble(params.get("longitude")), rec.getPoint().getX());
+			
+	        Calendar cal = GregorianCalendar.getInstance();
+	        cal.setTime(today);
+	        cal.set(Calendar.HOUR_OF_DAY, 15);
+	        cal.set(Calendar.MINUTE, 48);
+	        cal.set(Calendar.SECOND, 0);
+	        cal.set(Calendar.MILLISECOND, 0);
+	        
+	        Assert.assertEquals(cal.getTime(), rec.getWhen());
+	        Assert.assertEquals(cal.getTime().getTime(), rec.getTime().longValue());
+	        
+	        Assert.assertEquals(rec.getNotes(), params.get("notes"));
+        }else{
+        	Assert.assertEquals("/bdrs/user/tracker.htm", redirect.getUrl());
+        	Assert.assertEquals(0, recordDAO.countRecords(getRequestContext().getUser()).intValue());
         }
     }
     

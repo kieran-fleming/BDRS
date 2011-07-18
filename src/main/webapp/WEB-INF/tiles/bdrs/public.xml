@@ -5,6 +5,22 @@
 
 <tiles-definitions>
 
+    <!--  static page renderer with theming -->
+    <definition name="static_public" extends="template">
+        <put-attribute name="content" value="/WEB-INF/jsp/template/theme/static_public.jsp"/>
+    </definition>
+    
+    <!-- map viewer -->
+    <definition name="viewMap" extends="template">
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/viewMap.jsp"/>
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customCss">
+            <add-attribute>bdrs/bdrs.css</add-attribute>
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+
     <!-- reCAPTCHA -->
     <definition name="recaptcha" extends="template">
         <put-attribute name="title" value="Register"/>
@@ -30,6 +46,10 @@
     <definition name="latest_statistics" extends="widget-template">
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/embedded/latest_statistics.jsp"/>
     </definition>
+	
+	<definition name="image_slideshow" extends="widget-template">
+		<put-attribute name="content" value="/WEB-INF/jsp/bdrs/embedded/image_slideshow.jsp"/>
+	</definition>
     
     <definition name="bdrs_embed_js" template="/WEB-INF/jsp/bdrs/embedded/bdrs-embed.js.jsp">
     </definition>

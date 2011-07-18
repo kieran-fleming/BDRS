@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import junit.framework.Assert;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -108,7 +110,7 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
 
         request.setMethod("POST");
         request.setRequestURI("/bdrs/user/managedfile/edit.htm");
-        
+
         MockMultipartFile testFile = new MockMultipartFile("file", "test_text_file.txt", "text/plain", "Spam and Eggs".getBytes());
         request.setParameter("managedFilePk", expected.getId().toString());
         request.setParameter("filename", "C:\\fakepath\\"+testFile.getOriginalFilename());
@@ -181,6 +183,93 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
         
         // Otherwise you didn't find the new file!
         Assert.assertTrue(actual != null);
+    }
+    
+    @Test
+    public void testEditManagedFileWebServiceGet() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        ManagedFile expected = managedFileDAO.getManagedFiles().get(0);
+
+        request.setMethod("GET");
+        request.setRequestURI(ManagedFileController.MANAGED_FILE_EDIT_AJAX_URL);
+        request.setParameter("id", expected.getId().toString());
+
+        handle(request, response);
+        
+        JSONObject result = (JSONObject) JSONSerializer.toJSON(response.getContentAsString());
+        JSONObject data = (JSONObject)result.get("data");
+        
+        Assert.assertEquals(expected.getId().toString(), data.getString("id"));
+        Assert.assertEquals(expected.getCredit(), data.getString("credit"));
+        Assert.assertEquals(expected.getDescription(), data.getString("description"));
+        Assert.assertEquals(expected.getLicense(), data.getString("license"));
+        Assert.assertEquals(expected.getUuid(), data.getString("uuid"));
+    }
+    
+    @Test 
+    public void testEditManagedFileWebServicePostNew() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        request.setMethod("POST");
+        request.setRequestURI("/bdrs/user/managedfile/edit.htm");
+        
+        Set<UUID> uuidSet = new HashSet<UUID>();
+        for(ManagedFile existingMF : managedFileDAO.getManagedFiles()) {
+           uuidSet.add(UUID.fromString(existingMF.getUuid())); 
+        }
+        
+        MockMultipartFile testFile = new MockMultipartFile("file", "test_text_file.txt", "text/plain", "Spam and Eggs".getBytes());
+        request.setParameter("filename", "C:\\fakepath\\"+testFile.getOriginalFilename());
+        request.setParameter("description", "New Description");
+        request.setParameter("credit", "New Credits");
+        request.setParameter("license", "New License");
+        ((MockMultipartHttpServletRequest)request).addFile(testFile);
+        
+        handle(request, response);
+        
+        ManagedFile actual = null;
+        for(ManagedFile mf : managedFileDAO.getManagedFiles()) {
+            if(!uuidSet.contains(UUID.fromString(mf.getUuid()))) {
+                actual = mf;
+                
+                Assert.assertEquals(testFile.getOriginalFilename(), actual.getFilename());
+                Assert.assertEquals(request.getParameter("description"), actual.getDescription());
+                Assert.assertEquals(request.getParameter("credit"), actual.getCredit());
+                Assert.assertEquals(request.getParameter("license"), actual.getLicense());
+            }
+        }
+        
+        // Otherwise you didn't find the new file!
+        Assert.assertTrue(actual != null);
+    }
+    
+
+    @Test 
+    public void testEditManagedFileWebServicePostExisting() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        ManagedFile expected = managedFileDAO.getManagedFiles().get(0);
+
+        request.setMethod("POST");
+        request.setRequestURI(ManagedFileController.MANAGED_FILE_EDIT_AJAX_URL);
+
+        MockMultipartFile testFile = new MockMultipartFile("file", "test_text_file.txt", "text/plain", "Spam and Eggs".getBytes());
+        request.setParameter("managedFilePk", expected.getId().toString());
+        request.setParameter("filename", "C:\\fakepath\\"+testFile.getOriginalFilename());
+        request.setParameter("description", "Edited Description");
+        request.setParameter("credit", "Edited Credits");
+        request.setParameter("license", "Edited License");
+        ((MockMultipartHttpServletRequest)request).addFile(testFile);
+        
+        handle(request, response);
+
+        ManagedFile actual = managedFileDAO.getManagedFile(expected.getId());
+        
+        Assert.assertEquals(testFile.getOriginalFilename(), actual.getFilename());
+        Assert.assertEquals(request.getParameter("description"), actual.getDescription());
+        Assert.assertEquals(request.getParameter("credit"), actual.getCredit());
+        Assert.assertEquals(request.getParameter("license"), actual.getLicense());
     }
     
     @Override

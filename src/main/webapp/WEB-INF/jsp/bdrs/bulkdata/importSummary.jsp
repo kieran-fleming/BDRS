@@ -62,24 +62,24 @@
                         <th>Name</th>
                         <th>Description</th>
                     </thead>
-                    <c:forEach items="${bulkUpload.missingGroups}" var="name">
+                    <c:forEach items="${bulkUpload.missingGroups}" var="missingGroupName">
                         <tr>
                            <td>Group</td>
-                           <td><c:out value="${name}"/></td>
+                           <td><c:out value="${missingGroupName}"/></td>
                            <td>You do not have a student group by this name. Please add one.</td>
                         </tr>
                     </c:forEach>
-                    <c:forEach items="${bulkUpload.missingUsers}" var="name">
+                    <c:forEach items="${bulkUpload.missingUsers}" var="missingUserName">
                         <tr>
                            <td>User</td>
-                           <td><c:out value="${name}"/></td>
+                           <td><c:out value="${missingUserName}"/></td>
                            <td>You do not have a user by this name. Please add one.</td>
                         </tr>
                     </c:forEach>
-                    <c:forEach items="${bulkUpload.missingSurveys}" var="name">
+                    <c:forEach items="${bulkUpload.missingSurveys}" var="missingSurveyName">
                         <tr>
                            <td>Survey</td>
-                           <td><c:out value="${name}"/></td>
+                           <td><c:out value="${missingSurveyName}"/></td>
                            <td>You do not have a survey by this name. Please contact your project administrator.</td>
                         </tr>
                     </c:forEach>
@@ -90,10 +90,10 @@
                            <td>You do not have a location by this name. Please contact your project administrator.</td>
                         </tr>
                     </c:forEach>
-                    <c:forEach items="${bulkUpload.missingIndicatorSpecies}" var="name">
+                    <c:forEach items="${bulkUpload.missingIndicatorSpecies}" var="missingSpeciesName">
                         <tr>
                            <td>Species</td>
-                           <td><c:out value="${name}"/></td>
+                           <td><c:out value="${missingSpeciesName}"/></td>
                            <td>We do not recognise this species. Please contact your project administrator.</td>
                         </tr>
                     </c:forEach>

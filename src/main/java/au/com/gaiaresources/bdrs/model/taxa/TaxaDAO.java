@@ -81,8 +81,8 @@ public interface TaxaDAO {
      */
     AttributeOption createAttributeOption(Attribute attribute, String option);
 
-    AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value);
-    AttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc);
+    TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value);
+    TypedAttributeValue createIndicatorSpeciesAttribute(IndicatorSpecies species, Attribute attr, String value, String desc);
 
     /**
      * Deletes a given option.

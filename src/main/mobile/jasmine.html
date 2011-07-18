@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Jasmine Test Runner</title>
+  
+    <!-- jasmine stuff... -->
+    <link rel="stylesheet" type="text/css" href="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine.css">
+    <script type="text/javascript" src="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine.js"></script>
+    <script type="text/javascript" src="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine-html.js"></script>
+  
+    <!--
+    <link type="text/css" rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.11.custom.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jquery-ui-timepicker.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jquery.mobile-1.0a4.min.css"/>
+    <link type="text/css" rel="stylesheet" href="css/bdrs-mobile.css"/>
+	-->
+    
+    <script type="text/javascript" charset="utf-8" src="js/jquery-1.5.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.ui.timepicker.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.ui.autocomplete.html.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0a4.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.jsonp-2.1.4.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/oni-apollo.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.sparkline.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.4.js"></script>
+    
+    <script type="application/javascript" src="js/persistence.js"></script>
+    <script type="application/javascript" src="js/persistence.search.js"></script>
+        
+    <script type="application/javascript" src="js/persistence.store.sql.js"></script>
+    <script type="application/javascript" src="js/persistence.store.websql.js"></script>
+    <script type="application/javascript" src="js/persistence.jquery.js"></script>
+    <!--script type="application/javascript" src="js/persistence.jquery.mobile.js"></script-->
+
+    <!-- BDRS Mobile Lib -->
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-globals.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-log.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-utils.js"></script>
+
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-queue.js"></script>  
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-persistence.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-pages.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-template.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-dispatcher.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-geolocation.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-validation.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-media.js"></script>      
+    
+    <!-- Mobile application pages -->
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-login.js"></script>
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-dashboard.js"></script>
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-choose-survey.js"></script>
+  
+    <!-- Think about importing this sjs init stuff in from a separate file
+	which would also be included in index.html -->
+    <script type="text/sjs">
+        require.path = "./js/bdrs/";
+        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
+        bdrs.mobile.widget = require("bdrs-mobile-widget");
+        bdrs.mobile.camera = require("bdrs-mobile-camera");
+        bdrs.mobile.survey = require("bdrs-mobile-survey");
+
+        require.path = "./js/bdrs/pages/";
+        bdrs.mobile.pages.guide = require("bdrs-page-guide");
+        bdrs.mobile.pages.species_list = require("bdrs-page-species-list");
+        bdrs.mobile.pages.species = require("bdrs-page-species");
+        bdrs.mobile.pages.settings = require("bdrs-page-settings");
+        bdrs.mobile.pages.record = require("bdrs-page-record");
+        bdrs.mobile.pages.review = require("bdrs-page-review");
+        bdrs.mobile.pages.download_surveys = require("bdrs-page-download-surveys");
+        bdrs.mobile.pages.sites = require("bdrs-page-sites");
+        bdrs.mobile.pages.site = require("bdrs-page-site");
+        bdrs.mobile.pages.add_site = require("bdrs-page-add-site");
+        bdrs.mobile.pages.statistics = require("bdrs-page-statistics");
+        bdrs.mobile.pages.logging = require("bdrs-page-logging");
+    </script>
+	
+	<!-- include our test files (jasmine calls them 'spec' files but whatevaaaaa) here -->
+	<script type="text/javascript" src="js-test/testAttributeValueFormField.js"></script>  
+
+	<!-- include spec files here... -->
+	<script type="text/javascript">
+        // The 'require' stuff in the text/sjs tag executes sequentially.
+        // So we know that when bdrs.mobile.pages.statistics (the last item to
+		// be initialised) is ready we can proceed with our tests.
+        function waitForSjs() {
+			if (!bdrs || !bdrs.mobile || !bdrs.mobile.pages || !bdrs.mobile.pages.statistics) {
+            //if (!bdrs.mobile.pages.statistics) {
+                 setTimeout("waitForSjs()", 100);
+            } else {
+                // Sjs is ready, run the tests!
+                runTests();
+            }
+        };
+        waitForSjs();
+    </script>
+</head>
+<body>
+
+<script type="text/javascript">
+	var runTests = function() {
+		//jasmine.getEnv().addReporter(new jasmine.ConsoleReporter());
+		jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+		jasmine.getEnv().execute();
+    };
+</script>  
+</body>
+</html>                                                                                

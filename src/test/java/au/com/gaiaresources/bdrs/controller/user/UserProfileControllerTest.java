@@ -89,7 +89,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Map<String, String> metaMap = getMetaValueMap(mv);
         
         Assert.assertEquals("WA", metaMap.get(Metadata.STATE));
-        Assert.assertEquals(new String(), metaMap.get(Metadata.TELEPHONE));
+        Assert.assertEquals("", metaMap.get(Metadata.TELEPHONE));
 
         assertUserMetaDataList(mv);
         
@@ -172,10 +172,10 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertEquals("123123123", u.getMetadataValue(Metadata.TELEPHONE));
 
         // returns empty string if key does not exist...
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.CLIMATEWATCH_USERNAME));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.SCHOOL_NAME_KEY));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.SCHOOL_SUBURB_KEY));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.COUNTRY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.CLIMATEWATCH_USERNAME));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_NAME_KEY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_SUBURB_KEY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.COUNTRY));
         
         Assert.assertEquals(UserMetaData.FALSE, u.getMetadataValue("receiveEmail"));
         Assert.assertEquals(UserMetaData.TRUE, u.getMetadataValue("otherBool"));
@@ -366,10 +366,10 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertEquals("123123123", u.getMetadataValue(Metadata.TELEPHONE));
 
         // returns empty string if key does not exist...
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.CLIMATEWATCH_USERNAME));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.SCHOOL_NAME_KEY));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.SCHOOL_SUBURB_KEY));
-        Assert.assertEquals(new String(), u.getMetadataValue(Metadata.COUNTRY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.CLIMATEWATCH_USERNAME));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_NAME_KEY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_SUBURB_KEY));
+        Assert.assertEquals("", u.getMetadataValue(Metadata.COUNTRY));
         
         Assert.assertEquals(true, mv.getModel().get(UserProfileController.USER_ACTIVE));
         Assert.assertEquals((int) userId, Integer.parseInt((String) mv.getModel().get(UserProfileController.USER_ID)));
@@ -498,7 +498,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
 
         Map<String, String> metaMap = getMetaValueMap(mv);
         Assert.assertEquals("WA", metaMap.get(Metadata.STATE));
-        Assert.assertEquals(new String(), metaMap.get(Metadata.TELEPHONE));
+        Assert.assertEquals("", metaMap.get(Metadata.TELEPHONE));
 
         assertUserMetaDataList(mv);
 
@@ -561,6 +561,48 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         // Check the return contents of the modelandview...
         this.handle(request, response);
     }
+    
+ // we expect an exception to be thrown because an ADMIN is trying to edit the details of the ROOT,
+    // note the ROOT is also an ADMIN
+    @Test
+    public void testAdminEditSelfAsAdmin() throws Exception {
+        //User u = userDAO.getUser("testuser");
+        //u.setRoles(new String[] { Role.ADMIN });
+        //userDAO.updateUser(u);
+        
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        request.setMethod("POST");
+        request.setRequestURI("/admin/profile.htm");
+        request.setParameter(UserProfileController.USER_ID, userDAO.getUser("admin").getId().toString());
+
+        request.setParameter(UserProfileController.FIRST_NAME, "Billy");
+        request.setParameter(UserProfileController.LAST_NAME, "Bob");
+        request.setParameter(UserProfileController.EMAIL_ADDR, "billy@bob.com.au");
+        
+        request.setParameter(UserProfileController.USER_NAME, "usertest");
+
+        request.setParameter(Metadata.TELEPHONE, "123123123");
+        request.setParameter(Metadata.STATE, "SA");
+
+        // can set all this stuff but it won't have an effect...
+        request.setParameter(Metadata.CLIMATEWATCH_USERNAME, "aaa");
+        request.setParameter(Metadata.SCHOOL_NAME_KEY, "bbb");
+        request.setParameter(Metadata.SCHOOL_SUBURB_KEY, "ccc");
+
+        // this item doesn't already exist in the metadata
+        request.setParameter(Metadata.COUNTRY, "eee");
+
+        // change password... 6 characters should pass
+        request.setParameter(UserProfileController.PASSWORD, "aardva");
+        
+        // Assigning a role higher than the editing user
+        // request.setParameter(Role.ROOT, "on");
+
+        // Check the return contents of the modelandview...
+        this.handle(request, response);
+    }
+    
 
     // this stuff is so i can get away with minimal refactoring of tests
     @SuppressWarnings("unchecked")

@@ -21,7 +21,7 @@ public class PortalEntryPoint extends PortalPersistentImpl {
     private Logger log = Logger.getLogger(getClass());
     
     private String pattern;
-    private String redirect = new String();
+    private String redirect = "";
     
     @Column(name = "PATTERN", nullable = false)
     public String getPattern() {

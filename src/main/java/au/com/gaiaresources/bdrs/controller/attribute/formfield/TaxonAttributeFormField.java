@@ -3,7 +3,7 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import org.apache.log4j.Logger;
 
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 
 /**
@@ -11,7 +11,7 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
  * configurable field on the taxon editing form that stores its value in a
  * {@link IndicatorSpeciesAttribute}.
  */
-public class TaxonAttributeFormField extends AbstractFormField implements AttributeValueFormField {
+public class TaxonAttributeFormField extends AbstractFormField implements TypedAttributeValueFormField {
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -71,12 +71,12 @@ public class TaxonAttributeFormField extends AbstractFormField implements Attrib
     }
 
 	@Override
-	public AttributeValue getAttributeValue() {
+	public TypedAttributeValue getAttributeValue() {
 		return this.taxonAttribute;
 	}
 
 	@Override
-	public void setAttributeValue(AttributeValue attributeValue) {
+	public void setAttributeValue(TypedAttributeValue attributeValue) {
 		if(!(attributeValue instanceof IndicatorSpeciesAttribute)) {
 			throw new IllegalArgumentException(String.format("Attribute Value %s is not an instance of IndicatorSpeciesAttribute", attributeValue));
 		} 

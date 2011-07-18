@@ -35,7 +35,7 @@ import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.template.TemplateService;
+import au.com.gaiaresources.bdrs.service.detect.BDRSWurflLoadService;
 
 // non autowired class...
 public class PortalInitialiser implements ServletContextListener {
@@ -45,7 +45,7 @@ public class PortalInitialiser implements ServletContextListener {
 
     private Logger log = Logger.getLogger(getClass());
     
-    private static final Map<String, String> CONTENT;
+    public static final Map<String, String> CONTENT;
     static {
         Map<String, String> tmp = new HashMap<String, String>();
         tmp.put("public/home", "public_home.vm");
@@ -68,6 +68,23 @@ public class PortalInitialiser implements ServletContextListener {
         tmp.put("root/theme/edit/themeElements", "root_theme_edit_themeElements.vm");
         tmp.put("root/theme/edit/advanced", "root_theme_edit_advanced.vm");
         tmp.put("root/theme/edit/advanced/editFile", "root_theme_edit_advanced_editFile.vm");
+        
+        tmp.put("admin/groupEdit", "admin_groupEdit.vm");
+        tmp.put("admin/groupListing", "admin_groupListing.vm");
+        
+        tmp.put("admin/censusMethodEdit", "admin_censusMethodEdit.vm");
+        tmp.put("admin/censusMethodListing", "admin_censusMethodListing.vm");
+        
+        tmp.put("email/ExpertConfirmation", "/au/com/gaiaresources/bdrs/email/ExpertConfirmation.vm");
+        tmp.put("email/PasswordReminder", "/au/com/gaiaresources/bdrs/email/PasswordReminder.vm");
+        tmp.put("email/StudentSignUp", "/au/com/gaiaresources/bdrs/email/StudentSignUp.vm");
+        tmp.put("email/StudentSurveyLink", "/au/com/gaiaresources/bdrs/email/StudentSurveyLink.vm");
+        tmp.put("email/TeacherClassListing", "/au/com/gaiaresources/bdrs/email/TeacherClassListing.vm");
+        tmp.put("email/UnhandledError", "/au/com/gaiaresources/bdrs/email/UnhandledError.vm");
+        tmp.put("email/UserSignUp", "/au/com/gaiaresources/bdrs/email/UserSignUp.vm");
+        tmp.put("email/UserSignupApproval", "/au/com/gaiaresources/bdrs/email/UserSignupApproval.vm");
+        tmp.put("email/UserSignupApproved", "/au/com/gaiaresources/bdrs/email/UserSignUpApproved.vm");
+        tmp.put("email/UserSignUpWait", "/au/com/gaiaresources/bdrs/email/UserSignUpWait.vm");
         
         CONTENT = Collections.unmodifiableMap(tmp);
     }
@@ -92,23 +109,31 @@ public class PortalInitialiser implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
+    	 PortalDAO portalDAO = AppContext.getBean(PortalDAO.class);
+         Session sesh = portalDAO.getSessionFactory().getCurrentSession();
+    	
         try {
-            PortalDAO portalDAO = AppContext.getBean(PortalDAO.class);
-            Session sesh = portalDAO.getSessionFactory().getCurrentSession();
             Transaction tx = sesh.beginTransaction();
 
             if (!portalDAO.getPortals().isEmpty()) {
                 log.info("ROOT portal already exists, skipping initialisation");
-                return;
+               // return;
+            }else{
+            	 log.info("Initialising ROOT portal");
+                 initRootPortal();
             }
-            log.info("Initialising ROOT portal");
+            
+            BDRSWurflLoadService loadService = AppContext.getBean(BDRSWurflLoadService.class);
+            loadService.loadWurflXML("wurfl.xml");
+            loadService.loadWurflXML("wurfl_patch.xml");
+            
 
-            initRootPortal();
 
             tx.commit();
         } catch (Exception e) {
             log.error("Failed to initialise ROOT portal", e);
         }
+        
     }
 
     // call this one on server startup if no portal already exists....
@@ -162,7 +187,7 @@ public class PortalInitialiser implements ServletContextListener {
 
         // Just note we don't need to call PortalInitialiser.init() on this new portal.
         // The init method is called inside of PortalDAO.save.
-
+        
         return portal;
     }
     
@@ -174,25 +199,53 @@ public class PortalInitialiser implements ServletContextListener {
 
     // Exposing as a public method so we can reinit the portal content to the defaults.
     // Also good for testing our default content config files...
-    public void initContent(Portal portal) {
-
-        TemplateService templateService = AppContext.getBean(TemplateService.class);
+    public void initContent(Portal portal) throws IOException {
         ContentDAO contentDAO = AppContext.getBean(ContentDAO.class);
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("portal", portal);
 
         for (Entry<String, String> entry : CONTENT.entrySet()) {
-            // note we now copy stuff directly from the file - all the templating stuff is 
-            // left in its original form.
-            try {
-                InputStream stream = PortalInitialiser.class.getResourceAsStream(entry.getValue());
-                String text = readStream(stream);
-                Content content = contentDAO.saveContent(entry.getKey(), text);
-                content.setPortal(portal);
-            } catch (IOException e) {
-                log.error("Could not initialise content. key = " + entry.getKey() + " and filename = " + entry.getValue(), e);
-            }
+            initContent(contentDAO, portal, entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
+     * Initialize the content of the given key to the default value.
+     * @param contentDAO
+     * @param portal
+     * @param key
+     * @throws IOException
+     */
+    public void initContent(ContentDAO contentDAO, Portal portal, String key) throws IOException {
+        initContent(contentDAO, portal, key, null);
+    }
+
+    /**
+     * Initialize the content of the given key to the given value.
+     * @param contentDAO
+     * @param portal
+     * @param key
+     * @param value
+     * @throws IOException
+     */
+    public Content initContent(ContentDAO contentDAO, Portal portal, String key, String value) throws IOException {
+        // note we now copy stuff directly from the file - all the templating stuff is 
+        // left in its original form.
+        if (value == null)
+            value = CONTENT.get(key);
+        InputStream stream = PortalInitialiser.class.getResourceAsStream(value);
+        try {
+            String text = readStream(stream);
+            Content content = contentDAO.saveContent(key, text);
+            content.setPortal(portal);
+            return content;
+        } catch (IOException e) {
+            log.error("Could not initialise content. key = " + key + " and filename = " + value, e);
+            return null;
+        } finally {
+            if (stream != null)
+                stream.close();
         }
     }
 

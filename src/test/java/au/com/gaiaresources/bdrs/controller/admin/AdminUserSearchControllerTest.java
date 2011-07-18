@@ -1,24 +1,14 @@
 package au.com.gaiaresources.bdrs.controller.admin;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.util.StringUtils;
@@ -68,10 +58,10 @@ public class AdminUserSearchControllerTest extends AbstractControllerTest {
         request.setParameter(AdminUserSearchController.SEARCH, "true");
 
         // 13 users with the first name (and hence user name) starting with z
-        request.setParameter(AdminUserSearchController.USER_NAME, "z");
+        request.setParameter(AdminUserSearchController.INPUT_ARG_NAME, "z");
         request.setParameter(AdminUserSearchController.MAX_PER_PAGE, "5");
         request.setParameter(AdminUserSearchController.getPageNumberParamName(), "2");
-        request.setParameter(AdminUserSearchController.getSortParamName(), AdminUserSearchController.USER_NAME);
+        request.setParameter(AdminUserSearchController.getSortParamName(), AdminUserSearchController.INPUT_ARG_NAME);
         request.setParameter(AdminUserSearchController.getOrderParamName(), "2");
 
         ModelAndView mav = this.handle(request, response);
@@ -80,6 +70,10 @@ public class AdminUserSearchControllerTest extends AbstractControllerTest {
         Assert.assertEquals(testnames.length, result.getCount());
         Assert.assertEquals(5, result.getList().size());
         Assert.assertEquals("Zhhh", result.getList().get(0).getFirstName());
+        
+        Assert.assertEquals("z", mav.getModel().get(AdminUserSearchController.OUTPUT_ARG_NAME));
+        Assert.assertFalse(org.springframework.util.StringUtils.hasLength((String)mav.getModel().get(AdminUserSearchController.EMAIL)));
+        Assert.assertFalse(org.springframework.util.StringUtils.hasLength((String)mav.getModel().get(AdminUserSearchController.FULL_NAME)));
     }
 
     @SuppressWarnings("unchecked")
@@ -118,10 +112,10 @@ public class AdminUserSearchControllerTest extends AbstractControllerTest {
         request.setParameter(AdminUserSearchController.SEARCH, "true");
 
         // 13 users with the first name (and hence user name) starting with z
-        request.setParameter(AdminUserSearchController.USER_NAME, "z");
+        request.setParameter(AdminUserSearchController.INPUT_ARG_NAME, "z");
         request.setParameter(AdminUserSearchController.MAX_PER_PAGE, "5");
         request.setParameter(AdminUserSearchController.getPageNumberParamName(), "2");
-        request.setParameter(AdminUserSearchController.getSortParamName(), AdminUserSearchController.USER_NAME);
+        request.setParameter(AdminUserSearchController.getSortParamName(), AdminUserSearchController.INPUT_ARG_NAME);
         request.setParameter(AdminUserSearchController.getOrderParamName(), "2");
 
         ModelAndView mav = this.handle(request, response);

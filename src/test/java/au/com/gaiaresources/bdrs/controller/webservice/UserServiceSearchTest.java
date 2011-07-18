@@ -62,7 +62,7 @@ public class UserServiceSearchTest extends AbstractControllerTest {
         request.setParameter(UserService.USER_NAME, "z");
         request.setParameter(JqGridDataHelper.MAX_PER_PAGE_PARAM, "5");
         request.setParameter(JqGridDataHelper.REQUESTED_PAGE_PARAM, "2");
-        request.setParameter(JqGridDataHelper.SORT_IDX_PARAM, AdminUserSearchController.USER_NAME);
+        request.setParameter(JqGridDataHelper.SORT_IDX_PARAM, AdminUserSearchController.INPUT_ARG_NAME);
         request.setParameter(JqGridDataHelper.SORT_ORDER_PARAM, JqGridDataHelper.DESC);
 
         this.handle(request, response);
@@ -85,7 +85,7 @@ public class UserServiceSearchTest extends AbstractControllerTest {
         request.setParameter(UserService.USER_NAME, "sdakfjhasdfjklsda");
         request.setParameter(JqGridDataHelper.MAX_PER_PAGE_PARAM, "5");
         request.setParameter(JqGridDataHelper.REQUESTED_PAGE_PARAM, "2");
-        request.setParameter(JqGridDataHelper.SORT_IDX_PARAM, UserService.USER_NAME);
+        request.setParameter(JqGridDataHelper.SORT_IDX_PARAM, AdminUserSearchController.INPUT_ARG_NAME);
         request.setParameter(JqGridDataHelper.SORT_ORDER_PARAM, JqGridDataHelper.DESC);
 
         this.handle(request, response);

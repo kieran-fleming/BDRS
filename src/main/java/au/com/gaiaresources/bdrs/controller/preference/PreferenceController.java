@@ -45,17 +45,14 @@ public class PreferenceController extends AbstractController {
         // { Category : [ Preference ] }
         Map<PreferenceCategory, List<Preference>> categoryMap = new HashMap<PreferenceCategory, List<Preference>>();
         // { Category : categoryDisplayName }
+        
+        for (PreferenceCategory pc : prefDAO.getPreferenceCategories()) {
+            categoryMap.put(pc, new ArrayList<Preference>());
+        }
 
         for (Preference pref : prefMap.values()) {
-
             PreferenceCategory cat = pref.getPreferenceCategory();
             List<Preference> prefList = categoryMap.get(cat);
-            if (prefList == null) {
-
-                prefList = new ArrayList<Preference>();
-                categoryMap.put(cat, prefList);
-            }
-            // log.debug(pref.getPreferenceCategory().getName()+": "+pref.getKey());
             prefList.add(pref);
         }
 

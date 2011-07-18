@@ -90,7 +90,7 @@ public class ContentServiceTest extends AbstractControllerTest {
     private String getContent(String key) {
         Content item = contentDAO.getContent(key);
         if (item == null) {
-            return new String("");
+            return "";
         }
         return item.getValue();
     }

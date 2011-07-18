@@ -128,6 +128,11 @@ public class GridServiceImpl implements GridService, ApplicationListener {
                     final Record r = queue.take();
                     logger.info("New record received, starting processing.");
                     
+                    if (r.getSpecies() == null || r.getNumber() == null) {
+                        // cancel processing, null members not handled properly.
+                        continue;
+                    }
+                    
                     for (final Grid g : gridDAO.getGrids()) {
                         doInTransaction(new TransactionCallback<Boolean>() {
                             @Override

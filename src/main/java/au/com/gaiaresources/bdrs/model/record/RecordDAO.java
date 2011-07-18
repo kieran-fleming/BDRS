@@ -10,14 +10,21 @@ import java.util.Set;
 import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.util.Pair;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -109,7 +116,7 @@ public interface RecordDAO extends TransactionDAO {
 
 	Record updateRecord(Record r);
 
-	AttributeValue updateAttribute(Integer id, BigDecimal numeric,
+	TypedAttributeValue updateAttribute(Integer id, BigDecimal numeric,
 			String value, Date date);
 
 	void saveRecordList(List<Record> records);
@@ -146,25 +153,26 @@ public interface RecordDAO extends TransactionDAO {
 	List<Record> getLatestRecords(User user, String scientificNameSearch,
 			int limit);
 
-	RecordAttribute saveRecordAttribute(RecordAttribute recAttr);
+	AttributeValue saveAttributeValue(AttributeValue recAttr);
+	AttributeValue updateAttributeValue(AttributeValue recAttr);
 
 	List<Record> getRecords(String userRegistrationKey, int surveyPk,
 			int locationPk);
 
 	/**
-	 * Converts form values into RecordAttributes
+	 * Converts form values into AttributeValues
 	 * 
 	 * @param r
 	 *            Record that you want to attach the attributes to
 	 * @param attributeMap
 	 *            a Map of <Attribute, Object> containing the Attributes that
 	 *            you want to store values for and the Object which is produced
-	 *            by beanUtils getting the RecordAttribute values from the
+	 *            by beanUtils getting the AttributeValue values from the
 	 *            RecordForm
 	 * @return a List of Records which then need to be attached to the record
 	 *         (record.setAttributes()) and saved using the RecordDAO
 	 */
-	Set<RecordAttribute> saveRecordAttributes(Record r,
+	Set<AttributeValue> saveAttributeValues(Record r,
 			Map<Attribute, Object> attributeMap);
 
 	/**
@@ -192,28 +200,28 @@ public interface RecordDAO extends TransactionDAO {
 	Metadata getRecordMetadataForKey(Record record, String metadataKey);
 
 	/**
-	 * Returns the <code>RecordAttribute</code> with the specified primary key
+	 * Returns the <code>AttributeValue</code> with the specified primary key
 	 * or null if one does not exist.
 	 * 
 	 * @param recordAttributePk
-	 *            primary key of the <code>RecordAttribute</code> to be
+	 *            primary key of the <code>AttributeValue</code> to be
 	 *            retrieved.
-	 * @return the <code>RecordAttribute</code> with the provided primary key or
+	 * @return the <code>AttributeValue</code> with the provided primary key or
 	 *         null if one does not exist.
 	 */
-	RecordAttribute getRecordAttribute(int recordAttributePk);
+	AttributeValue getAttributeValue(int recordAttributePk);
 
 	/**
 	 * Returns the <code>Record</code> that contains a
-	 * <code>RecordAttribute</code> with the specified primary key.
+	 * <code>AttributeValue</code> with the specified primary key.
 	 * 
 	 * @param sesh
 	 *            the session to use to retrieve the <code>Record</code>.
 	 * @param id
-	 *            the primary key of the <code>RecordAttribute</code>.
+	 *            the primary key of the <code>AttributeValue</code>.
 	 * @return the <code>Record</code>
 	 */
-	PersistentImpl getRecordForRecordAttributeId(Session sesh, Integer id);
+	PersistentImpl getRecordForAttributeValueId(Session sesh, Integer id);
 
 	/**
 	 * Returns a list of the latest species recorded for a user.
@@ -223,5 +231,63 @@ public interface RecordDAO extends TransactionDAO {
     List<IndicatorSpecies> getLastSpecies(int userPk, int limit);
 
     void delete(Record record);
-    void delete(RecordAttribute recAttr);
+    void delete(AttributeValue recAttr);
+    
+    PagedQueryResult<Record> search(PaginationFilter filter, Integer surveyPk, List<Integer> userId);
+
+    /**
+     * Queries all records for a list of distinct taxon groups and the number of
+     * records associated with that taxon group.
+     * @param sesh the session to use for this query.
+     * @return the list of distinct taxon groups and record counts.
+     */
+    List<Pair<TaxonGroup, Long>> getDistinctTaxonGroups(Session sesh);
+
+    /**
+     * Queries all records for a list of distinct surveys and the number of
+     * records associated with that survey.
+     * @param sesh the session to use for this query.
+     * @return the list of distinct surveys and record counts.
+     */
+    List<Pair<Survey, Long>> getDistinctSurveys(Session sesh);
+
+    /**
+     * Queries all records for a list of distinct months and the count of records
+     * for that month.
+     * @param sesh the session to use for this query.
+     * @return the list of distinct months and the count of records that match.
+     */
+    List<Pair<Date, Long>> getDistinctMonths(Session sesh);
+
+    /**
+     * Queries all records for a list of distinct census method types
+     * and the count of records for each type
+     * @param sesh the session to use for this query.
+     * @return the list of distinct census methods and count of records that match.
+     */
+    List<Pair<String, Long>> getDistinctCensusMethodTypes(Session sesh);
+
+    /**
+     * Counts all Records which do not have a Census Method.
+     * @return the number of records without a census method.
+     */
+    Integer countNullCensusMethodRecords();
+
+    /**
+     * Queries all records for a list of distinct attribute types
+     * and the count of records for each type
+     * @param sesh the session to use for this query.
+     * @return the list of distinct attribute types and count of records that match.
+     */
+    List<Pair<String, Long>> getDistinctAttributeTypes(Session sesh,
+            AttributeType[] attributeTypes);
+            
+    /**
+     * spatial query for records
+     * 
+     * @param mapLayerId the ids of the maplayers the record must be associated with
+     * @param intersectGeom the geometry to use for the intersection spatial query
+     * @return
+     */
+    List<Record> find(Integer[] mapLayerId, Geometry intersectGeom);
 }

@@ -19,6 +19,7 @@
 	<div id="record_base_map_hover_tip">&nbsp;</div>
 	<div class="map_wrapper" id="map_wrapper">
 	    <div id="base_map" class="defaultmap tracker_map"></div>
+	    <div id="geocode" class="geocode"></div>
 	</div>
 	
 	<c:if test="${ not preview }">
@@ -133,7 +134,7 @@
 
     jQuery(function() {
         var layerName = bdrs.survey.location.LAYER_NAME;
-        bdrs.map.initBaseMap('base_map');
+        bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
         
         <c:choose>
             <c:when test="<%= survey.isPredefinedLocationsOnly() %>">

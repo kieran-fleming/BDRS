@@ -7,6 +7,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -118,7 +120,8 @@ public class SurveyBaseController extends AbstractController {
             @RequestParam(value = "description", required = true) String description,
             @RequestParam(value = "active", defaultValue = "false") boolean active,
             @RequestParam(value = "rendererType", defaultValue="DEFAULT") String rendererType,
-            @RequestParam(value = "surveyDate", required = true) Date surveyDate) 
+            @RequestParam(value = "surveyDate", required = true) Date surveyDate,
+            @RequestParam(value = "surveyEndDate", required = false) String surveyEndDate) 
         throws IOException {
 
         Survey survey;
@@ -135,7 +138,8 @@ public class SurveyBaseController extends AbstractController {
 
         survey.setName(name);
         survey.setDescription(description);
-        survey.setDate(surveyDate);
+        survey.setStartDate(surveyDate);
+        survey.setEndDate(surveyEndDate);
         survey.setActive(active);
         
         // A list of metadata to delete. To maintain referential integrity,

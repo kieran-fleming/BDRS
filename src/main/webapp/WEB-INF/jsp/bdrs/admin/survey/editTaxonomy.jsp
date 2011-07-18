@@ -222,7 +222,8 @@
             return false;
         },
         minLength: 2,
-        delay: 300
+        delay: 300,
+        html:true
     });
 
     jQuery("#speciesGroup_search").autocomplete({
@@ -280,7 +281,8 @@
             return false;
         },
         minLength: 2,
-        delay: 300
+        delay: 300,
+        html:true
     });
 
 </script>

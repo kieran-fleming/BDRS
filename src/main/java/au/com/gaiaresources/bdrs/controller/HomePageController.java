@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,13 +17,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.message.Message;
-import au.com.gaiaresources.bdrs.model.group.Group;
-import au.com.gaiaresources.bdrs.model.group.GroupDAO;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.detect.BDRSWurflDevice;
+import au.com.gaiaresources.bdrs.model.detect.BDRSWurflDeviceDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 
@@ -32,72 +31,74 @@ public class HomePageController extends AbstractController {
     @Autowired
     private RecordDAO recordDAO;
     @Autowired
-    private GroupDAO groupDAO;
-    @Autowired
     private UserDAO userDAO;
     @Autowired
     private SurveyDAO surveyDAO;
+    @Autowired
+    private BDRSWurflDeviceDAO deviceDAO;
 
     Logger log = Logger.getLogger(getClass());
 
-    public static final String[] MOBILE_TAGS = { "android", "iphone", "ipad" };
+    private static final String[] MOBILE_TAGS = { "android", "iphone", "ipad" };
+    private static final String[] DEVICES_WITH_APP = { "Android"};
+
+    
 
     @RequestMapping(value = "/home.htm", method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request,
             HttpServletResponse response) {
-        log.debug("User Agent is : " + request.getHeader("User-Agent"));
-        Integer id = null;
-        ModelAndView view = new ModelAndView();
+    	
+    	log.info("User-Agent = " +request.getHeader("User-Agent"));
+        
+		ModelAndView view = new ModelAndView();
+		String sessionType = (String) request.getSession().getAttribute("sessionType");
+		
+		if ((sessionType != null) && sessionType.equals("mobile")) {
+			// view mobile, forced by user
+			view.setView(new RedirectView(request.getSession().getServletContext().getContextPath() + "/mobile/"));
+		} else if ((sessionType != null) && sessionType.equals("desktop")) {
+			
+			// view desktop, forced by user session
+			if (request.getParameter("signin") != null) {
+				view.setViewName("signin");
+			} else {
+				view.setViewName("home");
+				Record latestRecord = recordDAO.getLatestRecord();
+				view.addObject("recordCount", recordDAO.countAllRecords());
+				view.addObject("latestRecord", latestRecord);
+				view.addObject("uniqueSpeciesCount", recordDAO.countUniqueSpecies());
+				view.addObject("userCount", userDAO.countUsers());
+				view.addObject("publicSurveys", surveyDAO.getActivePublicSurveys(true));
+			}
+			
+		} else {
+			// view based on device detection
+			BDRSWurflDevice d = deviceDAO.getByUserAgent(request.getHeader("User-Agent"));
+			String capabilityValue = deviceDAO.getCapabilityValue(d,"is_wireless_device");
+			if (!Boolean.parseBoolean(capabilityValue)) {
+				//view desktop
+				if (request.getParameter("signin") != null) {
+					view.setViewName("signin");
+				} else {
+					view.setViewName("home");
+					Record latestRecord = recordDAO.getLatestRecord();
+					view.addObject("recordCount", recordDAO.countAllRecords());
+					view.addObject("latestRecord", latestRecord);
+					view.addObject("uniqueSpeciesCount", recordDAO.countUniqueSpecies());
+					view.addObject("userCount", userDAO.countUsers());
+					view.addObject("publicSurveys", surveyDAO.getActivePublicSurveys(true));
+				}
+			} else {
+				RedirectView redirectView = new RedirectView("/mobile/", true, true, true);
+				String deviceOs = deviceDAO.getCapabilityValue(d, "device_os");
+				if (deviceOs != null){
+					view.addObject("hasApp", deviceOs);
+				}
+				view.setView(redirectView);
+			}
+		}
 
-        // This method call will set session variables and therefore cannot
-        // be invoked in the if statement
-        boolean isMobileDevice = mobileHeaderCheck(request);
-        log.debug(isMobileDevice);
-
-        // Check to see if we are signed into a survey.
-        if ((request.getParameter("surveyId") != null)
-                && (!request.getParameter("surveyId").isEmpty())) {
-            id = new Integer(request.getParameter("surveyId"));
-            request.getSession().setAttribute("surveyId", id);
-            view.setViewName("surveylogin");
-        }
-
-        if (!isMobileDevice) {
-            if (request.getParameter("signin") != null) {
-                view.setViewName("signin");
-            } else {
-                if (id == null) {
-                    view.setViewName("home");
-                    Record latestRecord = recordDAO.getLatestRecord();
-                    view.addObject("recordCount", recordDAO.countAllRecords());
-                    view.addObject("latestRecord", latestRecord);
-                    view.addObject("uniqueSpeciesCount", recordDAO.countUniqueSpecies());
-                    view.addObject("userCount", userDAO.countUsers());
-                    view.addObject("publicSurveys", surveyDAO.getActivePublicSurveys(true));
-                    if (latestRecord != null) {
-                        User u = latestRecord.getUser();
-                        String schoolName = u.getMetadataValue(Metadata.SCHOOL_NAME_KEY);
-                        if (schoolName != null && !schoolName.isEmpty()) {
-                            view.addObject("klassOrSchoolName", schoolName);
-                        } else {
-                            Group klass = groupDAO.getClassForUser(u);
-                            String klassName = klass == null ? null
-                                    : klass.getName();
-                            view.addObject("klassOrSchoolName", klassName);
-                        }
-                    }
-                } else {
-                    view.setViewName("signin");
-                }
-            }
-        } else {
-            if (!getRequestContext().isAuthenticated()) {
-                view.setViewName("loginmobile");
-            } else {
-                view.setView(new RedirectView("/bdrs/mobile/home.htm"));
-            }
-        }
-        return view;
+		return view;
     }
 
     @RequestMapping(value = "/deviceDataStore.htm", method = RequestMethod.POST)
@@ -153,7 +154,7 @@ public class HomePageController extends AbstractController {
         String referer = request.getHeader("Referer");
 
         String urlparams = "";
-        if (referer != null) {
+        if (referer != null && referer.contains("?")) {
             urlparams = referer.substring(referer.indexOf('?'));
         }
 
@@ -205,7 +206,7 @@ public class HomePageController extends AbstractController {
      * @param res
      * @return
      */
-    @RequestMapping(value = "/desktopSession.htm", method = RequestMethod.GET)
+    @RequestMapping(value = "/mobile/desktopSession.htm", method = RequestMethod.GET)
     public String setDesktopSession(HttpServletRequest req,
             HttpServletResponse res) {
         req.getSession().setAttribute("sessionType", "desktop");
@@ -224,7 +225,7 @@ public class HomePageController extends AbstractController {
     public String setMobileSession(HttpServletRequest req,
             HttpServletResponse res) {
         req.getSession().setAttribute("sessionType", "mobile");
-        return "redirect:/home.htm";
+        return "redirect:/mobile/";
     }
     
 	/**
@@ -256,17 +257,4 @@ public class HomePageController extends AbstractController {
 		
 		return mv;
 	}
-	
-/*	@RequestMapping(value = "/bdrs/mobile/index.htm", method = RequestMethod.GET)
-	public ModelAndView getIndex(HttpServletRequest request,
-			HttpServletResponse response) {
-		log.debug("THIS MOBILE INDEX");
-		ModelAndView mv = new ModelAndView("mobileTemplate");
-		String ident = getRequestContext().getUser().getRegistrationKey();
-		mv.addObject("manifest", "mobile.manifest?ident=" + ident);
-		Cookie cookie = new Cookie("regkey", getRequestContext().getUser().getRegistrationKey());
-		response.addCookie(cookie);
-		
-		return mv;
-	}*/
 }

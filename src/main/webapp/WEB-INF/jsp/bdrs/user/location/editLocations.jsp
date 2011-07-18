@@ -12,11 +12,13 @@
     </c:if>
     <div class="map_wrapper" id="map_wrapper">
         <div id="base_map" class="defaultmap tracker_map"></div>
+        <div id="geocode" class="geocode"></div>
     </div>
 
     <table id="locationTable" class="datatable">
         <thead>
             <tr>
+                <th>Default</th>
                 <th>Name</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
@@ -25,7 +27,7 @@
         </thead>
         <tbody>
             <c:forEach items="${locations}" var="loc" varStatus="status">
-                <tiles:insertDefinition name="locationRow">
+                <tiles:insertDefinition name="userLocationRow">
                     <tiles:putAttribute name="location" value="${loc}"/>
                     <tiles:putAttribute name="index" value="${status.index}"/>
                 </tiles:insertDefinition>
@@ -41,6 +43,6 @@
 
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.location.initLocationMapAndTable();
+        bdrs.location.initLocationMapAndTable('/bdrs/location/ajaxAddUserLocationRow.htm');
     });
 </script>

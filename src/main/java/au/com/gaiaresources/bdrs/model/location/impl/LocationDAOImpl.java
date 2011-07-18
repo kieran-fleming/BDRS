@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.model.location.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,14 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
     public Location getLocation(int pk) {
         return getByID(Location.class, pk);
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Location> getLocations(List<Integer> ids) {
+    	Query query = getSession().createQuery("FROM Location loc WHERE loc.id IN (:ids)");
+    	query.setParameterList("ids", ids);
+    	return query.list();
+    }
 
     @Override
     public Location createUserLocation(User user, String locationName,
@@ -72,7 +81,6 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
 
     @Override
     public Location getUserLocation(User user, String locationName) {
-
         String query = "from Location loc where loc.user = :user and loc.name = :name";
         Query q = getSession().createQuery(query);
         q.setParameter("user", user);
@@ -86,7 +94,6 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
             }
             return locList.get(0);
         }
-
     }
 
     @Override

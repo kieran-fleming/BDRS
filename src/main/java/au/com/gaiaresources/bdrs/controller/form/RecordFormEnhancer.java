@@ -46,6 +46,8 @@ public class RecordFormEnhancer {
             case INTEGER:
                 generator.addProperty(attributeName, Integer.class);
                 break;
+            case INTEGER_WITH_RANGE:
+            	break;
             case DATE:
                 generator.addProperty(attributeName, Date.class);
                 break;

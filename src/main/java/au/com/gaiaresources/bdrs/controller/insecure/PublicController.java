@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
 
 @Controller
@@ -23,6 +25,8 @@ public class PublicController extends AbstractController {
 
     @Autowired
     private TaxaDAO taxaDAO;
+    @Autowired
+    private PortalDAO portalDAO;
     
     @Autowired
     private TemplateService templateService;
@@ -76,6 +80,13 @@ public class PublicController extends AbstractController {
     @RequestMapping(value = "/privacyStatement.htm", method = RequestMethod.GET)
     public ModelAndView renderPrivacyStatement() {
         ModelAndView view = new ModelAndView("privacyStatement");
+        return view;
+    }
+    
+    @RequestMapping(value="/index.html", method = RequestMethod.GET)
+    public ModelAndView index(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView view = new ModelAndView("index");
+        view.addObject("portalList", portalDAO.getPortals());
         return view;
     }
 }

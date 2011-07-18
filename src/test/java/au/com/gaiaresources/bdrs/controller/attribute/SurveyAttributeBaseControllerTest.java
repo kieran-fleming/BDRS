@@ -15,12 +15,13 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import au.com.gaiaresources.bdrs.controller.attribute.AttributeFormField;
-import au.com.gaiaresources.bdrs.controller.attribute.AttributeInstanceFormField;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
+import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -40,15 +41,79 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
     private MetadataDAO metadataDAO;
     @Autowired
     private AttributeDAO attributeDAO;
+    
+    @Autowired
+    private CensusMethodDAO cmDAO;
+    @Autowired
+    private AttributeDAO attrDAO;
 
     private Survey survey;
+    
+    CensusMethod m1;
+    CensusMethod m2;
+    CensusMethod m3;
 
     @Before
     public void setUp() throws Exception {
+        // worst test data generation ever!
+        m1 = new CensusMethod();
+        m1.setName("apple");
+        m1.setTaxonomic(Taxonomic.NONTAXONOMIC);
+        Attribute testAttr1 = new Attribute();
+        testAttr1.setName("an_attribute");
+        testAttr1.setDescription("attribute description");
+        testAttr1.setRequired(true);
+        testAttr1.setScope(AttributeScope.RECORD);
+        testAttr1.setTag(false);
+        testAttr1.setTypeCode("IN");
+        attrDAO.save(testAttr1);
+        
+        Attribute testAttr2 = new Attribute();
+        testAttr2.setName("anotherattr");
+        testAttr2.setDescription("attribsdfsute desgfdsdfcription");
+        testAttr2.setRequired(true);
+        testAttr2.setScope(AttributeScope.RECORD);
+        testAttr2.setTag(false);
+        testAttr2.setTypeCode("ST");
+        attrDAO.save(testAttr2);
+        
+        m1.getAttributes().add(testAttr1);
+        m1.getAttributes().add(testAttr2);
+        m1 = cmDAO.save(m1);
+        
+        
+        m2 = new CensusMethod();
+        m2.setName("banana");
+        m2.setTaxonomic(Taxonomic.TAXONOMIC);
+        Attribute testAttr3 = new Attribute();
+        testAttr3.setName("an_attribute_22");
+        testAttr3.setDescription("attribute description 22");
+        testAttr3.setRequired(true);
+        testAttr3.setScope(AttributeScope.RECORD);
+        testAttr3.setTag(false);
+        testAttr3.setTypeCode("IN 22");
+        m2.getAttributes().add(testAttr3);
+        m2 = cmDAO.save(m2);
+        attrDAO.save(testAttr3);
+        
+        m3 = new CensusMethod();
+        m3.setName("chicken");
+        m3.setTaxonomic(Taxonomic.TAXONOMIC);
+        Attribute testAttr4 = new Attribute();
+        testAttr4.setName("an_attribute_22");
+        testAttr4.setDescription("attribute description 22");
+        testAttr4.setRequired(true);
+        testAttr4.setScope(AttributeScope.RECORD);
+        testAttr4.setTag(false);
+        testAttr4.setTypeCode("INasd22");
+        m3.getAttributes().add(testAttr4);
+        m3 = cmDAO.save(m3);
+        attrDAO.save(testAttr4);
+        
         survey = new Survey();
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
         metadataDAO.save(md);
@@ -60,6 +125,9 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         }
         //survey.setAttributes();
         //survey.setSpecies(null);
+        
+        survey.getCensusMethods().add(m1);
+        
         survey = surveyDAO.save(survey);
     }
 
@@ -89,6 +157,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             // the list must be property attributes.
             Assert.assertTrue(formField.isPropertyField());
         }
+        Assert.assertEquals(1, survey.getCensusMethods().size());
+        Assert.assertTrue(survey.getCensusMethods().contains(m1));
     }
 
     @Test
@@ -196,6 +266,10 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         }
                 
         request.addParameters(params);
+        
+        // change the census methods...
+        request.addParameter("childCensusMethod", m2.getId().toString());
+        request.addParameter("childCensusMethod", m3.getId().toString());
 
         ModelAndView mv = handle(request, response);
         Assert.assertTrue(mv.getView() instanceof RedirectView);
@@ -226,6 +300,11 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
 
             index = index + 1;
         }
+        
+        Assert.assertEquals(2, actualSurvey.getCensusMethods().size());
+        Assert.assertFalse(actualSurvey.getCensusMethods().contains(m1));
+        Assert.assertTrue(actualSurvey.getCensusMethods().contains(m2));
+        Assert.assertTrue(actualSurvey.getCensusMethods().contains(m3));
     }
 
     @Test

@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 
 import java.util.Map;
 
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 /**
@@ -31,9 +32,9 @@ public class DoubleValidator extends AbstractValidator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
 
-        boolean isValid = super.validate(parameterMap, key, errorMap);
+        boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
         if (isValid) {
             String value = getSingleParameter(parameterMap, key);
             if (value != null && !value.isEmpty()) {

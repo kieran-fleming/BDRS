@@ -2,8 +2,9 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 
 import java.util.Map;
 
-import org.w3c.dom.ls.LSException;
+import org.apache.log4j.Logger;
 
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 /**
@@ -11,6 +12,8 @@ import au.com.gaiaresources.bdrs.service.property.PropertyService;
  * is between the min and max range.
  */
 public class IntRangeValidator extends IntValidator {
+	
+	Logger log = Logger.getLogger(getClass());
 
     private static final String RANGE_MESSAGE_KEY = "IntRangeValidator.range";
     private static final String RANGE_MESSAGE = "Must be a number between %d and %d.";
@@ -84,12 +87,15 @@ public class IntRangeValidator extends IntValidator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
-
-        boolean isValid = super.validate(parameterMap, key, errorMap);
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
+    	return this.validate(parameterMap, key, attribute, errorMap, this.min, this.max);
+    }
+    
+    protected boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap, int min, int max){
+        boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
         if (isValid) {
-            
             String value = getSingleParameter(parameterMap, key);
+            
             if (value != null && !value.isEmpty()) {
                 
                 int val = Integer.parseInt(value, 10);

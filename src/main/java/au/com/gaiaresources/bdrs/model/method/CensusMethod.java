@@ -6,6 +6,9 @@ import java.util.List;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -30,7 +33,10 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 public class CensusMethod extends PortalPersistentImpl {
     private String name;
     private List<Attribute> attributes = new ArrayList<Attribute>();
-    private boolean taxonomic;
+    private Taxonomic taxonomic;
+    private List<CensusMethod> censusMethods = new ArrayList<CensusMethod>();
+    private String type;
+    private String description;
     
     /**
      * Get the name of this <code>Location</code>.
@@ -57,13 +63,44 @@ public class CensusMethod extends PortalPersistentImpl {
     }
     
     @CompactAttribute
+    @Enumerated(EnumType.STRING)
     @Column(name = "taxonomic")
-    public boolean isTaxonomic() {
+    public Taxonomic getTaxonomic() {
         return taxonomic;
     }
 
-    public void setTaxonomic(boolean taxonomic) {
+    public void setTaxonomic(Taxonomic taxonomic) {
         this.taxonomic = taxonomic;
+    }
+    
+    @CompactAttribute
+    @Column(name = "type")
+    public String getType() {
+        return type;
+    }
+    
+    public void setType(String value) {
+        this.type = value;
+    }
+    
+    @CompactAttribute
+    @Column(name = "description", length=1023)
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String value) {
+        this.description = value;
+    }
+    
+    @CompactAttribute
+    @ManyToMany
+    @IndexColumn(name = "pos")
+    public List<CensusMethod> getCensusMethods() {
+        return this.censusMethods;
+    }
+    public void setCensusMethods(List<CensusMethod> cmList) {
+        this.censusMethods = cmList;
     }
 
 }

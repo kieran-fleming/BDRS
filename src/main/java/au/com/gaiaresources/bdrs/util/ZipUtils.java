@@ -28,12 +28,12 @@ public class ZipUtils {
         File file;
         InputStream is;
         FileOutputStream fos;
-        log.debug("Zip File: "+zipFile.getName());
+        log.info("Zip File: "+zipFile.getName());
         Enumeration<? extends ZipEntry> zipFileEntries = zipFile.entries();
         ZipEntry entry;
         while(zipFileEntries.hasMoreElements()) {
             entry = zipFileEntries.nextElement();
-            log.debug("Zip Entry: "+entry.getName());
+            log.info("Zip Entry: "+entry.getName());
             file = new File(dir, entry.getName());
             if(entry.isDirectory()) {
                 boolean dirCreateSuccess = file.mkdirs();

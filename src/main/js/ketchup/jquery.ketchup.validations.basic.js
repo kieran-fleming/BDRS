@@ -134,6 +134,20 @@ $.fn.ketchup.validation('positiveIntegerLessThanOneMillion', function(element, v
     }
 });
 
+$.fn.ketchup.validation('positiveIntegerLessThanOneMillionOrBlank', function(element, value) {
+    if(element.val().length === 0) {
+        return true;
+    } else {
+	    if(/^\d+$/.test(value)) {
+	        var v = parseInt(value, 10);
+	        return v < 1000000;
+	    } else {
+	        return false;
+	    }
+    }   
+});
+
+
 $.fn.ketchup.validation('email', function(element, value) {
   if(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i.test(value)) return true;
   else return false;
@@ -256,4 +270,31 @@ $.fn.ketchup.validation('uniqueOrBlank', function(element, value, uniqueElements
         }
     }
     return isUnique;
+});
+
+$.fn.ketchup.validation('optionallyTaxonomicSpeciesAndNumber', function(element, value, otherSelector) {
+    var other = jQuery(otherSelector);
+    var otherValue = other.val();
+    var bothBlank = value.length === 0 && otherValue.length === 0;
+    var noneBlank = value.length > 0 && otherValue.length > 0;
+    var isValid = bothBlank || noneBlank;
+    
+    var elem = jQuery(element);
+    elem.addClass("validating");
+    if(!other.hasClass("validating")) {
+        other.trigger("blur");
+    } 
+    elem.removeClass("validating");
+    
+    return isValid;
+});
+
+var hexColorRegex = new RegExp('#[0-9A-F]{6}', 'i');
+$.fn.ketchup.validation('color', function(element, value, otherSelector) {
+    return hexColorRegex.test(value);
+});
+
+var uuidRegex = new RegExp('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
+$.fn.ketchup.validation('uuid', function(element, value, otherSelector) {
+    return uuidRegex.test(value);
 });

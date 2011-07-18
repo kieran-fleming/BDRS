@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 import java.util.Map;
 
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.model.taxa.*;
 
 /**
  * Validates that the input is a parseable decimal value and if specified, 
@@ -65,9 +66,9 @@ public class DoubleRangeValidator extends DoubleValidator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
 
-        boolean isValid = super.validate(parameterMap, key, errorMap);
+        boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
         if (isValid) {
             
             String value = getSingleParameter(parameterMap, key);

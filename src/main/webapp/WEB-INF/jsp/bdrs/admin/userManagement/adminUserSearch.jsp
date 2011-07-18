@@ -14,7 +14,7 @@
 		</tr>
     	<tr>
             <td class="formlabel">Login:</td>
-            <td><input name="name" value="<c:out value="${name}" />" size="40"  autocomplete="off"/></td>
+            <td><input name="name" value="<c:out value="${userName}" />" size="40"  autocomplete="off"/></td>
         </tr>
         <tr>
             <td class="formlabel">Email Address:</td>

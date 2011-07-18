@@ -45,6 +45,10 @@ public class UserProfileController extends AbstractController {
     public final static String USER_INDICATOR = "user";
     public final static String ADMIN_INDICATOR = "admin";
     public final static String EDIT_AS = "editAs";
+    
+    public final static String ERROR_EMAIL_TAKEN = "The email is already taken by another user";
+    public final static String ERROR_PASSWORD = "Password must be between 6 and 12 characters";
+    public final static String SUCCESS_STANDARD = "Profile details successfully changed";
 
     @Autowired
     private UserDAO userDAO;
@@ -222,13 +226,15 @@ public class UserProfileController extends AbstractController {
         String highestEditingUserRole = Role.getHighestRole(editingUser.getRoles());
         String highestNewTargetUserRole = Role.getHighestRole(newRoleArray);
         String highestOldTargetUserRole = Role.getHighestRole(targetUser.getRoles());
+        
+        boolean editingSelf = targetUser.getId().equals(editingUser.getId()); 
 
-        if (!Role.isRoleHigher(highestEditingUserRole, highestOldTargetUserRole)) {
+        if (!editingSelf && !Role.isRoleHigher(highestEditingUserRole, highestOldTargetUserRole)) {
             throw new Exception(
             "Can't edit the user details when the target has a higher role");
         }
 
-        if (!Role.isRoleHigherThanOrEqualTo(highestEditingUserRole, highestNewTargetUserRole)) {
+        if (!editingSelf && !Role.isRoleHigherThanOrEqualTo(highestEditingUserRole, highestNewTargetUserRole)) {
             throw new Exception(
                     "Can't assign a role higher than the highest role held by the editing user");
         }
@@ -256,7 +262,7 @@ public class UserProfileController extends AbstractController {
         addAssignedAndAllowedRoles(mv, editingUser, targetUser);
         return mv;
     }
-
+    
     @SuppressWarnings("unchecked")
     private ModelAndView save(HttpServletRequest request,
             HttpServletResponse response, User u) throws Exception {
@@ -274,7 +280,7 @@ public class UserProfileController extends AbstractController {
         if (userByEmail != null && !userByEmail.getId().equals(u.getId())) {
             // The email address is already taken.
             getRequestContext().addMessage(new Message(
-                    "The email is already taken by another user"));
+                    ERROR_EMAIL_TAKEN));
 
             // remove the email from the model to prompt the user to change it
             ModelAndView result = createModelAndView(request, u);
@@ -287,15 +293,15 @@ public class UserProfileController extends AbstractController {
         if (params.get(PASSWORD) != null
                 && params.get(PASSWORD)[0].length() > 0) {
             String newPassword = params.get(PASSWORD)[0];
-            if (newPassword.length() > PASSWORD_MIN_LENGTH
-                    && newPassword.length() < PASSWORD_MAX_LENGTH) {
+            if (newPassword.length() >= PASSWORD_MIN_LENGTH
+                    && newPassword.length() <= PASSWORD_MAX_LENGTH) {
                 if (newPassword != null) {
                     PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
                     u.setPassword(passwordEncoder.encodePassword(newPassword, null));
                 }
             } else {
                 getRequestContext().addMessage(new Message(
-                        "Password must be between 6 and 12 characters"));
+                        ERROR_PASSWORD));
                 return createModelAndView(request, u);
             }
         }
@@ -328,7 +334,7 @@ public class UserProfileController extends AbstractController {
         userDAO.updateUser(u);
 
         getRequestContext().addMessage(new Message(
-                "Profile details successfully changed"));
+                SUCCESS_STANDARD));
 
         // display the updated form...
         return createModelAndView(request, u);

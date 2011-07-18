@@ -4,15 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 @Service
@@ -38,6 +37,7 @@ public class RegistrationService {
         {
         	Map<String, Object> params = new HashMap<String, Object>();
         	params.put("newUser", user);
+        	params.put("portal", RequestContextHolder.getContext().getPortal());
         	if(requireAdminApproval){
         		// Send approval request email to administrators.
         		 String[] searchRoles = {Role.ADMIN};
@@ -89,6 +89,7 @@ public class RegistrationService {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("newUser", user);
         params.put("newpassword", newPassword);
+        params.put("portal", RequestContextHolder.getContext().getPortal());
         emailService.sendMessage(user.getEmailAddress(), "Password Reminder", "PasswordReminder.vm", params);
     }
     

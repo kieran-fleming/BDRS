@@ -20,12 +20,15 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -53,6 +56,9 @@ public class SurveyAttributeBaseController extends AbstractController {
     @Autowired
     private AttributeDAO attributeDAO;
     
+    @Autowired
+    private CensusMethodDAO cmDAO;
+    
     private AttributeFormFieldFactory formFieldFactory = new AttributeFormFieldFactory();
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
@@ -79,7 +85,8 @@ public class SurveyAttributeBaseController extends AbstractController {
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.POST)
-    public ModelAndView submitSurveyAttributes(HttpServletRequest request, HttpServletResponse response) {
+    public ModelAndView submitSurveyAttributes(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList) {
         
         Survey survey = getSurvey(request.getParameter("surveyId"));
         for (String propertyName : Record.RECORD_PROPERTY_NAMES) {
@@ -126,6 +133,17 @@ public class SurveyAttributeBaseController extends AbstractController {
             Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
             metadataDAO.save(md);
         }
+        
+        // no child protection!
+        List<CensusMethod> childList = new ArrayList<CensusMethod>();
+        if (childCensusMethodList != null) {
+            for (int cmId : childCensusMethodList) {
+                CensusMethod child = cmDAO.get(cmId);
+                childList.add(child);
+            }
+        }
+        survey.setCensusMethods(childList);
+        
         surveyDAO.save(survey);
 
         getRequestContext().addMessage("bdrs.survey.attributes.success", new Object[]{survey.getName()});

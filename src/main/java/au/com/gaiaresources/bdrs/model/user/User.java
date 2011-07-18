@@ -26,7 +26,6 @@ import org.hibernate.annotations.ParamDef;
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.annotation.Sensitive;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
-import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.security.Role;
 
@@ -194,7 +193,7 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
     @Transient
     public String getMetadataValue(String key) {
         if (key == null) {
-            return new String();
+            return "";
         }
 
         for (Metadata md : this.getMetadata()) {
@@ -203,7 +202,7 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
             }
         }
 
-        return new String();
+        return "";
     }
 
     // because it's private it doesn't need the transient annotation.. ?
@@ -299,5 +298,14 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
     @Override
     public int compareTo(User o) {
         return getId() - o.getId();
+    }
+    
+    @Transient
+    public String getFullName() {
+        if(this.getFirstName() != null && this.getLastName() != null) {
+            return String.format("%s %s", this.getFirstName(), this.getLastName());
+        } else {
+            return this.getName();
+        }
     }
 }

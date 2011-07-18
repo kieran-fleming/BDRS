@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.model.survey;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +30,12 @@ import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.util.DateUtils;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 @Entity
 @FilterDef(name=PortalPersistentImpl.PORTAL_FILTER_NAME, parameters=@ParamDef( name="portalId", type="integer" ) )
@@ -43,7 +47,8 @@ public class Survey extends PortalPersistentImpl {
 	private String name;
 	private String description;
     private boolean active;
-    private Date date;
+    private Date startDate;
+    private Date endDate;
     private boolean publik;
 
     private List<Location> locations = new ArrayList<Location>();
@@ -52,6 +57,7 @@ public class Survey extends PortalPersistentImpl {
     private Set<IndicatorSpecies> species = new HashSet<IndicatorSpecies>();
 
     private List<Attribute> attributes = new ArrayList<Attribute>();
+    private List<CensusMethod> censusMethods = new ArrayList<CensusMethod>();
 
     private Set<Metadata> metadata = new HashSet<Metadata>();
     
@@ -103,12 +109,44 @@ public class Survey extends PortalPersistentImpl {
      */
     @CompactAttribute
     @Column(name = "SURVEYDATE")
-    public Date getDate() {
-        return date;
+    public Date getStartDate() {
+        return startDate != null ? (Date) startDate.clone() : null;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setStartDate(Date date) {
+        this.startDate = date != null ? (Date) date.clone() : null;
+    }
+
+    public void setStartDate(String date) {
+        setStartDate(DateUtils.getDate(date));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @CompactAttribute
+    @Column(name = "SURVEYENDDATE")
+    public Date getEndDate() {
+        if (this.endDate != null) {
+            // make the end date inclusive by setting the HH:mm to 23:59
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(this.endDate);
+            cal.set(Calendar.HOUR_OF_DAY, 11);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            cal.set(Calendar.AM_PM, Calendar.PM);
+            this.endDate = cal.getTime();
+        }
+
+        return endDate != null ? (Date) endDate.clone() : null;
+    }
+
+    public void setEndDate(Date date) {
+        this.endDate = date != null ? (Date) date.clone() : null;
+    }
+    
+    public void setEndDate(String date) {
+        setEndDate(DateUtils.getDate(date));
     }
 
     @CompactAttribute
@@ -185,6 +223,18 @@ public class Survey extends PortalPersistentImpl {
     public void setMetadata(Set<Metadata> metadata) {
         metadataLookup = null;
         this.metadata = metadata;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @ManyToMany
+    @IndexColumn(name = "pos")
+    public List<CensusMethod> getCensusMethods() {
+        return this.censusMethods;
+    }
+    public void setCensusMethods(List<CensusMethod> cmList) {
+        this.censusMethods = cmList;
     }
 
     @Transient

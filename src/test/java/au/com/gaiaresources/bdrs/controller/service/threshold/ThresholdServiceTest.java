@@ -27,7 +27,6 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
@@ -35,6 +34,7 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -188,8 +188,32 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         Assert.assertFalse(result);
     }
 
-    @Test
-    public void testRecordAttributeCondition() throws Exception {
+    @Test 
+    public void testRecordAttributeConditionLowerLimitOutside() throws Exception{
+    	testRecordAttributeCondition("99");
+    }
+    
+    @Test 
+    public void testRecordAttributeConditionLowerLimitEdge() throws Exception{
+    	testRecordAttributeCondition("100");
+    }
+    
+    @Test 
+    public void testRecordAttributeConditionInRange() throws Exception{
+    	testRecordAttributeCondition("101");
+    }
+    
+    @Test 
+    public void testRecordAttributeConditionUpperLimitEdge() throws Exception{
+    	testRecordAttributeCondition("200");
+    }
+    
+    @Test 
+    public void testRecordAttributeConditionUpperLimitOutside() throws Exception{
+    	testRecordAttributeCondition("201");
+    }
+    
+    public void testRecordAttributeCondition(String intWithRangeValue) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         Map<AttributeType, Object> attributeTypeValueLookup = new HashMap<AttributeType, Object>();
         for (AttributeType at : AttributeType.values()) {
@@ -204,6 +228,9 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 break;
             case INTEGER:
                 attributeTypeValueLookup.put(at, new BigDecimal(101));
+                break;
+            case INTEGER_WITH_RANGE:
+            	attributeTypeValueLookup.put(at, new BigDecimal(intWithRangeValue));
                 break;
             case DECIMAL:
                 attributeTypeValueLookup.put(at, new BigDecimal(123.4567));
@@ -232,7 +259,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         speciesB.setTaxonGroup(taxonGroup);
         //speciesB = taxaDAO.save(speciesB);
 
-        List<RecordAttribute> recAttrList = new ArrayList<RecordAttribute>();
+        List<AttributeValue> recAttrList = new ArrayList<AttributeValue>();
         List<Attribute> attributeList = new ArrayList<Attribute>();
         Attribute attr;
         for (AttributeType attrType : AttributeType.values()) {
@@ -255,12 +282,21 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         optionList.add(opt);
                     }
                     attr.setOptions(optionList);
+                }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                	AttributeOption upper = new AttributeOption();
+                	AttributeOption lower = new AttributeOption();
+                	lower.setValue("100");
+                	upper.setValue("200");
+                	rangeList.add(taxaDAO.save(lower));
+                	rangeList.add(taxaDAO.save(upper));
+                	attr.setOptions(rangeList);
                 }
 
                 //attr = taxaDAO.save(attr);
                 attributeList.add(attr);
 
-                RecordAttribute recAttr = new RecordAttribute();
+                AttributeValue recAttr = new AttributeValue();
                 recAttr.setAttribute(attr);
                 switch (attrType) {
                 case STRING:
@@ -272,6 +308,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                     recAttr.setStringValue((String) attributeTypeValueLookup.get(attrType));
                     break;
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     recAttr.setNumericValue((BigDecimal) attributeTypeValueLookup.get(attrType));
                     break;
                 case DECIMAL:
@@ -295,7 +332,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         Survey survey = new Survey();
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
         //metadataDAO.save(md);
@@ -326,7 +363,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         condition.setClassName(Record.class.getCanonicalName());
         condition.setPropertyPath("attributes");
 
-        Assert.assertEquals(RecordAttribute.class, condition.getTargetIterableTypeForPath());
+        Assert.assertEquals(AttributeValue.class, condition.getTargetIterableTypeForPath());
         ComplexTypeOperator operator = ThresholdService.COMPLEX_TYPE_TO_OPERATOR_MAP.get(condition.getTargetIterableTypeForPath());
         for (Operator keyOperator : operator.getKeyOperators()) {
             for (Operator valueOperator : operator.getValueOperators()) {
@@ -337,7 +374,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         condition.setKeyOperator(keyOperator);
                         condition.setKey(String.format("%s_%s", attrType.toString(), scope.getName()));
                         condition.setValueOperator(valueOperator);
-                        String falseValue = new String();
+                        String falseValue = "";
                         switch (attrType) {
                         case STRING:
                         case STRING_AUTOCOMPLETE:
@@ -349,6 +386,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                             falseValue = condition.getValue() + "Wrong";
                             break;
                         case INTEGER:
+                        case INTEGER_WITH_RANGE:
                             condition.setValue(((BigDecimal) attributeTypeValueLookup.get(attrType)).intValue());
                             falseValue = condition.getValue() + "1";
                             break;
@@ -482,6 +520,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         @Override
         public void sendMessage(String to, String subject, String templateName,
                 Map<String, Object> subsitutionParams) {
+        	
             messageQueue.add(new MockEmailMessage(to, subject, templateName,
                     subsitutionParams));
         }

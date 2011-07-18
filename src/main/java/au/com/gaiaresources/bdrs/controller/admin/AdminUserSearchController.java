@@ -27,11 +27,17 @@ public class AdminUserSearchController extends AbstractController {
     @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
 
-    public static final String USER_NAME = "name";
+    // need to change this from just 'name' as maven filtering was giving us conflicts
+    public static final String OUTPUT_ARG_NAME = "userName";
     public static final String EMAIL = "emailAddress";
     public static final String FULL_NAME = "FULL_NAME";
     //public static final String SORT = "SORT";
     public static final String MAX_PER_PAGE = "MAX_PER_PAGE";
+    
+    
+    
+    // this can't change unless the model changes
+    public static final String INPUT_ARG_NAME = "name";
 
     public static final Integer EXPECTED_NUM_SORT_PARAM = 2;
 
@@ -76,7 +82,8 @@ public class AdminUserSearchController extends AbstractController {
             return mav;
         }
 
-        String username = request.getParameter(USER_NAME);
+        // must be "name" as this is the getter/setter for the login in the model.
+        String username = request.getParameter(INPUT_ARG_NAME);
         String email = request.getParameter(EMAIL);
         String fullname = request.getParameter(FULL_NAME);
         
@@ -96,7 +103,7 @@ public class AdminUserSearchController extends AbstractController {
         mav.addObject(PAGED_USER_RESULT, queryResult);
 
         // pass back the search parameters...
-        mav.addObject(USER_NAME, username);
+        mav.addObject(OUTPUT_ARG_NAME, username);
         mav.addObject(EMAIL, email);
         mav.addObject(FULL_NAME, fullname);
 

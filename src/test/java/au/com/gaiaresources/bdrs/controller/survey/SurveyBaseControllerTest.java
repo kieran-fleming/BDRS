@@ -100,7 +100,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         Calendar cal = GregorianCalendar.getInstance();
         cal.set(2010, 10, 10, 0, 0, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        Assert.assertEquals(survey.getDate().getTime(), cal.getTime().getTime());
+        Assert.assertEquals(survey.getStartDate().getTime(), cal.getTime().getTime());
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         Assert.assertEquals(imgTmp.getName(), md.getValue());
@@ -149,7 +149,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         Calendar cal = GregorianCalendar.getInstance();
         cal.set(2010, 10, 10, 0, 0, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        Assert.assertEquals(survey.getDate().getTime(), cal.getTime().getTime());
+        Assert.assertEquals(survey.getStartDate().getTime(), cal.getTime().getTime());
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         Assert.assertEquals(imgTmp.getName(), md.getValue());

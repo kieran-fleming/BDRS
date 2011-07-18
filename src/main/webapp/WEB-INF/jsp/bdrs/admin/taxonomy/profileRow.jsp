@@ -16,7 +16,7 @@
                 <input type="hidden" name="new_profile" value="${ index }"/>
                 <select name="new_profile_type_${ index }">
                     <c:forEach var="entry" items="<%=  SpeciesProfile.SPECIES_PROFILE_TYPE_VALUES %>">
-                        <option value="${ entry.key }"><c:out value="${ entry.value }" /></option>
+                        <option value="${ entry.key }" <c:if test="${profile.type == entry.key}">selected="selected"</c:if>><c:out value="${ entry.value }" /></option>
                     </c:forEach>
                 </select>
                 

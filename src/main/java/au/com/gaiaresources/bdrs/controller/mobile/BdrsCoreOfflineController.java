@@ -22,7 +22,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
@@ -194,7 +194,7 @@ public class BdrsCoreOfflineController extends AbstractController {
             urlSet.add(s.getTaxonGroup().getThumbNail());
             // gets the silhouette from the speciesAttributes
             speciesAtts = s.getAttributes();
-            for (AttributeValue ia : speciesAtts) {
+            for (TypedAttributeValue ia : speciesAtts) {
                 if (ia.getStringValue().contains("/")) {
                     urlSet.add(ia.getStringValue());
                 }

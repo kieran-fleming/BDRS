@@ -36,7 +36,7 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -114,7 +114,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         survey = new Survey();
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA);
         metadataDAO.save(md);
@@ -230,8 +230,31 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
      * 
      * @throws Exception
      */
-    @Test
-    public void testSaveRecord() throws Exception {
+    @Test 
+    public void testSaveRecordLowerLimitOutside() throws Exception{
+    	testSaveRecord("99");
+    }
+    
+    @Test 
+    public void testSaveRecordLowerLimitEdge() throws Exception{
+    	testSaveRecord("100");
+    }
+    
+    @Test 
+    public void testSaveRecordInRange() throws Exception{
+    	testSaveRecord("101");
+    }
+    
+    @Test 
+    public void testSaveRecordUpperLimitEdge() throws Exception{
+    	testSaveRecord("200");
+    }
+    
+    @Test 
+    public void testSaveRecordUpperLimitOutside() throws Exception{
+    	testSaveRecord("201");
+    }
+    public void testSaveRecord(String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
@@ -289,13 +312,16 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 }
 
                 key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, prefix, attr.getId());
-                value = new String();
+                value = "";
 
                 switch (attr.getType()) {
                 case INTEGER:
                     Integer val = new Integer(sightingIndex + 30);
                     value = val.toString();
                     valueMap.put(attr, val);
+                    break;
+                case INTEGER_WITH_RANGE:
+                	valueMap.put(attr, intWithRangeValue);
                     break;
                 case DECIMAL:
                     value = String.format("50.%d", sightingIndex);
@@ -374,7 +400,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
             Map<Attribute, Object> attributeValueMap = recordScopeAttributeValueMapping.get(taxon);
             Object expected;
-            for (AttributeValue recAttr : record.getAttributes()) {
+            for (TypedAttributeValue recAttr : record.getAttributes()) {
                 if (AttributeScope.SURVEY.equals(recAttr.getAttribute().getScope())) {
                     expected = surveyScopeAttributeValueMapping.get(recAttr.getAttribute());
                 } else {
@@ -383,6 +409,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
                 switch (recAttr.getAttribute().getType()) {
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     Assert.assertEquals(expected, recAttr.getNumericValue().intValue());
                     break;
                 case DECIMAL:

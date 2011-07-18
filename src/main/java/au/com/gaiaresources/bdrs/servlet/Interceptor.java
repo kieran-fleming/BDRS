@@ -37,6 +37,7 @@ import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.UserDetails;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.service.web.GoogleKeyService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 public class Interceptor implements HandlerInterceptor {
@@ -57,6 +58,12 @@ public class Interceptor implements HandlerInterceptor {
     
     @Autowired
     private PropertyService propertyService;
+    
+    @Autowired
+    private GoogleKeyService gkService;
+    
+    private static final String GOOGLE_MAP_KEY = "bdrsGoogleMapsKey";
+    
     /**
      * 
      */
@@ -148,10 +155,21 @@ public class Interceptor implements HandlerInterceptor {
     	    RequestContext requestContext = RequestContextHolder.getContext();
             modelAndView.getModel().put("context", requestContext);
             
+            String googleMapKey = gkService.getGoogleMapApiKey(request.getServerName());
+            if (googleMapKey == null) {
+                log.error("No google maps key found - google maps will not work");
+                modelAndView.addObject(GOOGLE_MAP_KEY, "");
+            } else {
+                modelAndView.addObject(GOOGLE_MAP_KEY, googleMapKey);
+            }
+            
             // Theming
             Theme theme = null;
             Map<String, ThemeElement> themeElementMap = new HashMap<String, ThemeElement>();
-            if(request.getParameter(Theme.DISABLE_THEME) == null) {
+            
+            if( request.getParameter(Theme.DISABLE_THEME) != null) {
+                requestContext.addMessage(propertyService.getMessage("theme.disabled"));
+            } else {
                 theme = requestContext.getTheme();
                 modelAndView.getModel().put("theme", theme);
                 if(theme != null) {
@@ -160,8 +178,6 @@ public class Interceptor implements HandlerInterceptor {
                     }
                 }
                 modelAndView.getModel().put("themeMap", themeElementMap);
-            } else {
-                requestContext.addMessage(propertyService.getMessage("theme.disabled"));
             }
             
             if (modelAndView.getView() instanceof RedirectView) {
@@ -169,13 +185,13 @@ public class Interceptor implements HandlerInterceptor {
             }
             if (request.getParameter("format") != null) {
             	if (request.getParameter("format").equalsIgnoreCase("java")) {
-	            	modelAndView.setViewName("json");
+	            	modelAndView.setViewName("jsonDummyView");
 	            	response.setContentType("text/plain");
 	            	response.getWriter().write(modelAndView.getModel().toString());
 	            	response.getWriter().flush();
 	            	response.getWriter().close();
             	} else if (request.getParameter("format").equalsIgnoreCase("json")) {
-            		modelAndView.setViewName("json");
+            		modelAndView.setViewName("jsonDummyView");
 	            	response.setContentType("application/json");
 	            	response.getWriter().write(parseJSON(modelAndView.getModel()).toString(4));
 	            	response.getWriter().flush();

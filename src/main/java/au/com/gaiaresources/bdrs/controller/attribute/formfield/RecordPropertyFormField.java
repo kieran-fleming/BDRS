@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import org.apache.commons.lang.NotImplementedException;
 
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
@@ -14,6 +15,7 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 public class RecordPropertyFormField extends AbstractRecordFormField {
 
     private IndicatorSpecies species;
+    private Taxonomic taxonomic;
     private String propertyName;
 
     private int weight = 0;
@@ -34,11 +36,12 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
      *            the prefix to be prepended to input names.
      */
     RecordPropertyFormField(Survey survey, Record record, String propertyName,
-            IndicatorSpecies species, String prefix) {
+            IndicatorSpecies species, Taxonomic taxonomic, String prefix) {
 
         super(survey, record, prefix);
 
         this.propertyName = propertyName;
+        this.taxonomic = taxonomic;
         this.species = species;
 
         String mdkey = String.format(Metadata.RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE, this.propertyName);
@@ -71,8 +74,16 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
     public void setSpecies(IndicatorSpecies species) {
         this.species = species;
     }
+    
+    public Taxonomic getTaxonomic() {
+		return taxonomic;
+	}
 
-    public String getPropertyName() {
+	public void setTaxonomic(Taxonomic taxonomic) {
+		this.taxonomic = taxonomic;
+	}
+
+	public String getPropertyName() {
         return propertyName;
     }
 

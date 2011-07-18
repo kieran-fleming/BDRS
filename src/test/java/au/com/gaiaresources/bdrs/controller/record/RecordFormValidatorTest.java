@@ -71,27 +71,27 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
 
         // Bounadary Test
         paramMap.put(key, new String[] { dateFormat.format(valid) });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { dateFormat.format(earliest) });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { dateFormat.format(latest) });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { dateFormat.format(invalidEarly) });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { dateFormat.format(invalidLate) });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         // Parse Error
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -111,21 +111,21 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
 
         // Boundary Test
         paramMap.put(key, new String[] { valid.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null, errorMap));
 
         paramMap.put(key, new String[] { min.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null, errorMap));
 
         paramMap.put(key, new String[] { max.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null, errorMap));
 
         paramMap.put(key, new String[] { invalidMin.toString() });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null, errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { invalidMax.toString() });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null, errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -138,11 +138,11 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
                 false);
 
         paramMap.put(key, new String[] { "1.0" });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null, errorMap));
 
         // Parse Error
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null, errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -169,19 +169,19 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
 
         // Bounadary Test
         paramMap.put(key, new String[] { dateFormat.format(valid) });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { dateFormat.format(past) });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { dateFormat.format(future) });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         // Parse Error
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -201,21 +201,21 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
 
         // Boundary Test
         paramMap.put(key, new String[] { valid.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { min.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { max.toString() });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { invalidMin.toString() });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { invalidMax.toString() });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -228,11 +228,11 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
                 false);
 
         paramMap.put(key, new String[] { "1" });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         // Parse Error
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
@@ -245,25 +245,25 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
                 false);
 
         // Must be required
-        Assert.assertFalse(reqValidator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(reqValidator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertTrue(reqValidator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(reqValidator.validate(paramMap, key, null,  errorMap));
 
         Validator blankValidator = new StringValidator(propertyService, false,
                 true);
 
         // Is not required
         paramMap.clear();
-        Assert.assertTrue(blankValidator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(blankValidator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { "Spam" });
-        Assert.assertTrue(blankValidator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(blankValidator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { "" });
-        Assert.assertTrue(blankValidator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(blankValidator.validate(paramMap, key, null,  errorMap));
     }
 
     @Test
@@ -288,22 +288,93 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
         String invalid = valid.substring(1, valid.length());
 
         paramMap.put(key, new String[] { valid });
-        Assert.assertTrue(validator.validate(paramMap, key, errorMap));
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
         paramMap.put(key, new String[] { invalidLower });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { invalidUpper });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
 
         paramMap.put(key, new String[] { invalid });
-        Assert.assertFalse(validator.validate(paramMap, key, errorMap));
+        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
         Assert.assertTrue(errorMap.containsKey(key));
         errorMap.clear();
     }
+    
+    @Test
+    public void testValidateDateRange() throws Exception {
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        Calendar cal = new GregorianCalendar();
+
+        Date valid = dateFormat.parse("14 Dec 2010");
+
+        cal.setTime(valid);
+        cal.add(Calendar.DAY_OF_WEEK, -7);
+        Date earliest = cal.getTime();
+
+        cal.add(Calendar.DAY_OF_WEEK, -1);
+        Date invalidEarly = cal.getTime();
+
+        cal.setTime(valid);
+        cal.add(Calendar.DAY_OF_WEEK, 7);
+        Date latest = cal.getTime();
+
+        cal.add(Calendar.DAY_OF_WEEK, 1);
+        Date invalidLate = cal.getTime();
+
+        String key = "date";
+        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
+
+        // Boundary Test
+        paramMap.put(key, new String[] { dateFormat.format(valid) });
+        paramMap.put("dateRange", new String[] { dateFormat.format(earliest) , dateFormat.format(latest) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(earliest) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(latest) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(invalidEarly) });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+
+        paramMap.put(key, new String[] { dateFormat.format(invalidLate) });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+
+        // Test with no lower bound
+        paramMap.put(key, new String[] { dateFormat.format(valid) });
+        paramMap.put("dateRange", new String[] { dateFormat.format(earliest) , null });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(earliest) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(latest) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+
+        paramMap.put(key, new String[] { dateFormat.format(invalidEarly) });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+
+        paramMap.put(key, new String[] { dateFormat.format(invalidLate) });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+        
+        // Parse Error
+        paramMap.put(key, new String[] { "Spam" });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+    }
 }

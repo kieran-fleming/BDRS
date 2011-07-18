@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 
@@ -39,20 +40,22 @@ public class TaxonValidator extends AbstractValidator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
 
-        boolean isValid = super.validate(parameterMap, key, errorMap);
+        boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
         if (isValid) {
             String value = getSingleParameter(parameterMap, key);
 
-            List<IndicatorSpecies> taxaList = taxaDAO.getIndicatorSpeciesListByScientificName(value);
-
-            if (taxaList.isEmpty() || taxaList.size() > 1) {
-                if (blank) {
-                    errorMap.put(key, propertyService.getMessage(TAXON_OR_BLANK_MESSAGE_KEY, TAXON_OR_BLANK_MESSAGE));
-                } else {
-                    errorMap.put(key, propertyService.getMessage(TAXON_MESSAGE_KEY, TAXON_MESSAGE));
-                }
+            if(value != null && !value.isEmpty()) {
+	            List<IndicatorSpecies> taxaList = taxaDAO.getIndicatorSpeciesListByScientificName(value);
+	
+	            if (taxaList.isEmpty() || taxaList.size() > 1) {
+	                if (blank) {
+	                    errorMap.put(key, propertyService.getMessage(TAXON_OR_BLANK_MESSAGE_KEY, TAXON_OR_BLANK_MESSAGE));
+	                } else {
+	                    errorMap.put(key, propertyService.getMessage(TAXON_MESSAGE_KEY, TAXON_MESSAGE));
+	                }
+	            }
             }
             // Otherwise it is valid
         }

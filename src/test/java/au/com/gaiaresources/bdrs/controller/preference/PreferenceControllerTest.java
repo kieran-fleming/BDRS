@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.controller.preference;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -17,16 +18,12 @@ import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.preference.impl.PreferenceDAOImpl;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.model.portal.Portal;
-import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 
 public class PreferenceControllerTest extends AbstractControllerTest {
     
     @Autowired
     private PreferenceDAO prefDAO;
-    
-    private Portal portal;
-    
+       
     @Before
     public void setUp() throws Exception {
         // Force reinitialisation of the DAO.
@@ -44,6 +41,10 @@ public class PreferenceControllerTest extends AbstractControllerTest {
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertViewName(mv, "preference");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "categoryMap");
+        
+        List<PreferenceCategory> allCats = prefDAO.getPreferenceCategories();
+        Map<PreferenceCategory, List<Preference>> categoryMap = (Map<PreferenceCategory, List<Preference>>)mv.getModel().get("categoryMap");
+        Assert.assertEquals(allCats.size(), categoryMap.size());
     }
     
     @Test

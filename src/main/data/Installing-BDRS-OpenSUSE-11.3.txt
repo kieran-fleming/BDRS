@@ -1,5 +1,6 @@
 Installing on openSuse
 
+
 Default opensuse install
 use yast to enable ssh access (under system->services)
 use yast to open up port for SSH (security -> firewall)
@@ -84,7 +85,6 @@ tomcat-users.xml:
 <tomcat-users>
   <role rolename="tomcat"/>
   <role rolename="manager"/>
-  <user username="admin" password="BioSnaps!T0mC4t" roles="tomcat,manager"/>
 </tomcat-users>
 
 
@@ -174,7 +174,7 @@ WEB-INF/climatewatch-email.xml:
   sudo vi WEB-INF/climatewatch-hibernate.xml
 WEB-INF/climatewatch-hibernate.xml:
         <property name="username" value="biosnaps"/>
-        <property name="password" value="biosnaps"/>
+        <property name="password" value=""/>
 
 // Configure postgresql libraries
   cd /srv/tomcat6/webapps/BDRS/WEB-INF/

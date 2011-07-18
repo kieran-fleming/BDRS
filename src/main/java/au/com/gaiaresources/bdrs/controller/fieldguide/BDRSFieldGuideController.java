@@ -77,7 +77,6 @@ public class BDRSFieldGuideController  extends AbstractController {
     public ModelAndView viewTaxon(  HttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value="id", required=true) int taxonPk) {
-        
         ModelAndView mv = new ModelAndView("fieldGuideViewTaxon");
         mv.addObject("taxon", taxaDAO.getIndicatorSpecies(taxonPk));
         return mv;

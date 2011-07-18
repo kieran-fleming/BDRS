@@ -41,11 +41,12 @@
 
 <div class="map_wrapper" id="map_wrapper">
     <div id="record_base_map" class="defaultmap tracker_map"></div>
+    <div id="geocode" class="geocode"></div>
 </div>
 
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.map.initBaseMap('record_base_map', 'record_map_layers');
+        bdrs.map.initBaseMap('record_base_map', { geocode: { selector: '#geocode' }});
         bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
         bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePoupUpHandler);
 

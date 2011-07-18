@@ -6,6 +6,8 @@ import java.util.Set;
 import org.hibernate.classic.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -40,6 +42,15 @@ public interface SurveyDAO extends TransactionDAO {
      * @return
      */
     Survey getSurveyData(int pk);
+
+    /**
+     * Returns a list of indicator species from a survey that aren't in the 
+     * list of survey Id's given.
+     * @param pk
+     * @param notTheseSurveys
+     * @return
+     */
+    public List<IndicatorSpecies> getSpeciesForSurvey(Survey thisSurvey, List<Survey> notTheseSurveys);
 
     /**
      * Create a survey and stores it in the database.
@@ -195,6 +206,16 @@ public interface SurveyDAO extends TransactionDAO {
      * @return the survey with the specified primary key.
      */
     Survey getSurvey(Session sesh, int pk);
+    
+    /**
+     * Overriding this because I may break existing code by changing the
+     * interface...
+     * 
+     * @param sesh
+     * @param pk
+     * @return
+     */
+    Survey getSurvey(org.hibernate.Session sesh, int pk);
 
     /**
      * Returns a set of species that have distributions which overlap the survey's locations
@@ -215,4 +236,6 @@ public interface SurveyDAO extends TransactionDAO {
      * @return all surveys containing the specified taxon.
      */
     List<Survey> getSurveys(IndicatorSpecies taxon);
+    
+    PagedQueryResult<Survey> search(PaginationFilter filter);
 }

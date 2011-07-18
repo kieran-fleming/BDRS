@@ -5,8 +5,7 @@
 <a href="${pageContext.request.contextPath}/authenticated/redirect.htm">
     <div id="header" class="<sec:authorize ifAnyGranted="ROLE_ROOT">root</sec:authorize>">
         <div id="portalName">
-            <%= context.getPortal() == null ? "" : context.getPortal().getName() %>
+            <%= context.getPortal() == null ? "Biological Data Recording System" : context.getPortal().getName() %>
         </div>
     </div>
 </a>
-

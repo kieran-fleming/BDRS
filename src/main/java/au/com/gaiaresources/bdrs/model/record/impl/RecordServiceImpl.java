@@ -16,7 +16,7 @@ import au.com.gaiaresources.bdrs.model.record.NewRecordEvent;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordService;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -112,7 +112,7 @@ public class RecordServiceImpl implements RecordService {
 	}
 
 	@Override
-	public AttributeValue updateAttribute(Integer id, BigDecimal numeric, String value, Date date) {
+	public TypedAttributeValue updateAttribute(Integer id, BigDecimal numeric, String value, Date date) {
 		return recordDAO.updateAttribute(id, numeric, value, date);
 	}
 

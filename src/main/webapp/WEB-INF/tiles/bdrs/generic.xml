@@ -43,18 +43,44 @@
 
     <definition name="empty" template="/WEB-INF/jsp/template/emptyContent.jsp"/>
     
-    <definition name="json" template="/WEB-INF/jsp/template/json.jsp"/>
+    <definition name="jsonDummyView" template="/WEB-INF/jsp/template/jsonDummyView.jsp"/>
+    <definition name="postMessage" template="/WEB-INF/jsp/template/postMessage.jsp"/>
     
     <!--  widgets -->
-    <definition name="userSearch" template="/WEB-INF/jsp/bdrs/widget/userSearch.jsp">
+    <definition name="userGrid" template="/WEB-INF/jsp/bdrs/widget/userGrid.jsp">
         <put-attribute name="id"/>
         <put-attribute name="multiselect"/>
         <put-attribute name="scrollbars" value="true"/>
     </definition>
     
-    <definition name="groupSearch" template="/WEB-INF/jsp/bdrs/widget/groupSearch.jsp">
+    <definition name="groupGrid" template="/WEB-INF/jsp/bdrs/widget/groupGrid.jsp">
         <put-attribute name="id"/>
         <put-attribute name="multiselect"/>
         <put-attribute name="scrollbars" value="true"/>
     </definition>
+    
+    <definition name="censusMethodGrid" template="/WEB-INF/jsp/bdrs/widget/censusMethodGrid.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars" value="true"/>
+    </definition>
+    
+    <definition name="geoMapLayerGrid" template="/WEB-INF/jsp/bdrs/widget/geoMapLayerGrid.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars"/>
+    </definition>
+    
+    <definition name="geoMapGrid" template="/WEB-INF/jsp/bdrs/widget/geoMapGrid.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars"/>
+    </definition>
+	
+    <definition name="galleryGrid" template="/WEB-INF/jsp/bdrs/widget/galleryGrid.jsp">
+        <put-attribute name="id"/>
+        <put-attribute name="multiselect"/>
+        <put-attribute name="scrollbars"/>
+    </definition>
+    
 </tiles-definitions>

@@ -176,7 +176,7 @@ public class Session implements org.hibernate.classic.Session {
         if (portal != null) {
             FilterManager.setPortalFilter(this.session, portal);
         } else {
-            log.warn("Portal is not set. Not enabling hibernate portal filter.");
+        	//log.warn("Portal is not set. Not enabling hibernate portal filter.");
         }
 
         return tx;

@@ -11,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
+import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 
 @Controller
@@ -26,8 +27,9 @@ public class UserHomePageController extends AbstractController {
     @RequestMapping(value = "/user/home.htm", method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request) {
         ModelAndView view = new ModelAndView("userHome");
+        Record latestRecord = recordDAO.getLatestRecord();
+        view.addObject("latestRecord", latestRecord);
         view.addObject("recordCount", recordDAO.countRecords(getRequestContext().getUser()));
-        System.err.println(getRequestContext().getUser());
         view.addObject("locationCount", locationDAO.countUserLocations(getRequestContext().getUser()));
         return view;
     }

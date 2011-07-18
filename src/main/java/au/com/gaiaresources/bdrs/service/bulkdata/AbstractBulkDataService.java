@@ -34,25 +34,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
-import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
-import au.com.gaiaresources.bdrs.service.lsid.Lsid;
-import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.survey.SurveyService;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
+import au.com.gaiaresources.bdrs.service.lsid.Lsid;
+import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 
@@ -68,6 +69,7 @@ public abstract class AbstractBulkDataService {
     public static final String HELP_SHEET_NAME = "Help";
     public static final String TAXONOMY_SHEET_NAME = "Taxonomy";
     public static final String LOCATION_SHEET_NAME = "Locations";
+    public static final String CENSUS_METHOD_SHEET_NAME = "Census Methods";
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -100,6 +102,12 @@ public abstract class AbstractBulkDataService {
     
     @Autowired
     protected PropertyService propertyService;
+    
+    @Autowired
+    protected SurveyService surveyService;
+    
+    @Autowired
+    protected BulkDataReadWriteService bulkDataReadWriteService;
 
     private PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
 
@@ -110,13 +118,13 @@ public abstract class AbstractBulkDataService {
 
     public void exportSurveyRecords(Survey survey, List<Record> recordList,
             OutputStream outputStream) throws IOException {
-
+        
         RecordRow rowPrinter = getRecordRow();
         Workbook wb = new HSSFWorkbook();
         if(survey != null) {
             rowPrinter.createCellStyles(wb);
             Sheet observationSheet = wb.createSheet(RECORD_SHEET_NAME);
-    
+
             int rowIndex = 0;
             // Survey Description
             Row surveyDescriptionRow = observationSheet.createRow(rowIndex++);
@@ -124,9 +132,12 @@ public abstract class AbstractBulkDataService {
             surveyDescriptionCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
             surveyDescriptionCell.setCellValue(String.format("%s: %s", survey.getName(), survey.getDescription()));
     
+            // placeholder for census method names etc
+            Row censusMethodTitleRow = observationSheet.createRow(rowIndex++);
+
             // Record Header
             Row headerRow = observationSheet.createRow(rowIndex++);
-            rowPrinter.writeHeader(headerRow, survey);
+            rowPrinter.writeHeader(censusMethodTitleRow, headerRow, survey);
     
             // Merge the survey description cell to occupy the width of the
             // spreadsheet
@@ -138,18 +149,13 @@ public abstract class AbstractBulkDataService {
             ));
     
             for (Record r : recordList) {
-                if (!survey.equals(r.getSurvey())) {
-                    log.warn("Skipping Record: " + r.getId()
-                            + " This record is not a part of survey: "
-                            + survey.getId());
-                }
-    
                 rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
             }
     
             writeHelpSheet(survey, wb, rowPrinter);
             writeLocationSheet(survey, wb, rowPrinter);
             writeTaxonomySheet(survey, wb, rowPrinter);
+            writeCensusMethodSheet(survey, wb, rowPrinter);
         }
         wb.write(outputStream);
     }
@@ -286,6 +292,64 @@ public abstract class AbstractBulkDataService {
             row.createCell(colIndex++).setCellValue(attr.getDescription());
         }
     }
+    
+    private void writeCensusMethodSheet(Survey survey, Workbook wb, RecordRow recordRow) {
+        Sheet censusMethodSheet = wb.createSheet(CENSUS_METHOD_SHEET_NAME);
+        
+        Set<CensusMethod> censusMethods = surveyService.catalogCensusMethods(survey);
+        
+        int rowIndex = 0;
+        int colIndex = 0;
+
+        // Help Header
+        CellStyle helpHeaderStyle = recordRow.getCellStyleByKey(XlsRecordRow.STYLE_HELP_HEADER);
+        
+        Row headerRow = censusMethodSheet.createRow(rowIndex++);
+        colIndex = 0;
+        
+        createStyledCell(headerRow, "Census Method Name", helpHeaderStyle, colIndex++);
+        createStyledCell(headerRow, "Taxonomic", helpHeaderStyle, colIndex++);
+        createStyledCell(headerRow, "Type", helpHeaderStyle, colIndex++);
+        createStyledCell(headerRow, "Description", helpHeaderStyle, colIndex++);
+        createStyledCell(headerRow, "Valid Child Census Methods", helpHeaderStyle, colIndex++);
+        
+        for (CensusMethod cm : censusMethods) {
+            Row cmDescRow = censusMethodSheet.createRow(rowIndex++);
+            colIndex = 0;
+            
+            createCell(cmDescRow, bulkDataReadWriteService.formatCensusMethodNameId(cm), colIndex++);
+            createCell(cmDescRow, cm.getTaxonomic().getName(), colIndex++);
+            createCell(cmDescRow, cm.getType(), colIndex++);
+            createCell(cmDescRow, cm.getDescription(), colIndex++);
+            
+            StringBuilder sb = new StringBuilder();
+            for (CensusMethod childCm : cm.getCensusMethods()) {
+                sb.append(bulkDataReadWriteService.formatCensusMethodNameId(childCm));
+                sb.append(", ");
+            }
+            if (sb.length() >= 2) {
+                sb.delete(sb.length() - 2, sb.length() - 1);
+            }
+            
+            createCell(cmDescRow, sb.toString(), colIndex++);
+        }
+    }
+    
+    private void createCell(Row row, String text, int colIndex) {
+        createStyledCell(row, text, null, colIndex);
+    }
+    
+    private void createStyledCell(Row row, String text, CellStyle style, int colIndex) {
+        Cell cell = row.createCell(colIndex);
+        cell.setCellValue(text);
+        setCellStyle(cell, style);
+    }
+    
+    private void setCellStyle(Cell cell, CellStyle style) {
+        if (style != null) {
+            cell.setCellStyle(style);
+        }
+    }
 
     public BulkUpload importSurveyRecords(Survey survey, InputStream inp)
             throws IOException, ParseException {
@@ -300,18 +364,27 @@ public abstract class AbstractBulkDataService {
             for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
                 sheet = wb.getSheetAt(sheetIndex);
                 sheetName = sheet.getSheetName();
-                if (!TAXONOMY_SHEET_NAME.equals(sheetName)
-                        && !LOCATION_SHEET_NAME.equals(sheetName)
-                        && !HELP_SHEET_NAME.equals(sheetName)) {
+                //if (!TAXONOMY_SHEET_NAME.equals(sheetName)
+                //        && !LOCATION_SHEET_NAME.equals(sheetName)
+                //       && !HELP_SHEET_NAME.equals(sheetName)
+                //        && !CENSUS_METHOD_SHEET_NAME.equals(sheetName)) {
+                if (RECORD_SHEET_NAME.equals(sheetName)) {
 
                     RecordUpload recordUpload;
-                    Row row;
+                    Row row = null;
+                    Row superRow = null;
                     Iterator<Row> rowIterator = sheet.rowIterator();
                     int errorCount = 0;
                     boolean headerReached = false;
                     while (rowIterator.hasNext()
                             && errorCount < PARSE_ERROR_LIMIT) {
-                        row = rowIterator.next();
+                        
+                        superRow = row;
+                        row = rowIterator.next(); 
+                        
+                        if (superRow == null) {
+                            continue;
+                        }
                         
                         // headerParsed means that the header has been loaded
                         // by the record row.
@@ -321,8 +394,7 @@ public abstract class AbstractBulkDataService {
                         if (!headerParsed || !headerReached) {
                             // Skip all rows until the header is reached.
                             if (recordRow.isHeader(row)) {
-                                
-                                recordRow.readHeader(survey, row);
+                                recordRow.readHeader(survey, superRow, row);
                                 headerParsed = true;
                                 headerReached = true;
                             }
@@ -333,6 +405,22 @@ public abstract class AbstractBulkDataService {
                             if (!isBlankRow(row)) {
                                 recordUpload = recordRow.readRow(survey, row);
                                 recordUpload.setSurveyName(survey.getName());
+                                // if the record date is outside the survey date range,
+                                // add an error message for that record
+                                if ((survey.getStartDate() != null && recordUpload.getWhen().before(survey.getStartDate())) || 
+                                        (survey.getEndDate() != null && recordUpload.getWhen().after(survey.getEndDate()))) 
+                                {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyy HH:mm");
+                                    recordUpload.setErrorMessage(
+                                        "Observation date "+
+                                        sdf.format(recordUpload.getWhen())+" outside survey " +
+                                        (survey.getStartDate() != null && survey.getEndDate() != null ? 
+                                                "range ("+sdf.format(survey.getStartDate())+" - "+sdf.format(survey.getEndDate())+")" : 
+                                        "start date ("+sdf.format(survey.getStartDate())+")") + 
+                                        ".");
+                                    recordUpload.setError(true);
+                                }
+                                
                                 bulkUpload.addRecordUpload(recordUpload);
                                 if (recordUpload.isError()) {
                                     errorCount += 1;
@@ -368,6 +456,15 @@ public abstract class AbstractBulkDataService {
         log.debug(String.format("Row %d is blank. Skipping this row.", row.getRowNum()+1));
         return true;
     }
+    
+    private String formatErrorString(RecordUpload ru, String msg) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[Row ");
+        sb.append(ru.getRowNumber().toString());
+        sb.append("] ");
+        sb.append(msg);
+        return sb.toString();
+    }
 
     // ------------------------------------------------------
     // Converting BulkUpload to Persisted Objects
@@ -375,195 +472,251 @@ public abstract class AbstractBulkDataService {
 
     public List<Record> saveRecords(User owner, BulkUpload bulkUpload,
             boolean createMissingData) throws MissingDataException,
-            AuthenticationException, InvalidSurveySpeciesException {
+            AuthenticationException, InvalidSurveySpeciesException, DataReferenceException {
 
         if (bulkUpload.hasError()) {
             return null;
         }
 
         List<Record> records = new ArrayList<Record>();
+        // IMPORTANT!!
+        // because we are using a new hibernate session here all DAO usage
+        // MUST REFER TO THIS NEW SESSION!!  If you don't follow this rule
+        // the app may hang / other weirdness may happen. 
+        // I assume this has something to do
+        // with the sessions deadlocking each other.
         Session sesh = sessionFactory.openSession();
-        Transaction tx = sesh.beginTransaction();
-        User ownerForSesh = (User) sesh.merge(owner);
-
-        // Set up all the src data
-        bulkUpload.setMissingGroups(populateGroups(sesh, ownerForSesh, bulkUpload, createMissingData));
-        bulkUpload.setMissingUsers(populateUsers(sesh, ownerForSesh, bulkUpload, createMissingData));
-        bulkUpload.setMissingSurveys(populateSurveys(sesh, ownerForSesh, bulkUpload, createMissingData));
-        bulkUpload.setMissingLocations(populateLocation(sesh, ownerForSesh, bulkUpload, createMissingData));
-        bulkUpload.setMissingIndicatorSpecies(populateIndicatorSpecies(sesh, bulkUpload));
-
-        if (bulkUpload.isMissingData()) {
-            tx.rollback();
-            if (createMissingData) {
-                // You were allowed to create missing data and yet you still
-                // have missing data. Must be an authentication issue.
-                throw new AuthenticationException();
-
-            } else {
-                // You need to switch on creation of missing data.
-                throw new MissingDataException();
-            }
-        }
-
-        // Create the records
-        Survey survey;
-        Group klass;
-        Group group;
-        User recordedBy;
-        Record rec;
-        RecordAttribute recAttr;
-        IndicatorSpecies species;
-        for (RecordUpload recordUpload : bulkUpload.getRecordUploadList()) {
-            // Put the class in the survey
-            survey = bulkUpload.getSurveyByName(recordUpload.getSurveyName());
-            klass = bulkUpload.getGroupByName(recordUpload.getClassName());
-            group = bulkUpload.getGroupByName(recordUpload.getGroupName());
-
-            // If there is no user for this record, then they will be assigned
-            // to the person who uploaded the spreadsheet.
-            recordedBy = bulkUpload.getUserByUsername(recordUpload.getRecordedByUsername());
-            recordedBy = recordedBy == null ? owner : recordedBy;
-
-            if (klass != null) {
-                survey.getGroups().add(klass);
-                survey.getUsers().add(ownerForSesh);
-                surveyDAO.update(sesh, survey);
-
-                // Put the group in the class
-                if (group != null) {
-                    klass.getGroups().add(group);
-                    klass.getAdmins().add(ownerForSesh);
-                    groupDAO.update(sesh, klass);
-
-                    // Put the user in the group
-                    group.getUsers().add(recordedBy);
-                    groupDAO.update(sesh, group);
+        try {
+            Transaction tx = sesh.beginTransaction();
+    
+            User ownerForSesh = (User) sesh.merge(owner);
+    
+            // Set up all the src data
+            bulkUpload.setMissingGroups(populateGroups(sesh, ownerForSesh, bulkUpload, createMissingData));
+            bulkUpload.setMissingUsers(populateUsers(sesh, ownerForSesh, bulkUpload, createMissingData));
+            bulkUpload.setMissingSurveys(populateSurveys(sesh, ownerForSesh, bulkUpload, createMissingData));
+            bulkUpload.setMissingLocations(populateLocation(sesh, ownerForSesh, bulkUpload, createMissingData));
+            bulkUpload.setMissingIndicatorSpecies(populateIndicatorSpecies(sesh, bulkUpload));
+    
+            if (bulkUpload.isMissingData()) {
+                tx.rollback();
+                if (createMissingData) {
+                    // You were allowed to create missing data and yet you still
+                    // have missing data. Must be an authentication issue.
+                    throw new AuthenticationException();
+    
+                } else {
+                    // You need to switch on creation of missing data.
+                    throw new MissingDataException();
                 }
             }
-
-            try {
-                Lsid lsid = lsidService.fromLSID(recordUpload.getId());
-                rec = recordDAO.getRecord(sesh, lsid.getObjectId());
-            } catch (IllegalArgumentException iae) {
-                rec = new Record();
-            }
-
-            rec.setSurvey(bulkUpload.getSurveyByName(recordUpload.getSurveyName()));
-
-            if (recordUpload.getScientificName() != null
-                    && !recordUpload.getScientificName().isEmpty()) {
-                species = bulkUpload.getIndicatorSpeciesByScientificName(recordUpload.getScientificName());
-            } else {
-                species = bulkUpload.getIndicatorSpeciesByCommonName(recordUpload.getCommonName());
-            }
+    
+            // Create the records
+            Survey survey;
+            Group klass;
+            Group group;
+            User recordedBy;
+            Record rec;
+            IndicatorSpecies species;
+            Map<String, Record> newRecords = new HashMap<String, Record>();
             
-            // an survey with no species actually includes everything
-            if(survey.getSpecies().isEmpty() || survey.getSpecies().contains(species)) {
-                rec.setSpecies(species);                
-            } else {
-                bulkUpload.getInvalidSurveySpecies().put(species, survey);
-            }
-
-            rec.setUser(recordedBy);
-            
-            if(!recordUpload.isGPSLocationName()) {
-                rec.setLocation(bulkUpload.getLocationByLocationUpload(recordUpload.getLocationUpload()));
-            }
-            if(recordUpload.hasLatitudeLongitude()){
-                rec.setPoint(locationService.createPoint(recordUpload.getLatitude(), recordUpload.getLongitude()));
-            }
-            
-            rec.setHeld(recordUpload.isHeld());
-            rec.setWhen(recordUpload.getWhen());
-            rec.setTime(recordUpload.getTime().getTime());
-            rec.setLastDate(recordUpload.getLastDate() != null ? recordUpload.getLastDate()
-                    : recordUpload.getWhen());
-            rec.setLastTime(recordUpload.getLastTime() != null ? recordUpload.getLastTime().getTime()
-                    : recordUpload.getTime().getTime());
-
-            rec.setNotes(recordUpload.getNotes());
-            rec.setFirstAppearance(recordUpload.getFirstAppearance());
-            rec.setLastAppearance(recordUpload.getLastAppearance());
-            rec.setBehaviour(recordUpload.getBehaviour());
-            rec.setHabitat(recordUpload.getHabitat());
-            rec.setNumber(recordUpload.getNumberSeen());
-
-            // Insert the current attributes into a lookup.
-            // We will remove attributes that we retain out of this lookup.
-            // At the end, any attribute remaining in the lookup will be
-            // deleted.
-            Map<Attribute, RecordAttribute> recordAttributeMap = new HashMap<Attribute, RecordAttribute>();
-            for (RecordAttribute curAttr : rec.getAttributes()) {
-                recordAttributeMap.put(curAttr.getAttribute(), curAttr);
-            }
-
-            Set<RecordAttribute> recAttrSet = new HashSet<RecordAttribute>();
-            for (Attribute taxonAttr : species.getTaxonGroup().getAttributes()) {
-                String recAttrValue = recordUpload.getRecordAttribute(taxonAttr.getName());
-                if (!taxonAttr.isTag() && recAttrValue != null
-                        && !recAttrValue.isEmpty()) {
-                    if (recordAttributeMap.containsKey(taxonAttr)) {
-                        recAttr = recordAttributeMap.remove(taxonAttr);
-                    } else {
-                        recAttr = new RecordAttribute();
-                        recAttr.setAttribute(taxonAttr);
+            for (RecordUpload recordUpload : bulkUpload.getRecordUploadList()) {
+                
+                // Put the class in the survey
+                survey = bulkUpload.getSurveyByName(recordUpload.getSurveyName());
+                klass = bulkUpload.getGroupByName(recordUpload.getClassName());
+                group = bulkUpload.getGroupByName(recordUpload.getGroupName());
+    
+                // If there is no user for this record, then they will be assigned
+                // to the person who uploaded the spreadsheet.
+                recordedBy = bulkUpload.getUserByUsername(recordUpload.getRecordedByUsername());
+                recordedBy = recordedBy == null ? owner : recordedBy;
+    
+                if (klass != null) {
+                    survey.getGroups().add(klass);
+                    survey.getUsers().add(ownerForSesh);
+                    surveyDAO.update(sesh, survey);
+    
+                    // Put the group in the class
+                    if (group != null) {
+                        klass.getGroups().add(group);
+                        klass.getAdmins().add(ownerForSesh);
+                        groupDAO.update(sesh, klass);
+    
+                        // Put the user in the group
+                        group.getUsers().add(recordedBy);
+                        groupDAO.update(sesh, group);
                     }
-
-                    populateAttribute(recordUpload, taxonAttr, recAttr);
-
-                    recordDAO.save(sesh, recAttr);
-                    recAttrSet.add(recAttr);
                 }
-            }
-
-            for (Attribute surveyAttr : survey.getAttributes()) {
-                String recAttrValue = recordUpload.getRecordAttribute(surveyAttr.getDescription());
-                if (recAttrValue != null && !recAttrValue.isEmpty()) {
-                    if (recordAttributeMap.containsKey(surveyAttr)) {
-                        recAttr = recordAttributeMap.remove(surveyAttr);
-                    } else {
-                        recAttr = new RecordAttribute();
-                        recAttr.setAttribute(surveyAttr);
+                
+                try {
+                    Lsid lsid = lsidService.fromLSID(recordUpload.getId());
+                    rec = recordDAO.getRecord(sesh, lsid.getObjectId());
+                } catch (IllegalArgumentException iae) {
+                    rec = new Record();
+                    if (org.springframework.util.StringUtils.hasLength(recordUpload.getId())) {
+                        newRecords.put(recordUpload.getId().trim(), rec);
                     }
-
-                    populateAttribute(recordUpload, surveyAttr, recAttr);
-
-                    recordDAO.save(sesh, recAttr);
-                    recAttrSet.add(recAttr);
+                }
+                
+                Set<CensusMethod> cmSet = surveyService.catalogCensusMethods(survey);
+                Integer censusMethodId = org.springframework.util.StringUtils.hasLength(recordUpload.getCensusMethodId()) ? 
+                        bulkDataReadWriteService.parseCensusMethodId(recordUpload.getCensusMethodId())
+                        : 0;
+                CensusMethod cm = findCensusMethod(censusMethodId, cmSet);
+                rec.setCensusMethod(cm);
+                
+                if (cm == null && org.springframework.util.StringUtils.hasLength(recordUpload.getCensusMethodId())) {
+                    // a census method has been requested but it is invalid!
+                    String err = formatErrorString(recordUpload, "You have requested a census method id = " + recordUpload.getCensusMethodId() + " but it is invalid. Only use the ID's exactly as they appear on provided Census Method list bundled with your template");
+                    throw new DataReferenceException(err);
+                }
+                // Set parent record if requested...
+                if (org.springframework.util.StringUtils.hasLength(recordUpload.getParentId())) {
+                    Record parentRecord;
+                    try {
+                        Lsid lsid = lsidService.fromLSID(recordUpload.getParentId());
+                        parentRecord = recordDAO.getRecord(sesh, lsid.getObjectId());
+                    } catch (IllegalArgumentException iae) {
+                        // The parent record must be a newly formed record.
+                        parentRecord = newRecords.get(recordUpload.getParentId());
+                    }
+                    if (parentRecord == null) {
+                        // error!
+                        log.error("Parent record id : " + recordUpload.getParentId() + " was requested but was not found in the list of added records. Can't assign parent record!");
+                        throw new DataReferenceException(formatErrorString(recordUpload, "Cannot find the parent id = " + recordUpload.getParentId() 
+                                                         + ". The ID does not exist in the database nor does it reference a newly created ID in the uploaded data"));
+                    }
+                    // check if the parent record is a valid one i.e. does it fulfill the census method rules.
+                    if (rec.getCensusMethod() == null) {
+                        String err = formatErrorString(recordUpload, "The census method of the row is null, unable to assign a parent record. Review the census method listing for valid combinations.");
+                        throw new DataReferenceException(err);
+                    }
+                    if (parentRecord.getCensusMethod() == null) {
+                        throw new DataReferenceException(formatErrorString(recordUpload, "The census method of the parent record of the row is null, unable to assign a parent record. Review the census method listing for valid combinations."));
+                    }
+                    if (!parentRecord.getCensusMethod().getCensusMethods().contains(rec.getCensusMethod())) {
+                        throw new DataReferenceException(formatErrorString(recordUpload, "The census method of the child record record is not a valid child census method of the parent record. Review the census method listing for valid combinations."));
+                    }
+                    rec.setParentRecord(parentRecord);
+                } else {
+                    rec.setParentRecord(null);
+                }
+                
+                rec.setSurvey(bulkUpload.getSurveyByName(recordUpload.getSurveyName()));
+    
+                if (recordUpload.getScientificName() != null
+                        && !recordUpload.getScientificName().isEmpty()) {
+                    species = bulkUpload.getIndicatorSpeciesByScientificName(recordUpload.getScientificName());
+                } else {
+                    species = bulkUpload.getIndicatorSpeciesByCommonName(recordUpload.getCommonName());
+                }
+                
+                // an survey with no species actually includes everything
+                if(survey.getSpecies().isEmpty() || survey.getSpecies().contains(species)) {
+                    rec.setSpecies(species);                
+                } else {
+                    bulkUpload.getInvalidSurveySpecies().put(species, survey);
+                }
+    
+                rec.setUser(recordedBy);
+                
+                if(!recordUpload.isGPSLocationName()) {
+                    rec.setLocation(bulkUpload.getLocationByLocationUpload(recordUpload.getLocationUpload()));
+                }
+                if(recordUpload.hasLatitudeLongitude()){
+                    rec.setPoint(locationService.createPoint(recordUpload.getLatitude(), recordUpload.getLongitude()));
+                }
+                
+                rec.setHeld(recordUpload.isHeld());
+                rec.setWhen(recordUpload.getWhen());
+                rec.setTime(recordUpload.getTime().getTime());
+                rec.setLastDate(recordUpload.getLastDate() != null ? recordUpload.getLastDate()
+                        : recordUpload.getWhen());
+                rec.setLastTime(recordUpload.getLastTime() != null ? recordUpload.getLastTime().getTime()
+                        : recordUpload.getTime().getTime());
+    
+                rec.setNotes(recordUpload.getNotes());
+                rec.setFirstAppearance(recordUpload.getFirstAppearance());
+                rec.setLastAppearance(recordUpload.getLastAppearance());
+                rec.setBehaviour(recordUpload.getBehaviour());
+                rec.setHabitat(recordUpload.getHabitat());
+                rec.setNumber(recordUpload.getNumberSeen());
+                
+                // Insert the current attributes into a lookup.
+                // We will remove attributes that we retain out of this lookup.
+                // At the end, any attribute remaining in the lookup will be
+                // deleted.
+                Map<Attribute, AttributeValue> recordAttributeMap = new HashMap<Attribute, AttributeValue>();
+                for (AttributeValue curAttr : rec.getAttributes()) {
+                    recordAttributeMap.put(curAttr.getAttribute(), curAttr);
+                }
+    
+                Set<AttributeValue> recAttrSet = new HashSet<AttributeValue>();
+                if (species != null) {
+                    for (Attribute taxonAttr : species.getTaxonGroup().getAttributes()) {
+                        String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, taxonAttr.getName());
+                        if (!taxonAttr.isTag() && org.springframework.util.StringUtils.hasLength(recAttrValue)) {
+                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, taxonAttr, recAttrValue);
+                            recAttrSet.add(recAttr);
+                        }
+                    }
+                }
+    
+                for (Attribute surveyAttr : survey.getAttributes()) {
+                    String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, surveyAttr.getDescription());
+                    if (org.springframework.util.StringUtils.hasLength(recAttrValue)) {
+                        AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, surveyAttr, recAttrValue);
+                        recAttrSet.add(recAttr);
+                    }
+                }
+                
+                if (cm != null) {
+                    for (Attribute censusMethodAttr : cm.getAttributes()) {
+                        String cmAttrValue = recordUpload.getNamedAttribute(recordUpload.getCensusMethodId(), censusMethodAttr.getDescription());
+                        if (org.springframework.util.StringUtils.hasLength(cmAttrValue)) {
+                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, censusMethodAttr, cmAttrValue);
+                            recAttrSet.add(recAttr);
+                        }
+                    }
+                }
+                
+                rec.setAttributes(recAttrSet);
+                rec = recordDAO.save(sesh, rec);
+                records.add(rec);
+    
+                // Delete any remaining RecordAttributes
+                for (AttributeValue delRecAttr : recordAttributeMap.values()) {
+                    recordDAO.delete(sesh, delRecAttr);
                 }
             }
-
-            rec.setAttributes(recAttrSet);
-            rec = recordDAO.save(sesh, rec);
-            records.add(rec);
-
-            // Delete any remaining RecordAttributes
-            for (RecordAttribute delRecAttr : recordAttributeMap.values()) {
-                recordDAO.delete(sesh, delRecAttr);
+            
+            if (bulkUpload.hasInvalidSurveySpecies()) {
+                tx.rollback();
+    
+                throw new InvalidSurveySpeciesException();
+            } else {
+                tx.commit();
             }
+        } finally {
+            sesh.close();
         }
-        
-        if (bulkUpload.hasInvalidSurveySpecies()) {
-            tx.rollback();
-
-            throw new InvalidSurveySpeciesException();
-        } else {
-            tx.commit();
-        }
-
         return records;
     }
-
-    private void populateAttribute(RecordUpload recordUpload, Attribute attr,
-            AttributeValue recAttr) {
-        log.debug("Retrieve attribute with name: "+attr.getDescription());
-        String attributeValue = recordUpload.getRecordAttribute(attr.getDescription());
-        log.debug("attribute was: "+attributeValue);
+    
+    private AttributeValue createRecordAttribute(Session sesh, Map<Attribute, AttributeValue> existingAttributeMap, Attribute attrToAdd, String attributeValue) {
+        AttributeValue recAttr;
+        if (existingAttributeMap.containsKey(attrToAdd)) {
+            recAttr = existingAttributeMap.remove(attrToAdd);
+        } else {
+            recAttr = new AttributeValue();
+            recAttr.setAttribute(attrToAdd);
+        }
         recAttr.setStringValue(attributeValue);
         try {
-            switch (attr.getType()) {
+            switch (attrToAdd.getType()) {
             case INTEGER:
+            case INTEGER_WITH_RANGE:
             case DECIMAL:
                 recAttr.setNumericValue(new BigDecimal(attributeValue));
                 break;
@@ -586,8 +739,10 @@ public abstract class AbstractBulkDataService {
             }
         } catch (ParseException pe) {
             log.warn("Unable to parse date value \"" + attributeValue
-                    + "\" for attribute with name \"" + attr.getName() + "\"", pe);
+                    + "\" for attribute with name \"" + attrToAdd.getName() + "\"", pe);
         }
+        AttributeValue result = recordDAO.save(sesh, recAttr);//recordDAO.saveRecordAttribute(recAttr);
+        return result;
     }
 
     private List<LocationUpload> populateLocation(Session sesh, User owner,
@@ -760,7 +915,7 @@ public abstract class AbstractBulkDataService {
                         + scientificName);
                 missingItems.add(scientificName);
             } else {
-                log.debug("Retrieved Indicator Species: " + scientificName);
+                log.debug("x Retrieved Indicator Species: " + scientificName);
                 bulkUpload.addIndicatorSpecies(species);
             }
         }
@@ -772,12 +927,21 @@ public abstract class AbstractBulkDataService {
                         + commonName);
                 missingItems.add(commonName);
             } else {
-                log.debug("Retrieved Indicator Species: " + commonName);
+                log.debug("y Retrieved Indicator Species: " + commonName);
                 bulkUpload.addIndicatorSpecies(species);
             }
         }
 
         return missingItems;
+    }
+    
+    private CensusMethod findCensusMethod(Integer id, Set<CensusMethod> cmSet) {
+        for (CensusMethod cm : cmSet) {
+            if (cm.getId().equals(id)) {
+                return cm;
+            }
+        }
+        return null;
     }
     
     protected abstract RecordRow getRecordRow();

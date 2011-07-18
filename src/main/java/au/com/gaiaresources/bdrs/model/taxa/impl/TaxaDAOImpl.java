@@ -31,7 +31,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
@@ -152,12 +152,14 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 		if (survey.getSpecies().size() == 0) {
 			return getTaxonGroups();
 		} else {
-			StringBuilder builder = new StringBuilder();
-			builder.append("select distinct g");
-			builder.append(" from TaxonGroup g, IndicatorSpecies i, Survey s");
-			builder.append(" where i.taxonGroup=g");
-			builder.append(" and i.id in (select id from s.species) and s=?");
-			return find(builder.toString(), survey);
+			
+			return find("select distinct g from IndicatorSpecies i join i.taxonGroup g where i in (select elements(b.species) from Survey b where b = ?)", survey);
+//			StringBuilder builder = new StringBuilder();
+//			builder.append("select distinct g");
+//			builder.append(" from TaxonGroup g, IndicatorSpecies i, Survey s");
+//			builder.append(" where i.taxonGroup=g");
+//			builder.append(" and i.id in (select id from s.species) and s=?");
+//			return find(builder.toString(), survey);
 		}
 	}
 
@@ -348,12 +350,12 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 		return opt;
 	}
 
-	public AttributeValue createIndicatorSpeciesAttribute(
+	public TypedAttributeValue createIndicatorSpeciesAttribute(
 			IndicatorSpecies species, Attribute attr, String value) {
 		return createIndicatorSpeciesAttribute(species, attr, value, null);
 	}
 
-	public AttributeValue createIndicatorSpeciesAttribute(
+	public TypedAttributeValue createIndicatorSpeciesAttribute(
 			IndicatorSpecies species, Attribute attr, String value, String desc) {
 		IndicatorSpeciesAttribute impl = new IndicatorSpeciesAttribute();
 		impl.setDescription(desc);

@@ -74,4 +74,10 @@
         <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/privacyStatement.jsp"/>
     </definition>
     
+    <!-- Portal Select -->
+    <definition name="index" extends="template">
+        <put-attribute name="title" value="Select Portal"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/vanilla/public/index.jsp"/>
+    </definition>
+    
 </tiles-definitions>

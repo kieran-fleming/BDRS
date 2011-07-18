@@ -23,8 +23,8 @@ import au.com.gaiaresources.bdrs.service.threshold.operatorhandler.RecordAttribu
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
 import au.com.gaiaresources.bdrs.model.threshold.ActionType;
@@ -79,7 +79,7 @@ public class ThresholdService implements ConditionOperatorHandler {
      */
     public static Map<Class<?>, ComplexTypeOperator> COMPLEX_TYPE_TO_OPERATOR_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ComplexTypeOperator>() {
         {
-            put(RecordAttribute.class, new RecordAttributeOperator());
+            put(AttributeValue.class, new RecordAttributeOperator());
         }
     });
 
@@ -150,7 +150,7 @@ public class ThresholdService implements ConditionOperatorHandler {
     private void populateOperatorHandlers() {
         operatorHandlerMap = new HashMap<ComplexTypeOperator, OperatorHandler>(
                 COMPLEX_TYPE_TO_OPERATOR_MAP.size());
-        operatorHandlerMap.put(COMPLEX_TYPE_TO_OPERATOR_MAP.get(RecordAttribute.class), new RecordAttributeHandler());
+        operatorHandlerMap.put(COMPLEX_TYPE_TO_OPERATOR_MAP.get(AttributeValue.class), new RecordAttributeHandler());
 
         simpleOperatorHandlerMap = new HashMap<SimpleTypeOperator, SimpleOperatorHandler>(
                 Operator.values().length);

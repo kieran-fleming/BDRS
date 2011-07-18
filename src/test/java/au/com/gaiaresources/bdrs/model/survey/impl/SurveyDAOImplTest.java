@@ -54,8 +54,6 @@ public class SurveyDAOImplTest extends AbstractControllerTest {
     private LocationDAO locationDAO;
     @Autowired
     private UserDAO userDAO;
-    @Autowired
-    private PortalDAO portalDAO;
     
     private Logger log = Logger.getLogger(getClass());
    
@@ -132,7 +130,7 @@ public class SurveyDAOImplTest extends AbstractControllerTest {
         survey = new Survey();
         survey.setName("SurveyDAOTest");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Survey To Test Survey DAO with");
         survey.setAttributes(attributeList);
         

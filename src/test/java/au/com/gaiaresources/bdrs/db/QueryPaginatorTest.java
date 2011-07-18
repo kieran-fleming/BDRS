@@ -44,11 +44,15 @@ public class QueryPaginatorTest extends AbstractControllerTest {
             { "Zierau", "Smith" }, { "Zeisler", "Carlsson" },
             { "Yadon", "Haugen" }, { "Yeargin", "Halvorsen" },
             { "Zornes", "Andersen" } };
+    
+    // yeah I know this is bad...
+    private static int[] weights = new int[] { 10, 11, 12, 13, 14, 15, 4, 5, 6, 7, 8, 9 }; 
 
     @Before
     public void setup() throws Exception {
 
         // note there is 1 test user called admin
+        // and another test user called root
 
         // create a test user
         // Create User and the user's Locations
@@ -58,10 +62,15 @@ public class QueryPaginatorTest extends AbstractControllerTest {
         String encodedPassword = passwordEncoder.encodePassword("password", null);
         String registrationKey = passwordEncoder.encodePassword(au.com.gaiaresources.bdrs.util.StringUtils.generateRandomString(10, 50), emailAddr);
 
+        int i = 0;
         for (String[] name : testnames) {
             String first = name[0];
             String last = name[1];
-            userDAO.createUser(first.toLowerCase(), first, last, fakeEmail(first, last), encodedPassword, registrationKey, new String[] { "ROLE_USER" });
+            User u = userDAO.createUser(first.toLowerCase(), first, last, fakeEmail(first, last), encodedPassword, registrationKey, new String[] { "ROLE_USER" });
+            u.setWeight(weights[i]);
+            userDAO.updateUser(u);
+            
+            ++i;
         }
     }
 
@@ -120,6 +129,19 @@ public class QueryPaginatorTest extends AbstractControllerTest {
         Assert.assertEquals(1, result.getCount());
         Assert.assertEquals(1, result.getList().size());
         Assert.assertEquals("Aaaaaa", result.getList().get(0).getFirstName());
+    }
+    
+    @Test
+    public void testDefaultSortByWeight() throws Exception {
+        PagedQueryResult<User> result = hqlSearch(null, null, null, null);
+        Assert.assertEquals(14, result.getCount());
+        Assert.assertEquals(14, result.getList().size());
+        
+        // there are 2 primed users, admin and root both with weight 0.
+        // Item number 7 in the testnames array is Zenichowski and it
+        // has the next lowest weight, 4. Hence we expect it to be the third
+        // item returned by ascending weight...
+        Assert.assertEquals("Zenichowski", result.getList().get(2).getFirstName());
     }
 
     public PagedQueryResult<User> hqlSearch(String username, String email,

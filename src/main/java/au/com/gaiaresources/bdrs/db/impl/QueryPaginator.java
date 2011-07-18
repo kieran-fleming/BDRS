@@ -79,7 +79,15 @@ public class QueryPaginator<T extends PersistentImpl> {
                         paginationHql.append("desc");
                     }
                 }
+            } 
+        } else {
+            // else sort by the weight
+            paginationHql.append(" order by ");
+            if (StringUtils.hasLength(sortTargetAlias) ) {
+                paginationHql.append(sortTargetAlias);
+                paginationHql.append(".");
             }
+            paginationHql.append("weight");
         }
         Query query = session.createQuery(paginationHql.toString());
         

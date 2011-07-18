@@ -48,16 +48,18 @@ public class ThemeControllerTest extends AbstractControllerTest {
     
     private static final String TEST_CSS_FILE_PATH= "css/style.css";
     private static final String TEST_CSS_RAW_CONTENT = "#horiz-menu {background-image: url(${asset}../images/blockdefault.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/css/../images/blockdefault.gif);background-repeat: repeat-x;}";
-    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/css/../images/blockdefault.gif);background-repeat: no-repeat;}";
+    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: no-repeat;}";
     
     private static final String TEST_CSS_MODIFIED_RAW_CONTENT = ".horizontal-menu {background-image: url(${asset}../images/default.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/css/../images/default.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/default.gif);background-repeat: repeat-x;}";
     
     private static final String TEST_TEMPLATE_FILE_PATH = "templates/template.vm"; 
     private static final String TEST_TEMPLATE_RAW_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"${asset}images/wild_backyards.jpg\" id=\"logo\"/></a>";
-    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"${asset}images/wild_backyards.jpg\" id=\"logo\"/></a>";
-    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"${asset}images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    // we now expect $asset to be overwritten at the unzipping/processing stage so the 2 strings below becomes...
+    // note there is no context path. I assume this is because there is no context path when running these tests
+    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
     
     private static final String TEST_JS_FILE_PATH = "js/javascript.js";
     private static final String TEST_JS_RAW_CONTENT = "function foobar(a){ var b=${js.foobar.b};var c=a+b;return c;}";
@@ -120,6 +122,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeValue(mv, "portalId", portal.getId());
         Assert.assertEquals(0, ((List<ThemeFile>)mv.getModel().get("themeFileList")).size());
         Assert.assertNull(((Theme)mv.getModel().get("editTheme")).getId());
+        Assert.assertTrue((Boolean)mv.getModel().get("editAsRoot"));
     }
     
     @Test
@@ -174,7 +177,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         // Check the processed file directory
         File processedDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, false);
         Assert.assertEquals(String.format(TEST_CSS_DEFAULT_CONTENT_TMPL, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_CSS_FILE_PATH)).trim());
-        Assert.assertEquals(TEST_TEMPLATE_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
+        Assert.assertEquals(String.format(TEST_TEMPLATE_DEFAULT_CONTENT, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
         Assert.assertEquals(TEST_JS_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_JS_FILE_PATH)).trim());
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());
@@ -268,7 +271,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         // Check the processed file directory
         File processedDir = fileService.getTargetDirectory(actualTheme, Theme.THEME_DIR_PROCESSED, false);
         Assert.assertEquals(String.format(TEST_CSS_CUSTOM_CONTENT_TMPL, actualTheme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_CSS_FILE_PATH)).trim());
-        Assert.assertEquals(TEST_TEMPLATE_CUSTOM_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
+        Assert.assertEquals(String.format(TEST_TEMPLATE_CUSTOM_CONTENT, actualTheme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
         Assert.assertEquals(TEST_JS_CUSTOM_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_JS_FILE_PATH)).trim());
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());
@@ -395,7 +398,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         File processedDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, false);
         
         Assert.assertEquals(String.format(TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_CSS_FILE_PATH)).trim());
-        Assert.assertEquals(TEST_TEMPLATE_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
+        Assert.assertEquals(String.format(TEST_TEMPLATE_DEFAULT_CONTENT, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
         Assert.assertEquals(TEST_JS_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_JS_FILE_PATH)).trim());
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());
@@ -474,7 +477,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         File processedDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, false);
         
         Assert.assertEquals(String.format(TEST_CSS_DEFAULT_CONTENT_TMPL, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_CSS_FILE_PATH)).trim());
-        Assert.assertEquals(TEST_TEMPLATE_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
+        Assert.assertEquals(String.format(TEST_TEMPLATE_DEFAULT_CONTENT, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
         Assert.assertEquals(TEST_JS_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_JS_FILE_PATH)).trim());
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());
@@ -567,7 +570,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         // Check the processed file directory
         File processedDir = fileService.getTargetDirectory(actualTheme, Theme.THEME_DIR_PROCESSED, false);
         Assert.assertEquals(String.format(TEST_CSS_DEFAULT_CONTENT_TMPL, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_CSS_FILE_PATH)).trim());
-        Assert.assertEquals(TEST_TEMPLATE_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
+        Assert.assertEquals(String.format(TEST_TEMPLATE_DEFAULT_CONTENT, theme.getId()).trim(), FileUtils.fileRead(new File(processedDir, TEST_TEMPLATE_FILE_PATH)).trim());
         Assert.assertEquals(TEST_JS_DEFAULT_CONTENT, FileUtils.fileRead(new File(processedDir, TEST_JS_FILE_PATH)).trim());
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());

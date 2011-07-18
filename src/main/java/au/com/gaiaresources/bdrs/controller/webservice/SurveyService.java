@@ -39,12 +39,12 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -247,7 +247,7 @@ public class SurveyService extends AbstractController {
             throws IOException {
     		
     		//check authorisation
-   		 	if(regkey == "0") {
+    	    if(regkey.equals("0")) {
    	            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
    	        }
    	        User user = userDAO.getUserByRegistrationKey(regkey);
@@ -283,7 +283,7 @@ public class SurveyService extends AbstractController {
             throws IOException, ParseException {
     		
     		//check authorisation
-    		 if(regkey == "0") {
+    		 if(regkey.equals("0")) {
     	            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     	        }
     	        User user = userDAO.getUserByRegistrationKey(regkey);
@@ -294,9 +294,9 @@ public class SurveyService extends AbstractController {
     	    Record record;
     		Survey survey = surveyDAO.getSurvey(new Integer(request.getParameter("survey")));
 			List<Attribute> surveyatts = survey.getAttributes();
-			Set<RecordAttribute> newAttributes = new HashSet<RecordAttribute>();
-			String string_codes = new String("TASVSTIMFI"); //
-			String numeric_codes= new String("INDE"); //
+			Set<AttributeValue> newAttributes = new HashSet<AttributeValue>();
+			String string_codes = "TASVSTIMFI"; //
+			String numeric_codes= "INDE"; //
 			record = new Record();
 			
 			//set standard fields
@@ -332,7 +332,7 @@ public class SurveyService extends AbstractController {
 			//set custom fields
 			for(Attribute att : surveyatts){
 				String rec_att_value = request.getParameter("attribute"+att.getId());
-				RecordAttribute recAttr = new RecordAttribute();
+				AttributeValue recAttr = new AttributeValue();
 				recAttr.setAttribute(att);
 				if(string_codes.contains(att.getType().getCode())){
 					recAttr.setStringValue(rec_att_value);
@@ -351,7 +351,7 @@ public class SurveyService extends AbstractController {
 				}
 				
 				//save attribute and store in Set
-				newAttributes.add(recordDAO.saveRecordAttribute(recAttr));
+				newAttributes.add(recordDAO.saveAttributeValue(recAttr));
 			}
 			//add the new RecordAttributes to the record 
 			record.setAttributes(newAttributes);
@@ -374,7 +374,7 @@ public class SurveyService extends AbstractController {
                                         @RequestParam(value="regkey", defaultValue="0") String regkey)
             throws IOException, ParseException {
     		//check authorisation
-    		 if(regkey == "0") {
+    		 if(regkey.equals("0")) {
     	            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     	        }
     	        User user = userDAO.getUserByRegistrationKey(regkey);
@@ -384,8 +384,8 @@ public class SurveyService extends AbstractController {
     	    Record record;
     		Survey survey = surveyDAO.getSurvey(new Integer(request.getParameter("survey")));
 			List<Attribute> surveyatts = survey.getAttributes();
-			String string_codes = new String("TASVSTIMFI"); 
-			String numeric_codes= new String("INDE"); 
+			String string_codes = "TASVSTIMFI"; 
+			String numeric_codes= "INDE"; 
 			Integer rec_id = new Integer(request.getParameter("record"));
 			record = recordDAO.getRecord(rec_id);
 			
@@ -411,17 +411,17 @@ public class SurveyService extends AbstractController {
 			record.setHeld(true);
 			
 			//set custom fields
-			Map<Integer, RecordAttribute> recordAttributesMap = new HashMap<Integer, RecordAttribute>();
-			Set<RecordAttribute> recordAttributes =  record.getAttributes();
+			Map<Integer, AttributeValue> recordAttributesMap = new HashMap<Integer, AttributeValue>();
+			Set<AttributeValue> recordAttributes =  record.getAttributes();
 			//convert Set in to Map
-			for(RecordAttribute ra : recordAttributes){
+			for(AttributeValue ra : recordAttributes){
 				recordAttributesMap.put(ra.getAttribute().getId(), ra);
 			}
 			//empty set
 			recordAttributes.clear();
 			
 			for(Attribute att : surveyatts){
-				RecordAttribute ra = recordAttributesMap.get(att.getId());
+				AttributeValue ra = recordAttributesMap.get(att.getId());
 				ra.setAttribute(att);
 				//update record att
 				if(string_codes.contains(att.getType().getCode())){
@@ -435,7 +435,7 @@ public class SurveyService extends AbstractController {
 					date_custom = cal_custom.getTime();
 					ra.setDateValue(date_custom);
 				}
-				recordAttributes.add(recordDAO.saveRecordAttribute(ra));
+				recordAttributes.add(recordDAO.saveAttributeValue(ra));
 			}
 			//add the updated RecordAttributes to the record 
 			record.setAttributes(recordAttributes);
@@ -489,7 +489,7 @@ public class SurveyService extends AbstractController {
             List<IndicatorSpecies> surveySpecies = taxaDAO.getIndicatorSpeciesBySurvey(sesh, survey, start, size);
             while (!surveySpecies.isEmpty()) {
                 for (IndicatorSpecies species : surveySpecies) {
-                    speciesArray[0] = species.getTaxonRank() == null ? new String() : species.getTaxonRank().toString();
+                    speciesArray[0] = species.getTaxonRank() == null ? "" : species.getTaxonRank().toString();
                     speciesArray[1] = species.getScientificName();
                     speciesArray[2] = species.getCommonName();
                     speciesArray[3] = species.getTaxonGroup().getName();
@@ -510,4 +510,15 @@ public class SurveyService extends AbstractController {
         }
     }
 
+    @RequestMapping(value="/webservice/survey/getPublicSurveys.htm", method=RequestMethod.GET)
+    public void getPublicSurveys(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        List<Survey> surveyList = surveyDAO.getActivePublicSurveys(false);
+        JSONArray array = new JSONArray();
+        for(Survey survey : surveyList) {
+            array.add(survey.flatten());
+        }
+        
+        response.setContentType("application/json");
+        response.getWriter().write(array.toString());
+    }
 }

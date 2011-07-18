@@ -23,7 +23,6 @@ import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
-import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;

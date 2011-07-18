@@ -35,7 +35,6 @@ import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -45,6 +44,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -118,6 +118,15 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                         optionList.add(opt);
                     }
                     attr.setOptions(optionList);
+                }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                	AttributeOption upper = new AttributeOption();
+                	AttributeOption lower = new AttributeOption();
+                	lower.setValue("100");
+                	upper.setValue("200");
+                	rangeList.add(taxaDAO.save(lower));
+                	rangeList.add(taxaDAO.save(upper));
+                	attr.setOptions(rangeList);
                 }
                 
                 attr = taxaDAO.save(attr);
@@ -131,7 +140,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         survey = new Survey();
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA);
         metadataDAO.save(md);
@@ -176,16 +185,41 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "formFieldList");
     }
     
-    @Test
-    public void testAddRecordWithRecordId() throws Exception {
+    
+    @Test 
+    public void testAddRecordWithRecordIdLowerLimitOutside() throws Exception{
+    	testAddRecordWithRecordId("99");
+    }
+    
+    @Test 
+    public void testAddRecordWithRecordIdLowerLimitEdge() throws Exception{
+    	testAddRecordWithRecordId("100");
+    }
+    
+    @Test 
+    public void testAddRecordWithRecordIdInRange() throws Exception{
+    	testAddRecordWithRecordId("101");
+    }
+    
+    @Test 
+    public void testAddRecordWithRecordIdUpperLimitEdge() throws Exception{
+    	testAddRecordWithRecordId("200");
+    }
+    
+    @Test 
+    public void testAddRecordWithRecordIdUpperLimitOutside() throws Exception{
+    	testAddRecordWithRecordId("201");
+    }
+    
+    public void testAddRecordWithRecordId(String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
-        Set<RecordAttribute> attributeSet = new HashSet<RecordAttribute>();
-        Map<Attribute, RecordAttribute> expectedRecordAttrMap = new HashMap<Attribute, RecordAttribute>();
+        Set<AttributeValue> attributeSet = new HashSet<AttributeValue>();
+        Map<Attribute, AttributeValue> expectedRecordAttrMap = new HashMap<Attribute, AttributeValue>();
         for(Attribute attr : survey.getAttributes()) {
-            RecordAttribute recAttr = new RecordAttribute();
+            AttributeValue recAttr = new AttributeValue();
             recAttr.setAttribute(attr);
             switch (attr.getType()) {
                 case INTEGER:
@@ -193,6 +227,10 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     recAttr.setNumericValue(new BigDecimal(i));
                     recAttr.setStringValue(i.toString());
                     break;
+                case INTEGER_WITH_RANGE:
+               	 Integer j = new Integer(intWithRangeValue);
+                    recAttr.setNumericValue(new BigDecimal(j));
+                    recAttr.setStringValue(intWithRangeValue);
                 case DECIMAL:
                     Double d = new Double(123);
                     recAttr.setNumericValue(new BigDecimal(d));
@@ -224,7 +262,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     break;
             }
             
-            recAttr = recordDAO.saveRecordAttribute(recAttr);
+            recAttr = recordDAO.saveAttributeValue(recAttr);
             attributeSet.add(recAttr);
             expectedRecordAttrMap.put(attr, recAttr);
         }
@@ -288,8 +326,33 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         }
     }
     
-    @Test
-    public void testSubmitRecord() throws Exception {
+    @Test 
+    public void testSubmitRecordLowerLimitOutside() throws Exception{
+    	testSubmitRecord("99");
+    }
+    
+    @Test 
+    public void testSubmitRecordLowerLimitEdge() throws Exception{
+    	testSubmitRecord("100");
+    }
+    
+    @Test 
+    public void testSubmitRecordInRange() throws Exception{
+    	testSubmitRecord("101");
+    }
+    
+    @Test 
+    public void testSubmitRecordUpperLimitEdge() throws Exception{
+    	testSubmitRecord("200");
+    }
+    
+    @Test 
+    public void testSubmitRecordUpperLimitOutside() throws Exception{
+    	testSubmitRecord("201");
+    }
+    
+
+    public void testSubmitRecord(String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         request.setMethod("POST");
@@ -309,12 +372,15 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         for (Attribute attr : survey.getAttributes()) {
             if(AttributeScope.SURVEY.equals(attr.getScope())) {
                 key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-                value = new String();
+                value = "";
     
                 switch (attr.getType()) {
                     case INTEGER:
                         value = "123";
                         break;
+                    case INTEGER_WITH_RANGE:
+                    	value = intWithRangeValue;
+                    	break;
                     case DECIMAL:
                         value = "456.7";
                         break;
@@ -383,10 +449,11 @@ public class YearlySightingsControllerTest extends RecordFormTest {
             // Test that the sighting was for the correct day.
             Assert.assertEquals(rec.getNumber().intValue(), cal.get(Calendar.DAY_OF_YEAR));
             
-            for(AttributeValue recAttr: rec.getAttributes()) {
+            for(TypedAttributeValue recAttr: rec.getAttributes()) {
                 key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", recAttr.getAttribute().getId());
                 switch (recAttr.getAttribute().getType()) {
                     case INTEGER:
+                    case INTEGER_WITH_RANGE:
                         Assert.assertEquals(Integer.parseInt(params.get(key)), recAttr.getNumericValue().intValue());
                         break;
                     case DECIMAL:

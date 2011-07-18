@@ -17,6 +17,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.apache.log4j.Logger;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ForeignKey;
@@ -29,10 +30,13 @@ import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.expert.ReviewRequest;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
 
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 @Entity
@@ -45,21 +49,35 @@ public class Record extends PortalPersistentImpl {
     public static final String RECORD_PROPERTY_SPECIES = "species";
     public static final String RECORD_PROPERTY_LOCATION = "location";
     public static final String RECORD_PROPERTY_POINT = "point";
+    public static final String RECORD_PROPERTY_ACCURACY = "accuracyInMeters";
     public static final String RECORD_PROPERTY_WHEN = "when";
     public static final String RECORD_PROPERTY_TIME = "time";
     public static final String RECORD_PROPERTY_NOTES = "notes";
     public static final String RECORD_PROPERTY_NUMBER = "number";
 
+    // aka taxonomic record property names
     public static final String[] RECORD_PROPERTY_NAMES = new String[] {
             RECORD_PROPERTY_SPECIES, RECORD_PROPERTY_LOCATION,
-            RECORD_PROPERTY_POINT, RECORD_PROPERTY_WHEN, RECORD_PROPERTY_TIME,
+            RECORD_PROPERTY_POINT, RECORD_PROPERTY_ACCURACY, 
+            RECORD_PROPERTY_WHEN, RECORD_PROPERTY_TIME,
             RECORD_PROPERTY_NOTES, RECORD_PROPERTY_NUMBER };
+    
+    // no species and number seen
+    public static final String[] NON_TAXONOMIC_RECORD_PROPERTY_NAMES = new String[] {
+            RECORD_PROPERTY_LOCATION,
+            RECORD_PROPERTY_POINT,
+            RECORD_PROPERTY_ACCURACY, 
+            RECORD_PROPERTY_WHEN, RECORD_PROPERTY_TIME,
+            RECORD_PROPERTY_NOTES, };
+
+    private Logger log = Logger.getLogger(getClass());
     
     private Survey survey;
     private IndicatorSpecies species;
     private User user;
     private Location location;
-    private Point point;
+    private Geometry geometry;
+    private Double accuracyInMeters;
     private Boolean held;
     private Date when;
     private Long time;
@@ -72,8 +90,12 @@ public class Record extends PortalPersistentImpl {
     private String behaviour = "";
     private String habitat = "";
     private Integer number;
+    private CensusMethod censusMethod;
+    
+    private Record parentRecord;
+    private Set<Record> childRecords = new HashSet<Record>();
 
-    private Set<RecordAttribute> attributes = new HashSet<RecordAttribute>();
+    private Set<AttributeValue> attributes = new HashSet<AttributeValue>();
     private Set<ReviewRequest> reviewRequests = new HashSet<ReviewRequest>();
 
     private Set<Metadata> metadata = new HashSet<Metadata>();
@@ -83,7 +105,7 @@ public class Record extends PortalPersistentImpl {
      */
     @CompactAttribute
     @ManyToOne
-    @JoinColumn(name = "INDICATOR_SPECIES_ID", nullable = false)
+    @JoinColumn(name = "INDICATOR_SPECIES_ID", nullable = true)
     @ForeignKey(name = "RECORD_SPECIES_FK")
     @Index(name = "RECORD_N1")
     /**
@@ -97,6 +119,40 @@ public class Record extends PortalPersistentImpl {
     public void setSpecies(IndicatorSpecies species) {
         this.species = species;
     }
+    
+    @ManyToOne
+    @JoinColumn(name = "PARENT_RECORD_ID", nullable = true)
+    @ForeignKey(name = "PARENT_RECORD_TO_RECORD_FK")
+    public Record getParentRecord() {
+        return this.parentRecord;
+    }
+    
+    public void setParentRecord(Record value) {
+        this.parentRecord = value;
+    }
+    
+    /**
+     * DO NO UPDATE THIS LIST! the relationship is managed by the
+     * get/setParentRecord! Any changes to the list will be ignored
+     * See RecordDAOImplTest.java
+     *  
+     * @return
+     */
+    @OneToMany(mappedBy="parentRecord", fetch = FetchType.LAZY)
+    public Set<Record> getChildRecords() {
+        return childRecords;
+    }
+
+    /**
+     * DO NO UPDATE THIS LIST! the relationship is managed by the
+     * get/setParentRecord! Any changes to the list will be ignored
+     * See RecordDAOImplTest.java
+     * 
+     * @param value
+     */
+    public void setChildRecords(Set<Record> value) {
+        childRecords = value;
+    }
 
     @CompactAttribute
     @ManyToOne(fetch =  FetchType.LAZY)
@@ -108,6 +164,17 @@ public class Record extends PortalPersistentImpl {
 
     public void setSurvey(Survey survey) {
         this.survey = survey;
+    }
+    
+    @ManyToOne(fetch =  FetchType.LAZY)
+    @JoinColumn(name = "INDICATOR_CENSUSMETHOD_ID", nullable = true)
+    @ForeignKey(name = "RECORD_CENSUSMETHOD_FK")
+    public CensusMethod getCensusMethod() {
+        return this.censusMethod;
+    }
+    
+    public void setCensusMethod(CensusMethod value) {
+        this.censusMethod = value;
     }
 
     /**
@@ -148,24 +215,51 @@ public class Record extends PortalPersistentImpl {
         this.location = location;
     }
 
+    
+    @Transient
+    public Point getPoint() {
+    	return geometry == null ? null : geometry.getCentroid();
+    }
+
+    public void setPoint(Point location) {
+        this.geometry = location;
+    }
+    
     /**
      * {@inheritDoc}
      */
     @CompactAttribute
-    @Column(name = "POINT")
+    @Column(name = "GEOM")
     @Type(type = "org.hibernatespatial.GeometryUserType")
     /**
      * Get the Point coordinates that the user saw the species.
      * @return {@link Location}
      */
-    public Point getPoint() {
-        return point;
+    public Geometry getGeometry() {
+        return geometry;
     }
 
-    public void setPoint(Point location) {
-        this.point = location;
+    public void setGeometry(Geometry value) {
+        this.geometry = value;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @CompactAttribute
+    @Column(name = "ACCURACY")
+    /**
+     * Get the Point coordinates that the user saw the species.
+     * @return {@link Location}
+     */
+    public Double getAccuracyInMeters() {
+        return accuracyInMeters;
+    }
+
+    public void setAccuracyInMeters(Double accuracy) {
+        this.accuracyInMeters = accuracy;
+    }
+    
     @CompactAttribute
     @Column(name = "HELD")
     /**
@@ -295,11 +389,11 @@ public class Record extends PortalPersistentImpl {
      * Get the set of attributes that were recorded for the species.
      * @return {@link Set} of {@link RecordAttribute}
      */
-    public Set<RecordAttribute> getAttributes() {
+    public Set<AttributeValue> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(Set<RecordAttribute> attributes) {
+    public void setAttributes(Set<AttributeValue> attributes) {
         this.attributes = attributes;
     }
 
@@ -373,7 +467,7 @@ public class Record extends PortalPersistentImpl {
     }
 
     @CompactAttribute
-    @Column(name = "NUMBER_SEEN")
+    @Column(name = "NUMBER_SEEN", nullable=true)
     /**
      * How many were seen?
      * @return {@link Integer}
@@ -412,7 +506,7 @@ public class Record extends PortalPersistentImpl {
     @Transient
     public String getMetadataValue(String key) {
         if(key == null) {
-            return new String();
+            return "";
         }
 
         for(Metadata md : this.getMetadata()) {
@@ -421,15 +515,16 @@ public class Record extends PortalPersistentImpl {
             }
         }
 
-     return new String();
+     return "";
     }
     @Transient
     public Double getLatitude() {
-        if(this.location != null && this.location.getLocation() != null){
-            return this.location.getLocation().getY();
+    	Location loc = this.getLocation();
+        if(loc != null && loc.getLocation() != null){
+            return loc.getLocation().getY();
         }
-        else if(this.point != null) {
-            return this.point.getY();
+        else if(this.getPoint() != null) {
+            return this.getPoint().getY();
         }
         else {
             return null;
@@ -438,11 +533,12 @@ public class Record extends PortalPersistentImpl {
 
     @Transient
     public Double getLongitude() {
-        if(this.location != null && this.location.getLocation() != null){
-            return this.location.getLocation().getX();
+    	Location loc = this.getLocation();
+        if(loc != null && loc.getLocation() != null){
+            return loc.getLocation().getX();
         }
-        else if(this.point != null) {
-            return this.point.getX();
+        else if(this.getPoint() != null) {
+            return this.getPoint().getX();
         }
         else {
             return null;

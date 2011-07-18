@@ -36,12 +36,12 @@ import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -179,8 +179,8 @@ public class RecordService extends AbstractController {
 
 		Survey survey = surveyDAO.getSurvey(surveyId);
 		List<Attribute> surveyatts = survey.getAttributes();
-		String string_codes = new String("TASVSTIMFISA"); //
-		String numeric_codes = new String("INDE"); //
+		String string_codes = "TASVSTIMFISA"; //
+		String numeric_codes = "INDE"; //
 		Map<String, Integer> onlineRecordIds = new HashMap<String, Integer>();
 		JSONObject jsonRecord;
 
@@ -193,7 +193,7 @@ public class RecordService extends AbstractController {
 		// convert JSON records in to Record objects
 		for (Object key : jsonRecordObject.keySet()) {
 			Record record = new Record();
-			Set<RecordAttribute> newAttributes = new HashSet<RecordAttribute>();
+			Set<AttributeValue> newAttributes = new HashSet<AttributeValue>();
 			jsonRecord = (JSONObject) jsonRecordObject.get(key);
 			// standard attributes
 			double latitude = jsonRecord.getDouble("latitude");
@@ -225,7 +225,7 @@ public class RecordService extends AbstractController {
 			for (Attribute att : surveyatts) {
 				String rec_att_value = jsonRecordAttributeList.getString(att
 						.getId());
-				RecordAttribute recAttr = new RecordAttribute();
+				AttributeValue recAttr = new AttributeValue();
 				recAttr.setAttribute(att);
 				if (string_codes.contains(att.getType().getCode())) {
 					recAttr.setStringValue(rec_att_value);
@@ -239,7 +239,7 @@ public class RecordService extends AbstractController {
 					date_custom = cal_custom.getTime();
 					recAttr.setDateValue(date_custom);
 				}
-				recAttr = recordDAO.saveRecordAttribute(recAttr);
+				recAttr = recordDAO.saveAttributeValue(recAttr);
 				// save attribute and store in Set
 				newAttributes.add(recAttr);
 			}
@@ -269,8 +269,8 @@ public class RecordService extends AbstractController {
 
 		Survey survey = surveyDAO.getSurvey(surveyId);
 		List<Attribute> surveyatts = survey.getAttributes();
-		String string_codes = new String("TASVSTIMFI"); //
-		String numeric_codes = new String("INDE"); //
+		String string_codes = "TASVSTIMFI"; //
+		String numeric_codes = "INDE"; //
 		Map<String, Integer> onlineRecordIds = new HashMap<String, Integer>();
 		JSONObject jsonRecord;
 
@@ -285,7 +285,7 @@ public class RecordService extends AbstractController {
 			jsonRecord = (JSONObject) jsonRecordObject.get(key);
 			Record record = recordDAO.getRecord(jsonRecord
 					.getInt("online_recordid"));
-			Set<RecordAttribute> newAttributes = new HashSet<RecordAttribute>();
+			Set<AttributeValue> newAttributes = new HashSet<AttributeValue>();
 
 			// set standard fields
 			Date date = new Date(new Long(jsonRecord.getString("when")));
@@ -309,10 +309,10 @@ public class RecordService extends AbstractController {
 					.getJSONArray("attributes");
 
 			// set custom fields
-			Map<Integer, RecordAttribute> recordAttributesMap = new HashMap<Integer, RecordAttribute>();
-			Set<RecordAttribute> recordAttributes = record.getAttributes();
+			Map<Integer, AttributeValue> recordAttributesMap = new HashMap<Integer, AttributeValue>();
+			Set<AttributeValue> recordAttributes = record.getAttributes();
 			// convert Set in to Map
-			for (RecordAttribute ra : recordAttributes) {
+			for (AttributeValue ra : recordAttributes) {
 				recordAttributesMap.put(ra.getAttribute().getId(), ra);
 			}
 			// empty set
@@ -321,7 +321,7 @@ public class RecordService extends AbstractController {
 			for (Attribute att : surveyatts) {
 				String rec_att_value = jsonRecordAttributeList.getString(att
 						.getId());
-				RecordAttribute recAttr = new RecordAttribute();
+				AttributeValue recAttr = new AttributeValue();
 				recAttr.setAttribute(att);
 				if (string_codes.contains(att.getType().getCode())) {
 					recAttr.setStringValue(rec_att_value);
@@ -335,7 +335,7 @@ public class RecordService extends AbstractController {
 					date_custom = cal_custom.getTime();
 					recAttr.setDateValue(date_custom);
 				}
-				recAttr = recordDAO.saveRecordAttribute(recAttr);
+				recAttr = recordDAO.saveAttributeValue(recAttr);
 				// save attribute and store in Set
 				newAttributes.add(recAttr);
 			}
@@ -441,9 +441,10 @@ public class RecordService extends AbstractController {
 		JSONArray array = new JSONArray();
 		for (Record r : records) {
 			Map<String, Object> flattendRecord = r.flatten();
-			flattendRecord.put("commonName", r.getSpecies().getCommonName());
-			flattendRecord.put("scientificName", r.getSpecies()
-					.getScientificName());
+			if (r.getSpecies() != null) {
+        		    flattendRecord.put("commonName", r.getSpecies().getCommonName());
+        		    flattendRecord.put("scientificName", r.getSpecies().getScientificName());
+			}
 			array.add(flattendRecord);
 		}
 
@@ -566,11 +567,12 @@ public class RecordService extends AbstractController {
 		Record record = recordDAO.getRecord(recordPk);
 
 		Map<String, Object> flattendRecord = record.flatten();
-		flattendRecord.put("commonName", record.getSpecies().getCommonName());
-		flattendRecord.put("scientificName", record.getSpecies()
-				.getScientificName());
+		if (record.getSpecies() != null) {
+        	    flattendRecord.put("commonName", record.getSpecies().getCommonName());
+        	    flattendRecord.put("scientificName", record.getSpecies().getScientificName());
+		}
 		Map<String, String> attVals = new HashMap<String, String>();
-		for (AttributeValue ra : record.getAttributes()) {
+		for (TypedAttributeValue ra : record.getAttributes()) {
 			String attId = ra.getAttribute().getId().toString();
 			String attVal = ra.getStringValue();
 			attVals.put(attId, attVal);
@@ -602,8 +604,8 @@ public class RecordService extends AbstractController {
 			}
 		}
 
-		RecordAttribute recAttr = recordDAO
-				.getRecordAttribute(recordAttributePk);
+		AttributeValue recAttr = recordDAO
+				.getAttributeValue(recordAttributePk);
 		JSONObject rec = new JSONObject();
 		if (recAttr != null) {
 			rec.accumulateAll(recAttr.flatten());
@@ -648,8 +650,8 @@ public class RecordService extends AbstractController {
 		
 		Survey survey;
 		HashMap<Integer, Survey> surveyMap = new HashMap<Integer, Survey>();
-		String string_codes = new String("TASVSTIMFISA"); //
-		String numeric_codes = new String("INDE"); //
+		String string_codes = "TASVSTIMFISA"; //
+		String numeric_codes = "INDE"; //
 		Map<String, Integer> onlineRecordIds = new HashMap<String, Integer>();
 		Map<String, Integer> updatedRecordIds = new HashMap<String, Integer>();
 		Map<String, String> deletedRecordIds = new HashMap<String, String>();
@@ -690,7 +692,7 @@ public class RecordService extends AbstractController {
 			JSONObject jsonUpdateRecord = (JSONObject) update_r;
 			// Get the original record from the database
 			Record updateRecord = recordDAO.getRecord(jsonUpdateRecord.getInt("online_recordid"));
-			Set<RecordAttribute> newUpdateAttributes = new HashSet<RecordAttribute>();
+			Set<AttributeValue> newUpdateAttributes = new HashSet<AttributeValue>();
 			// Get survey from map if exists in the map otherwise get it from the database
 			if(surveyMap.containsKey(jsonUpdateRecord.getInt("surveyid"))){
 				survey = surveyMap.get(jsonUpdateRecord.getInt("surveyid"));
@@ -719,7 +721,7 @@ public class RecordService extends AbstractController {
 			Map<String, String> jsonUpdateRecordAttributeList = jsonUpdateRecord.getJSONObject("attributes");
 			for (Attribute att : surveyatts) {
 				String rec_att_value = jsonUpdateRecordAttributeList.get(att.getId().toString());
-				RecordAttribute recAttr = new RecordAttribute();
+				AttributeValue recAttr = new AttributeValue();
 				recAttr.setAttribute(att);
 				if (string_codes.contains(att.getType().getCode())) {
 					recAttr.setStringValue(rec_att_value);
@@ -733,7 +735,7 @@ public class RecordService extends AbstractController {
 					date_custom = cal_custom.getTime();
 					recAttr.setDateValue(date_custom);
 				}
-				recAttr = recordDAO.saveRecordAttribute(recAttr);
+				recAttr = recordDAO.saveAttributeValue(recAttr);
 				// save attribute and store in Set
 				newUpdateAttributes.add(recAttr);
 			}
@@ -759,7 +761,7 @@ public class RecordService extends AbstractController {
 				surveyMap.put(survey.getId(), survey);
 			}
 			Record uploadRecord = new Record();
-			Set<RecordAttribute> newUploadAttributes = new HashSet<RecordAttribute>();
+			Set<AttributeValue> newUploadAttributes = new HashSet<AttributeValue>();
 			// standard attributes
 			double uploadLatitude = jsonUploadRecord.getDouble("latitude");
 			double uploadLongitude = jsonUploadRecord.getDouble("longitude");
@@ -791,7 +793,7 @@ public class RecordService extends AbstractController {
 			for (Attribute att : surveyatts) {
 				String rec_att_value = jsonUploadRecordAttributeList.get(att
 						.getId().toString());
-				RecordAttribute recAttr = new RecordAttribute();
+				AttributeValue recAttr = new AttributeValue();
 				recAttr.setAttribute(att);
 				if (string_codes.contains(att.getType().getCode())) {
 					recAttr.setStringValue(rec_att_value);
@@ -805,7 +807,7 @@ public class RecordService extends AbstractController {
 					date_custom = cal_custom.getTime();
 					recAttr.setDateValue(date_custom);
 				}
-				recAttr = recordDAO.saveRecordAttribute(recAttr);
+				recAttr = recordDAO.saveAttributeValue(recAttr);
 				// save attribute and store in Set
 				newUploadAttributes.add(recAttr);
 			}

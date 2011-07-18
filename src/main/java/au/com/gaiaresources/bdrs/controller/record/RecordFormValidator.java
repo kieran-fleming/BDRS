@@ -3,15 +3,20 @@ package au.com.gaiaresources.bdrs.controller.record;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import au.com.gaiaresources.bdrs.controller.record.validator.DateValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.DoubleRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.DoubleValidator;
+import au.com.gaiaresources.bdrs.controller.record.validator.DynamicDateRangeValidator;
+import au.com.gaiaresources.bdrs.controller.record.validator.DynamicIntRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.HistoricalDateValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.IntRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.IntValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.StringValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.TaxonValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.Validator;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
@@ -20,6 +25,8 @@ import au.com.gaiaresources.bdrs.service.property.PropertyService;
  * validate POST parameters.
  */
 public class RecordFormValidator {
+	
+	Logger log = Logger.getLogger(getClass());
 
     private Map<ValidationType, Validator> validatorMap;
     
@@ -52,9 +59,14 @@ public class RecordFormValidator {
         
         validatorMap.put(ValidationType.INTEGER, new IntValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_INTEGER, new IntValidator(propertyService, true, false));
+        
+        validatorMap.put(ValidationType.INTEGER_RANGE, new DynamicIntRangeValidator(propertyService, false, true));
+        validatorMap.put(ValidationType.REQUIRED_INTEGER_RANGE, new DynamicIntRangeValidator(propertyService, true, false));
+        
         validatorMap.put(ValidationType.REQUIRED_POSITIVE_INT, new IntRangeValidator(propertyService, true, false));
         // less than, not less than or equal to.
         validatorMap.put(ValidationType.REQUIRED_POSITIVE_LESSTHAN, new IntRangeValidator(propertyService, true, false, 1000000-1));
+        validatorMap.put(ValidationType.POSITIVE_LESSTHAN, new IntRangeValidator(propertyService, false, true, 1000000-1));
         
         validatorMap.put(ValidationType.DOUBLE, new DoubleValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_DOUBLE, new DoubleValidator(propertyService, true, false));
@@ -64,8 +76,10 @@ public class RecordFormValidator {
         validatorMap.put(ValidationType.DATE, new DateValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_DATE, new DateValidator(propertyService, true, false));
         validatorMap.put(ValidationType.REQUIRED_HISTORICAL_DATE, new HistoricalDateValidator(propertyService, true, false));
+        validatorMap.put(ValidationType.DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, true, false));
         
         validatorMap.put(ValidationType.REQUIRED_TAXON, new TaxonValidator(propertyService, true, false, taxaDAO));
+        validatorMap.put(ValidationType.TAXON, new TaxonValidator(propertyService, false, true, taxaDAO));
     }
     
     /**
@@ -90,13 +104,15 @@ public class RecordFormValidator {
      * @param key the name of the input to validate.
      * @return true if the input was valid, false otherwise.
      */
-    public boolean validate(Map<String, String[]> parameterMap, ValidationType type, String key) {
+    
+    public boolean validate(Map<String, String[]> parameterMap, ValidationType type, String key, Attribute attribute) {
         Validator v = validatorMap.get(type);
         if(v == null) {
             throw new IllegalArgumentException("Cannot find validator for: "+type);
         } else {
-            return v.validate(parameterMap, key, errorMap);
+            return v.validate(parameterMap, key, attribute, errorMap);
         }
     }
+
 }
 

@@ -45,11 +45,12 @@
 		        <value>au.com.gaiaresources.bdrs.model.taxa.TaxonGroup</value>
 		        <value>au.com.gaiaresources.bdrs.model.taxa.Attribute</value>
 		        <value>au.com.gaiaresources.bdrs.model.taxa.AttributeOption</value>
+				<value>au.com.gaiaresources.bdrs.model.taxa.AttributeValue</value>
 		        <value>au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies</value>
 		        <value>au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute</value>
 		        <value>au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile</value>
 		        <value>au.com.gaiaresources.bdrs.model.record.Record</value>
-		        <value>au.com.gaiaresources.bdrs.model.record.RecordAttribute</value>
+		        
 		        <value>au.com.gaiaresources.bdrs.model.survey.Survey</value>
 		        <value>au.com.gaiaresources.bdrs.model.project.Project</value>
 		        <value>au.com.gaiaresources.bdrs.model.metadata.Metadata</value>
@@ -75,6 +76,16 @@
 		        
 		        <value>au.com.gaiaresources.bdrs.model.theme.Theme</value>
 		        <value>au.com.gaiaresources.bdrs.model.theme.ThemeElement</value>
+		        <value>au.com.gaiaresources.bdrs.model.method.CensusMethod</value>
+		        <value>au.com.gaiaresources.bdrs.model.map.GeoMapLayer</value>
+		        <value>au.com.gaiaresources.bdrs.model.map.GeoMap</value>
+				<value>au.com.gaiaresources.bdrs.model.map.GeoMapFeature</value>
+				<value>au.com.gaiaresources.bdrs.model.map.AssignedGeoMapLayer</value>
+				<value>au.com.gaiaresources.bdrs.model.showcase.Gallery</value>
+    
+		        <value>au.com.gaiaresources.bdrs.model.detect.BDRSWurflDevice</value>
+		        <value>au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability</value>
+		        
             </list>
         </property>
         

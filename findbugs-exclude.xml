@@ -1,0 +1,7 @@
+<FindBugsFilter>
+     <Match>
+        <!-- Exclude unused loggers -->
+       <Field type="org.apache.log4j.Logger"/>
+       <Bug code="UrF"/>
+     </Match>
+</FindBugsFilter>

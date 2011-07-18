@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.model.preference;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
@@ -103,4 +104,13 @@ public interface PreferenceDAO extends TransactionDAO {
      * @param pref the preference to be removed.
      */
     public void delete(Preference pref);
+    
+    public List<Preference> getPreferenceByKeyPrefix(String prefix);
+    
+    public PreferenceCategory save(Session sesh, PreferenceCategory cat);
+    
+    /*
+     * Returns all of the preference categories
+     */
+    public List<PreferenceCategory> getPreferenceCategories();
 }

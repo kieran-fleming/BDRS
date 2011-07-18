@@ -2,87 +2,84 @@
 
 bdrs.embed = {};
 bdrs.embed.widgetBuilder = {
-    
-    init: function(featureSelector, widthSelector, heightSelector, footerSelector, cssStylesSelector,
-        embedSrcSelector, previewSelector,
-        domain, port, servlet) {
-    
-        // Attach listeners to the inputs
-        var featureElem = jQuery(featureSelector);
-        var widthElem = jQuery(widthSelector);
-        var heightElem = jQuery(heightSelector);
-        var footerElem = jQuery(footerSelector);
-        var cssStyles = jQuery(cssStylesSelector);
-        
-        var embedSrcElem = jQuery(embedSrcSelector);
-        
-        var data = {
-            featureSelector: featureSelector,
-            widthSelector: widthSelector,
-            heightSelector: heightSelector,
-            footerSelector: footerSelector,
-            cssStylesSelector: cssStylesSelector,
-            
-            previewSelector: previewSelector,
-            embedSrcSelector: embedSrcSelector,
-            
-            domain: domain,
-            port: port,
-            servlet: servlet
-        };
-        featureElem.bind("change", data, bdrs.embed.widgetBuilder.updatePreview);
-        widthElem.bind("change", data, bdrs.embed.widgetBuilder.updatePreview);
-        heightElem.bind("change", data, bdrs.embed.widgetBuilder.updatePreview);
-        footerElem.bind("change", data, bdrs.embed.widgetBuilder.updatePreview);
-        cssStyles.bind("change", data, bdrs.embed.widgetBuilder.updatePreview);
-
-        embedSrcElem.click(function(event) {
+	// widget map maps a widget feature value to a selector which we use to
+	// expose the special params for a particular widget
+	init: function(args) {
+		// You should always set the args or the embedded widget stuff won't work.
+		// This is not a functional set of defaults, it's just an example.
+		if (!args) {
+			args = {
+				widgetMap: {},
+				featureSelector: "#feature",
+				widgetParamSelector: ".widgetParameter",
+				customSectionSelector: ".customWidgetSection",
+				cssStylesSelector: ".css"
+			};
+		};
+		
+		this.widgetMap = args.widgetMap;
+		this.featureSelector = args.featureSelector;
+		this.widgetParamSelector = args.widgetParamSelector;
+		this.customSectionSelector = args.customSectionSelector;
+		this.cssStylesSelector = args.cssStylesSelector;
+		this.embedSrcSelector = args.embedSrcSelector;
+		this.previewSelector = args.previewSelector;
+		this.domain = args.domain;
+		this.port = args.port;
+		
+		jQuery(this.featureSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.changeFeature, this));
+		jQuery(this.widgetParamSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.updatePreview, this));
+        jQuery(this.cssStylesSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.updatePreview, this));
+		
+		jQuery(this.embedSrcSelector).click(function(event) {
             event.target.focus();
             event.target.select();
         });
-    },
-    
-    updatePreview: function(event) {
-        var data = event.data;
-        
-        var featureElem = jQuery(data.featureSelector);
-        var widthElem = jQuery(data.widthSelector);
-        var heightElem = jQuery(data.heightSelector);
-        var footerElem = jQuery(data.footerSelector);
-        var previewElem = jQuery(data.previewSelector);
-        var embedSrcElem = jQuery(data.embedSrcSelector);
-        var cssStyles = jQuery(data.cssStylesSelector);
-        
+	},
+	
+	changeFeature: function(event) {
+		var featureElem = jQuery(this.featureSelector);
+		// 1. hide all custom sections.
+		// 2. show required sections as defined in the widget map.
+		jQuery(this.customSectionSelector).hide();
+		var feature = featureElem.val();
+		jQuery(this.widgetMap[feature]).show();
+		
+		this.updatePreview(event);
+	},
+	
+	updatePreview: function(event) {
+		var featureElem = jQuery(this.featureSelector);
+        var paramElem = jQuery(this.widgetParamSelector);
+        var previewElem = jQuery(this.previewSelector);
+        var embedSrcElem = jQuery(this.embedSrcSelector);
+        var cssStyles = jQuery(this.cssStylesSelector);
+        var widgetParams = jQuery(this.widgetParamSelector);
+		
         // Validate width and height
-        if(isNaN(parseInt(widthElem.val(), 10))) {
-            widthElem.val(300);
-        }
-        if(isNaN(parseInt(heightElem.val(), 10))) {
-            heightElem.val(250);
-        }
-
-        var embedParams = {
-            domain: data.domain,
-            port: data.port,
+		var embedParams = {
+            domain: this.domain,
+            port: this.port,
             contextPath: bdrs.contextPath,
-            width: widthElem.val(),
-            height: heightElem.val(),
             feature: featureElem.val(),
         };
-        if(footerElem.length > 0) {
-            embedParams.showFooter = footerElem.val();
-        }
-        var style;
+		
+		for (var i=0; i<widgetParams.length; ++i) {
+			var param = jQuery(widgetParams[i]);
+			embedParams[param.attr("name")] = param.val();
+		}
+		
         for(var i=0; i<cssStyles.length; i++) {
-            style = jQuery(cssStyles[i]);
+            var style = jQuery(cssStyles[i]);
             embedParams[style.attr("name")] = style.val();
         }
-        
+		
         var embedScript = jQuery("<script></script>");
+		var port = window.location.port;
         embedScript.attr({
             "id" : embedParams.targetId,
             "type": "text/javascript",
-            "src": bdrs.contextPath+"/bdrs/public/embedded/bdrs-embed.js?"+jQuery.param(embedParams)
+            "src": document.location.hostname + (port?":"+port:"") + bdrs.contextPath+"/bdrs/public/embedded/bdrs-embed.js?"+jQuery.param(embedParams)
         });
         
         embedSrcElem.text(bdrs.embed.widgetBuilder.elemToString(embedScript[0]));
@@ -97,6 +94,7 @@ bdrs.embed.widgetBuilder = {
         previewElem.append(targetSpan);
         previewElem.append(embedScript);
     },
+	
     
     elemToString: function(elem) {
         var buf = [];

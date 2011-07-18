@@ -36,6 +36,12 @@ public abstract class AbstractDAOImpl {
         return instance;
     }
     
+    public <T extends PersistentImpl> T saveOrUpdate(Session sesh, T instance) {
+        updateTimestamp(instance);
+        sesh.saveOrUpdate(instance);
+        return instance;
+    }
+    
     protected int deleteByQuery(PersistentImpl instance) {
         if(instance.getId() == null) {
             return 0;
@@ -94,19 +100,24 @@ public abstract class AbstractDAOImpl {
         T ob = (T)sessionFactory.getCurrentSession().merge(instance);
         return ob;
     }
-
+    
     @SuppressWarnings("unchecked")
-    protected <T extends PersistentImpl> T getByID(Class<T> clazz, Integer id) {
+    protected <T extends PersistentImpl> T getByID(Session sesh, Class<T> clazz, Integer id) {
         // The following subterfuge is required because hibernate does not apply
         // filters to 'get' requests.
         // https://forum.hibernate.org/viewtopic.php?f=1&t=966610
         if(PortalPersistentImpl.class.isAssignableFrom(clazz)) {
-            List<PersistentImpl> list = this.find(sessionFactory.getCurrentSession(),
+            List<PersistentImpl> list = this.find(sesh,
                                                   String.format("from %s where id = ?", clazz.getSimpleName()), new Object[]{id}, 1);
             return list.isEmpty() ? null : (T)list.get(0);
         } else {
-            return (T)sessionFactory.getCurrentSession().get(clazz, id);
+            return (T)sesh.get(clazz, id);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends PersistentImpl> T getByID(Class<T> clazz, Integer id) {
+        return getByID(sessionFactory.getCurrentSession(), clazz, id);
     }
 
     protected <T extends PersistentImpl> QueryCriteria<T> newQueryCriteria(Class<T> persistentClass) {

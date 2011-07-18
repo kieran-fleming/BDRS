@@ -10,9 +10,9 @@ import org.apache.log4j.Logger;
 import org.springframework.web.multipart.MultipartFile;
 
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 
@@ -78,7 +78,7 @@ public class AttributeParser {
         case TEXT:
         case STRING_WITH_VALID_VALUES:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_NONBLANK_STRING : ValidationType.STRING;
-            return validator.validate(parameterMap, validationType, key);
+            return validator.validate(parameterMap, validationType, key, attribute);
         case IMAGE:
         case FILE:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_NONBLANK_STRING : ValidationType.STRING;
@@ -92,17 +92,20 @@ public class AttributeParser {
                 parameterMap = new HashMap<String, String[]>(parameterMap);
                 parameterMap.put(key, new String[]{file.getOriginalFilename()});
             }
-            boolean isValid = validator.validate(parameterMap, validationType, key);
+            boolean isValid = validator.validate(parameterMap, validationType, key, attribute);
             return isValid;
         case INTEGER:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_INTEGER : ValidationType.INTEGER;
-            return validator.validate(parameterMap, validationType, key);
+            return validator.validate(parameterMap, validationType, key, attribute);
+        case INTEGER_WITH_RANGE:
+            validationType = attribute.isRequired() ? ValidationType.REQUIRED_INTEGER_RANGE : ValidationType.INTEGER_RANGE;
+            return validator.validate(parameterMap, validationType, key, attribute);
         case DECIMAL:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_DOUBLE : ValidationType.DOUBLE;
-            return validator.validate(parameterMap, validationType, key);
+            return validator.validate(parameterMap, validationType, key, attribute);
         case DATE:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_DATE : ValidationType.DATE;
-            return validator.validate(parameterMap, validationType, key);
+            return validator.validate(parameterMap, validationType, key, attribute);
         default:
             log.warn("Unknown Attribute Type: " + attribute.getType());
             throw new IllegalArgumentException("Unknown Attribute Type: " + attribute.getType());
@@ -124,7 +127,7 @@ public class AttributeParser {
      * @throws ParseException thrown if the provided date value cannot be 
      * parsed.
      */
-    public RecordAttribute parse(Attribute attribute, Record record,
+    public AttributeValue parse(Attribute attribute, Record record,
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap) throws ParseException {
         return this.parse(DEFAULT_PREFIX, attribute, record, parameterMap, fileMap);
@@ -146,23 +149,23 @@ public class AttributeParser {
      * @throws ParseException thrown if the provided date value cannot be 
      * parsed.
      */
-    public RecordAttribute parse(String prefix, Attribute attribute, Record record,
+    public AttributeValue parse(String prefix, Attribute attribute, Record record,
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap) throws ParseException {
 
-    	Map<Attribute, RecordAttribute> recAttrMap = new HashMap<Attribute, RecordAttribute>();
-        for (RecordAttribute recAttr : record.getAttributes()) {
+    	Map<Attribute, AttributeValue> recAttrMap = new HashMap<Attribute, AttributeValue>();
+        for (AttributeValue recAttr : record.getAttributes()) {
             recAttrMap.put(recAttr.getAttribute(), recAttr);
         }
 
-        RecordAttribute recAttr;
+        AttributeValue recAttr;
         addOrUpdateAttribute = true;
 
         // Retrieve or instantiate the attribute
         if (recAttrMap.containsKey(attribute)) {
             recAttr = recAttrMap.get(attribute);
         } else {
-            recAttr = new RecordAttribute();
+            recAttr = new AttributeValue();
             recAttr.setAttribute(attribute);
         }
 
@@ -212,67 +215,71 @@ public class AttributeParser {
         return taxonAttr;
     }    
 
-	private void parseAttributeValue(String prefix, Attribute attribute,
+    private void parseAttributeValue(String prefix, Attribute attribute,
 			Map<String, String[]> parameterMap,
-			Map<String, MultipartFile> fileMap, AttributeValue attributeValue)
+			Map<String, MultipartFile> fileMap, TypedAttributeValue attributeValue)
 			throws ParseException {
 		
-		String attrValue;
-		attrValue = getParameter(parameterMap, String.format(ATTRIBUTE_NAME_TEMPLATE, prefix, attribute.getId()));
+	String attrValue;
+	attrValue = getParameter(parameterMap, String.format(ATTRIBUTE_NAME_TEMPLATE, prefix, attribute.getId()));
         attrFile = fileMap.get(String.format(ATTRIBUTE_FILE_NAME_TEMPLATE, prefix, attribute.getId()));
-
+        
         if (attrValue != null || attrFile != null) {
+            addOrUpdateAttribute = true;
             attributeValue.setStringValue(attrValue);
             switch (attribute.getType()) {
-            case STRING:
-            case STRING_AUTOCOMPLETE:
-            case TEXT:
-                break;
-            case STRING_WITH_VALID_VALUES:
-                addOrUpdateAttribute = !attrValue.isEmpty();
-                break;
-            case INTEGER:
-            case DECIMAL:
-                addOrUpdateAttribute = !attrValue.isEmpty();
-                if (addOrUpdateAttribute) {
-                    attributeValue.setNumericValue(new BigDecimal(attrValue));
-                }
-                break;
-            case DATE:
-                addOrUpdateAttribute = !attrValue.isEmpty();
-                if (addOrUpdateAttribute) {
-                    attributeValue.setDateValue(dateFormat.parse(attrValue));
-                }
-                break;
-            case IMAGE:
-            case FILE:
-                
-                // attrValue is empty when a file is cleared or the client 
-                // does not have javascript enabled when uploading a file.
-                // Without javascript, it is not possible to clear a file.
-                
-                // attrFile will always have size zero unless a file
-                // is uploaded. 
-                
-                // If there is already a file, but the
-                // record is updated, without changing the file input,
-                // addAttribute will be true but attrFile will
-                // have size zero.
-                addOrUpdateAttribute = !attrValue.isEmpty() || (attrFile != null && attrFile.getSize() > 0);
-                if (addOrUpdateAttribute && attrFile != null && attrFile.getSize() > 0) {
-                    attributeValue.setStringValue(attrFile.getOriginalFilename());
-                } else {
-                    // Simplifies the need for users of this class to know about
-                    // zero sized files.
-                    attrFile = null;
-                }
-                break;
-            default:
-                log.warn("Unknown Attribute Type: " + attribute.getType());
-                break;
+                case STRING:
+                case STRING_AUTOCOMPLETE:
+                case TEXT:
+                    break;
+                case STRING_WITH_VALID_VALUES:
+                    addOrUpdateAttribute = !attrValue.isEmpty();
+                    break;
+                case INTEGER:
+                case INTEGER_WITH_RANGE:
+                case DECIMAL:
+                    addOrUpdateAttribute = !attrValue.isEmpty();
+                    if (addOrUpdateAttribute) {
+                        attributeValue.setNumericValue(new BigDecimal(attrValue));
+                    }
+                    break;
+                case DATE:
+                    addOrUpdateAttribute = !attrValue.isEmpty();
+                    if (addOrUpdateAttribute) {
+                        attributeValue.setDateValue(dateFormat.parse(attrValue));
+                    }
+                    break;
+                case IMAGE:
+                case FILE:
+                    
+                    // attrValue is empty when a file is cleared or the client 
+                    // does not have javascript enabled when uploading a file.
+                    // Without javascript, it is not possible to clear a file.
+                    
+                    // attrFile will always have size zero unless a file
+                    // is uploaded. 
+                    
+                    // If there is already a file, but the
+                    // record is updated, without changing the file input,
+                    // addAttribute will be true but attrFile will
+                    // have size zero.
+                    addOrUpdateAttribute = !attrValue.isEmpty() || (attrFile != null && attrFile.getSize() > 0);
+                    if (addOrUpdateAttribute && attrFile != null && attrFile.getSize() > 0) {
+                        attributeValue.setStringValue(attrFile.getOriginalFilename());
+                    } else {
+                        // Simplifies the need for users of this class to know about
+                        // zero sized files.
+                        attrFile = null;
+                    }
+                    break;
+                default:
+                    log.warn("Unknown Attribute Type: " + attribute.getType());
+                    break;
             }
+        } else {
+            addOrUpdateAttribute = false;
         }
-	}
+    }
     
     private String getParameter(Map<String, String[]> parameterMap, String key) {
         String[] value = parameterMap.get(key);

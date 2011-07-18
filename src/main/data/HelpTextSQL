@@ -1,25 +1,25 @@
 BEGIN;
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please enter a name for the class you wish to create. Each class name should be unique and easy for you to identify.' , 'addClass');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please add a unique group name. This name should be easy for you and the students to identify. If you are having only one student per group, you can use the student name here.' , 'addGroup');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please create a unique field trip name. This name must be between 6 and 12 characters, and will be used by you and your students to identify this fieldtrip.' , 'addSurveyName');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Click inside the text box to bring up a calender from which you can select the survey date. Please do not type the date manually.' , 'addSurveyDate');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Type a short description of the Survey' , 'addSurveyDescript');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please select where your field trip will be. You can indicate up to four places by selecting the map or entering latitude and longitude values in the spaces provided. If you select from the map, these coordinates will be entered automatically. By selecting an area on a map, you will limit the species you will observe. This will help students make fewer identification errors. By not selecting any area, the species list for all of Victoria will be available. This is not recommended unless your field trip is intended to encompass all of Victoria. It will also make the program quite large if you download to mobile devices.' , 'addSurveyMap');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The default is set for you to observe all 8 animal groups. If you wish to restrict the field trip to less than 8 groups, make your selection by using the checkboxes.', 'addSurveyAnimals');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'This section allows you to select which groups you would like to participate in the field trip. If there are no classes listed you should return to the dashboard and select ‘Add New Classes and Groups’.', 'addSurveyGroups');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The groups on this page are the animals you are able to observe.', 'idToolP1');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The groups on this page are the animals you are able to observe.', 'fieldGuide');
-INSERT INTO help_item(created_at, updated_at, "value", "key")
-    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please check the boxes for the classes you wish to participate in this survey.', 'addSurveyClass');
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please enter a name for the class you wish to create. Each class name should be unique and easy for you to identify.' , 'addClass', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please add a unique group name. This name should be easy for you and the students to identify. If you are having only one student per group, you can use the student name here.' , 'addGroup', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please create a unique field trip name. This name must be between 6 and 12 characters, and will be used by you and your students to identify this fieldtrip.' , 'addSurveyName', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Click inside the text box to bring up a calender from which you can select the survey date. Please do not type the date manually.' , 'addSurveyDate', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Type a short description of the Survey' , 'addSurveyDescript', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please select where your field trip will be. You can indicate up to four places by selecting the map or entering latitude and longitude values in the spaces provided. If you select from the map, these coordinates will be entered automatically. By selecting an area on a map, you will limit the species you will observe. This will help students make fewer identification errors. By not selecting any area, the species list for all of Victoria will be available. This is not recommended unless your field trip is intended to encompass all of Victoria. It will also make the program quite large if you download to mobile devices.' , 'addSurveyMap', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The default is set for you to observe all 8 animal groups. If you wish to restrict the field trip to less than 8 groups, make your selection by using the checkboxes.', 'addSurveyAnimals', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'This section allows you to select which groups you would like to participate in the field trip. If there are no classes listed you should return to the dashboard and select ‘Add New Classes and Groups’.', 'addSurveyGroups', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The groups on this page are the animals you are able to observe.', 'idToolP1', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'The groups on this page are the animals you are able to observe.', 'fieldGuide', 0);
+INSERT INTO help_item(created_at, updated_at, "value", "key", "weight")
+    VALUES (TIMESTAMP 'now', TIMESTAMP 'now', 'Please check the boxes for the classes you wish to participate in this survey.', 'addSurveyClass', 0);
 COMMIT;
 

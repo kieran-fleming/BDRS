@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -45,7 +46,12 @@ public class ManagedFileDAOImpl extends AbstractDAOImpl implements ManagedFileDA
     
     @Override 
     public ManagedFile getManagedFile(String uuid) {
-        List<ManagedFile> files = find("from ManagedFile f where f.uuid = ?", uuid);
+        return getManagedFile(getSession(), uuid);
+    }
+    
+    @Override
+    public ManagedFile getManagedFile(Session sesh, String uuid) {
+        List<ManagedFile> files = find(sesh, "from ManagedFile f where f.uuid = ?", uuid);
         return files.isEmpty() ? null : files.get(0);
     }
     
@@ -69,5 +75,10 @@ public class ManagedFileDAOImpl extends AbstractDAOImpl implements ManagedFileDA
     @Override
     public void delete(ManagedFile mf) {
         super.deleteByQuery(mf);
+    }
+    
+    @Override 
+    public ManagedFile saveOrUpdate(ManagedFile mf) {
+        return super.saveOrUpdate(super.getSession(), mf);
     }
 }

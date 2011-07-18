@@ -16,46 +16,39 @@
     <input type="hidden" name="taxon_group" value="0"/>
     <input type="hidden" name="layer_name" value="All Records"/>
     <input type="hidden" name="ident" value="<%= context.getUser().getRegistrationKey() %>"/>
-
-    <table id="sightingFilterTable">
-        <thead>
-            <tr>
-                <th><label for="project">Project:</label></th>
-                <th><label for="date_start">From:</label></th>
-                <th><label for="date_end">To:</label></th>
-                <th><label for="limit">Limit:</label></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <select id="project" name="survey">
-                        <c:forEach items="${surveyList}" var="survey">                            
-                            <option value=${survey.id}
-                            <c:if test="${survey.id == defaultSurveyId}">
-                                selected="selected"</c:if>
-                            >
-                                <c:out value="${survey.name}"/>
-                            </option>
-                        </c:forEach>
-                    </select>
-                </td>
-                <td>
-                    <input id="date_start" class="datepicker_historical" type="text" name="date_start"/>
-                </td>
-                <td>
-                    <input id="date_end" class="datepicker_historical" type="text" name="date_end"/>
-                </td>
-                <td>
-                    <input id="limit" class="validate(integer)" type="text" name="limit" value="300"/>
-                </td>
-                <td>
-                    <input type="submit" value="Load Records" class="form_action"/>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+	
+	<div id="sightingFilter">
+        <div class="sightingFilterItem">
+        	<div><label for="project">Project:</label></div>
+            <div>
+				<select id="project" name="survey">
+	                <c:forEach items="${surveyList}" var="survey">                            
+	                    <option value=${survey.id}
+	                    <c:if test="${survey.id == defaultSurveyId}">
+	                        selected="selected"</c:if>
+	                    >
+	                        <c:out value="${survey.name}"/>
+	                    </option>
+	                </c:forEach>
+	            </select>
+			</div>
+		</div>	
+		<div class="sightingFilterItem">
+			<div><label for="date_start">From:</label></div>
+			<div><input id="date_start" class="datepicker_historical" type="text" name="date_start"/></div>
+		</div>
+		<div class="sightingFilterItem">    
+            <div><label for="date_end">To:</label></div>
+			<div><input id="date_end" class="datepicker_historical" type="text" name="date_end"/></div>
+		</div>
+		<div class="sightingFilterItem">    	
+            <div><label for="limit">Limit:</label></div>
+			<div><input id="limit" class="validate(integer)" type="text" name="limit" value="300"/></div>
+        </div>
+     
+	    <div class="sightingFilterSubmit"><input type="submit" value="Load Records" class="form_action"/></div>
+    </div>
+	<div class="clear"></div>
 
     <c:if test="${not empty recordDateList}">
         <div class="textright">
@@ -74,16 +67,25 @@
 </form>
 
 <h3>Map</h3>
-<div class="clear">
+<div class="left">
     <a id="mapToggle" class="left" href="javascript:void(0);">
         Collapse
     </a>
-    <a class="right" href="javascript: bdrs.map.downloadKML('#record_filter_form', null);">
+    <span>&nbsp;|&nbsp;<span/>
+    <a href="javascript: bdrs.map.downloadKML('#record_filter_form', null);">
         Download KML
     </a>
 </div>
-<div class="map_wrapper clear" id="map_wrapper">
-    <div id="record_base_map" class="defaultmap tracker_map"></div>
+
+<div class="right">
+    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#record_base_map', bdrs.map.baseMap)">Enlarge Map</a>
+</div>
+
+<div class="clear"></div>
+
+<div class="map_wrapper" id="map_wrapper">
+    <div id="record_base_map" class="defaultmap review_map"></div>
+    <div id="geocode" class="geocode"></div>
     <div class="recordCount textright"></div>
 </div>
 
@@ -167,19 +169,23 @@
                 dateCell = jQuery("<td></td>").addClass("nowrap").append(dateLink);
                 speciesCell = jQuery("<td></td>").addClass("nowrap").attr("id", "record_"+rec.id).addClass("taxon_"+rec.species);
                 locationCell = jQuery("<td></td>").addClass("nowrap").text(rec.latitude+", "+rec.longitude);
-                numberCell = jQuery("<td></td>").addClass("nowrap").text(rec.number == null ? "" : rec.number);
+                numberCell = jQuery("<td></td>").addClass("nowrap").text(rec.number == null ? "N/A" : rec.number);
                 notesCell = jQuery("<td></td>").text(rec.notes);
 
                 row.append(dateCell).append(speciesCell).append(locationCell).append(numberCell).append(notesCell);
                 tbody.append(row);
 
-                if(taxaLookup[rec.species] === undefined) {
-                    jQuery.getJSON("${pageContext.request.contextPath}/webservice/taxon/getTaxonById.htm",
-                        {"id": rec.species}, function(taxon) {
-                        jQuery(".taxon_"+taxon.id).addClass("scientificName").append(taxon.scientificName);
-                    });
-                    // Add an entry to the map. This taxon has been requested.
-                    taxaLookup[rec.species] = rec.species;
+                if (rec.species) {
+	                if(taxaLookup[rec.species] === undefined) {
+	                    jQuery.getJSON("${pageContext.request.contextPath}/webservice/taxon/getTaxonById.htm",
+	                        {"id": rec.species}, function(taxon) {
+	                        jQuery(".taxon_"+taxon.id).addClass("scientificName").append(taxon.scientificName);
+	                    });
+	                    // Add an entry to the map. This taxon has been requested.
+	                    taxaLookup[rec.species] = rec.species;
+	                }
+                } else {
+                    speciesCell.text("N/A");
                 }
             }
             var mapRecordCount = jQuery('.recordCount');
@@ -193,7 +199,7 @@
     };
 
     jQuery(function() {
-        bdrs.map.initBaseMap('record_base_map', null);
+        bdrs.map.initBaseMap('record_base_map', { geocode: { selector: '#geocode' }});
         bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
         bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePoupUpHandler);
 
@@ -203,6 +209,7 @@
 
                 var map = bdrs.map.baseMap;
                 var layerArray = map.getLayersByName(jQuery('[name=layer_name]').val());
+                
                 for(var i=0; i<layerArray.length; i++) {
                     bdrs.map.removeLayerById(layerArray[i].id);
                 }
@@ -212,7 +219,7 @@
         </c:if>
         
         jQuery("#record_filter_form").submit(function() {
-            bdrs.map.clearAllVectorLayers();
+            bdrs.map.clearAllVectorLayers(bdrs.map.baseMap);
 
             // User Records
             var params = {

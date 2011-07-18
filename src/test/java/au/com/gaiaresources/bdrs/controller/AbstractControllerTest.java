@@ -7,14 +7,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.ProviderManager;
@@ -27,9 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,34 +31,21 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.db.FilterManager;
-import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
-import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.servlet.Interceptor;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaInterceptor;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
+import au.com.gaiaresources.bdrs.test.AbstractTransactionalTest;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {
-        "file:src/main/webapp/WEB-INF/climatewatch.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-hibernate.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-hibernate-datasource-test.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-security.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-daos.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-email.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-servlet.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-profileConfig-test.xml"})
+
 @Transactional
 public abstract class AbstractControllerTest extends
-        AbstractTransactionalJUnit4SpringContextTests {
+    AbstractTransactionalTest {
 
     private Logger log = Logger.getLogger(getClass());
 
-    @Autowired
-    protected SessionFactory sessionFactory;
     @Autowired
     @Qualifier(value = "org.springframework.security.authenticationManager")
     protected ProviderManager authProviderManager;
@@ -77,39 +56,16 @@ public abstract class AbstractControllerTest extends
     @Autowired
     protected PortalDAO portalDAO;
 
-    protected MockHttpServletRequest request;
     protected MockHttpServletResponse response;
     protected MockHttpSession session;
 
     private ModelAndView mv;
     private Object controller;
     private HandlerInterceptor[] interceptors;
-
-    @Before
-    public void primeDatabase() {
-        try {
-            Portal portal = new PortalInitialiser().initRootPortal();
-
-            RequestContext c = RequestContextHolder.getContext();
-            c.setPortal(portal);
-            Session sesh = c.getHibernate();
-            FilterManager.setPortalFilter(sesh, portal);
-
-            //if (c.getUser() != null) {
-                // rebind the user in the context to the current session.
-            //    ((au.com.gaiaresources.bdrs.security.UserDetails) c.getUserDetails()).setUser(userDAO.getUser(c.getUser().getId()));
-            //}
-            //if (c.getPortal() != null) {
-            //    c.setPortal(portalDAO.getPortal(c.getPortal().getId()));
-            //}
-        } catch (Exception e) {
-            log.error("db setup error", e);
-        }
-    }
+    
 
     @BeforeTransaction
-    public void beforeTx() throws Exception {
-        request = createMockHttpServletRequest();
+    public final void beforeTx() throws Exception {
         response = new MockHttpServletResponse();
         session = new MockHttpSession();
 
@@ -119,17 +75,13 @@ public abstract class AbstractControllerTest extends
         authProviderManager.setProviders(providerList);
 
         // The following block would normally be done by the interceptor.
-        RequestContext c = new RequestContext(request, applicationContext);
+        RequestContext c = RequestContextHolder.getContext();
         request.setAttribute(RequestContext.REQUEST_CONTEXT_SESSION_ATTRIBUTE_KEY, c);
         SecurityContext securityContext = SecurityContextHolder.getContext();
         if ((securityContext.getAuthentication() != null)
                 && (securityContext.getAuthentication().getPrincipal() instanceof UserDetails)) {
             c.setUserDetails((au.com.gaiaresources.bdrs.security.UserDetails) securityContext.getAuthentication().getPrincipal());
         }
-
-        RequestContextHolder.set(c);
-        c.setHibernate(sessionFactory.getCurrentSession());
-        sessionFactory.getCurrentSession().beginTransaction();
     }
 
     protected RequestContext getRequestContext() {
@@ -184,21 +136,8 @@ public abstract class AbstractControllerTest extends
         return handler.getHandler();
     }
 
-    /**
-     * This function should be overriden by tests taht require a multipart
-     * request.
-     * 
-     * @return
-     */
-    protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockHttpServletRequest();
-    }
-
     @AfterTransaction
-    public void afterTx() throws Exception {
-        sessionFactory.getCurrentSession().getTransaction().rollback();
-        //sessionFactory.getCurrentSession().getTransaction().commit();
-
+    public final void afterTx() throws Exception {
         HandlerInterceptor interceptor;
         if (interceptors != null) {
             for (int i = interceptors.length - 1; i > -1; i--) {

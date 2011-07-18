@@ -1,10 +1,11 @@
 package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 
 import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
+import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 
@@ -25,7 +26,7 @@ public class FormFieldFactory {
      * @return a <code>RecordFormField</code>
      */
     public FormField createRecordFormField(Survey survey, Record record,
-            Attribute attribute, AttributeValue recordAttribute, String prefix) {
+            Attribute attribute, TypedAttributeValue recordAttribute, String prefix) {
         return new RecordAttributeFormField(survey, record, attribute,
                 recordAttribute, prefix);
     }
@@ -40,7 +41,7 @@ public class FormFieldFactory {
      * @return a <code>RecordFormField</code>
      */
     public FormField createRecordFormField(Survey survey,
-            Record record, Attribute attribute, AttributeValue recordAttribute) {
+            Record record, Attribute attribute, TypedAttributeValue recordAttribute) {
         return new RecordAttributeFormField(survey, record, attribute,
                 recordAttribute, AttributeParser.DEFAULT_PREFIX);
     }
@@ -81,14 +82,15 @@ public class FormFieldFactory {
      * @param propertyName the name of the bean property represented by this field.
      * @param species the indicator species to be represented by this field, or
      * null otherwise.
+     * @param taxonomic determines if the species field is mandatory.
      * @param prefix the prefix to be prepended to input names.
      * @return a <code>RecordFormField</code>
      */
     public FormField createRecordFormField(Survey survey,
             Record record, String propertyName, IndicatorSpecies species,
-            String prefix) {
+            Taxonomic taxonomic, String prefix) {
         return new RecordPropertyFormField(survey, record, propertyName,
-                species, prefix);
+                species, taxonomic, prefix);
     }
 
     /**
@@ -99,12 +101,13 @@ public class FormFieldFactory {
      * @param propertyName the name of the bean property represented by this field.
      * @param species the indicator species to be represented by this field, or
      * null otherwise.
+     * @param taxonomic determines if the species field is mandatory.
      * @return a <code>RecordFormField</code>
      */
     public FormField createRecordFormField(Survey survey,
-            Record record, String propertyName, IndicatorSpecies species) {
+            Record record, String propertyName, IndicatorSpecies species, Taxonomic taxonomic) {
         return new RecordPropertyFormField(survey, record, propertyName,
-                species, AttributeParser.DEFAULT_PREFIX);
+                species, taxonomic, AttributeParser.DEFAULT_PREFIX);
     }
 
     /**
@@ -117,7 +120,7 @@ public class FormFieldFactory {
      */
     public FormField createRecordFormField(Survey survey, Record record,
             String propertyName) {
-        return new RecordPropertyFormField(survey, record, propertyName, null,
+        return new RecordPropertyFormField(survey, record, propertyName, null, null,
                 AttributeParser.DEFAULT_PREFIX);
     }
     

@@ -7,7 +7,6 @@ import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
-import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 

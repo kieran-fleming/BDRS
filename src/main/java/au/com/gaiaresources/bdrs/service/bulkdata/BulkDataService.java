@@ -7,6 +7,6 @@ public class BulkDataService extends AbstractBulkDataService {
 
    @Override
     protected RecordRow getRecordRow() {
-        return new XlsRecordRow(propertyService);
+        return new XlsRecordRow(propertyService, surveyService, bulkDataReadWriteService);
     }
 }

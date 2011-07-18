@@ -67,7 +67,7 @@ public abstract class RecordFormTest extends AbstractControllerTest {
         Survey survey = new Survey();
         survey.setName("testRecordLocations");
         survey.setActive(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription("RecordFormTest.testRecordLocations Description");
         
         Metadata md = survey.setFormRendererType(rendererType);

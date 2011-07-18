@@ -65,6 +65,7 @@ public enum TaxonRank {
     EPIFAMILY("epifamily","http://vocabularies.gbif.org/rank/epifamily","","http://www.ubio.org"),
     FAMILY_GROUP("family group","http://vocabularies.gbif.org/rank/family-group","","http://www.ubio.org"),
     SUBFAMILY_GROUP("subfamily group","http://vocabularies.gbif.org/rank/subfamily-group","","http://www.ubio.org"),
+    SUPRAFAMILY("suprafamily","","",""),
     FAMILY("Family","http://vocabularies.gbif.org/rank/Family","fam.","http://rs.tdwg.org/ontology/voc/TaxonRank"),
     SUBFAMILY("Subfamily","http://vocabularies.gbif.org/rank/Subfamily","subfam.","http://rs.tdwg.org/ontology/voc/TaxonRank"),
     INFRAFAMILY("Infrafamily","http://vocabularies.gbif.org/rank/Infrafamily","infrafam.","http://rs.tdwg.org/ontology/voc/TaxonRank"),
@@ -157,5 +158,24 @@ public enum TaxonRank {
 
     public String getSource() {
         return source;
+    }
+    
+    public static TaxonRank findByAbbreviation(String abbrev) {
+        for (TaxonRank t : TaxonRank.values()) {
+            if (t.getAbbreviation().equals(abbrev)) {
+                return t;
+            }
+        }
+        return null;
+    }
+    
+    // returns a taxon rank based on the identifier given. Note, this does a case insensitive search.
+    public static TaxonRank findByIdentifier(String id) {
+        for (TaxonRank t : TaxonRank.values()) {
+            if (t.getIdentifier().equalsIgnoreCase(id)) {
+                return t;
+            }
+        }
+        return null;
     }
 }

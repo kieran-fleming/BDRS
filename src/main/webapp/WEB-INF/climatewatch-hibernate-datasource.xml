@@ -11,9 +11,14 @@
 	<!-- Database -->
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
         
-        <property name="driverClassName" value="${bdrs.db.driver}"/>
+<!--        <property name="driverClassName" value="${bdrs.db.driver}"/>
         <property name="url" value="${bdrs.db.url}"/>
         <property name="username" value="${bdrs.db.user.name}"/>
         <property name="password" value="${bdrs.db.user.password}"/>
+-->        
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="url" value="jdbc:postgresql://localhost:5432/bdrs"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value="postgres"/>
     </bean>
 </beans>

@@ -36,8 +36,6 @@ public class ApplicationServiceTest extends AbstractControllerTest {
 	private Logger log = Logger.getLogger(getClass());
 	private Survey frogSurveyInDb, birdAndFrogSurveyInDb;
 	
-	@Autowired
-	private PortalDAO portalDAO;
 	
 	@Autowired
 	private SurveyDAO surveyDAO;

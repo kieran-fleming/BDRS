@@ -3,21 +3,21 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import org.apache.log4j.Logger;
 
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 
 /**
  * The <code>RecordAttributeFormField</code> is a representation of a
  * configurable field on the record form that stores its value in a
- * {@link RecordAttribute}.
+ * {@link AttributeValue}.
  */
-public class RecordAttributeFormField extends AbstractRecordFormField implements AttributeValueFormField {
+public class RecordAttributeFormField extends AbstractRecordFormField implements TypedAttributeValueFormField {
 
     private Logger log = Logger.getLogger(getClass());
 
-    private AttributeValue recordAttribute;
+    private TypedAttributeValue recordAttribute;
     private Attribute attribute;
 
     /**
@@ -36,7 +36,7 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
      *            the prefix to be prepended to input names.
      */
     RecordAttributeFormField(Survey survey, Record record, Attribute attribute,
-            AttributeValue recordAttribute, String prefix) {
+            TypedAttributeValue recordAttribute, String prefix) {
 
         super(survey, record, prefix);
 
@@ -60,11 +60,11 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
         return true;
     }
 
-    public AttributeValue getRecordAttribute() {
+    public TypedAttributeValue getRecordAttribute() {
         return recordAttribute;
     }
 
-    public void setRecordAttribute(AttributeValue recordAttribute) {
+    public void setRecordAttribute(TypedAttributeValue recordAttribute) {
         this.recordAttribute = recordAttribute;
     }
 
@@ -77,15 +77,15 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
     }
 
 	@Override
-	public AttributeValue getAttributeValue() {
+	public TypedAttributeValue getAttributeValue() {
 		return this.recordAttribute;
 	}
 
 	@Override
-	public void setAttributeValue(AttributeValue attributeValue) {
-		if(!(attributeValue instanceof RecordAttribute)) {
+	public void setAttributeValue(TypedAttributeValue attributeValue) {
+		if(!(attributeValue instanceof AttributeValue)) {
 			throw new IllegalArgumentException(String.format("Attribute Value %s is not an instance of RecordAttribute", attributeValue));
 		} 
-		this.recordAttribute = (AttributeValue) attributeValue;
+		this.recordAttribute = (TypedAttributeValue) attributeValue;
 	}
 }

@@ -38,12 +38,12 @@ import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordAttribute;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
@@ -89,7 +89,7 @@ public class YearlySightingsController extends AbstractController {
         GregorianCalendar start = new GregorianCalendar();
         GregorianCalendar end = new GregorianCalendar();
 
-        if(survey.getDate() == null) {
+        if(survey.getStartDate() == null) {
             start.setTime(new Date());
             start.set(Calendar.DAY_OF_MONTH, 0);
             start.add(Calendar.MONTH, -6);
@@ -97,7 +97,7 @@ public class YearlySightingsController extends AbstractController {
             end.setTime(start.getTime());
             end.add(Calendar.YEAR, 1);
         } else {
-            start.setTime(survey.getDate());
+            start.setTime(survey.getStartDate());
             start.set(Calendar.DAY_OF_MONTH, 0);
             start.add(Calendar.MONTH, -6);
 
@@ -223,13 +223,13 @@ public class YearlySightingsController extends AbstractController {
                     }
                     
                     // Record Attributes
-                    RecordAttribute recAttr;
+                    AttributeValue recAttr;
                     AttributeParser attributeParser = new AttributeParser();
                     for(Attribute attribute : survey.getAttributes()) {
                         if(AttributeScope.SURVEY.equals(attribute.getScope())) {
                             recAttr = attributeParser.parse(attribute, rec, request.getParameterMap(), request.getFileMap());
                             if(attributeParser.isAddOrUpdateAttribute()) {
-                                recAttr = recordDAO.saveRecordAttribute(recAttr);
+                                recAttr = recordDAO.saveAttributeValue(recAttr);
                                 if(attributeParser.getAttrFile() != null) {
                                     fileService.createFile(recAttr, attributeParser.getAttrFile());
                                 }

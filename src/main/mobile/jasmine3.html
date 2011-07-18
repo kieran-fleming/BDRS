@@ -1,0 +1,710 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>ALA Citizen Science Mobile</title>
+
+    <!-- jasmine stuff... -->
+    <link rel="stylesheet" type="text/css" href="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine.css">
+    <script type="text/javascript" src="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine.js"></script>
+    <script type="text/javascript" src="js/jasmine-standalone-1.0.2/lib/jasmine-1.0.2/jasmine-html.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.11.custom.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jquery-ui-timepicker.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jquery.mobile-1.0a4.min.css"/>
+    <link type="text/css" rel="stylesheet" href="css/bdrs-mobile.css"/>
+    
+    <script type="text/javascript" charset="utf-8" src="js/jquery-1.5.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.ui.timepicker.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.ui.autocomplete.html.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0a4.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.jsonp-2.1.4.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/oni-apollo.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.sparkline.min.js"></script>
+
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-log.js"></script>
+    
+    <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.4.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/phonegap-testplugin.js"></script>
+    
+    <script type="application/javascript" src="js/persistence.js"></script>
+    <script type="application/javascript" src="js/persistence.search.js"></script>
+        
+    <script type="application/javascript" src="js/persistence.store.sql.js"></script>
+    <script type="application/javascript" src="js/persistence.store.websql.js"></script>
+    <script type="application/javascript" src="js/persistence.jquery.js"></script>
+    <!--script type="application/javascript" src="js/persistence.jquery.mobile.js"></script-->
+
+    <!-- BDRS Mobile Lib -->
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-globals.js"></script>
+
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-utils.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-phonegap.js"></script>
+    
+
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-queue.js"></script>  
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-persistence.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-pages.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-template.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-dispatcher.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-geolocation.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-validation.js"></script>
+    <script type="application/javascript" src="js/bdrs/bdrs-mobile-media.js"></script>      
+    
+    <!-- Mobile application pages -->
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-login.js"></script>
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-dashboard.js"></script>
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-choose-survey.js"></script>
+    <script type="text/sjs">
+        require.path = "./js/bdrs/";
+        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
+        bdrs.mobile.widget = require("bdrs-mobile-widget");
+        bdrs.mobile.camera = require("bdrs-mobile-camera");
+        bdrs.mobile.survey = require("bdrs-mobile-survey");
+
+        require.path = "./js/bdrs/pages/";
+        bdrs.mobile.pages.guide = require("bdrs-page-guide");
+        bdrs.mobile.pages.species_list = require("bdrs-page-species-list");
+        bdrs.mobile.pages.species = require("bdrs-page-species");
+        bdrs.mobile.pages.settings = require("bdrs-page-settings");
+        bdrs.mobile.pages.record = require("bdrs-page-record");
+        bdrs.mobile.pages.review = require("bdrs-page-review");
+        bdrs.mobile.pages.download_surveys = require("bdrs-page-download-surveys");
+        bdrs.mobile.pages.sites = require("bdrs-page-sites");
+        bdrs.mobile.pages.site = require("bdrs-page-site");
+        bdrs.mobile.pages.add_site = require("bdrs-page-add-site");
+        bdrs.mobile.pages.statistics = require("bdrs-page-statistics");
+        bdrs.mobile.pages.dump_data = require("bdrs-page-dump-data");
+    </script>
+    
+    <!-- Mobile Map -->
+    <script type="text/javascript" src="js/bdrs/map/OpenLayers.js"></script>
+    <!-- Patch in scroll wheel fixes -->
+    <script type="text/javascript" src="js/bdrs/map/MouseWheelMonkeyPatches.js"></script>
+    <!-- Add Multitouch -->
+    <script type="text/javascript" src="js/bdrs/map/MultitouchHandler.js"></script>
+    <script type="text/javascript" src="js/bdrs/map/MultitouchNavigation.js"></script>
+    <!-- Disabled while mobile devices are too slow: <script type="text/javascript" src="js/bdrs/map/MomentumPan.js"></script> -->
+    <!-- Add Map scripts -->
+    <script type="text/javascript" src="js/bdrs/map/TileLayer.js"></script>
+    <script type="text/javascript" src="js/bdrs/map/map.js"></script>
+    <!-- Add Geolocation -->
+    <script type="text/javascript" src="js/bdrs/map/GeolocationAPI.js"></script>
+    <!-- Add LocalStorage functions -->
+    <script type="text/javascript" src="js/bdrs/map/LocalStorage.js"></script>
+    <!-- Mobile Map Interface -->           
+    <link rel="stylesheet" type="text/css" href="css/map/interface.css" />   
+    
+	<!-- include our test files (jasmine calls them 'spec' files but whatevaaaaa) here -->
+    <script type="text/javascript" src="js-test/loginTest.js"></script>  
+              
+    <script type="text/javascript">
+        jQuery(function () {
+            
+            bdrs.template.render('footer', null, ".footer");
+            bdrs.template.render('header', null, ".header");
+    
+            jQuery(".bdrs-page-login #login_button").click(function(event) {
+                jQuery.jsonp({
+                    url: jQuery(".bdrs-page-login #url").val() + "/webservice/user/validate.htm",
+                    data: jQuery(".bdrs-page-login #login_form").serializeArray(),
+                    type: 'POST',
+                    callbackParameter: 'callback',
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        jQuery.mobile.changePage("#login_error", "slidedown", false, true);
+                    },
+                    success: function(data) {
+                        bdrs.mobile.Debug(JSON.stringify(data));
+                        // stuff into database
+                        var t = new User({  name : data.user.name, 
+                                            ident : data.ident,
+                                            firstname: data.user.firstName,
+                                            lastname : data.user.lastName,
+                                            server_id : data.user.server_id,
+                                            server_url: jQuery(".bdrs-page-login #url").val() });
+                        // add user locations to user
+                        for (var i = 0; i < data.location.length; i++){
+                            var location = data.location[i];
+                            var point = new bdrs.mobile.Point(location.location);
+                            t.locations().add(new Location({
+                                server_id : location.server_id,
+                                name : location.name,
+                                latitude : point.getLatitude(),
+                                longitude : point.getLongitude() }));
+                        }
+                        
+                        persistence.add(t);
+                        persistence.flush();
+                        bdrs.mobile.User = t;
+                        
+                        // change the page
+                        jQuery.mobile.changePage("#dashboard", "slide", false, true);
+                    }
+                });
+            });
+            
+            User.all().count(function(number) { 
+                if (number > 0) { 
+                    User.all().one(function(user) {
+                        bdrs.mobile.User = user;
+                    });
+                    
+                    if (jQuery(jQuery.mobile.activePage).attr('data-url') == 'dashboard') {
+                        bdrs.mobile.pages.dashboard.Show();
+                    } else {
+                        jQuery.mobile.changePage("#dashboard", "slide", false, true);
+                    }
+                }
+            });
+            
+            jQuery.datepicker.setDefaults({dateFormat : 'dd M yy'});
+            
+            
+            // Phonegap events.
+            document.addEventListener("menuKeyDown", function() {
+                window.plugins.bdrs.exit();
+            });
+        });
+    </script>
+	
+	<script type="text/javascript">
+		// Seems to work ok without running this stuff in the jQuery doc ready function...
+		// might need to relook at this in the future if tests become flakey when starting
+		
+		//jQuery(function () {
+	        // The 'require' stuff in the text/sjs tag executes sequentially.
+	        // So we know that when bdrs.mobile.pages.statistics (the last item to
+	        // be initialised) is ready we can proceed with our tests.
+	        function waitForSjs() {
+	            if (!bdrs || !bdrs.mobile || !bdrs.mobile.pages || !bdrs.mobile.pages.statistics) {
+	            //if (!bdrs.mobile.pages.statistics) {
+	                 setTimeout("waitForSjs()", 100);
+	            } else {
+	                // Sjs is ready, run the tests!
+	                runTests();
+	            }
+	        };
+	        waitForSjs();
+	        var runTests = function() {
+	            //jasmine.getEnv().addReporter(new jasmine.ConsoleReporter());
+	            jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+	            jasmine.getEnv().execute();
+	        };
+		//});
+    </script>
+</head>
+<body>
+
+<!-- Login page --> 
+<div data-role="page" id="login" data-theme="b"> 
+
+ 
+    <div data-role="header"> 
+        <h1>Login</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-login">   
+        <form id="login_form" action="" method="post">
+            <h2>Login</h2> 
+            <p class="center">Welcome the the ALA Citizen Science Mobile Tool</p>       
+            <p class="center">Please enter your Biological Data Recording Service URL and your login credentials</p>
+            <label for="url">BDRS URL</label><input type="text" name="url" id="url" value="http://localhost:8080/BDRS"/>
+            <label for="username">Username</label><input type="text" name="username" id="username" value="root"/>
+            <label for="password">Password</label><input type="password" name="password" id="password" value="password"/>
+        </form>
+        <button id="login_button">Login</button>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+    
+</div><!-- /page --> 
+ 
+<!-- Login Error Dialog Page --> 
+<div data-role="page" id="login_error" data-theme="b"> 
+ 
+    <div data-role="header"> 
+        <h1>Error</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-login-error"> 
+        <h2>Unable to Login</h2>
+        <p>We were unable to log you in using the details you provided, please try again.</p> 
+        <a href="#login" data-role="button" data-rel="back">Return</a>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+ 
+<!-- Dashboard page --> 
+<div data-role="page" id="dashboard" data-theme="b"> 
+ 
+    <div data-role="header" data-backbtn="false"> 
+        <h1>Dashboard</h1>
+    </div><!-- /header --> 
+    <div data-role="content" class="bdrs-page-dashboard">   
+        <div class="dashboard-status"></div>
+        <p>
+            Please select from the following tools tools to assist you with your field data collection.
+        </p>
+        <ul data-role="listview" data-inset="true">
+            <li>
+                <a href="#guide">
+                    <h3>Fieldguide</h3>
+                    <p>View the fieldguide</p>
+                </a>
+            </li>
+            <li>
+                <a href="#id">
+                    <h3>Identify</h3>
+                    <p>Identify a species</p>
+                </a>
+            </li>
+            <li>
+                <a href="#sites">
+                    <h3>Sites</h3>
+                    <p>Manage sites</p>
+                </a>
+            </li>
+            <li>
+                <a href="#record">
+                    <h3>Record</h3>
+                    <p>Record an observation</p>
+                </a>
+            </li>
+            <li>
+                <a href="#review">
+                    <h3>Review</h3>
+                    <p>Review observations</p>
+                </a>
+            </li>
+            <li>
+                <a href="#statistics">
+                    <h3>Statistics</h3>
+                    <p>View some statistics</p>
+                </a>
+            </li>
+            <li>
+                <a href="#settings">
+                    <h3>Settings</h3>
+                    <p>Configure the application</p>
+                </a>
+            </li>
+        </ul>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Choose current survey dialog --> 
+<div data-role="page" id="choose-survey" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Choose Survey</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-choose-survey" data-spliticon="plus">
+        <h3>Choose from the following surveys</h3>
+        <ul data-role="listview" data-inset="true" class="surveyList">
+        </ul>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page -->
+
+<!-- Map Page --> 
+<div data-role="dialog" data-transition="pop" id="mobilemap" data-theme="b" style="height:80%"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Map</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-record" style="height:80%">
+        <div id="container">    
+        <div id="card">
+        <div id="map">
+            <div class="well" id="well"><!-- --></div>
+            <div class="surface" id="touchArea"><!-- --></div>
+            <div class="marker" id="markers"></div> 
+            <p class="controls">
+                <span class="zoomIn" title="Zoom In" onclick="ZoomIn()">+</span>
+                <br/>
+                <span class="zoomOut" title="Zoom Out" onclick="ZoomOut()">-</span>
+                <br/>
+                <span class="findLocation" title="Find Current Location" onclick="mapLocation()">GPS</span>
+                <br/>
+                <span class="info" title="Select tool" onclick="return startBox()" id="selectTool">box</span>
+            </p>
+            <p class="copyright"><span id='copyright'></span></p>
+        </div>
+        </div>
+        </div>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Recording Step 1 Page --> 
+<div data-role="page" id="record" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Record</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-record">  
+        <h2><span id="record-type"></span>&nbsp;Record</h2> 
+        <p class="center">Please enter recording details below</p>
+        
+        <div id="record-form" action="" method="post">
+            <div data-role="fieldcontain"><label for="record-latitude">Latitude</label><input type="text" name="record-latitude" id="record-latitude" class="validate decimal latitude"/></div>
+            <div data-role="fieldcontain"><label for="record-longitude">Longitude</label><input type="text" name="record-longitude" id="record-longitude" class="validate decimal longitude"/></div>
+            <div data-inline="true" class="center">
+                <a href="#mobilemap" data-inline="true" data-rel="dialog" data-role="button" onclick="setTimeout(&#39;setup(&quot;lonlat&quot;)&#39;,1000)">Select Lat/Lon From Map</a>
+            </div>
+            <div data-role="fieldcontain"><label for="record-when">Date</label><input type="text" name="record-when" id="record-when" class="validate date"/></div>
+            <div data-role="fieldcontain"><label for="record-time">Time</label><input type="text" name="record-time" id="record-time"/></div>
+            <div data-role="fieldcontain"><label for="record-notes">Notes</label><input type="text" name="record-notes" id="record-notes"/></div>
+            <!--<span id="record-survey-attributes"></span>-->
+            <div data-role="collapsible" data-collapsed="true">
+                <h1>Survey Attributes</h1>
+                <span id="record-survey-attributes"></span>
+            </div>
+            <!--<span id="record-taxongroup-attributes"></span>-->
+            <div data-role="collapsible" data-collapsed="true">
+                <h1>Taxon Group Attributes</h1>
+                <span id="record-taxongroup-attributes"></span>
+            </div>
+            <!--<span id="record-method-attributes"></span>-->
+            <div data-role="collapsible" data-collapsed="true">
+                <h1>Census Method Attributes</h1>
+                <span id="record-method-attributes"></span>
+            </div>
+            <!-- Sub Method Container -->
+            <div id="record-sub-methods" data-role="collapsible-set" data-collapsed="true"></div>            
+        </div>
+        <div data-inline="true" class="center">
+            <button data-inline="true" id="record-save">Save</button>
+            <button data-inline="true" id="record-save-continue">Save and Continue</button>
+        </div>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Sub Sample Page --> 
+<div data-role="page" id="subsample" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Sub Sample</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-subsample">   
+        <form id="subsample-form" action="" method="post">
+            <h2>Sub Sample</h2> 
+        </form>
+        <div data-inline="true" class="center">
+            <button data-inline="true" id="record-save">Save</button>
+            <button data-inline="true" id="record-save-continue">Save and Continue</button>
+        </div>
+    </div><!-- /content --> 
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Sites Page --> 
+<div data-role="page" id="sites" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Sites</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-sites">   
+        <h2>Sites</h2> 
+        <p>Select a site to start collecting site data</p>
+        <ul data-role="listview" data-inset="true" class="siteList">
+        </ul>
+        <div data-inline="true" class="center">
+            <a href="#add-site" data-role="button">Add Site</a>
+        </div>
+    </div><!-- /content --> 
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Site Page --> 
+<div data-role="page" id="site" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Site</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-site">
+        <form id="site-form" action="" method="post">
+            <fieldset data-role="controlgroup" data-type="horizontal" data-role="fieldcontain" class="censusControlGroup">
+            </fieldset>
+            <ul data-role="listview" data-inset="true" class="methodList">
+            </ul>
+        </form>
+    </div><!-- /content --> 
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Add Site Page --> 
+<div data-role="page" id="add-site" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Add Site</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-add-site">    
+        <form id="subsample-form" action="" method="post">
+            <h2>Add Site</h2> 
+            <p class="center">Please enter site details below</p>
+            <div data-role="fieldcontain"><label for="add-site-id">Site ID</label><input type="text" name="add-site-id" id="add-site-id"/></div>
+            <div data-role="fieldcontain"><label for="add-site-latitude">Latitude</label><input type="text" name="add-site-latitude" id="add-site-latitude"/></div>
+            <div data-role="fieldcontain"><label for="add-site-longitude">Longitude</label><input type="text" name="add-site-longitude" id="add-site-longitude"/></div>
+        </form>
+        <div data-inline="true" class="center">
+            <button data-inline="true" id="add-site-save">Save</button>
+        </div>
+    </div><!-- /content --> 
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+
+<!-- Field Guide --> 
+<div data-role="page" id="guide" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Field Guide</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-guide">   
+        <h2>Field Guide</h2>
+        <p>Work in progress, here is a list of the taxon groups to choose from...</p>
+        <ul data-role="listview" data-inset="true" class="taxonList">
+        </ul>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Species List Page (Field Guide page 2) --> 
+<div data-role="page" id="species-list" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Field Guide</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-species-list">    
+        <h2>Species List</h2>
+        <p>Work in progress, here is a list of species for the chosen group...</p>
+        <ul data-role="listview" data-inset="true" class="taxonList">
+        </ul>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Species Page (Field Guide page 3) --> 
+<div data-role="page" id="species" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Field Guide</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-species"> 
+        <h2>Species Page</h2>
+        <p>Work in progress, here is some basic information about your chosen species.</p>
+        <ul data-role="listview" data-inset="true" class="taxonList">
+        </ul>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- ID Tool --> 
+<div data-role="page" id="id" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Identify</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-id">  
+        <h2>Identify</h2> 
+        <p>Not yet implemented</p>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- ID Tool --> 
+<div data-role="page" id="review" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Review</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-review">  
+        <h2>Review</h2>
+        <p>Not yet implemented, in the meantime, here's a records list</p>
+        <ul data-role="listview" data-inset="true" class="recordList">  
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Statistics --> 
+<div data-role="page" id="statistics" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Statistics</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-statistics">  
+        <h2>Statistics</h2>
+        <span id="statistics-record"></span>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Settings --> 
+<div data-role="page" id="settings" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Settings</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-settings">    
+        <h2>Settings</h2>
+        <ul data-role="listview" data-inset="true">
+            <li>
+                <a href="#download-surveys"><h3>Download Surveys</h3>
+                    <p>Download surveys to your device</p>
+                </a>
+            </li>
+            <li>
+                <a href="#sync-settings"><h3>Sync Settings</h3>
+                    <p>Setup synchronization</p>
+                </a>
+            </li>
+            <li>
+                <a href="#dump-data"><h3>Dump Data</h3>
+                    <p>Dump all records</p>
+                </a>
+            </li>
+            <li>
+                <a href="#log-settings"><h3>Logging Configuration</h3>
+                    <p>Setup log level and remote logging</p>
+                </a>
+            </li>
+        </ul> 
+        
+        <button class="reset_database">Reset Database</button>
+        <button class="reset_templates">Reset Templates</button>
+        <button class="add_census_data">Add Example Census Methods</button>
+        <button class="clear_census_data">Clear Example Census Methods</button>
+        <button class="reload">Reload</button>
+        
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page -->
+
+<!-- Sync Settings --> 
+<div data-role="page" id="sync-settings" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Sync Settings</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-sync-settings">   
+        <h3>Sync Settings</h3>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Download Surveys --> 
+<div data-role="page" id="download-surveys" data-theme="b"> 
+ 
+    <div data-role="header" class="header"> 
+        <h1>Surveys</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-download-surveys">    
+        <h3>Add or remove surveys</h3>
+        <div data-role="fieldcontain" class="surveyListContainer">
+            <fieldset data-role="controlgroup" class="surveyList">
+            </fieldset>
+        </div>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Dump Data --> 
+<div data-role="page" id="dump-data" data-theme="b"> 
+ 
+    <div data-role="header"  class="header"> 
+        <h1>Dump Data</h1>
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-dump-data">
+        <div class="data"></div>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+<!-- Logging --> 
+<div data-role="page" id="log-settings" data-theme="b"> 
+    
+    <div data-role="header"  class="header"> 
+        <h1>Logging Configuration</h1>
+    </div><!-- /header --> 
+
+    <div data-role="content" class="bdrs-page-logging">
+        <div data-role="fieldcontain">
+            <fieldset data-role="controlgroup">
+                <input type="checkbox" name="remoteLogging" id="remoteLogging" class="custom" />
+                <label for="remoteLogging">Enable Remote Logging:</label>
+            </fieldset>
+        </div>
+        <div data-role="fieldcontain">
+            <label for="logLevel" class="select">Select Logging Level:</label>
+            <select name="logLevel" id="logLevel" data-native-menu="false">
+                <option value="0">Off</option>
+                <option value="1">Error</option>
+                <option value="2">Warn</option>
+                <option value="3">Info</option>
+                <option value="4">Debug</option>
+            </select>
+        </div>
+    </div><!-- /content --> 
+    
+    <div data-role="footer" class="footer"> 
+    </div><!-- /footer --> 
+</div><!-- /page --> 
+
+</body>
+</html>

@@ -1,11 +1,13 @@
 package au.com.gaiaresources.bdrs.controller.file;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.displaytag.tags.TableTagParameters;
@@ -24,10 +26,9 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
-import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
-import au.com.gaiaresources.bdrs.util.FileUtils;
+import au.com.gaiaresources.bdrs.service.managedFile.ManagedFileService;
 
 /**
  * The <code>TaxonomyManagementControllers</code> handles all view requests
@@ -39,13 +40,23 @@ public class ManagedFileController extends AbstractController {
 
     private static final String MANAGED_FILE_LISTING_TABLE_ID = "managedFileListingTable";
     private static final int MANAGED_FILE_LISTING_PAGE_SIZE = 50;
-    @SuppressWarnings("unused")
+    
+    public static final String MANAGED_FILE_EDIT_AJAX_URL = "/bdrs/user/managedfile/service/edit.htm";
+    public static final String MANAGED_FILE_PK = "pk";
+    
+    public static final String AJAX_PROP_ID = "id";
+    public static final String AJAX_PROP_UUID = "uuid";
+    public static final String AJAX_PROP_DESCRIPTION = "description";
+    public static final String AJAX_PROP_LICENSE = "license";
+    public static final String AJAX_PROP_CREDIT = "credit";
+    
     private Logger log = Logger.getLogger(getClass());
     
     @Autowired
     private ManagedFileDAO managedFileDAO;
+    
     @Autowired
-    private FileService fileService;
+    private ManagedFileService mfService;
     
     private ParamEncoder managedFileListingParamEncoder = new ParamEncoder(MANAGED_FILE_LISTING_TABLE_ID);
     
@@ -66,28 +77,9 @@ public class ManagedFileController extends AbstractController {
                                  @RequestParam(value="managedFilePk", required=false, defaultValue="0") int pk,
                                  @RequestParam(value="description", required=true) String description,
                                  @RequestParam(value="credit", required=true) String credit,
-                                 @RequestParam(value="license", required=true) String license) throws IOException {
-        
-        ManagedFile mf = pk == 0 ? new ManagedFile() : managedFileDAO.getManagedFile(pk);
-        mf.setDescription(description);
-        mf.setCredit(credit);
-        mf.setLicense(license);
-        
+                                 @RequestParam(value="license", required=true) String license) throws IOException {      
         MultipartFile file = request.getFile("file").getSize() > 0 ? request.getFile("file") : null;
-        if(file != null) {
-            mf.setContentType(file.getContentType());
-            mf.setFilename(file.getOriginalFilename());
-        }
-        
-        mf = managedFileDAO.save(mf);
-        
-        if(file != null) {
-            fileService.createFile(mf, file);
-            File f = fileService.getFile(mf, mf.getFilename()).getFile();
-            mf.setContentType(FileUtils.getContentType(f));
-            mf = managedFileDAO.save(mf);
-        }
-        
+        mfService.saveManagedFile(pk, description, credit, license, file);
         return new ModelAndView(new RedirectView("/bdrs/user/managedfile/listing.htm", true));
     }
 
@@ -141,5 +133,71 @@ public class ManagedFileController extends AbstractController {
     public String getOrderParamName() {
         return managedFileListingParamEncoder.encodeParameterName(TableTagParameters.PARAMETER_ORDER);
     }
+    
+    @RequestMapping(value = MANAGED_FILE_EDIT_AJAX_URL, method = RequestMethod.GET)
+    public void viewService(HttpServletRequest request,
+                            HttpServletResponse response,
+                            @RequestParam(value="id", required=false, defaultValue="0") int pk) throws IOException {
+        ManagedFile mf = pk == 0 ? new ManagedFile() : managedFileDAO.getManagedFile(pk);
+        
+        JSONObject result = new JSONObject();
+        JSONObject data = new JSONObject();
+        
+        // If the managed file already exists add these to the ajax response
+        if (mf.getId() != null) {
+            data.put(AJAX_PROP_ID, mf.getId().toString());
+            data.put(AJAX_PROP_UUID, mf.getUuid());
+        }
+        data.put(AJAX_PROP_CREDIT, mf.getCredit());
+        data.put(AJAX_PROP_DESCRIPTION, mf.getDescription());
+        data.put(AJAX_PROP_LICENSE, mf.getLicense());
+        
+        // you need to add the child JSON objects to the parent AFTER
+        // you have populated the child's properties. Otherwise the child's
+        // properties do not show up in the final JSON object!
+        result.put("data", data);
+        result.put("success", true);
+        
+        response.setContentType("application/json");
+        response.getWriter().write(result.toString());
+    }
 
+    @RequestMapping(value = MANAGED_FILE_EDIT_AJAX_URL, method = RequestMethod.POST)
+    public void saveService(MultipartHttpServletRequest request,
+            HttpServletResponse response,
+            @RequestParam(value="managedFilePk", required=false, defaultValue="0") int pk,
+            @RequestParam(value="description", required=true) String description,
+            @RequestParam(value="credit", required=true) String credit,
+            @RequestParam(value="license", required=true) String license) throws IOException {      
+        MultipartFile file = request.getFile("file").getSize() > 0 ? request.getFile("file") : null;
+        
+        ManagedFile mf = null;
+        try {
+            mf = mfService.saveManagedFile(pk, description, credit, license, file);
+        } catch (IOException e) {
+            
+        }
+
+        JSONObject result = new JSONObject();
+        
+        if (mf != null) {
+            JSONObject data = new JSONObject();
+            result.put("data", data);
+            // If the managed file already exists add these to the ajax response
+            data.put(AJAX_PROP_ID, mf.getId().toString());
+            data.put(AJAX_PROP_UUID, mf.getUuid());
+            data.put(AJAX_PROP_CREDIT, mf.getCredit());
+            data.put(AJAX_PROP_DESCRIPTION, mf.getDescription());
+            data.put(AJAX_PROP_LICENSE, mf.getLicense());
+            
+            result.put("success", true);
+            result.put("message", "File successfully uploaded.");
+        } else {
+            response.setStatus(500);
+            result.put("success", false);
+            result.put("message", "Error while uploading file.");
+        }
+        response.setContentType("application/json");
+        response.getWriter().write(result.toString());
+    }
 }

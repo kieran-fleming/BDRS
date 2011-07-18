@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
@@ -27,6 +30,8 @@ public class ContentService extends AbstractController {
     public static final String VALUE = "value";
     public static final String SUCCESS = "success";
 
+    private Logger log = Logger.getLogger(getClass());
+    
     @RolesAllowed( { Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/webservice/content/saveContent.htm", method = RequestMethod.POST)
     public void save(HttpServletRequest request, HttpServletResponse response)
@@ -59,10 +64,24 @@ public class ContentService extends AbstractController {
         response.setContentType("application/json");
     }
 
-    private String getContent(String key) {
+    private String getContent(String key) throws Exception {
         Content item = contentDAO.getContent(key);
         if (item == null) {
-            return new String("");
+            log.warn("Didn't find content \"" + key + "\" in the DAO, " +
+                    "loading default value.");
+            // couldn't find the content in the DAO,
+            // load the default from the file
+            PortalInitialiser pi = new PortalInitialiser();
+            Portal currentPortal = getRequestContext().getPortal();
+            if (currentPortal == null) {
+                // something has gone seriously wrong for this to happen...
+                throw new Exception("The portal cannot be null");
+            }
+            item = pi.initContent(contentDAO, currentPortal, key, null);
+            if (item == null) {
+                log.warn("Couldn't load default for content \"" + key + "\".");
+                return "";
+            }
         }
         return item.getValue();
     }

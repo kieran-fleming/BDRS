@@ -11,7 +11,6 @@ import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
 
 public class DisplayTagHelper {
 
-    String tableId;
     private ParamEncoder paramEncoder;
     
     // "1" and "2" is returned by displaytag for ASC and DESC so...
@@ -21,7 +20,6 @@ public class DisplayTagHelper {
     public static final Integer DEFAULT_MAX_PER_PAGE = 10;
     
     public DisplayTagHelper(String tableId) {
-        this.tableId = tableId;
         paramEncoder = new ParamEncoder(tableId);
     }
     

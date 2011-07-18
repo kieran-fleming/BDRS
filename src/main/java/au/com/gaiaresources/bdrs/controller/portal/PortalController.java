@@ -1,12 +1,17 @@
 package au.com.gaiaresources.bdrs.controller.portal;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalMatches;
+import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilterMatcher;
 
 /**
@@ -237,5 +243,16 @@ public class PortalController extends AbstractController {
             portalDAO.delete(sesh, mapEntry.getValue());
         }
         return portal;
+    }
+    
+    @RequestMapping(value = "/portal/**")
+    public void restfulPortalRequestForward(HttpServletRequest request, 
+                                                    HttpServletResponse response) throws ServletException, IOException {
+        Pattern pattern = Pattern.compile(PortalSelectionFilter.RESTFUL_PORTAL_PATTERN_STR);
+        Matcher matcher = pattern.matcher(request.getServletPath());
+        
+        String subServletPath = matcher.replaceFirst("");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/"+subServletPath);
+        dispatcher.forward(request, response);
     }
 }

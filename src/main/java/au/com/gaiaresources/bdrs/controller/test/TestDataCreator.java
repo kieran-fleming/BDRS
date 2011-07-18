@@ -165,6 +165,15 @@ public class TestDataCreator implements TestDataConstants {
                             optionList.add(opt);
                         }
                         attr.setOptions(optionList);
+                    }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                    	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                    	AttributeOption upper = new AttributeOption();
+                    	AttributeOption lower = new AttributeOption();
+                    	lower.setValue("0");
+                    	upper.setValue("50");
+                    	rangeList.add(taxaDAO.save(lower));
+                    	rangeList.add(taxaDAO.save(upper));
+                    	attr.setOptions(rangeList);
                     }
                     
                     attr = taxaDAO.save(attr);
@@ -179,7 +188,7 @@ public class TestDataCreator implements TestDataConstants {
             survey.setName(surveyName);
             survey.setActive(true);
             survey.setPublic(true);
-            survey.setDate(new Date());
+            survey.setStartDate(new Date());
             survey.setDescription(generateLoremIpsum(5));
             survey.setAttributes(attributeList);
             
@@ -208,7 +217,7 @@ public class TestDataCreator implements TestDataConstants {
         survey.setName(surveyName);
         survey.setActive(true);
         survey.setPublic(true);
-        survey.setDate(new Date());
+        survey.setStartDate(new Date());
         survey.setDescription(generateLoremIpsum(5));
         Metadata surveyRenderer  = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);;
         metadataDAO.save(surveyRenderer);
@@ -267,6 +276,8 @@ public class TestDataCreator implements TestDataConstants {
             if(createAttributes) {
                 int curWeight = 0;
                 String attributeOptions = "Option A, Option B, Option C, Option D";
+                String rangeIntOptions = "0, 50";
+                
                 int index = 0;
                 for(Boolean isTag : new Boolean[] { true, false }) {
                     for (AttributeType attrType : AttributeType.values()) {
@@ -281,7 +292,10 @@ public class TestDataCreator implements TestDataConstants {
             
                         if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
                             request.setParameter(String.format("add_option_%d", index), attributeOptions);
+                        }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                        	request.setParameter(String.format("add_option_%d", index), rangeIntOptions);
                         }
+                        
             
                         index = index + 1;
                         curWeight = curWeight + 100;
@@ -319,7 +333,7 @@ public class TestDataCreator implements TestDataConstants {
                 String scientificName = generateScientificName(rank, genusName);
                 request.setParameter("scientificName", scientificName);
                 request.setParameter("commonName", generateCommonName(rank, scientificName));
-                request.setParameter("parentPk", new String());
+                request.setParameter("parentPk", "");
                 
                 request.setParameter("taxonGroupPk", taxonGroup.getId().toString());
                 request.setParameter("author", generateRandomPersonName());
@@ -462,6 +476,7 @@ public class TestDataCreator implements TestDataConstants {
     private void setValueForTaxonAttribute(IndicatorSpeciesAttribute taxonAttr) throws ParseException {
         switch(taxonAttr.getAttribute().getType()) {
             case INTEGER:
+            case INTEGER_WITH_RANGE:
                 taxonAttr.setNumericValue(new BigDecimal(random.nextInt(50)));
                 taxonAttr.setStringValue(taxonAttr.getNumericValue().toPlainString());
                 break;

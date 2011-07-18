@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 
 import java.util.Map;
 
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 /**
@@ -36,7 +37,7 @@ public abstract class AbstractValidator implements Validator {
      * {@inheritDoc}
      */
     @Override
-    public boolean validate(Map<String, String[]> parameterMap, String key, Map<String, String> errorMap) {
+    public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
         
         String value = getSingleParameter(parameterMap, key);
         if(required && value == null) {
@@ -66,4 +67,5 @@ public abstract class AbstractValidator implements Validator {
             return values[0];
         }
     }
+
 }

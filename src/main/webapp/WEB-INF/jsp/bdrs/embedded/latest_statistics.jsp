@@ -18,9 +18,11 @@
             </tr>
         </tbody>
     </table>
+    <c:if test="${not empty latestRecord}">
     <p>
         The last sighting was a <c:out value="${latestRecord.species.commonName}"/>,  
         <span class="scientificName"><c:out value="${latestRecord.species.scientificName}"/></span>
         in the group <c:out value="${latestRecord.species.taxonGroup.name}"/>.
     </p>
+    </c:if>
 </div>

@@ -23,7 +23,7 @@ import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
@@ -85,8 +85,24 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                         opt.setValue(String.format("Option %d", i));
                         opt = taxaDAO.save(opt);
                         optionList.add(opt);
-                    }
+                    }  attr = new Attribute();
+                    attr.setRequired(true);
+                    attr.setName(group.getName() + "_" + attrType.toString());
+                    attr.setDescription(group.getName() + "_" + attrType.toString());
+                    attr.setTypeCode(attrType.getCode());
+                    attr.setScope(null);
+                    attr.setTag(true);
+
                     attr.setOptions(optionList);
+                }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                	AttributeOption upper = new AttributeOption();
+                	AttributeOption lower = new AttributeOption();
+                	lower.setValue("100");
+                	upper.setValue("200");
+                	rangeList.add(taxaDAO.save(lower));
+                	rangeList.add(taxaDAO.save(upper));
+                	attr.setOptions(rangeList);
                 }
 
                 attr = taxaDAO.save(attr);
@@ -199,16 +215,59 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "index");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "profile");
     }
+        
+    @Test
+    public void testAddTaxonSubmitWithParentLowerLimitOutside() throws Exception{
+    	testAddTaxon(true, "99");
+    }
     
     @Test
-    public void testAddTaxonSubmit() throws Exception {
-        testAddTaxon(true);
+    public void testAddTaxonSubmitWithParentLowerLimitEdge() throws Exception {
+    	testAddTaxon(true, "100");
     }
 
     @Test
-    public void testAddTaxonSubmitNoParent() throws Exception {
-        testAddTaxon(false);
+    public void testAddTaxonSubmitWithParent() throws Exception {
+        testAddTaxon(true, "101");
     }
+    
+    @Test
+    public void testAddTaxonSubmitWithParentUpperLimitEdge() throws Exception {
+    	testAddTaxon(true, "200");
+    }
+    
+    @Test
+    public void testAddTaxonSubmitWithParentUpperLimitOutside() throws Exception  {
+    	testAddTaxon(true, "201");
+    }
+    
+    @Test
+    public void testAddTaxonSubmitWithoutParentLowerLimitOutside() throws Exception{
+    	testAddTaxon(false, "99");
+    }
+    
+    @Test
+    public void testAddTaxonSubmitWithoutParentLowerLimitEdge() throws Exception {
+    	testAddTaxon(false, "100");
+    }
+
+    @Test
+    public void testAddTaxonSubmitWithoutParent() throws Exception {
+        testAddTaxon(false, "101");
+    }
+    
+    @Test
+    public void testAddTaxonSubmitWithoutParentUpperLimitEdge() throws Exception {
+    	testAddTaxon(false, "200");
+    }
+    
+    @Test
+    public void testAddTaxonSubmitWithoutParentUpperLimitOutside() throws Exception  {
+    	testAddTaxon(false, "201");
+    }
+
+    
+    
     
     @Test
     public void testEditTaxon() throws Exception {
@@ -224,17 +283,58 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "formFieldList");
     }
     
+
     @Test
-    public void testEditTaxonSubmit() throws Exception {
-        testEditTaxon(true);
+    public void testEditTaxonSubmitWithParentLowerLimitOutside() throws Exception{
+    	testEditTaxon(true, "99");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithoutParentLowerLimitOutside() throws Exception{
+    	testEditTaxon(false, "99");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithParentLowerLimitEdge() throws Exception {
+    	testEditTaxon(true, "100");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithoutParentLowerLimitEdge() throws Exception {
+    	testEditTaxon(false, "100");
     }
 
     @Test
-    public void testEditTaxonSubmitNoParent() throws Exception {
-        testEditTaxon(false);
+    public void testEditTaxonSubmitWithParent() throws Exception {
+        testEditTaxon(true, "101");
     }
     
-    private void testEditTaxon(boolean withParent) throws Exception {
+    @Test
+    public void testEditTaxonSubmitWithoutParent() throws Exception {
+        testEditTaxon(false, "101");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithParentUpperLimitEdge() throws Exception {
+    	testEditTaxon(true, "200");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithoutParentUpperLimitEdge() throws Exception {
+    	testEditTaxon(false, "200");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithParentLimitOutside() throws Exception  {
+    	testEditTaxon(true, "201");
+    }
+    
+    @Test
+    public void testEditTaxonSubmitWithoutParentLimitOutside() throws Exception  {
+    	testEditTaxon(false, "201");
+    }
+    
+    private void testEditTaxon(boolean withParent, String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
@@ -251,7 +351,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         if(withParent) {
             request.setParameter("parentPk", speciesB.getId().toString());
         } else {
-            request.setParameter("parentPk", new String());
+            request.setParameter("parentPk", "");
         }
         request.setParameter("taxonGroupPk", taxonGroupFrogs.getId().toString());
         request.setParameter("author", "Brock Urban");
@@ -277,11 +377,14 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         String value;
         for (Attribute attr : taxonGroupFrogs.getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-            value = new String();
+            value = "";
             switch (attr.getType()) {
                 case INTEGER:
                     value = "123";
                     break;
+                case INTEGER_WITH_RANGE:
+	               	 value = intWithRangeValue;                    
+	               	 break;
                 case DECIMAL:
                     value = "456.7";
                     break;
@@ -358,10 +461,11 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
             }
         }
         
-        for(AttributeValue taxonAttr: taxon.getAttributes()) {
+        for(TypedAttributeValue taxonAttr: taxon.getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", taxonAttr.getAttribute().getId());
             switch (taxonAttr.getAttribute().getType()) {
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     Assert.assertEquals(Integer.parseInt(request.getParameter(key)), taxonAttr.getNumericValue().intValue());
                     break;
                 case DECIMAL:
@@ -389,7 +493,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         }
     }
     
-    private void testAddTaxon(boolean withParent) throws Exception {
+    private void testAddTaxon(boolean withParent, String intWithRangeValue) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
@@ -405,7 +509,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         if(withParent) {
             request.setParameter("parentPk", speciesA.getId().toString());
         } else {
-            request.setParameter("parentPk", new String());
+            request.setParameter("parentPk", "");
         }
         request.setParameter("taxonGroupPk", taxonGroupButterflies.getId().toString());
         request.setParameter("author", "Anna Abigail");
@@ -427,13 +531,17 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         
         String key;
         String value;
+        
         for (Attribute attr : taxonGroupButterflies.getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-            value = new String();
+            value = "";
             switch (attr.getType()) {
                 case INTEGER:
                     value = "123";
                     break;
+                case INTEGER_WITH_RANGE:
+                	 value = intWithRangeValue;                    
+                	 break;
                 case DECIMAL:
                     value = "456.7";
                     break;
@@ -500,10 +608,11 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
             Assert.assertEquals(request.getParameter(String.format("new_profile_weight_%s", index)), String.valueOf(profile.getWeight()));
         }
         
-        for(AttributeValue taxonAttr: taxon.getAttributes()) {
+        for(TypedAttributeValue taxonAttr: taxon.getAttributes()) {
             key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", taxonAttr.getAttribute().getId());
             switch (taxonAttr.getAttribute().getType()) {
                 case INTEGER:
+                case INTEGER_WITH_RANGE:
                     Assert.assertEquals(Integer.parseInt(request.getParameter(key)), taxonAttr.getNumericValue().intValue());
                     break;
                 case DECIMAL:

@@ -37,11 +37,21 @@
                 </td>
             </tr>
             <tr>
-                <th>Survey Date:</th>
+                <th>Survey Start Date:</th>
                 <td>
-                    <input type="text" class="datepicker validate(required)" name="surveyDate"
-                        <c:if test="${survey.date != null}">
-                            value="<fmt:formatDate pattern="dd MMM yyyy" value="${survey.date}"/>"
+                    <input type="text" class="datepicker_range validate(required)" name="surveyDate" id="from"
+                        <c:if test="${survey.startDate != null}">
+                            value="<fmt:formatDate pattern="dd MMM yyyy" value="${survey.startDate}"/>"
+                        </c:if>
+                    />
+                </td>
+            </tr>
+            <tr>
+                <th>Survey End Date:</th>
+                <td>
+                    <input type="text" class="datepicker_range" name="surveyEndDate" id="to"
+                        <c:if test="${survey.endDate != null}">
+                            value="<fmt:formatDate pattern="dd MMM yyyy" value="${survey.endDate}"/>"
                         </c:if>
                     />
                 </td>

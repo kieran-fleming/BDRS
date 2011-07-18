@@ -1,0 +1,61 @@
+/**
+ * Override Styles
+ */
+
+h1, h2, h3, h4 {
+	text-align: center;
+}
+
+ul h1, ul h2, ul h3, ul h4 {
+	text-align: left;
+}
+
+.ui-li-medium_icon {
+	width: 32px;
+	height: 32px;
+	max-width: 32px;
+	max-height: 32px;
+}
+
+/**
+ * Formatting Styles
+ */
+.center {
+	text-align: center;
+}
+
+/**
+ * Table Style
+ */
+.horizontal-datatable {
+    
+}
+
+.horizontal-datatable .header {
+    text-align: right;
+}
+
+.horizontal-datatable .data {
+    padding-left: 1em;
+    test-align: left;
+}
+
+/* css for timepicker */
+.ui-timepicker-div .ui-widget-header{ margin-bottom: 8px; }
+.ui-timepicker-div dl{ text-align: left; }
+.ui-timepicker-div dl dt{ height: 25px; }
+.ui-timepicker-div dl dd{ margin: -25px 0 10px 65px; }
+.ui-timepicker-div td { font-size: 90%; }
+
+/* Record */
+.record-aside {
+    /* 38 pixels, same as the count */
+    right: 38px;
+    font-size: 12px;
+    font-weight: normal;
+    position: absolute;
+}
+
+#point-intersect-species-table input[type=text] {
+    width: 85%;
+}
