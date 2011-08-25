@@ -1,5 +1,6 @@
 $.fn.ketchup.messages = {
   'required':           'This field is required.',
+  'multiRequired':      'This field is required.',
   'minlength':          'This field must have a minimal length of $arg1.',
   'maxlength':          'This field must have a maximal length of $arg1.',
   'rangelength':        'This field must have a length between $arg1 and $arg2.',
@@ -30,9 +31,12 @@ $.fn.ketchup.messages = {
   'rangeselect':        'Select between $arg1 and $arg2 checkboxes.',
   'unique':             'All values must be unique.',
   'uniqueOrBlank':      'All values must be unique.',
+  'uniqueAndRequired':  'All values must be unique and not blank.',
   'time':				'Must be of format hh:mm.',
   'timeOrBlank':		'Must be of format hh:mm or blank.',
   'optionallyTaxonomicSpeciesAndNumber': 'The Species and Number must both be blank, or both filled in.',
   'color':              'Must be a valid hex color starting with #',
-  'uuid':               'Not a valid file UUID'
+  'uuid':               'Not a valid file UUID',
+  'regExp':				'Must fit regular expression $arg1',
+  'regExpOrBlank':		'Must fit regular expression $arg1 or blank'
 };

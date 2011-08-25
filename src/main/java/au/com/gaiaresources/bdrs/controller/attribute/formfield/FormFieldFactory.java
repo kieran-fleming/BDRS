@@ -1,6 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 
-import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;

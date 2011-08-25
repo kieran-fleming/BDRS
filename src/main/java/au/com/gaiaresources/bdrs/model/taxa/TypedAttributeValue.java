@@ -51,4 +51,16 @@ public interface TypedAttributeValue {
 	public void setDateValue(Date dateValue);
 
 	public String getFileURL();
+	
+	public String[] getMultiCheckboxValue();
+    public String[] getMultiSelectValue();
+   
+    public void setMultiCheckboxValue(String[] values);
+    public void setMultiSelectValue(String[] values);
+    
+    public boolean hasMultiCheckboxValue(String val);
+    public boolean hasMultiSelectValue(String val);
+    
+	public Boolean getBooleanValue();
+	public void setBooleanValue(String value);
 }

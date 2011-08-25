@@ -24,6 +24,8 @@ public class AssignedGeoMapLayer extends PortalPersistentImpl {
     private GeoMapLayer layer;
     private GeoMap map;
     private boolean visible = true;
+    private Integer upperZoomLimit = null;
+    private Integer lowerZoomLimit = null;
     
     // we will use the 'weight' member to record order
 
@@ -67,5 +69,35 @@ public class AssignedGeoMapLayer extends PortalPersistentImpl {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    /**
+     * The upper zoom limit that the map layer will appear
+     * 
+     * null means there is no upper limit
+     * @return
+     */
+    @Column(name="upperZoomLimit", nullable=true)
+    public Integer getUpperZoomLimit() {
+        return upperZoomLimit;
+    }
+
+    public void setUpperZoomLimit(Integer upperZoomLimit) {
+        this.upperZoomLimit = upperZoomLimit;
+    }
+
+    /**
+     * The lower zoom limit that the map layer will appear
+     * 
+     * null means there is no lower limit
+     * @return
+     */
+    @Column(name="lowerZoomLimit", nullable=true)
+    public Integer getLowerZoomLimit() {
+        return lowerZoomLimit;
+    }
+
+    public void setLowerZoomLimit(Integer lowerZoomLimit) {
+        this.lowerZoomLimit = lowerZoomLimit;
     }
 }

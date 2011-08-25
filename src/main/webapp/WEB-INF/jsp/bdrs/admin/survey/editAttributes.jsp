@@ -3,6 +3,13 @@
 
 <%@page import="au.com.gaiaresources.bdrs.controller.attribute.RecordPropertyAttributeFormField"%>
 
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/sets/html/style.css" />
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/skins/markitup/style.css" />
+
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/markitup/jquery.markitup.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/attribute.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/admin.js"></script>
+
 <h2>Choose Fields</h2>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
@@ -44,8 +51,26 @@
     
     <h2>Choose Available Census Methods</h2>
     
+	<table>
+		<tbody>
+			<tr>
+		        <th title="Whether the default 'Standard Taxonomic' census method is provided. If this is false you will need to assign a census method to this survey to create records.">Standard Taxonomic Census Method Provided:</th>
+		        <td>
+		            <input type="checkbox" name="defaultCensusMethodProvided" value="true"
+		                <c:if test="${survey.defaultCensusMethodProvided}">
+		                    checked="checked"
+		                </c:if>
+		            />
+		        </td>
+		    </tr>
+		</tbody>
+	</table>
+	
     <p>
         The table below allows you to define which census methods should be available for your project.
+    </p>
+	<p>
+        If you have chosen not to have the default 'Standard Taxonomic' census method provided, the first census method in the list shall become the default census method for this survey.
     </p>
     
     <div id="subCensusMethodContainer">
@@ -92,6 +117,11 @@
     </tiles:insertDefinition>
 </div>
 
+<div id="htmlEditorDialog" title="HTML Editor">
+    <label>Edit the HTML content that you want to display in the editor below: </label>
+    <textarea id="markItUp"></textarea>
+</div>
+
 <script type="text/javascript">
     jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
@@ -114,11 +144,29 @@
                 }
             }
         });
-        
+        $( "#htmlEditorDialog" ).dialog({
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Cancel: function() {
+                    $( this ).dialog( "close" );
+                },
+                "Clear": function() {
+                    $('#markItUp')[0].value = "";
+                },
+                "Ok": function() {
+                    bdrs.attribute.saveAndUpdateContent($("#markItUp")[0]);
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
         $( "#addCensusMethodBtn" )
             .click(function() {
                 addCensusMethodGrid_GridHelper.reload();
                 $( "#addCensusMethodDialog" ).dialog( "open" );
         });
+
+        $('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
     });
 </script>

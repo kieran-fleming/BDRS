@@ -20,9 +20,7 @@ public class PropertyService {
 
     private Map<String, Properties> propertyMap;
 
-    @PostConstruct
-    public void init() throws Exception {
-
+    public PropertyService() throws Exception {
         propertyMap = new HashMap<String, Properties>();
         Properties properties;
         for(String propertyName : new String[]{MESSAGE, BULKDATA}) {

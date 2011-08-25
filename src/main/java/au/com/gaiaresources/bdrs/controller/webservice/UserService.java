@@ -6,7 +6,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +17,7 @@ import javax.xml.ws.http.HTTPException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Filter;
@@ -36,9 +39,11 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
+import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
 
@@ -67,7 +72,12 @@ public class UserService extends AbstractController {
     
     @Autowired
     private PortalDAO portalDAO;
-
+    
+    @Autowired
+    private SurveyDAO surveyDAO;
+    
+    @Autowired
+    private AbstractBulkDataService bulkDataService;
 
     /**
      * <p>
@@ -437,4 +447,58 @@ public class UserService extends AbstractController {
         response.setContentType("application/json");
         response.getWriter().write(builder.toJson());
     }
+    
+    @RequestMapping(value="/webservice/user/getUsers.htm", method=RequestMethod.GET)
+    public void getUsers(
+                @RequestParam(value = "queryType", defaultValue = "allUsers") String queryType,
+                HttpServletRequest request, HttpServletResponse response) throws Exception {
+        
+        List queryList = new ArrayList();
+        if (queryType.equals("allUsers")) {
+            queryList = userDAO.getUsers();
+        } else if (queryType.equals("group")) {
+            queryList = groupDAO.getAllGroups();
+        } else if (queryType.equals("project")) {
+            queryList = surveyDAO.getActiveSurveysForUser(this.getRequestContext().getUser());
+        }
+        
+        response.setContentType("application/json");
+        response.getWriter().write(JSONSerializer.toJSON(queryList).toString());
+    }
+
+    @RequestMapping(value = "/webservice/user/downloadUsers.htm", method = RequestMethod.GET)
+	public void downloadUsers(
+			@RequestParam(value = "ident", defaultValue = "") String ident,
+			@RequestParam(value = "userName", defaultValue = "") String username,
+            @RequestParam(value = "emailAddress", defaultValue = "") String emailAddress,
+            @RequestParam(value = "fullName", defaultValue = "") String fullName,
+            HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+
+		User user;
+		if (ident.isEmpty()) {
+			throw new HTTPException(HttpServletResponse.SC_UNAUTHORIZED);
+		} else {
+			user = userDAO.getUserByRegistrationKey(ident);
+			if (user == null) {
+				throw new HTTPException(HttpServletResponse.SC_UNAUTHORIZED);
+			}
+		}
+
+		// If you are not the administrator, you can not download users.
+		if (!user.isAdmin()) {
+			throw new HTTPException(HttpServletResponse.SC_UNAUTHORIZED);
+		}
+
+		//find the users
+		PagedQueryResult<User> queryResult = userDAO.search(username, emailAddress, fullName, null);
+		List<User>  userList = queryResult.getList();
+
+		response.setContentType("application/vnd.ms-excel");
+		response.setHeader("Content-Disposition",
+				"attachment;filename=users_"
+				+ Long.valueOf(System.currentTimeMillis()) + ".xls");
+		bulkDataService.exportUsers(userList, response
+				.getOutputStream());
+	}
 }

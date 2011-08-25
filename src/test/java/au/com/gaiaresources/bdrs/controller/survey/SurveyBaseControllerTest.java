@@ -24,6 +24,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.security.Role;
@@ -57,7 +58,6 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "publish");
     }
 
-    
     /**
      * Tests the basic use case of creating a new survey and clicking save.
      */
@@ -86,6 +86,11 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         params.put("SurveyLogo", "");
         params.put("rendererType", "DEFAULT");
         params.put(Metadata.SURVEY_LOGO, imgTmp.getName());
+        params.put(SurveyBaseController.PARAM_DEFAULT_RECORD_VISIBILITY, RecordVisibility.CONTROLLED.toString());
+        
+        // no value...
+        //params.put(SurveyBaseController.PARAM_RECORD_VISIBILITY_MODIFIABLE, "false");
+        
         request.setParameters(params);
         
         ModelAndView mv = handle(request, response);
@@ -104,6 +109,9 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         Assert.assertEquals(imgTmp.getName(), md.getValue());
+        
+        Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
+        Assert.assertEquals(false, survey.isRecordVisibilityModifiable());
     }
     
     /**
@@ -135,6 +143,9 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         params.put("rendererType", "DEFAULT");
         params.put("saveAndContinue", "saveAndContinue");
         params.put(Metadata.SURVEY_LOGO, imgTmp.getName());
+        params.put(SurveyBaseController.PARAM_DEFAULT_RECORD_VISIBILITY, RecordVisibility.CONTROLLED.toString());
+        params.put(SurveyBaseController.PARAM_RECORD_VISIBILITY_MODIFIABLE, "true");
+        
         request.setParameters(params);
         
         ModelAndView mv = handle(request, response);
@@ -153,6 +164,9 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         Assert.assertEquals(imgTmp.getName(), md.getValue());
+        
+        Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
+        Assert.assertEquals(true, survey.isRecordVisibilityModifiable());
     }
 
     @Override

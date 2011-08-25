@@ -11,11 +11,9 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/recordBaseMap.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
             <add-attribute>jpicker/jPicker-1.1.3.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
-            
             <add-attribute>jpicker/jpicker-1.1.3.js</add-attribute>
         </put-list-attribute>
     </definition>
@@ -26,7 +24,6 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/recordTracker.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
             <add-attribute>jpicker/jPicker-1.1.3.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
@@ -52,7 +49,6 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/mySightings.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customJavaScript">
-            
         </put-list-attribute>
     </definition>
     
@@ -61,9 +57,6 @@
         <put-attribute name="title" value="Sightings"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReview.jsp"/>
         <put-attribute name="maps" value="true"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             <add-attribute>advancedReviewSightings.js</add-attribute>
         </put-list-attribute>
@@ -91,9 +84,6 @@
         <put-attribute name="title" value="Record Listing"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>
     </definition>
@@ -103,9 +93,6 @@
         <put-attribute name="title" value="User Location"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/location/editLocations.jsp"/>
         <put-attribute name="maps" value="true"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
@@ -145,9 +132,6 @@
         <put-attribute name="title" value="Records Map"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/default/tracker.jsp"/>
         <put-attribute name="maps" value="true"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
@@ -158,9 +142,6 @@
         <put-attribute name="title" value="Record a Sighting"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/atlas/atlas.jsp"/>
         <put-attribute name="maps" value="true"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
@@ -181,9 +162,6 @@
         <put-attribute name="title" value="Yearly Sightings"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/yearlySightings/yearlySightings.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
@@ -194,15 +172,32 @@
         <put-attribute name="title" value="Single Site Multiple Species"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/singleSiteMultiTaxa/singleSiteMultiTaxa.jsp"/>
         <put-attribute name="maps" value="true"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
     </definition>
     
     <definition name="singleSiteMultiTaxaRow" template="/WEB-INF/jsp/bdrs/user/record/render/singleSiteMultiTaxa/singleSiteMultiTaxaRow.jsp">
+        <put-attribute name="sightingIndex"/>
+        <put-attribute name="record"/>
+        <put-attribute name="survey"/>
+        <put-attribute name="recAttrMap"/>
+        <put-attribute name="recAttrFileURLMapping"/>
+        <!--<put-attribute name="attribute"/>
+        <put-attribute name="index"/>-->
+    </definition>
+    
+    <!-- Single Site All Taxa -->
+    <definition name="singleSiteAllTaxa" extends="user-template">
+        <put-attribute name="title" value="Single Site All Species"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/singleSiteAllTaxa/singleSiteAllTaxa.jsp"/>
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customJavaScript">
+            
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="singleSiteAllTaxaRow" template="/WEB-INF/jsp/bdrs/user/record/render/singleSiteAllTaxa/singleSiteAllTaxaRow.jsp">
         <put-attribute name="sightingIndex"/>
         <put-attribute name="record"/>
         <put-attribute name="survey"/>
@@ -220,9 +215,6 @@
         <put-attribute name="title" value="Bulk Data"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/bulkdata/bulkdata.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>
     </definition>
@@ -231,8 +223,15 @@
         <put-attribute name="title" value="Import Summary"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/bulkdata/importSummary.jsp"/>
         <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+	
+	<definition name="shapefileImportSummary" extends="user-template">
+        <put-attribute name="title" value="Import Summary"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/bulkdata/shapefileImportSummary.jsp"/>
+        <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>
@@ -250,8 +249,6 @@
         <put-attribute name="title" value="Create Embedded Widget"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/embedded/widget_builder.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss">
-        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             <add-attribute>embedded.js</add-attribute>
         </put-list-attribute>
@@ -271,6 +268,15 @@
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
         <put-list-attribute name="customJavaScript"></put-list-attribute>
+    </definition>
+	
+	<!-- contact another user via bdrs -->
+    <definition name="messageUser" extends="template">
+        <put-attribute name="title" value="Contact Record Owner" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/message/messageUser.jsp" />
+		<put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
     </definition>
     
     <!-- MV cut and paste below here -->
@@ -314,7 +320,7 @@
         <put-attribute name="tabActive" value="identify" />
         <put-attribute name="content"
             value="/WEB-INF/jsp/mobile/featuresList.jsp" />
-                <put-list-attribute name="customCss">
+        <put-list-attribute name="customCss">
             <add-attribute>mv/featureslist.css</add-attribute>
         </put-list-attribute>
     </definition>
@@ -329,5 +335,4 @@
             <add-attribute>ketchup/jquery.ketchup.basic.min.js</add-attribute>
         </put-list-attribute>
     </definition>
-    
 </tiles-definitions>

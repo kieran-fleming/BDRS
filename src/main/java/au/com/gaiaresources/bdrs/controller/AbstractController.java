@@ -1,6 +1,8 @@
 package au.com.gaiaresources.bdrs.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
+import au.com.gaiaresources.bdrs.servlet.Interceptor;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
@@ -18,6 +21,11 @@ public abstract class AbstractController {
     @Autowired
     private PlatformTransactionManager transactionManager;
     private TransactionTemplate transactionTemplate;
+    
+    public static final String REDIRECT_HOME = "redirectWithoutModel:/home.htm";
+    public static final String REDIRECT_SECURE_HOME = "redirectWithoutModel:/secure/home.htm";
+    public static final String REDIRECT_ADMIN_HOME = "redirectWithoutModel:/admin/home.htm";
+    public static final String REDIRECT_MOBILE_HOME = "redirectWithoutModel:/bdrs/mobile/home.htm";
     
     protected synchronized TransactionTemplate getTransactionTemplate() {
         if (transactionTemplate == null) {
@@ -69,19 +77,37 @@ public abstract class AbstractController {
     }
     
     protected String getRedirectHome() {
-        return "redirect:/home.htm";
+        return "redirectWithoutModel:/home.htm";
     }
     
     protected String getRedirectSecureHome() {
-        return "redirect:/secure/home.htm";
+        return "redirectWithoutModel:/secure/home.htm";
     }
     
     protected String getRedirectAdminHome() {
-        return "redirect:/admin/home.htm";
+        return "redirectWithoutModel:/admin/home.htm";
     }
     
     protected String getRedirectSecureMobileHome(){
-        return "redirect:/bdrs/mobile/home.htm";
+        return "redirectWithoutModel:/bdrs/mobile/home.htm";
     }
     
+    protected void requestRollback(HttpServletRequest request) {
+        Interceptor.requestRollback(request);
+    }
+    
+    /**
+     * The request returns an unmodifiable map which is undesirable in certain situations
+     * 
+     * @param request
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Map<String, String[]> getModifiableParameterMap(HttpServletRequest request) {
+        Map<String, String[]> result = new HashMap<String, String[]>();
+        for (java.util.Map.Entry<String, String[]> entry : ((Map<String, String[]>)request.getParameterMap()).entrySet()) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
+    }
 }

@@ -85,6 +85,8 @@ public class PortalInitialiser implements ServletContextListener {
         tmp.put("email/UserSignupApproval", "/au/com/gaiaresources/bdrs/email/UserSignupApproval.vm");
         tmp.put("email/UserSignupApproved", "/au/com/gaiaresources/bdrs/email/UserSignUpApproved.vm");
         tmp.put("email/UserSignUpWait", "/au/com/gaiaresources/bdrs/email/UserSignUpWait.vm");
+        tmp.put("email/ContactRecordOwner", "/au/com/gaiaresources/bdrs/email/contactRecordOwner.vm");
+        tmp.put("email/ContactRecordOwnerToSelf", "/au/com/gaiaresources/bdrs/email/contactRecordOwnerSendToSelf.vm");
         
         CONTENT = Collections.unmodifiableMap(tmp);
     }
@@ -114,17 +116,17 @@ public class PortalInitialiser implements ServletContextListener {
     	
         try {
             Transaction tx = sesh.beginTransaction();
-
+            BDRSWurflLoadService loadService = AppContext.getBean(BDRSWurflLoadService.class);
             if (!portalDAO.getPortals().isEmpty()) {
                 log.info("ROOT portal already exists, skipping initialisation");
                // return;
             }else{
             	 log.info("Initialising ROOT portal");
                  initRootPortal();
+                 // Running this here because if you run it in initRootPortal the tests
+                 // just never finish
+                 loadService.loadWurflXML("wurfl.xml");
             }
-            
-            BDRSWurflLoadService loadService = AppContext.getBean(BDRSWurflLoadService.class);
-            loadService.loadWurflXML("wurfl.xml");
             loadService.loadWurflXML("wurfl_patch.xml");
             
 
@@ -253,6 +255,7 @@ public class PortalInitialiser implements ServletContextListener {
         PortalDAO portalDAO = AppContext.getBean(PortalDAO.class);
         String portalName = jsonObject.getString("name");
         Portal portal = new Portal();
+        portal.setRunThreshold(false);
         portal.setName(portalName);
         portal.setDefault(jsonObject.getBoolean("isDefault"));
 
@@ -270,6 +273,7 @@ public class PortalInitialiser implements ServletContextListener {
         String entryPattern = jsonObject.getString("pattern");
 
         PortalEntryPoint entryPoint = new PortalEntryPoint();
+        entryPoint.setRunThreshold(false);
         entryPoint.setPattern(entryPattern);
         entryPoint.setRedirect(jsonObject.getString("redirect"));
         entryPoint.setPortal(portal);
@@ -334,6 +338,7 @@ public class PortalInitialiser implements ServletContextListener {
         String description = jsonObject.getString("description");
 
         PreferenceCategory cat = new PreferenceCategory();
+        cat.setRunThreshold(false);
         cat.setName(name);
         cat.setPortal(portal);
         cat.setDisplayName(displayName);
@@ -352,6 +357,7 @@ public class PortalInitialiser implements ServletContextListener {
         boolean isRequired = jsonObject.getBoolean("isRequired");
 
         Preference pref = new Preference();
+        pref.setRunThreshold(false);
         pref.setLocked(locked);
         pref.setPortal(portal);
         pref.setPreferenceCategory(catMap.get(prefCatName));

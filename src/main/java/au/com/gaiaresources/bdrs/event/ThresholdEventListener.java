@@ -85,8 +85,13 @@ public class ThresholdEventListener implements PostUpdateEventListener,
 
     private void triggerUpdateOrInsert(Object entity) {
         if ((entity != null) && (entity instanceof PersistentImpl) && (((PersistentImpl)entity).getId() != null)) {
-            
             PersistentImpl original = (PersistentImpl)entity;
+            
+            // Don't run the threshold tests...
+            if (!original.isRunThreshold()) {
+                return;
+            }
+            
             if (thresholdService.isRegisteredReference(original)) {
                 // Triggered by an action.
             } else {

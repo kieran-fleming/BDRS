@@ -4,10 +4,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
-import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -49,6 +52,8 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     private IndicatorSpecies speciesA;
 
     private IndicatorSpecies speciesB;
+    
+    private Logger log = Logger.getLogger(getClass());
 
     @Before
     public void setUp() throws Exception {
@@ -78,7 +83,9 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 attr.setScope(null);
                 attr.setTag(true);
 
-                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                		AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -395,12 +402,33 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                     value = "Test Species Attr String";
                     break;
+                case BARCODE:
+                    value = "#121212";
+                    break;
+                case TIME:
+                    value = "12:34";
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    value = "<hr/>";
+                    break;
                 case TEXT:
                     value = "Test Species Attr Text";
                     break;
                 case STRING_WITH_VALID_VALUES:
                     value = attr.getOptions().iterator().next().getValue();
                     break;
+                case MULTI_CHECKBOX:
+                case MULTI_SELECT:
+                	List<AttributeOption> opts = attr.getOptions(); 
+                	request.addParameter(key, opts.get(0).getValue());
+                	request.addParameter(key, opts.get(1).getValue());
+                	value = null;
+                	break;
+                case SINGLE_CHECKBOX:
+                	value = Boolean.TRUE.toString();
+                	break;
                 case FILE:
                     String file_filename = String.format("attribute_%d", attr.getId());
                     MockMultipartFile mockFileFile = new MockMultipartFile(key, file_filename, "audio/mpeg", file_filename.getBytes());
@@ -417,7 +445,9 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
                     break;
             }
-            request.setParameter(key, value);
+            if(value != null) {
+            	request.addParameter(key, value);
+            }
         }
         
         ModelAndView mv = handle(request, response);
@@ -477,11 +507,53 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
+                case BARCODE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
+                    break;
+                case TIME:
+                    value = "12:34";
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    value = "<hr/>";
                     break;
                 case STRING_WITH_VALID_VALUES:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
+                case MULTI_CHECKBOX:
+	                {
+	                	// make sure the correct data got posted to the server correctly
+	                	Assert.assertEquals(2, request.getParameterValues(key).length);
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	for(String val : taxonAttr.getMultiCheckboxValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+	                	
+	            	}
+	            	break;
+                case MULTI_SELECT:
+                	{
+	                	// make sure the correct data got posted to the server correctly
+	                	Assert.assertEquals(2, request.getParameterValues(key).length);
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	log.debug("taxonAttr " + taxonAttr);
+	                	log.debug("multi select val " + taxonAttr.getMultiSelectValue());
+	                	for(String val : taxonAttr.getMultiSelectValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+	                	
+                	}
+                	break;
+                case SINGLE_CHECKBOX:
+                	Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
+                	break; 
                 case FILE:
                 case IMAGE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
@@ -540,8 +612,8 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     value = "123";
                     break;
                 case INTEGER_WITH_RANGE:
-                	 value = intWithRangeValue;                    
-                	 break;
+                    value = intWithRangeValue;                    
+                    break;
                 case DECIMAL:
                     value = "456.7";
                     break;
@@ -552,12 +624,25 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                     value = "Test Species Attr String";
                     break;
+                case BARCODE:
+                    value="#121212";
+                    break;
                 case TEXT:
                     value = "Test Species Attr Text";
                     break;
                 case STRING_WITH_VALID_VALUES:
                     value = attr.getOptions().iterator().next().getValue();
                     break;
+                case MULTI_CHECKBOX:
+                case MULTI_SELECT:
+                	List<AttributeOption> opts = attr.getOptions(); 
+                	request.addParameter(key, opts.get(0).getValue());
+                	request.addParameter(key, opts.get(1).getValue());
+                	value = null;
+                	break;
+                case SINGLE_CHECKBOX:
+                	value = Boolean.FALSE.toString();
+                	break;
                 case FILE:
                     String file_filename = String.format("attribute_%d", attr.getId());
                     MockMultipartFile mockFileFile = new MockMultipartFile(key, file_filename, "audio/mpeg", file_filename.getBytes());
@@ -570,11 +655,25 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     ((MockMultipartHttpServletRequest)request).addFile(mockImageFile);
                     value = image_filename;
                     break;
+                case TIME:
+                    value = "12:34";
+                    break;
+                case HTML:
+                    value = "<html><body></body></html>";
+                    break;
+                case HTML_COMMENT:
+                    value = "This is a comment.";
+                    break;
+                case HTML_HORIZONTAL_RULE:
+                    value = "<hr/>";
+                    break;
                 default:
                     Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
                     break;
             }
-            request.setParameter(key, value);
+            if(value != null) {
+            	request.addParameter(key, value);
+            }
         }
         
         ModelAndView mv = handle(request, response);
@@ -624,11 +723,45 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
+                case BARCODE:
+                case TIME:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
                 case STRING_WITH_VALID_VALUES:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
+                case MULTI_CHECKBOX:
+                	{
+	                	// make sure the correct data got posted to the server correctly
+	                	Assert.assertEquals(2, request.getParameterValues(key).length);
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	for(String val : taxonAttr.getMultiCheckboxValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+                	}
+                	break;
+                case MULTI_SELECT:
+                	{
+                		// make sure the correct data got posted to the server correctly
+	                	Assert.assertEquals(2, request.getParameterValues(key).length);
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	for(String val : taxonAttr.getMultiSelectValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+                	}
+                	break;
+                case SINGLE_CHECKBOX:
+                	Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
+                	break; 
                 case FILE:
                 case IMAGE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());

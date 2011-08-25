@@ -12,26 +12,32 @@
 <tiles:useAttribute name="errorMap" classname="java.util.Map" ignore="true"/>
 <tiles:useAttribute name="valueMap" classname="java.util.Map" ignore="true"/>
 
+<tiles:useAttribute name="formPrefix" ignore="true"/>
+
 <%@page import="au.com.gaiaresources.bdrs.model.record.Record"%>
 <%@page import="au.com.gaiaresources.bdrs.model.method.Taxonomic"%>
 <%@page import="java.util.Calendar"%>
 <%@page import="java.util.GregorianCalendar"%>
 
+<c:if test="${ formPrefix == null }">
+<!-- set formPrefix to the passed value -->
+    <c:set var="formPrefix" value="${ formField.prefix }"></c:set>
+</c:if>
+
 <c:choose>
     <c:when test="<%= Record.RECORD_PROPERTY_SPECIES.equals(formField.getPropertyName()) %>">
         <c:choose>
 		    <c:when test="${ formField.species != null }">
-		        <input type="hidden" name="${ formField.prefix }species" value="${ formField.species.id }"/>
+		        <input type="hidden" name="${ formPrefix }species" value="${ formField.species.id }"/>
 		        <span class="scientificName"><c:out value="${ formField.species.scientificName }"/></span>
 		    </c:when>
 		    <c:when test="<%= (formField.getSurvey().getSpecies().size() > 1) || (formField.getSurvey().getSpecies().size() == 0) %>">
-		      
 				<c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
 				    <p class="error">
     				    <c:out value="<%= errorMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>
 				    </p>
 				</c:if>
-		        <input id="survey_species_search" type="text" name="${ formField.prefix }survey_species_search"
+		        <input id="survey_species_search" type="text" name="${ formPrefix }survey_species_search"
 		            <c:choose>
 			            <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
 			                value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>"
@@ -51,10 +57,10 @@
                             class="validate(optionallyTaxonomicSpeciesAndNumber(#number))"
                         </c:when>
 		            </c:choose>
-		        	name="${ formField.prefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:1px;padding:2px 0 0 0;margin:0 0 0 -4px;border-width:0;"/>
+		        	name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:1px;padding:2px 0 0 0;margin:0 0 0 -4px;border-width:0;"/>
 		    </c:when>
 		    <c:when test="<%= formField.getSurvey().getSpecies().size() == 1 %>">
-		        <input type="hidden" name="${ formField.prefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>
+		        <input type="hidden" name="${ formPrefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>
 		        <span class="scientificName"><c:out value="<%= formField.getSurvey().getSpecies().iterator().next().getScientificName() %>"/></span>
 		    </c:when>
 		    <c:otherwise>
@@ -72,7 +78,7 @@
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_LOCATION.equals(formField.getPropertyName()) %>">
-         <select id="location" onchange="bdrs.survey.location.updateLocation(jQuery(this).val());" name="${ formField.prefix }location" >
+         <select id="location" onchange="bdrs.survey.location.updateLocation(jQuery(this).val());" name="${ formPrefix }location" >
             <option value="-1"></option>
             <c:forEach items="${ locations }" var="location">
                 <jsp:useBean id="location" type="au.com.gaiaresources.bdrs.model.location.Location"/>
@@ -100,7 +106,7 @@
 			            <c:out value="<%= errorMap.get(formField.getPrefix()+\"latitude\") %>"/>
 			        </p>
 			    </c:if>
-                <input id="latitude" type="text" name="${ formField.prefix }latitude" class="validate(range(-90,90), number)"
+                <input id="latitude" type="text" name="${ formPrefix }latitude" class="validate(range(-90,90), number)"
                     <c:choose>
 			            <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"latitude\") %>">
 			                value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"latitude\") %>"/>"
@@ -120,7 +126,7 @@
                         <c:out value="<%= errorMap.get(formField.getPrefix()+\"longitude\") %>"/>
                     </p>
                 </c:if>
-                <input id="longitude" type="text" name="${ formField.prefix }longitude" class="validate(range(-180,180), number)"
+                <input id="longitude" type="text" name="${ formPrefix }longitude" class="validate(range(-180,180), number)"
                     <c:choose>
                         <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"longitude\") %>">
                             value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"longitude\") %>"/>"
@@ -134,7 +140,7 @@
                     </c:if>
                 />
             </c:when>
-        </c:choose>                                       
+        </c:choose>
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_WHEN.equals(formField.getPropertyName()) %>">
@@ -143,7 +149,16 @@
                 <c:out value="<%= errorMap.get(formField.getPrefix()+\"date\") %>"/>
             </p>
         </c:if>
-        <input id="date" class="datepicker_historical validate(required)" type="text" name="${ formField.prefix }date"
+        
+        <c:set var="calDate" value="<%= new GregorianCalendar() %>"/>
+        <jsp:useBean id="calDate" type="java.util.Calendar"/>
+        <%
+            if(formField.getRecord() != null && formField.getRecord().getWhen() != null) {
+                calDate.setTime(formField.getRecord().getWhen());
+            }
+        %>
+        
+        <input id="date" class="datepicker_historical validate(required)" type="text" name="${ formPrefix }date"
             <c:choose>
                 <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"date\") %>">
                     value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"date\") %>"/>"
@@ -151,8 +166,11 @@
                 <c:when test="${ formField.record != null }">
                     value="<fmt:formatDate pattern="dd MMM yyyy" value="${ formField.record.when }"/>"
                 </c:when>
+                <c:otherwise>
+                   value="<fmt:formatDate pattern="dd MMM yyyy" value="${ calDate }"/>"
+                </c:otherwise>
             </c:choose>
-        />                                   
+        />
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_TIME.equals(formField.getPropertyName()) %>">
@@ -163,7 +181,7 @@
                 cal.setTime(formField.getRecord().getWhen());
             }
         %>
-        <select id="time_hour" type="text" name="${ formField.prefix }time_hour">
+        <select id="time_hour" name="${ formPrefix }time_hour">
             <c:forEach var="hr" items="<%= new int[]{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23} %>">
                 <jsp:useBean id="hr" type="java.lang.Integer"/>
                 <option value="${ hr }"
@@ -176,11 +194,11 @@
             </c:forEach>
         </select>
         
-        <select id="time_minute" type="text" name="${ formField.prefix }time_minute">
+        <select id="time_minute" type="text" name="${ formPrefix }time_minute">
             <c:forEach var="min" items="<%= new int[]{0,5,10,15,20,25,30,35,40,45,50,55} %>">
                 <jsp:useBean id="min" type="java.lang.Integer"/>
                 <option value="${ min }"
-                    <c:if test="<%= cal.get(Calendar.MINUTE) >= min %>">
+                    <c:if test="<%= cal.get(Calendar.MINUTE) >= min && cal.get(Calendar.MINUTE) < min + 5 %>">
                         selected="selected"
                     </c:if>
                 >
@@ -196,7 +214,7 @@
                 <c:out value="<%= errorMap.get(formField.getPrefix()+\"notes\") %>"/>
             </p>
         </c:if>
-		<textarea id="notes" name="${ formField.prefix }notes"><c:choose><c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"notes\") %>"><c:out value="<%= valueMap.get(formField.getPrefix()+\"notes\") %>"/></c:when><c:when test="${ formField.record != null }"><c:out value="${ formField.record.notes }"/></c:when></c:choose></textarea>
+		<textarea id="notes" name="${ formPrefix }notes"><c:choose><c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"notes\") %>"><c:out value="<%= valueMap.get(formField.getPrefix()+\"notes\") %>"/></c:when><c:when test="${ formField.record != null }"><c:out value="${ formField.record.notes }"/></c:when></c:choose></textarea>
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_NUMBER.equals(formField.getPropertyName()) %>">
@@ -205,13 +223,13 @@
                 <c:out value="<%= errorMap.get(formField.getPrefix()+\"number\") %>"/>
             </p>
         </c:if>
-        <input id="number" type="text" name="${ formField.prefix }number" 
+        <input id="number" type="text" name="${ formPrefix }number" 
             <c:choose>
 	            <c:when test="<%= Taxonomic.TAXONOMIC.equals(formField.getTaxonomic()) %>"> 
 	                class="validate(positiveIntegerLessThanOneMillion)"
 	            </c:when>
 	            <c:when test="<%= Taxonomic.OPTIONALLYTAXONOMIC.equals(formField.getTaxonomic()) %>">
-	                class="validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name=${ formField.prefix }species]))"
+	                class="validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name=${ formPrefix }species]))"
 	            </c:when>
 	        </c:choose>
         
@@ -225,7 +243,7 @@
                     </c:when>
                 </c:choose>
             </c:if>
-        />                         
+        />
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_ACCURACY.equals(formField.getPropertyName()) %>">
@@ -234,7 +252,7 @@
                 <c:out value="<%= errorMap.get(formField.getPrefix()+\"accuracyInMeters\") %>"/>
             </p>
         </c:if>
-        <input id="accuracyInMeters" type="text" name="${ formField.prefix }accuracyInMeters"
+        <input id="accuracyInMeters" type="text" name="${ formPrefix }accuracyInMeters"
             class="validate(numberOrBlank)" 
             <c:if test="${ formField.record != null}">
                 <c:choose>

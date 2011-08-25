@@ -12,6 +12,13 @@ public interface GeoMapLayerDAO extends TransactionDAO {
     GeoMapLayer save(GeoMapLayer obj);
     GeoMapLayer update(GeoMapLayer obj);
     GeoMapLayer get(Integer pk);
+   
+    /**
+     * delete a geo map layer object
+     * 
+     * @param pk
+     */
+    void delete(Integer pk);
     
     GeoMapLayer save(Session sesh, GeoMapLayer obj);
     GeoMapLayer update(Session sesh, GeoMapLayer obj);
@@ -38,4 +45,12 @@ public interface GeoMapLayerDAO extends TransactionDAO {
      * @param assignedLayerList - the list to delete
      */
     void delete(List<AssignedGeoMapLayer> assignedLayerList);
+    
+    /**
+     * Gets all of the assigned layers for a given geo map layer 
+     * 
+     * @param layerId
+     * @return
+     */
+    List<AssignedGeoMapLayer> getAssignedLayerByLayerId(int layerId);
 }

@@ -69,6 +69,8 @@ public abstract class AbstractBulkDataService {
     public static final String HELP_SHEET_NAME = "Help";
     public static final String TAXONOMY_SHEET_NAME = "Taxonomy";
     public static final String LOCATION_SHEET_NAME = "Locations";
+    public static final String USERS_SHEET_NAME = "Users";
+    
     public static final String CENSUS_METHOD_SHEET_NAME = "Census Methods";
 
     private Logger log = Logger.getLogger(getClass());
@@ -157,6 +159,61 @@ public abstract class AbstractBulkDataService {
             writeTaxonomySheet(survey, wb, rowPrinter);
             writeCensusMethodSheet(survey, wb, rowPrinter);
         }
+        wb.write(outputStream);
+    }
+    
+    public void exportUsers(List<User> userList,
+            OutputStream outputStream) throws IOException {
+        
+        RecordRow rowPrinter = getRecordRow();
+        Workbook wb = new HSSFWorkbook();
+
+        rowPrinter.createCellStyles(wb);
+        Sheet usersSheet = wb.createSheet(USERS_SHEET_NAME);
+        
+        Row headerRow = usersSheet.createRow(0);
+        
+        Cell headerCell = headerRow.createCell(0);
+        headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
+        headerCell.setCellValue("Login");
+        
+        headerCell = headerRow.createCell(1);
+        headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
+        headerCell.setCellValue("Given Name");
+        
+        headerCell = headerRow.createCell(2);
+        headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
+        headerCell.setCellValue("Surname");
+        
+        headerCell = headerRow.createCell(3);
+        headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
+        headerCell.setCellValue("Email Address");
+        
+        
+        for (int rowIndex=0; rowIndex<userList.size(); rowIndex++){
+        	
+        	User u = userList.get(rowIndex);
+        	Row userDescriptionRow = usersSheet.createRow(rowIndex+1);
+        	
+        	Cell userLoginCell =userDescriptionRow.createCell(0);
+        	userLoginCell.setCellValue(String.format("%s", u.getName()));
+        	
+        	Cell userGivenNameCell =userDescriptionRow.createCell(1);
+        	userGivenNameCell.setCellValue(String.format("%s", u.getFirstName()));
+        	
+        	Cell userSurnameCell =userDescriptionRow.createCell(2);
+        	userSurnameCell.setCellValue(String.format("%s", u.getLastName()));
+        	
+        	Cell userEmailCell =userDescriptionRow.createCell(3);
+        	userEmailCell.setCellValue(String.format("%s", u.getEmailAddress()));
+        	
+        }
+        
+        usersSheet.autoSizeColumn(1);
+        usersSheet.autoSizeColumn(2);
+        usersSheet.autoSizeColumn(3);
+        usersSheet.autoSizeColumn(4);
+        
         wb.write(outputStream);
     }
 
@@ -253,8 +310,8 @@ public abstract class AbstractBulkDataService {
             colIndex = 0;
 
             row.createCell(colIndex++).setCellValue(loc.getName());
-            row.createCell(colIndex++).setCellValue(loc.getLocation().getX());
-            row.createCell(colIndex++).setCellValue(loc.getLocation().getY());
+            row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getX());
+            row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getY());
         }
     }
 
@@ -682,6 +739,11 @@ public abstract class AbstractBulkDataService {
                 }
                 
                 rec.setAttributes(recAttrSet);
+                
+                // Set record visibility to survey default. Setting via web form not supported.
+                // Survey's default record visibility can be set in the 'admin -> projects' interface
+                rec.setRecordVisibility(survey.getDefaultRecordVisibility());
+                
                 rec = recordDAO.save(sesh, rec);
                 records.add(rec);
     
@@ -733,6 +795,9 @@ public abstract class AbstractBulkDataService {
             case TEXT:
             case STRING_WITH_VALID_VALUES:
             case STRING:
+            case HTML:
+            case HTML_COMMENT:
+            case HTML_HORIZONTAL_RULE:
             default:
                 recAttr.setStringValue(attributeValue);
                 break;

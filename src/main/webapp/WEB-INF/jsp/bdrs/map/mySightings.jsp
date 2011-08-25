@@ -4,7 +4,15 @@
 <%@page import="java.awt.Color"%>
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
-<h1>My Sightings</h1>
+<c:choose>
+	<c:when test="${not empty pageTitle}">
+		<h1>${pageTitle}</h1>
+	</c:when>
+	<c:otherwise>
+		<h1>My Sightings</h1>
+	</c:otherwise>
+</c:choose>
+
 <p>
     Filter your records by
 </p>
@@ -68,13 +76,31 @@
 
 <h3>Map</h3>
 <div class="left">
-    <a id="mapToggle" class="left" href="javascript:void(0);">
-        Collapse
-    </a>
-    <span>&nbsp;|&nbsp;<span/>
-    <a href="javascript: bdrs.map.downloadKML('#record_filter_form', null);">
-        Download KML
-    </a>
+	<sec:authorize ifAnyGranted="ROLE_ADMIN">
+    <div>
+        <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'KML');">
+            Download KML for all records
+        </a>
+        <span>&nbsp;|&nbsp;<span/>
+        <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'SHAPEFILE', null);">
+            Download SHP for all records
+        </a>
+    </div>
+    </sec:authorize>
+	
+	<div>
+	    <a id="mapToggle" class="left" href="javascript:void(0);">
+	        Collapse
+	    </a>
+	    <span>&nbsp;|&nbsp;<span/>
+	    <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'KML', '<%= context.getUser().getId() %>');">
+	        Download KML for my records
+	    </a>
+		<span>&nbsp;|&nbsp;<span/>
+	    <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'SHAPEFILE', '<%= context.getUser().getId() %>');">
+	        Download SHP for my records
+	    </a>
+	</div>
 </div>
 
 <div class="right">
@@ -198,7 +224,7 @@
         return false;
     };
 
-    jQuery(function() {
+    jQuery(window).load(function() {
         bdrs.map.initBaseMap('record_base_map', { geocode: { selector: '#geocode' }});
         bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
         bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePoupUpHandler);
@@ -219,6 +245,7 @@
         </c:if>
         
         jQuery("#record_filter_form").submit(function() {
+			bdrs.map.clearPopups(bdrs.map.baseMap);
             bdrs.map.clearAllVectorLayers(bdrs.map.baseMap);
 
             // User Records
@@ -255,6 +282,7 @@
         });
 
         jQuery("#record_filter_form").submit();
+        bdrs.map.centerMap(bdrs.map.baseMap);
     });
 
 </script>

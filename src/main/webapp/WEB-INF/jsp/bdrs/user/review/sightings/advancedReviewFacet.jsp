@@ -12,6 +12,7 @@
 	<div class="facetOptions ${ facet.queryParamName }OptContainer"
 	    <%-- Open the facet if it contains a selected option --%>
 	    <%-- c:if test="${ !facet.containsSelected }"> style="display:none"</c:if --%>
+	    <c:if test="${ facet.displayName == 'Species Group' }"> style="display:none"</c:if>
 	>
 		<c:forEach var="facetOption" items="${ facet.facetOptions }">
 		    <div>

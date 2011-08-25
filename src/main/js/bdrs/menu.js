@@ -33,13 +33,21 @@ bdrs.menu.populateMapMenu = function(mapMenuItemSelector) {
     });
 };
 
-bdrs.menu.populateSurveyItems = function(registrationKey, contribMenuSelector) {
+bdrs.menu.populateSurveyItems = function(registrationKey, contribMenuSelector, parentLink) {
     var params = {};
     params.ident = registrationKey;
     // javascript doing some weird closure stuff
-    var getMenuRenderFcn = function(surveyMenuItem, surveyId) {
+    var getMenuRenderFcn = function(surveyMenuItem, surveyId, parentLink) {
         return function(data) {
             var censusMethodList = jQuery("<ul></ul>");
+			
+			// set the link on the parent item to the default census method...
+			if (data && data.length > 0) {
+				// the first item is the default census method.
+				var defaultCensusMethod = data[0];
+				parentLink.attr("href", bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId="+surveyId+"&censusMethodId="+defaultCensusMethod.id);
+			}
+			
             for(var j=0; j<data.length; ++j) {
                 var censusMethod = data[j];
                 var cmMenuItem = jQuery("<li></li>");
@@ -66,7 +74,7 @@ bdrs.menu.populateSurveyItems = function(registrationKey, contribMenuSelector) {
             menu.prepend(menuitem);
             
             // populate census method items...
-            jQuery.getJSON(bdrs.contextPath + "/bdrs/user/censusMethod/getSurveyCensusMethods.htm", {surveyId:survey.id}, getMenuRenderFcn(menuitem, survey.id)); 
+            jQuery.getJSON(bdrs.contextPath + "/bdrs/user/censusMethod/getSurveyCensusMethods.htm", {surveyId:survey.id}, getMenuRenderFcn(menuitem, survey.id, link)); 
         }
     });
 };

@@ -183,8 +183,8 @@ public class RecordForm {
         this.userID = record.getUser().getId();
         this.locationId = record.getLocation().getId();
         this.locationName = record.getLocation().getName();
-        this.locationLatitude = new BigDecimal(record.getLocation().getLocation().getY());
-        this.locationLongitude = new BigDecimal(record.getLocation().getLocation().getX());
+        this.locationLatitude = new BigDecimal(record.getLocation().getLocation().getCentroid().getY());
+        this.locationLongitude = new BigDecimal(record.getLocation().getLocation().getCentroid().getX());
         
         this.indicatorSpeciesID = record.getSpecies().getId();
         this.speciesCommonName = record.getSpecies().getCommonName();

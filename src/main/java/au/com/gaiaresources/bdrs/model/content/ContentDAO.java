@@ -27,4 +27,6 @@ public interface ContentDAO extends TransactionDAO {
     public Content getContent(String key);
     
     public List<String> getAllKeys();
+
+    public List<String> getKeysLike(String string);
 }

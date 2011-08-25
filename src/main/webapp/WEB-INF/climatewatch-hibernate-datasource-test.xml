@@ -17,7 +17,7 @@
         <property name="password" value="${bdrs.db.user.password}"/>-->
         
         <property name="driverClassName" value="org.postgresql.Driver"/>
-        <property name="url" value="jdbc:postgresql://localhost:5432/climatewatch2-test"/>
+        <property name="url" value="jdbc:postgresql://localhost:5432/bdrs-test"/>
         <property name="username" value="postgres"/>
         <property name="password" value="postgres"/>
     </bean>

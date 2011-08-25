@@ -55,4 +55,11 @@ public class ContentDAOImpl extends AbstractDAOImpl implements ContentDAO {
         Query query = getSessionFactory().getCurrentSession().createQuery("select c.key from Content c");
         return (List<String>)query.list();
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<String> getKeysLike(String string) {
+        Query query = getSessionFactory().getCurrentSession().createQuery("select c.key from Content c where c.key like '%" + string + "%'");
+        return (List<String>)query.list();
+    }
 }

@@ -40,6 +40,7 @@ import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
@@ -74,6 +75,12 @@ public class SurveyBaseController extends AbstractController {
     
     public static final Dimension TARGET_LOGO_DIMENSION = new Dimension(250,187);
     public static final String TARGET_LOGO_IMAGE_FORMAT = "PNG";
+    
+    // what is the record visibility
+    public static final String PARAM_DEFAULT_RECORD_VISIBILITY = "defaultRecordVis";
+    // is the record visibility modifiable to standard users.
+    // admins can always alter the record visibility
+    public static final String PARAM_RECORD_VISIBILITY_MODIFIABLE = "recordVisModifiable";
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/listing.htm", method = RequestMethod.GET)
@@ -121,7 +128,9 @@ public class SurveyBaseController extends AbstractController {
             @RequestParam(value = "active", defaultValue = "false") boolean active,
             @RequestParam(value = "rendererType", defaultValue="DEFAULT") String rendererType,
             @RequestParam(value = "surveyDate", required = true) Date surveyDate,
-            @RequestParam(value = "surveyEndDate", required = false) String surveyEndDate) 
+            @RequestParam(value = "surveyEndDate", required = false) String surveyEndDate,
+            @RequestParam(value = PARAM_DEFAULT_RECORD_VISIBILITY, required = true) String defaultRecordVis,
+            @RequestParam(value = PARAM_RECORD_VISIBILITY_MODIFIABLE, defaultValue="false") boolean recordVisMod) 
         throws IOException {
 
         Survey survey;
@@ -141,6 +150,9 @@ public class SurveyBaseController extends AbstractController {
         survey.setStartDate(surveyDate);
         survey.setEndDate(surveyEndDate);
         survey.setActive(active);
+        
+        survey.setDefaultRecordVisibility(RecordVisibility.parse(defaultRecordVis), metadataDAO);
+        survey.setRecordVisibilityModifiable(recordVisMod, metadataDAO);
         
         // A list of metadata to delete. To maintain referential integrity,
         // the link between survey and metadata must be broken before the 

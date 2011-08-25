@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +55,7 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.util.CSVUtils;
 
 public class ApplicationServiceUploadTest extends AbstractControllerTest {
     
@@ -341,7 +343,8 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                 Assert.assertTrue(syncDataMap.containsKey(jsonResult.getString("id")));
                 JSONObject jsonRecAttr = syncDataMap.get(jsonResult.getString("id"));
                 
-                AttributeValue recAttr = recordDAO.getAttributeValue(jsonResult.getInt("server_id"));
+                int serverId = jsonResult.getInt("server_id");
+                AttributeValue recAttr = recordDAO.getAttributeValue(serverId);
                 Assert.assertNotNull(recAttr);
                 
                 Attribute attr = recAttr.getAttribute(); 
@@ -378,10 +381,38 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     case STRING_AUTOCOMPLETE:
                     case TEXT:
                     case STRING_WITH_VALID_VALUES:
+                    	Assert.assertEquals(jsonRecAttr.getString("value"),
+                                recAttr.getStringValue());
+                    	break;
+                    case MULTI_CHECKBOX:
+                    	String[] actualMultiCheckboxValues = recAttr.getMultiCheckboxValue(); 
+                        Arrays.sort(actualMultiCheckboxValues);
+                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.getString("value"))) {
+                            Assert.assertTrue(Arrays.binarySearch(actualMultiCheckboxValues, expected) > -1);
+                        }
+                        break;
+                    case MULTI_SELECT:
+                    	String[] actualMultiSelectValues = recAttr.getMultiSelectValue(); 
+                        Arrays.sort(actualMultiSelectValues);
+                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.getString("value"))) {
+                            Assert.assertTrue(Arrays.binarySearch(actualMultiSelectValues, expected) > -1);
+                        }
+                        break;
+                    case SINGLE_CHECKBOX:
+                    	Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getString("value")).toString(),
+                                recAttr.getStringValue());
+                    	Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getString("value")),
+                    						recAttr.getBooleanValue());
+                    	break;
+                    case BARCODE:
                         Assert.assertEquals(jsonRecAttr.getString("value"),
                                             recAttr.getStringValue());
                         break;
-            
+                    case TIME:
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        break;
                     case IMAGE:
                         if(!recAttr.getStringValue().isEmpty()) {
                             String imgText;
@@ -459,7 +490,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         // Mandatory Stuff First.
         rec.put("id", UUID.randomUUID().toString());
         rec.put("server_id", record == null ? "0" : record.getId().toString());
-        rec.put("latitude", record == null ? -31.95222 : -32.962339);
+        rec.put("latitude", record == null ? -31.95222 : -32.96233);
         rec.put("longitude", record == null ? 115.85889 : 117.9422);
         rec.put("accuracy", record == null ? 5: 15);
         rec.put("when", System.currentTimeMillis());
@@ -544,6 +575,29 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     // Just get the first option.
                     recAttr.put("value", recordAttribute == null ? attr.getOptions().get(0).getValue() : attr.getOptions().get(1).getValue());
                     break;
+                case BARCODE:
+                    recAttr.put("value", "#123456");
+                    break;
+                case TIME:
+                    recAttr.put("value", "12:34");
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    recAttr.put("value", "<hr/>");
+                    break;
+                case MULTI_CHECKBOX:
+                case MULTI_SELECT:
+                    int offset = recordAttribute == null ? 0 : 1;
+                    String value = CSVUtils.toCSVString(new String[] {
+                            attr.getOptions().get(0 + offset).getValue(), 
+                            attr.getOptions().get(1 + offset).getValue()
+                        });
+                    recAttr.put("value", value);
+                    break;
+                case SINGLE_CHECKBOX: 
+                    recAttr.put("value", Boolean.toString(recordAttribute == null));
+                    break;
                 case IMAGE:
                     String imgText = recordAttribute == null ? attr.getName() : "Edited "+attr.getName();
                     String encodedBase64 = Base64.encodeBytes(createImage(72,72,imgText));
@@ -601,7 +655,9 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             attr.setScope(null);
             attr.setTag(false);
             
-            if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+            if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+            		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+            		AttributeType.MULTI_SELECT.equals(attrType)) {
                 List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                 for(int i=0; i<4; i++) {
                     AttributeOption opt = new AttributeOption();

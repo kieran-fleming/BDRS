@@ -16,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
@@ -265,6 +266,9 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             curWeight = curWeight + 100;
         }
                 
+        // no value...
+        //params.put(SurveyAttributeBaseController.PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, "false")
+        
         request.addParameters(params);
         
         // change the census methods...
@@ -305,6 +309,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         Assert.assertFalse(actualSurvey.getCensusMethods().contains(m1));
         Assert.assertTrue(actualSurvey.getCensusMethods().contains(m2));
         Assert.assertTrue(actualSurvey.getCensusMethods().contains(m3));
+        
+        Assert.assertEquals(false, survey.isDefaultCensusMethodProvided());
     }
 
     @Test
@@ -365,6 +371,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             curWeight = curWeight + 1; 
         }
         
+        params.put(SurveyAttributeBaseController.PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, "true");
+        
         request.addParameters(params);
 
         ModelAndView mv = handle(request, response);
@@ -388,6 +396,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             md = actualSurvey.getMetadataByKey(String.format(Metadata.RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE, propertyName));
             Assert.assertEquals(params.get(String.format("property_weight_%s", propertyName)), md.getValue());
         }
+        
+        Assert.assertEquals(true, survey.isDefaultCensusMethodProvided());
     }
 
     @Test

@@ -5,10 +5,25 @@ if (!bdrs.mobile) {
 	bdrs.mobile = {};
 }
 
-bdrs.mobile.positionOptions = new PositionOptions();
-bdrs.mobile.positionOptions.enableHighAccuracy = true;
-bdrs.mobile.positionOptions.timeout = 5000;
-bdrs.mobile.positionOptions.maximumAge = 0;
+
+var BdrsPositionOptions = function() {
+	/**
+	 * Specifies the desired position accuracy.
+	 */
+	this.enableHighAccuracy = true;
+	/**
+	 * The timeout after which if position data cannot be obtained the errorCallback
+	 * is called.
+	 */
+	this.timeout = 5000;
+	/**
+	 * 
+	 */
+	this.maximumAge = 0;
+	
+};
+
+bdrs.mobile.positionOptions = new BdrsPositionOptions();
 
 bdrs.mobile.geolocation = {
 	getCurrentPosition: function(callback) {

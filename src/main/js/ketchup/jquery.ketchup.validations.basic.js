@@ -11,8 +11,15 @@ $.fn.ketchup.validation('required', function(element, value) {
     }
     return false;
   } else {
-    if(value.length === 0) return false;
-    else return true;
+    if(value == null) {
+        return false;
+    } else {
+        if(value.length === 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
   }
 });
 
@@ -64,7 +71,6 @@ $.fn.ketchup.validation('rangeOrBlank', function(element, value, min, max) {
       else return false;
   }
 });
-
 
 $.fn.ketchup.validation('number', function(element, value) {
   if(/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value)) return true;
@@ -272,6 +278,26 @@ $.fn.ketchup.validation('uniqueOrBlank', function(element, value, uniqueElements
     return isUnique;
 });
 
+$.fn.ketchup.validation('uniqueAndRequired', function(element, value, uniqueElementsSelector) {
+	if(value == null || value.length === 0) {
+        // Blank is not allowed
+        return false;
+    }
+	
+	var elems = jQuery(uniqueElementsSelector);
+    var current;
+    var isUnique = true;
+    for(var i=0; i<elems.length && isUnique; i++) {
+        if(element[0] !== elems[i]) {
+            current = jQuery(elems[i]);
+            if(current.val() === value) {
+                isUnique = false;
+            }
+        }
+    }
+    return isUnique;
+});
+
 $.fn.ketchup.validation('optionallyTaxonomicSpeciesAndNumber', function(element, value, otherSelector) {
     var other = jQuery(otherSelector);
     var otherValue = other.val();
@@ -297,4 +323,21 @@ $.fn.ketchup.validation('color', function(element, value, otherSelector) {
 var uuidRegex = new RegExp('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
 $.fn.ketchup.validation('uuid', function(element, value, otherSelector) {
     return uuidRegex.test(value);
+});
+
+$.fn.ketchup.validation('regExp', function(element, value, regExp) {
+	var pattern = new RegExp(regExp);
+	if (pattern.test(value))
+		return true;
+	else
+		return false;
+});
+
+$.fn.ketchup.validation('regExpOrBlank', function(element, value, regExp) {
+	if (element.val().length === 0) {
+		return true;
+	} else {
+		var pattern = new RegExp(regExp);
+		return pattern.test(value);
+	}
 });

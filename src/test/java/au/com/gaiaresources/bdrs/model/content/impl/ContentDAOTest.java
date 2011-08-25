@@ -34,4 +34,11 @@ public class ContentDAOTest extends AbstractControllerTest {
             Assert.assertTrue(result.contains(s));
         }
     }
+    
+    @Test
+    public void testGetKeysLike() {
+        List<String> result = contentDAO.getKeysLike("asd");
+        // should be 3 matches with asd
+        Assert.assertEquals(3, result.size());
+    }
 }

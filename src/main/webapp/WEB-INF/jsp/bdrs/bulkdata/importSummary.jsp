@@ -124,7 +124,7 @@
 
     <c:otherwise>
         <h2>Import Summary</h2>
-        <div class="input_container_2">
+        <div>
             <p>
                 Congratulations. Your data has been imported and is visible
                 in your <a href="${pageContext.request.contextPath}/map/mySightings.htm">My Sightings</a> page.

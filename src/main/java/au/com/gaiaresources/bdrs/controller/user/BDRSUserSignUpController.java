@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.user;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.TransactionStatus;
@@ -12,8 +13,6 @@ import org.springframework.web.servlet.ModelAndView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
 import au.com.gaiaresources.bdrs.message.Message;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
-import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
@@ -27,6 +26,7 @@ public class BDRSUserSignUpController extends AbstractController {
     @Autowired
     private RegistrationService registrationService;
 
+    private Logger log = Logger.getLogger(getClass());
 
     /**
      * On a GET, render the form.
@@ -72,4 +72,5 @@ public class BDRSUserSignUpController extends AbstractController {
         }
         return getRedirectHome();
     }
+    
 }

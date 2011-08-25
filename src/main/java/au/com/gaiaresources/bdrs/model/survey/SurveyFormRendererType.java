@@ -7,7 +7,8 @@ public enum SurveyFormRendererType {
     DEFAULT("Default"),
     ATLAS("Atlas of Living Australia"),
     YEARLY_SIGHTINGS("Yearly Sightings"),
-    SINGLE_SITE_MULTI_TAXA("Single-Site Multi-Species");
+    SINGLE_SITE_MULTI_TAXA("Single-Site Multi-Species"),
+    SINGLE_SITE_ALL_TAXA("Single-Site All Species");
 
     private String name;
 
@@ -20,7 +21,7 @@ public enum SurveyFormRendererType {
     }
 
     /**
-     * Tests if this form type can be used to represent the specicied survey.
+     * Tests if this form type can be used to represent the specified survey.
      *
      * @param survey the survey to be tested for eligibility
      * @return true if this form type can be used to represent the specified
@@ -42,6 +43,7 @@ public enum SurveyFormRendererType {
                 }
                 break;
             case SINGLE_SITE_MULTI_TAXA:
+            case SINGLE_SITE_ALL_TAXA:
                 isEligible = true;
                 break;
             default:

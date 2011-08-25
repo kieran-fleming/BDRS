@@ -39,9 +39,11 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
@@ -50,7 +52,7 @@ import au.com.gaiaresources.bdrs.model.user.UserDAO;
 public class ApplicationService extends AbstractController {
     
     public static final String CLIENT_SYNC_STATUS_KEY = "status";
-
+    
     private Logger log = Logger.getLogger(getClass());
 
     @Autowired
@@ -67,6 +69,9 @@ public class ApplicationService extends AbstractController {
     
     @Autowired
     private CensusMethodDAO censusMethodDAO;
+    
+    @Autowired
+    private TaxaService taxaService;
     
     @Autowired
     private FileService fileService;
@@ -233,6 +238,7 @@ public class ApplicationService extends AbstractController {
             }
             
             String jsonData = request.getParameter("syncData");
+
             if(jsonData == null) {
                 throw new NullPointerException("Missing GET parameter 'syncData'.");
             }
@@ -247,6 +253,7 @@ public class ApplicationService extends AbstractController {
                 // to the new server id.
                 List<Map<String, Object>> syncResponseList = new ArrayList<Map<String, Object>>(); 
                 JSONArray clientData = JSONArray.fromObject(jsonData);
+                
                 for(Object jsonRecordBean : clientData){
                     syncRecord(syncResponseList, jsonRecordBean, user);
                 }
@@ -306,7 +313,8 @@ public class ApplicationService extends AbstractController {
         
         Double latitude = Double.parseDouble(PropertyUtils.getProperty(jsonRecordBean, "latitude").toString());
         Double longitude = Double.parseDouble(PropertyUtils.getProperty(jsonRecordBean, "longitude").toString());
-        Double accuracy = Double.parseDouble(PropertyUtils.getProperty(jsonRecordBean, "accuracy").toString());
+        String accuracyStr = getJSONString(jsonRecordBean, "accuracy", "");
+        Double accuracy = accuracyStr.trim().isEmpty() ? null : Double.parseDouble(accuracyStr);
         
         Date when = getJSONDate(jsonRecordBean, "when", null);
         Date lastDate = getJSONDate(jsonRecordBean, "lastDate", null);
@@ -315,6 +323,7 @@ public class ApplicationService extends AbstractController {
         Integer censusMethodPk = getJSONInteger(jsonRecordBean, "censusMethod_id", null);
         Integer surveyPk = getJSONInteger(jsonRecordBean, "survey_id", null);
         Integer taxonPk = getJSONInteger(jsonRecordBean, "taxon_id", null);
+        String scientificName = getJSONString(jsonRecordBean, "scientificName", "");
         
         Record rec = recordPk < 1 ? new Record() : recordDAO.getRecord(recordPk);
         rec.setUser(user);
@@ -327,11 +336,23 @@ public class ApplicationService extends AbstractController {
         rec.setNotes(notes);
         rec.setNumber(number);
         rec.setSurvey(surveyDAO.getSurvey(surveyPk));
+        
         if(censusMethodPk != null) {
             rec.setCensusMethod(censusMethodDAO.get(censusMethodPk));
         }
+        
         if(taxonPk != null) {
-            rec.setSpecies(taxaDAO.getIndicatorSpecies(taxonPk));
+            IndicatorSpecies taxon = taxaDAO.getIndicatorSpecies(taxonPk);
+            if(taxon == null) {
+                // Must be a field species
+                taxon = taxaService.getFieldSpecies();
+                AttributeValue fieldName = new AttributeValue();
+                fieldName.setStringValue(scientificName);
+                fieldName.setAttribute(taxaService.getFieldNameAttribute());
+                fieldName = recordDAO.saveAttributeValue(fieldName);
+                rec.getAttributes().add(fieldName);
+            }
+            rec.setSpecies(taxon);
         }
         
         rec = recordDAO.saveRecord(rec);
@@ -389,14 +410,22 @@ public class ApplicationService extends AbstractController {
                     recAttr.setStringValue("");
                 }
                 break;
-    
+            case HTML:
+            case HTML_COMMENT:
+            case HTML_HORIZONTAL_RULE:
             case STRING:
             case STRING_AUTOCOMPLETE:
             case TEXT:
+            case TIME:
             case STRING_WITH_VALID_VALUES:
+            case MULTI_CHECKBOX:
+            case MULTI_SELECT:
+            case BARCODE:
                 recAttr.setStringValue(value);
                 break;
-    
+            case SINGLE_CHECKBOX:
+            	recAttr.setBooleanValue(value);
+            	break;
             case IMAGE:
                 if(value != null && !value.isEmpty()) {
                     base64 = value;
@@ -413,6 +442,8 @@ public class ApplicationService extends AbstractController {
             case FILE:
                 log.error("File (Record) Attribute Type is not supported.");
                 break;
+            default:
+                throw new UnsupportedOperationException("Unsupported Attribute Type: "+attr.getType().toString());
         }
         recAttr = recordDAO.saveAttributeValue(recAttr);
         

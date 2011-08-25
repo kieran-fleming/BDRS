@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class TestAbstractController {
     @Test
     public void testRedirectDefaults() {
-        assertEquals("redirect:/home.htm", new AbstractControllerImpl().getRedirectHome());
-        assertEquals("redirect:/secure/home.htm", new AbstractControllerImpl().getRedirectSecureHome());
-        assertEquals("redirect:/admin/home.htm", new AbstractControllerImpl().getRedirectAdminHome());
+        assertEquals(AbstractController.REDIRECT_HOME, new AbstractControllerImpl().getRedirectHome());
+        assertEquals(AbstractController.REDIRECT_SECURE_HOME, new AbstractControllerImpl().getRedirectSecureHome());
+        assertEquals(AbstractController.REDIRECT_ADMIN_HOME, new AbstractControllerImpl().getRedirectAdminHome());
     }
     
     @Test

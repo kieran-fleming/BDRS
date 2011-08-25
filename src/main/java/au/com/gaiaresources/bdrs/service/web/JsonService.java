@@ -3,16 +3,20 @@ package au.com.gaiaresources.bdrs.service.web;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeature;
+import au.com.gaiaresources.bdrs.model.record.AccessControlledRecordAdapter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
@@ -39,45 +43,78 @@ public class JsonService {
     public static final String RECORD_KEY_RECORD_ID = "recordId";
     public static final String RECORD_KEY_SURVEY_ID = "surveyId";
     
+    // first + last name of the recording user
+    public static final String RECORD_KEY_USER = "owner";
+    public static final String RECORD_KEY_USER_ID = "ownerId";
+    
     public static final String DATE_FORMAT = "dd-MMM-yyyy";
     private SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
     
-    public JSONObject toJson(Record record) {
-        Map<String, Object> attrMap = new HashMap<String, Object>(13);
-
-        if (record.getCensusMethod() != null) {
-            attrMap.put(RECORD_KEY_CENSUS_METHOD, record.getCensusMethod().getName());
-        } else {
-            attrMap.put(RECORD_KEY_CENSUS_METHOD, "Standard Taxonomic");
-        }
-        if (record.getSpecies() != null) {
-            attrMap.put(RECORD_KEY_SPECIES, record.getSpecies().getScientificName());
-            attrMap.put(RECORD_KEY_COMMON_NAME, record.getSpecies().getCommonName());
-        }
-        attrMap.put(RECORD_KEY_NUMBER, record.getNumber());
-        attrMap.put(RECORD_KEY_NOTES, record.getNotes());
-        attrMap.put(RECORD_KEY_HABITAT, record.getHabitat());
-        attrMap.put(RECORD_KEY_WHEN, record.getWhen().getTime());
-        attrMap.put(RECORD_KEY_BEHAVIOUR, record.getBehaviour());
-        attrMap.put(RECORD_KEY_RECORD_ID, record.getId());
-        attrMap.put(RECORD_KEY_SURVEY_ID, record.getSurvey().getId());
+    private Logger log = Logger.getLogger(getClass());
+    
+    /**
+     * 
+     * @param record - the record to convert to json
+     * @param hideDetails - whether or not we should hide the details of the record. In general, on a public map we will hide the details
+     * @return
+     */
+    public JSONObject toJson(AccessControlledRecordAdapter record, boolean hideDetails) {
+        Map<String, Object> attrMap = new HashMap<String, Object>(16);
         
-        attrMap.put(JSON_KEY_ID, record.getId());
-        attrMap.put(JSON_KEY_TYPE, JSON_ITEM_TYPE_RECORD);
+        addToAttributeMap(attrMap, RECORD_KEY_USER, record.getUser().getFirstName() + " " + record.getUser().getLastName());
+        addToAttributeMap(attrMap, RECORD_KEY_USER_ID, record.getUser().getId());
+        
+        if (record.getCensusMethod() != null) {
+            addToAttributeMap(attrMap, RECORD_KEY_CENSUS_METHOD, record.getCensusMethod().getName());
+        } else {
+            addToAttributeMap(attrMap, RECORD_KEY_CENSUS_METHOD, "Standard Taxonomic");
+        }
+        
+        if (record.getSpecies() != null) {
+            addToAttributeMap(attrMap, RECORD_KEY_SPECIES, record.getSpecies().getScientificName());
+            addToAttributeMap(attrMap, RECORD_KEY_COMMON_NAME, record.getSpecies().getCommonName());
+            addToAttributeMap(attrMap, RECORD_KEY_NUMBER, record.getNumber());
+        }
+        addToAttributeMap(attrMap, RECORD_KEY_NOTES, record.getNotes());
+        addToAttributeMap(attrMap, RECORD_KEY_HABITAT, record.getHabitat());
+        addToAttributeMap(attrMap, JSON_KEY_ATTRIBUTES, getOrderedAttributes(record.getOrderedAttributes()));
+        addToAttributeMap(attrMap, RECORD_KEY_BEHAVIOUR, record.getBehaviour());   
+        
+        addToAttributeMap(attrMap, RECORD_KEY_WHEN, record.getWhen().getTime());
+        
+        // legacy
+        addToAttributeMap(attrMap, RECORD_KEY_RECORD_ID, record.getId());
+        addToAttributeMap(attrMap, RECORD_KEY_SURVEY_ID, record.getSurvey().getId());
+        
+        // This is important, always include this stuff
+        addToAttributeMap(attrMap, JSON_KEY_ID, record.getId());
+        addToAttributeMap(attrMap, JSON_KEY_TYPE, JSON_ITEM_TYPE_RECORD);
 
-        attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(record.getAttributes()));
         return JSONObject.fromObject(attrMap);
+    }
+    
+    public JSONObject toJson(AccessControlledRecordAdapter recordAdapter) {
+        return toJson(recordAdapter, false);
     }
     
     public JSONObject toJson(GeoMapFeature feature) {
         Map<String, Object> attrMap = new HashMap<String, Object>(3);
         attrMap.put(JSON_KEY_ID, feature.getId());
         attrMap.put(JSON_KEY_TYPE, JSON_ITEM_TYPE_MAP_FEATURE);
-        attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(feature.getAttributes()));
+        attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(feature.getOrderedAttributes()));
         return JSONObject.fromObject(attrMap);
     }
     
-    private JSONArray getOrderedAttributes(Set<AttributeValue> attributeValues) {
+    private void addToAttributeMap(Map<String, Object> attrMap, String key, Object value) {
+        if (attrMap.containsKey(key)) {
+            log.warn("overwriting attribute map key : " + key);
+        }
+        if (value != null) {
+            attrMap.put(key, value);
+        }
+    }
+    
+    private JSONArray getOrderedAttributes(List<AttributeValue> attributeValues) {
         JSONArray array = new JSONArray();
         for (AttributeValue av : attributeValues) {
             array.add(toJson(av));
@@ -100,6 +137,9 @@ public class JsonService {
 		    	String format = d == null ? null : dateFormat.format(av.getDateValue()); 
 		        obj.accumulate(key, format);
 		        break;
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
 		    case STRING:
 		    case STRING_AUTOCOMPLETE:
 		    case TEXT:

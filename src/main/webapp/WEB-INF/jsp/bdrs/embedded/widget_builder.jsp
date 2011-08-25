@@ -77,7 +77,7 @@
 </table>
 
 <h2>Preview</h2>
-<div class="hr"/>
+<div class="hr"></div>
 <div id="preview"></div>
 
 <script type="text/javascript">

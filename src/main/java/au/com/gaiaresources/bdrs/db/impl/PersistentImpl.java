@@ -42,6 +42,8 @@ public abstract class PersistentImpl implements Persistent,
     private Integer createdBy;
     private Integer updatedBy;
     
+    private boolean runThreshold = true;
+    
     private int weight = DEFAULT_WEIGHT;
 
     /**
@@ -316,5 +318,14 @@ public abstract class PersistentImpl implements Persistent,
      */
     public void setWeight(int weight) {
         this.weight = weight;
+    }
+    
+    @Transient
+    public boolean isRunThreshold() {
+        return runThreshold;
+    }
+    
+    public void setRunThreshold(boolean value) {
+        runThreshold = value;
     }
 }

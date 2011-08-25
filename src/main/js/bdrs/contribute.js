@@ -229,6 +229,40 @@ bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector
         search_elem.parents("tr").ketchup();
     });
 };
-
-// Single Site Multiple Taxa -----------
+//--------------------------------------
+// End Single Site Multiple Taxa -------
 // -------------------------------------
+//--------------------------------------
+// Single Site All Taxa
+//--------------------------------------
+bdrs.contribute.singleSiteAllTaxa = {};
+
+bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody) {
+	var sightingIndexElem = jQuery(sightingIndexSelector);
+  var sightingIndex = parseInt(sightingIndexElem.val(), 10);
+  sightingIndexElem.val(sightingIndex+1);
+  
+  var surveyId = jQuery(surveyIdSelector).val();
+  
+  var url = bdrs.contextPath+"/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm";
+  var param = {
+      sightingIndex: sightingIndex,
+      surveyId: surveyId
+  };
+  
+  jQuery.ajax(url, {
+	  data: param, 
+	  success: function(data) {
+	      jQuery(sightingTableBody).append(data);
+	      
+	      // Attach the datepickers
+	      bdrs.initDatePicker();
+	      search_elem.parents("tr").ketchup();
+  	  },
+  	  async: false
+  }
+  );
+  
+  // update the sightingIndex field to match the attribute count
+  sightingIndexElem.val(jQuery(sightingTableBody).find('tr').length);
+};

@@ -3,8 +3,12 @@
  */
 package au.com.gaiaresources.bdrs.controller.webservice;
 
+import java.util.Collection;
+
+import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -14,6 +18,8 @@ import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.model.group.Group;
+import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
 
 /**
@@ -124,4 +130,70 @@ public class UserServiceTest extends AbstractControllerTest {
 	    Assert.assertEquals("4", ((JSONObject)rows.get(1)).get("field2"));
 	    Assert.assertEquals("4", ((JSONObject)rows.get(1)).get("field3"));
 	}
+	
+	@Test
+	public void testGetAllUsers() throws Exception {
+	    request.setMethod("GET");
+            request.setRequestURI("/webservice/user/getUsers.htm");
+            request.addParameter("queryType", "allUsers");
+            
+            handle(request, response);
+            
+            // should get a JSON array of User objects
+            JSON userArr = JSONSerializer.toJSON(response.getContentAsString());
+            Assert.assertTrue(userArr.size() > 0);
+            // convert the JSON to Java Object to ensure it is a list of Users
+            Object javaObj = JSONSerializer.toJava(userArr);
+            Assert.assertTrue(javaObj instanceof Collection<?>);
+            
+            // test for appropriate object type
+            // fails because it is type 'net.sf.ezmorph.bean.MorphDynaBean'
+            // so abandoning this assertion
+            /*Assert.assertTrue(("First value in collection is not instance of '" +
+            		className + 
+            		"' not 'User'!"), ((Collection<?>)javaObj).toArray()[0] instanceof User);
+            */
+	}
+	
+       @Test
+        public void testGetGroupUsers() throws Exception {
+            request.setMethod("GET");
+            request.setRequestURI("/webservice/user/getUsers.htm");
+            request.addParameter("queryType", "group");
+            
+            handle(request, response);
+            
+            // should get a JSON array of Group objects
+            JSON groupArr = JSONSerializer.toJSON(response.getContentAsString());
+            if (groupArr.size() > 0) {
+                // convert the JSON to Java Object to ensure it is a list of Groups
+                Object javaObj = JSONSerializer.toJava(groupArr);
+                Assert.assertTrue(javaObj instanceof Collection<?>);
+                // test for appropriate object type
+                // fails because it is type 'net.sf.ezmorph.bean.MorphDynaBean'
+                // so abandoning this assertion
+                //Assert.assertTrue(((Collection<?>)javaObj).toArray()[0] instanceof Group);
+            }
+        }
+       
+       @Test
+       public void testGetProjectUsers() throws Exception {
+           request.setMethod("GET");
+           request.setRequestURI("/webservice/user/getUsers.htm");
+           request.addParameter("queryType", "project");
+           
+           handle(request, response);
+           
+           // should get a JSON array of Survey objects
+           JSON surveyArr = JSONSerializer.toJSON(response.getContentAsString());
+           if (surveyArr.size() > 0) {
+               // convert the JSON to Java Object to ensure it is a list of Surveys
+               Object javaObj = JSONSerializer.toJava(surveyArr);
+               Assert.assertTrue(javaObj instanceof Collection<?>);
+               // test for appropriate object type
+               // fails because it is type 'net.sf.ezmorph.bean.MorphDynaBean'
+               // so abandoning this assertion
+               //Assert.assertTrue(((Collection<?>)javaObj).toArray()[0] instanceof Survey);
+           }
+       }
 }

@@ -1,28 +1,32 @@
 package au.com.gaiaresources.bdrs.model.map.impl;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernatespatial.GeometryUserType;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeature;
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeatureDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 
 @Repository
 public class GeoMapFeatureDAOImpl extends AbstractDAOImpl implements GeoMapFeatureDAO {
 
     Logger log = Logger.getLogger(this.getClass());
+    
+    public static final int DEFAULT_MAX_RESULTS = 10;
     
     @Override
     public void deleteCascade(GeoMapFeature feature) {
@@ -59,6 +63,7 @@ public class GeoMapFeatureDAOImpl extends AbstractDAOImpl implements GeoMapFeatu
         return super.save(sesh, feature);
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public void deleteCascade(Session sesh, GeoMapFeature feature) {
         Set<AttributeValue> recAttrToDelete = new HashSet<AttributeValue>();
@@ -76,18 +81,7 @@ public class GeoMapFeatureDAOImpl extends AbstractDAOImpl implements GeoMapFeatu
     
     @Override
     public List<GeoMapFeature> find(Session sesh, Integer[] mapLayerId, Geometry pointIntersect) {
-        StringBuilder hb = new StringBuilder();
-        hb.append("select gmf from GeoMapFeature as gmf inner join gmf.layer as layer where layer.id in (:layerIds)");
-        if (pointIntersect != null) {
-            hb.append(" ");
-            hb.append("and intersects(:geom, gmf.geometry) = true");
-        }
-        Query q = sesh.createQuery(hb.toString());
-        q.setParameterList("layerIds", mapLayerId);
-        if (pointIntersect != null) {
-            q.setParameter("geom", pointIntersect, GeometryUserType.TYPE);
-        }
-        return (List<GeoMapFeature>)q.list();
+        return find(sesh, mapLayerId, pointIntersect, null).getList();
     }
 
     @Override
@@ -108,5 +102,35 @@ public class GeoMapFeatureDAOImpl extends AbstractDAOImpl implements GeoMapFeatu
     @Override
     public List<GeoMapFeature> find(Session sesh, Integer mapLayerId) {
         return find(sesh, new Integer[] { mapLayerId}, null);
+    }
+
+    @Override
+    public PagedQueryResult<GeoMapFeature> find(Integer[] mapLayerId,
+            Geometry intersectGeom, PaginationFilter filter) {
+        return find(getSession(), mapLayerId, intersectGeom, filter);
+    }
+
+    @Override
+    public PagedQueryResult<GeoMapFeature> find(Session sesh,
+            Integer[] mapLayerId, Geometry pointIntersect,
+            PaginationFilter filter) {
+        
+        if (mapLayerId == null || mapLayerId.length == 0) {
+            mapLayerId = new Integer[] { 0 };
+        }
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+                
+        StringBuilder hb = new StringBuilder();
+        hb.append("select gmf from GeoMapFeature as gmf inner join gmf.layer as layer where layer.id in (:layerIds)");
+        if (pointIntersect != null) {
+            hb.append(" and st_intersects(:geom, gmf.geometry) = true");
+        }
+        params.put("layerIds", java.util.Arrays.asList(mapLayerId));
+
+        if (pointIntersect != null) {
+            params.put("geom", pointIntersect);
+        }
+        return new QueryPaginator<GeoMapFeature>().page(sesh, hb.toString(), params, filter, "gmf");
     }
 }

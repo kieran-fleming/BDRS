@@ -1,5 +1,9 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
+import java.io.IOError;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -14,10 +18,15 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.file.FileService;
@@ -33,6 +42,8 @@ import au.com.gaiaresources.bdrs.file.FileService;
 @Table(name = "INDICATOR_SPECIES_ATTRIBUTE")
 @AttributeOverride(name = "id", column = @Column(name = "INDICATOR_SPECIES_ATTRIBUTE_ID"))
 public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements TypedAttributeValue {
+	private Logger log = Logger.getLogger(getClass());
+	
     private Attribute attribute;
     private BigDecimal numericValue;
     private String stringValue = "Not recorded";
@@ -134,6 +145,59 @@ public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements T
     }
     
     @Transient
+    public String[] getMultiSelectValue() {
+    	String[] split;
+    	try {
+    		CSVReader csvReader = new CSVReader(new StringReader(getStringValue()));
+    		split = csvReader.readNext();
+    		csvReader.close();
+    	} catch(IOException ioe) {
+    		// This can't happen because we are not doing any file or stream IO.
+    		log.error(ioe.getMessage(), ioe);
+    		throw new IOError(ioe);
+    	}
+		
+    	return split;
+    }
+    
+    @Transient
+    public String[] getMultiCheckboxValue() {
+    	return getMultiSelectValue();
+    }
+    
+    @Transient
+    public void setMultiCheckboxValue(String[] values) {
+    	try { 
+	    	StringWriter writer = new StringWriter();
+	    	CSVWriter csvWriter = new CSVWriter(writer);
+	    	csvWriter.writeNext(values);
+	    	setStringValue(writer.toString());
+	    	
+	    	csvWriter.close();
+	    	writer.close();
+    	} catch(IOException ioe) {
+    		// This cannot happen
+    		log.error(ioe.getMessage(), ioe);
+    		throw new IOError(ioe);
+    	}
+    }
+    
+    @Transient
+    public void setMultiSelectValue(String[] values) {
+    	this.setMultiCheckboxValue(values);
+    }
+    
+    @Transient
+	public Boolean getBooleanValue() {
+		return Boolean.valueOf(getStringValue());
+	}
+
+    @Transient
+	public void setBooleanValue(String value) {
+    	this.setStringValue(Boolean.valueOf(value).toString());
+	}
+    
+    @Transient
     public String getFileURL() {
         try {
             return String.format(FileService.FILE_URL_TMPL, URLEncoder.encode(getClass()
@@ -144,5 +208,17 @@ public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements T
                     .escapeHtml(getClass().getCanonicalName()), getId(),
                     StringEscapeUtils.escapeHtml(getStringValue()));
         }
+    }
+
+    @Transient
+    public boolean hasMultiSelectValue(String val) {
+    	String[] values = this.getMultiSelectValue();
+    	Arrays.sort(values);
+    	return Arrays.binarySearch(values, val) >= 0;
+    }
+    
+    @Transient
+    public boolean hasMultiCheckboxValue(String val) {
+    	return hasMultiSelectValue(val);
     }
 }

@@ -46,7 +46,9 @@ bdrs.mobile.remoteLog = function(level, msg) {
 
 bdrs.mobile.Debug = function(msg) {
 	if (bdrs.mobile.log_level > 3) {
-		console.log('DEBUG : ' + msg);
+		if (console.log){
+			console.log('DEBUG : ' + msg);
+		}
 		bdrs.mobile.remoteLog('DEBUG', msg);
 	}
 }
@@ -60,21 +62,27 @@ bdrs.mobile.Dump = function(obj, name) {
 
 bdrs.mobile.Info = function(msg) {
 	if (bdrs.mobile.log_level > 2) {
-		console.log('INFO  : ' + msg);
+		if (console.log){
+			console.log('INFO  : ' + msg);
+		}
 		bdrs.mobile.remoteLog('INFO', msg);
 	}
 }
 
 bdrs.mobile.Warn = function(msg) {
 	if (bdrs.mobile.log_level > 1) {
-		console.log('WARN  : ' + msg);
+		if (console.log){
+			console.log('WARN  : ' + msg);
+		}
 		bdrs.mobile.remoteLog('WARN', msg);
 	}
 }
 
 bdrs.mobile.Error = function(msg) {
 	if (bdrs.mobile.log_level > 0) {
-		console.log('ERROR : ' + msg);
+		if (console.log){
+			console.log('ERROR : ' + msg);
+		}
 		bdrs.mobile.remoteLog('ERROR', msg);
 	}
 }

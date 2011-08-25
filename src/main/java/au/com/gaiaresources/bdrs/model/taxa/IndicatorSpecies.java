@@ -42,6 +42,9 @@ import au.com.gaiaresources.bdrs.util.CollectionUtils;
 @Table(name = "INDICATOR_SPECIES")
 @AttributeOverride(name = "id", column = @Column(name = "INDICATOR_SPECIES_ID"))
 public class IndicatorSpecies extends PortalPersistentImpl {
+    
+    public static final String FIELD_SPECIES_NAME = "Field Species";
+    
     private String scientificNameAndAuthor;
     private String scientificName;
     private String commonName;

@@ -57,6 +57,7 @@
                         <li><a href="${pageContext.request.contextPath}/bdrs/user/managedfile/listing.htm">Media Upload</a></li>
 						<li><a href="${pageContext.request.contextPath}/bdrs/admin/gallery/listing.htm">Galleries</a></li>
                     	<li><a href="${pageContext.request.contextPath}/bdrs/public/embedded/widgetBuilder.htm">Embedded Widgets</a></li>
+                        <li><a href="${pageContext.request.contextPath}/admin/emailUsers.htm">Email Users and Groups</a></li>
                     </ul>
                 </li>
             </sec:authorize>

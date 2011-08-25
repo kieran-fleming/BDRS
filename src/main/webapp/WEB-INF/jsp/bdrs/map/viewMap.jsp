@@ -1,11 +1,30 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
 <h1>${geoMap.name}</h1>
 <p>${geoMap.description}</p>
 
-<div class="textright buttonpanel">
+
+<div class="left">
+    <div>
+        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'KML');">
+            Download KML for records
+        </a>
+        <span>&nbsp;|&nbsp;<span/>
+        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'SHAPEFILE');">
+            Download SHP for records
+        </a>
+    </div>
+</div>
+
+
+<div class="right">
     <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#view_base_map', bdrs.map.baseMap)">Enlarge Map</a>
 </div>
+
+<div class="clear"></div>
+
 <div class="map_wrapper" id="map_wrapper">
     <div id="view_base_map" class="defaultmap review_map"></div>
     <div id="geocode" class="geocode"></div>
@@ -38,24 +57,30 @@
 					fillColor: "${assignedLayer.layer.fillColor}",
                     strokeColor: "${assignedLayer.layer.strokeColor}",
                     strokeWidth: ${assignedLayer.layer.strokeWidth},
-                    size: ${assignedLayer.layer.symbolSize}
+                    size: ${assignedLayer.layer.symbolSize},
+					upperZoomLimit: ${assignedLayer.upperZoomLimit != null ? assignedLayer.upperZoomLimit : 'null'},
+					lowerZoomLimit: ${assignedLayer.lowerZoomLimit != null ? assignedLayer.lowerZoomLimit: 'null'}
 				};
 				bdrs.map.addMapServerLayer(bdrs.map.baseMap, "${assignedLayer.layer.name}", bdrs.map.getBdrsMapServerUrl(), layerOptions);
             </c:when>
 			<c:when test="${assignedLayer.layer.layerSource == \"SURVEY_KML\"}">
 			    var layerOptions = {
-                    visible: true,
+                    visible: ${assignedLayer.visible},
                     // cluster strategy doesn't work properly for polygons
-                    includeClusterStrategy: true
+                    includeClusterStrategy: true,
+                    upperZoomLimit: ${assignedLayer.upperZoomLimit != null ? assignedLayer.upperZoomLimit : 'null'},
+                    lowerZoomLimit: ${assignedLayer.lowerZoomLimit != null ? assignedLayer.lowerZoomLimit: 'null'}
                 };
                 var layer = bdrs.map.addKmlLayer(bdrs.map.baseMap, "${assignedLayer.layer.name}", "${pageContext.request.contextPath}/bdrs/map/getLayer.htm?layerPk=${assignedLayer.layer.id}", layerOptions);
                 layerArray.push(layer);
 			</c:when>
 			<c:when test="${assignedLayer.layer.layerSource == \"KML\"}">
                 var layerOptions = {
-                    visible: true,
+                    visible: ${assignedLayer.visible},
 					// cluster strategy doesn't work properly for polygons
-                    includeClusterStrategy: false
+                    includeClusterStrategy: false,
+                    upperZoomLimit: ${assignedLayer.upperZoomLimit != null ? assignedLayer.upperZoomLimit : 'null'},
+                    lowerZoomLimit: ${assignedLayer.lowerZoomLimit != null ? assignedLayer.lowerZoomLimit: 'null'}
                 };
 				var layer = bdrs.map.addKmlLayer(bdrs.map.baseMap, "${assignedLayer.layer.name}", "${pageContext.request.contextPath}/bdrs/map/getLayer.htm?layerPk=${assignedLayer.layer.id}", layerOptions);
 				layerArray.push(layer);
@@ -66,6 +91,7 @@
 
         // Add select for KML stuff
         bdrs.map.addSelectHandler(bdrs.map.baseMap, layerArray);
+        bdrs.map.centerMap(bdrs.map.baseMap);
     });
 
 

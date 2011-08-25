@@ -6,9 +6,10 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
+import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.service.threshold.ConditionOperatorHandler;
 import au.com.gaiaresources.bdrs.service.threshold.SimpleOperatorHandler;
-import au.com.gaiaresources.bdrs.model.threshold.Condition;
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Checks for the equality of two objects. The value stored by the 
@@ -69,7 +70,6 @@ public class EqualsHandler implements SimpleOperatorHandler {
      */
     @Override
     public boolean match(Object objA, Object objB) {
-
         if (objA == null || objB == null) {
             // Cannot equality match null objects.
             return false;
@@ -84,6 +84,8 @@ public class EqualsHandler implements SimpleOperatorHandler {
                 || (Boolean.class.equals(objA.getClass()))
                 || (Date.class.equals(objA.getClass()))) {
             return objA.equals(objB);
+        } else if (objA.getClass().isArray()) {
+        	return Arrays.equals((Object[])objA, (Object[])objB);
         } else {
 
             log.warn("Unsupported equality type: "

@@ -44,12 +44,15 @@ public class RecordDeletionController extends AbstractController {
     	Record record = recordDAO.getRecord(recordId);
     	
         if (record != null) {
+        	log.info("Requested delete of record: " + record.getId());
         	Survey s = record.getSurvey();
         		// only allow deletion of own records, or by admin.
         	if (record.getUser().equals(getRequestContext().getUser()) || getRequestContext().getUser().isAdmin()) {
+        		log.info("Deleting record: + " + record.getId());
         		recordDAO.delete(record);
         		getRequestContext().addMessage(new Message("bdrs.record.delete.success"));
         	} else {
+        		log.info("No permissions to delete record: + " + record.getId());
         		getRequestContext().addMessage(new Message("bdrs.record.delete.authfail"));
         	}
         	

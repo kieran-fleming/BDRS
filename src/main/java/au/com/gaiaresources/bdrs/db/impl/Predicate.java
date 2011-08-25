@@ -88,12 +88,12 @@ public class Predicate {
     }
 
     public static Predicate in(String expression, Object[] values) {
-        String cond = expression + " in (";
+        StringBuilder cond = new StringBuilder(expression + " in (");
         for (Object o : values) {
-            cond += (cond.endsWith("(") ? "?" : ",?");
+            cond.append(cond.charAt(cond.length()-1) == '(' ? "?" : ",?");
         }
-        cond += ")";
-        return new Predicate(cond, values);
+        cond.append(")");
+        return new Predicate(cond.toString(), values);
     }
 
     public static Predicate inElements(String expression, Object value) {

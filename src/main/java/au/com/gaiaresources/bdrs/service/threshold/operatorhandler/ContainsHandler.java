@@ -5,6 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 import au.com.gaiaresources.bdrs.service.threshold.ConditionOperatorHandler;
 import au.com.gaiaresources.bdrs.service.threshold.SimpleOperatorHandler;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
@@ -40,6 +42,12 @@ public class ContainsHandler implements SimpleOperatorHandler {
     public boolean match(Object objA, Object objB) {
         if(objA == null || objB == null) {
             return false;
+        } else if(objA.getClass().isArray()) {
+        	boolean isContained = true;
+        	for(Object item : (Object[])objB) {
+        		isContained = isContained && Arrays.binarySearch((Object[])objA, item) > -1;
+        	}
+        	return isContained;
         } else {
             return objA.toString().contains(objB.toString());
         }

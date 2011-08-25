@@ -65,6 +65,8 @@ public class GeoMapController extends AbstractController {
     public static final String MAV_ASSIGNED_LAYERS = "assignedLayers";
     
     public static final String PARAM_MAP_LAYER_VISIBLE = "mapLayerVisible";
+    public static final String PARAM_UPPER_ZOOM_LIMIT = "upperZoomLimit";
+    public static final String PARAM_LOWER_ZOOM_LIMIT = "lowerZoomLimit";
 
     @RequestMapping(value = LISTING_URL, method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request, HttpServletResponse response) {
@@ -93,7 +95,9 @@ public class GeoMapController extends AbstractController {
             @RequestParam(value="mapLayerPk", required=false) Integer[] mapLayerPkList,
             @RequestParam(value=PARAM_MAP_LAYER_VISIBLE, required=false) boolean[] mapLayerVisible,
             @RequestParam(value="hidePrivateDetails", required=false) boolean hidePrivateDetails,
-            @RequestParam(value="weight", required=true) int weight) {
+            @RequestParam(value="weight", required=true) int weight,
+            @RequestParam(value=PARAM_UPPER_ZOOM_LIMIT, required=false) Integer[] upperZoomLimit,
+            @RequestParam(value=PARAM_LOWER_ZOOM_LIMIT, required=false) Integer[] lowerZoomLimit) {
         
         boolean newMap = (pk == null || pk == 0);
         GeoMap gm = newMap ? new GeoMap() : geoMapDAO.get(pk);
@@ -139,6 +143,9 @@ public class GeoMapController extends AbstractController {
             Integer mlpk = mapLayerPkList[i];
             boolean visible = mapLayerVisible[i];
             
+            Integer upperLimit = upperZoomLimit[i];
+            Integer lowerLimit = lowerZoomLimit[i];
+            
             GeoMapLayer layerToAdd = mapLayerDAO.get(mlpk);
             if (layerToAdd == null) {
                 throw new IllegalArgumentException("Invalid of map layer to add to geomap. id = " + mlpk.toString());
@@ -147,6 +154,8 @@ public class GeoMapController extends AbstractController {
             assignedLayerToAdd.setLayer(layerToAdd);
             assignedLayerToAdd.setMap(gm);
             assignedLayerToAdd.setVisible(visible);
+            assignedLayerToAdd.setUpperZoomLimit(upperLimit);
+            assignedLayerToAdd.setLowerZoomLimit(lowerLimit);
             mapLayerList.add(assignedLayerToAdd);
         }
            

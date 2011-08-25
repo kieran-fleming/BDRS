@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
@@ -394,6 +395,11 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
                 case TEXT:
                     value = "Test Group Attr Text";
                     break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    value = "<hr/>";
+                    break;
                 case STRING_WITH_VALID_VALUES:
                     value = attr.getOptions().iterator().next().getValue();
                     break;
@@ -449,6 +455,9 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
                 case STRING:
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(params.get(key), recAttr.getStringValue());
                     break;
                 case STRING_WITH_VALID_VALUES:

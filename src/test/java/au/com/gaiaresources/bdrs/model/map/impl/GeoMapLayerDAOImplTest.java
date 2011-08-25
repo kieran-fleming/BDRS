@@ -56,6 +56,7 @@ public class GeoMapLayerDAOImplTest extends AbstractControllerTest {
         
         List<AssignedGeoMapLayer> layerList = new ArrayList<AssignedGeoMapLayer>();
         layerList.add(createTestAssignedLayer(map1, layer1));
+        layerList.add(createTestAssignedLayer(map1, layer2));
         layerDAO.save(layerList);
     }
 
@@ -69,6 +70,17 @@ public class GeoMapLayerDAOImplTest extends AbstractControllerTest {
         PagedQueryResult<GeoMapLayer> result = layerDAO.search(null, "aa", "zz");
         Assert.assertEquals(1, result.getCount());
         Assert.assertEquals(layer1, result.getList().get(0));
+    }
+    
+    @Test
+    public void testGetAssignedLayerForLayer() {
+        List<AssignedGeoMapLayer> assignedLayerList = layerDAO.getAssignedLayerByLayerId(layer1.getId().intValue());
+        Assert.assertEquals(1, assignedLayerList.size());
+        Assert.assertEquals(layer1.getId(), assignedLayerList.get(0).getLayer().getId());
+        
+        List<AssignedGeoMapLayer> assignedLayerList2 = layerDAO.getAssignedLayerByLayerId(layer2.getId().intValue());
+        Assert.assertEquals(1, assignedLayerList2.size());
+        Assert.assertEquals(layer2.getId(), assignedLayerList2.get(0).getLayer().getId());
     }
     
     private AssignedGeoMapLayer createTestAssignedLayer(GeoMap map, GeoMapLayer layer) {

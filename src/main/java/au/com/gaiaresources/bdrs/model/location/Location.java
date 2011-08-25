@@ -25,7 +25,7 @@ import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.user.User;
 
-import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A User defined location for where they are collecting information.
@@ -38,7 +38,7 @@ import com.vividsolutions.jts.geom.Point;
 @Table(name = "LOCATION")
 @AttributeOverride(name = "id", column = @Column(name = "LOCATION_ID"))
 public class Location extends PortalPersistentImpl {
-    private Point location;
+    private Geometry location;
     private User user;
     private String name;
     private Set<Region> regions = new HashSet<Region>();
@@ -50,10 +50,10 @@ public class Location extends PortalPersistentImpl {
     @CompactAttribute
     @Column(name = "LOCATION")
     @Type(type = "org.hibernatespatial.GeometryUserType")
-    public Point getLocation() {
+    public Geometry getLocation() {
         return location;
     }
-    public void setLocation(Point location) {
+    public void setLocation(Geometry location) {
         this.location = location;
     }
 
@@ -101,6 +101,7 @@ public class Location extends PortalPersistentImpl {
     public Set<Region> getRegions() {
         return regions;
     }
+    
     public void setRegions(Set<Region> regions) {
         this.regions = regions;
     }

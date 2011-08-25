@@ -1,6 +1,10 @@
 package au.com.gaiaresources.bdrs.model.threshold;
 
 import java.beans.PropertyDescriptor;
+import java.io.IOError;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -27,10 +31,13 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.springframework.beans.BeanUtils;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import au.com.gaiaresources.bdrs.annotation.NoThreshold;
 import au.com.gaiaresources.bdrs.annotation.Sensitive;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
@@ -114,6 +121,26 @@ public class Condition extends PortalPersistentImpl {
     
     public void setValue(Double value) {
         this.value = value.toString();
+    }
+    
+    public void setValue(String[] vals) {
+    	try {
+    		String[] copy = new String[vals.length];
+    		System.arraycopy(vals, 0, copy, 0, vals.length);
+    		Arrays.sort(copy);
+    		
+	    	StringWriter strWriter = new StringWriter();
+	    	CSVWriter writer = new CSVWriter(strWriter);
+	    	writer.writeNext(copy);
+	    	strWriter.close();
+	    	writer.close();
+	    	
+	    	this.value = strWriter.toString();
+	    	
+    	} catch(IOException ioe) {
+    		// Cannot Occur.
+    		throw new IOError(ioe);
+    	}
     }
 
     @Enumerated(EnumType.STRING)
@@ -452,8 +479,25 @@ public class Condition extends PortalPersistentImpl {
             return Boolean.parseBoolean(val);
         }
     }
-
+    
     @Transient
+    public String[] stringArrayValue() {
+    	return stringArrayValue(this.value);
+    }
+
+    private String[] stringArrayValue(String val) {
+    	try {
+    		CSVReader csvReader = new CSVReader(new StringReader(val));
+    		String[] array = csvReader.readNext();
+    		csvReader.close();
+    		return array;
+    	} catch(IOException ioe){
+    		// cannot occur
+    		throw new IOError(ioe);
+    	}
+	}
+
+	@Transient
     public Integer intKey() {
         return intValue(this.key);
     }

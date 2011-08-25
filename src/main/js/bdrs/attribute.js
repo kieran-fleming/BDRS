@@ -34,6 +34,31 @@ bdrs.attribute.enableOptionInput = function(enableOption, optionSelector) {
     if(enableOption) {
         elem.removeAttr("disabled");
     } else {
+        // clear the options before disabling
+        elem.val('');
         elem.attr("disabled", "disabled");
     }
 };
+
+bdrs.attribute.htmlInput = "";
+
+bdrs.attribute.saveAndUpdateContent = function(textEditor) {
+    bdrs.attribute.htmlInput.value = textEditor.value;
+};
+
+/**
+ * Shows a popup dialog with an HTML editor to allow the user to edit an HTML
+ * attribute more easily.
+ * @param popup the popup dialog on the page that you want to interact with
+ * @param input the input that originated the dialog
+ */
+bdrs.attribute.showHtmlEditor = function(popup, textEditor, input) {
+    textEditor.value = input.value;
+    bdrs.attribute.htmlInput = input;
+    popup.dialog('open');
+}
+
+bdrs.attribute.closeHtmlEditor = function(popup) {
+    popup.dialog('close');
+};
+

@@ -137,9 +137,9 @@ public class GridServiceImpl implements GridService, ApplicationListener {
                         doInTransaction(new TransactionCallback<Boolean>() {
                             @Override
                             public Boolean doInTransaction(TransactionStatus status) {
-                                GridEntry entry = gridDAO.getGridEntry(g, r.getLocation().getLocation(), r.getSpecies());
+                                GridEntry entry = gridDAO.getGridEntry(g, r.getLocation().getLocation().getCentroid(), r.getSpecies());
                                 if (entry == null) {
-                                    Point location = r.getLocation().getLocation();
+                                    Point location = r.getLocation().getLocation().getCentroid();
                                     
                                     BigDecimal gridX = new BigDecimal(GridServiceImpl.this.minX);
                                     while (location.getX() > gridX.add(g.getPrecision()).doubleValue()) {

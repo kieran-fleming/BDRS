@@ -218,7 +218,7 @@ public class XlsRecordRow implements RecordRow {
         if (rec.getLocation() == null) {
             longitude = rec.getPoint().getX();
         } else {
-            longitude = rec.getLocation().getLocation().getX();
+            longitude = rec.getLocation().getLocation().getCentroid().getX();
         }
         row.createCell(colIndex++).setCellValue(longitude);
         return colIndex;
@@ -229,7 +229,7 @@ public class XlsRecordRow implements RecordRow {
         if (rec.getLocation() == null) {
             latitude = rec.getPoint().getY();
         } else {
-            latitude = rec.getLocation().getLocation().getY();
+            latitude = rec.getLocation().getLocation().getCentroid().getY();
         }
         row.createCell(colIndex++).setCellValue(latitude);
         return colIndex;
@@ -299,6 +299,9 @@ public class XlsRecordRow implements RecordRow {
                 case TEXT:
                 case STRING_WITH_VALID_VALUES:
                 case STRING:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                 default:
                     if (attr.getStringValue() != null) {
                         cell.setCellValue(attr.getStringValue());
@@ -514,6 +517,9 @@ public class XlsRecordRow implements RecordRow {
                 case TEXT:
                 case STRING_WITH_VALID_VALUES:
                 case STRING:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                 default:
                     attrValue = cell.getStringCellValue();
                     break;
@@ -616,7 +622,7 @@ public class XlsRecordRow implements RecordRow {
         switch (cell.getCellType()) {
             case Cell.CELL_TYPE_NUMERIC:
                 // convert double to int, to Integer, to string lulz...
-                return new Integer(((int)cell.getNumericCellValue())).toString();
+                return Integer.valueOf(((int)cell.getNumericCellValue())).toString();
             // some of these will still throw errors. I was only aiming at catching the
             // numeric case. Note we always cast it to an int.
             case Cell.CELL_TYPE_BLANK:

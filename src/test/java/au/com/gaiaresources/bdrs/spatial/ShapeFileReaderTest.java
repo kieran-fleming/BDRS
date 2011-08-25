@@ -43,9 +43,9 @@ public class ShapeFileReaderTest extends AbstractSpringContextTest {
         Assert.assertFalse(reader.isCrsSupported());
         
         List<Attribute> attributeList = reader.readAttributes();
-        List<Record> recordList = reader.readAsRecords(attributeList, new Date(), admin);
+        List<GeoMapFeature> gmfList = reader.readAsMapFeatures(attributeList);
         
-        Assert.assertEquals(25, recordList.size());
+        Assert.assertEquals(25, gmfList.size());
         Assert.assertEquals(4, attributeList.size());
         
         {
@@ -83,9 +83,9 @@ public class ShapeFileReaderTest extends AbstractSpringContextTest {
         Assert.assertFalse(reader.isCrsSupported());
         
         List<Attribute> attributeList = reader.readAttributes();
-        List<Record> recordList = reader.readAsRecords(attributeList, new Date(), admin);
+        List<GeoMapFeature> gmfList = reader.readAsMapFeatures(attributeList);
         
-        Assert.assertEquals(3, recordList.size());
+        Assert.assertEquals(3, gmfList.size());
         Assert.assertEquals(4, attributeList.size());
         
         {

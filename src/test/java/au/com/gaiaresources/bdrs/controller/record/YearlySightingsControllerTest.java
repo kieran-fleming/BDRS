@@ -25,10 +25,10 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
-import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordAttributeFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordAttributeFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
@@ -44,10 +44,10 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
@@ -109,7 +109,9 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                 attr.setScope(scope);
                 attr.setTag(false);
                 
-                if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                		AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for(int i=0; i<4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -223,12 +225,12 @@ public class YearlySightingsControllerTest extends RecordFormTest {
             recAttr.setAttribute(attr);
             switch (attr.getType()) {
                 case INTEGER:
-                    Integer i = new Integer(123);
+                    Integer i = Integer.valueOf(123);
                     recAttr.setNumericValue(new BigDecimal(i));
                     recAttr.setStringValue(i.toString());
                     break;
                 case INTEGER_WITH_RANGE:
-               	 Integer j = new Integer(intWithRangeValue);
+               	 Integer j = Integer.valueOf(intWithRangeValue);
                     recAttr.setNumericValue(new BigDecimal(j));
                     recAttr.setStringValue(intWithRangeValue);
                 case DECIMAL:
@@ -251,6 +253,38 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                 case STRING_WITH_VALID_VALUES:
                     recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
                     break;
+                case BARCODE:
+                    recAttr.setStringValue("#343434");
+                    break;
+                case TIME:
+                    recAttr.setStringValue("12:34");
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    recAttr.setStringValue("<hr/>");
+                    break;
+                case MULTI_CHECKBOX:
+	                {
+	                	List<AttributeOption> opts = attr.getOptions(); 
+	                	recAttr.setMultiCheckboxValue(new String[]{
+	                			opts.get(0).getValue(),
+	                			opts.get(1).getValue()
+	                	});
+	            	}
+	                break;
+	            case MULTI_SELECT:
+	            	{
+	                	List<AttributeOption> opts = attr.getOptions(); 
+	                	recAttr.setMultiSelectValue(new String[]{
+	                			opts.get(0).getValue(),
+	                			opts.get(1).getValue()
+	                	});
+	            	}
+	            	break;
+	            case SINGLE_CHECKBOX:
+	            	recAttr.setStringValue(Boolean.FALSE.toString());
+	            	break;
                 case FILE:
                     recAttr.setStringValue("testDataFile.dat");
                     break;
@@ -397,6 +431,27 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case STRING_WITH_VALID_VALUES:
                         value = attr.getOptions().iterator().next().getValue();
                         break;
+                    case BARCODE:
+                        value ="#343434";
+                        break;
+                    case TIME:
+                        value = "12:34";
+                        break;
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        value = "<hr/>";
+                        break;
+                    case MULTI_CHECKBOX:
+                    case MULTI_SELECT:
+                    	List<AttributeOption> opts = attr.getOptions(); 
+                    	request.addParameter(key, opts.get(0).getValue());
+                    	request.addParameter(key, opts.get(1).getValue());
+                    	value = null;
+                    	break;
+                    case SINGLE_CHECKBOX:
+                    	value = String.valueOf(true);
+                    	break;
                     case FILE:
                         String file_filename = String.format("attribute_%d", attr.getId());
                         MockMultipartFile mockFileFile = new MockMultipartFile(key, file_filename, "audio/mpeg", file_filename.getBytes());
@@ -413,7 +468,9 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                         Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
                         break;
                 }
-                params.put(key, value);
+                if(value != null) {
+                	params.put(key, value);
+                } 
             }
         }
 
@@ -428,7 +485,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
 
         Set<Integer> sightingSet = new HashSet<Integer>();
         for(int i=0; i<300; i++) {
-            Integer sighting = new Integer(cal.get(Calendar.DAY_OF_YEAR));
+            Integer sighting = Integer.valueOf(cal.get(Calendar.DAY_OF_YEAR));
             sightingSet.add(sighting);
             params.put(String.format("date_%d", cal.getTimeInMillis()), sighting.toString());
             cal.add(Calendar.DAY_OF_MONTH, 1);
@@ -465,11 +522,45 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case STRING_AUTOCOMPLETE:
                     case STRING:
                     case TEXT:
+                    case BARCODE:
+                    case TIME:
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
                         Assert.assertEquals(params.get(key), recAttr.getStringValue());
                         break;
                     case STRING_WITH_VALID_VALUES:
                         Assert.assertEquals(params.get(key), recAttr.getStringValue());
                         break;
+                    case MULTI_CHECKBOX:
+		                {
+		                	// make sure the correct data got posted to the server correctly
+		                	Assert.assertEquals(2, request.getParameterValues(key).length);
+		                	Set<String> optionSet = new HashSet<String>();
+		                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+		                		optionSet.add(opt.getValue());
+		                	}
+		                	for(String val : recAttr.getMultiCheckboxValue()){
+		                		Assert.assertTrue(optionSet.contains(val));
+		                	}
+	                	}
+		                break;
+	                case MULTI_SELECT:
+	                	{
+		                	// make sure the correct data got posted to the server correctly
+		                	Assert.assertEquals(2, request.getParameterValues(key).length);
+		                	Set<String> optionSet = new HashSet<String>();
+		                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+		                		optionSet.add(opt.getValue());
+		                	}
+		                	for(String val : recAttr.getMultiSelectValue()){
+		                		Assert.assertTrue(optionSet.contains(val));
+		                	}
+	                	}
+	                	break;
+	                case SINGLE_CHECKBOX:
+	                	Assert.assertEquals(Boolean.parseBoolean(params.get(key)), Boolean.parseBoolean(recAttr.getStringValue()));
+	                	break;  
                     case FILE:
                     case IMAGE:
                         Assert.assertEquals(params.get(key), recAttr.getStringValue());

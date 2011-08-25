@@ -13,10 +13,7 @@
        <tiles:putAttribute name="scrollbars" value="false" />
        <tiles:putAttribute name="showActions" value="true" />
        <tiles:putAttribute name="editUrl" value="${pageContext.request.contextPath}/bdrs/admin/mapLayer/edit.htm" />
-       <!--
-       not implemented yet
        <tiles:putAttribute name="deleteUrl" value="${pageContext.request.contextPath}/bdrs/admin/mapLayer/delete.htm" />
-        -->
 </tiles:insertDefinition>
 
 <div class="buttonpanel textright">

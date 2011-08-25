@@ -1,13 +1,18 @@
 package au.com.gaiaresources.bdrs.controller.bulkdata;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.security.sasl.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +25,14 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordEntry;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordKeyLookup;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -28,16 +41,34 @@ import au.com.gaiaresources.bdrs.service.bulkdata.BulkUpload;
 import au.com.gaiaresources.bdrs.service.bulkdata.DataReferenceException;
 import au.com.gaiaresources.bdrs.service.bulkdata.InvalidSurveySpeciesException;
 import au.com.gaiaresources.bdrs.service.bulkdata.MissingDataException;
+import au.com.gaiaresources.bdrs.spatial.ShapeFileReader;
+import au.com.gaiaresources.bdrs.spatial.ShapeFileWriter;
+import au.com.gaiaresources.bdrs.spatial.ShapefileAttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.spatial.ShapefileAttributeParser;
+import au.com.gaiaresources.bdrs.spatial.ShapefileRecordKeyLookup;
+import au.com.gaiaresources.bdrs.spatial.ShapefileToRecordEntryTransformer;
+import au.com.gaiaresources.bdrs.spatial.ShapefileType;
 
 @Controller
 public class BulkDataController extends AbstractController {
 
     public static final String CONTENT_TYPE_XLS = "application/vnd.ms-excel";
-
+    public static final String SHAPEFILE_UPLOAD_URL = "/bulkdata/uploadShapefile.htm";
+    public static final String SHAPEFILE_TEMPLATE_URL = "/bulkdata/shapefileTemplate.htm";
+    
+    public static final String SHAPEFILE_IMPORT_SUMMARY_VIEW = "shapefileImportSummary";
+    public static final String PARAM_SHAPEFILE_FILE = "shapefile";
+    
+    public static final String MV_PARAM_RESULTS_IN_ERROR = "errors";
+    public static final String MV_PARAM_WRITE_COUNT = "writeCount";
+    
     private Logger log = Logger.getLogger(getClass());
 
     @Autowired
     private SurveyDAO surveyDAO;
+    
+    @Autowired
+    private CensusMethodDAO cmDAO;
 
     @Autowired
     private BulkDataService bulkDataService;
@@ -58,6 +89,34 @@ public class BulkDataController extends AbstractController {
             HttpServletRequest request,
             HttpServletResponse response,
             @RequestParam(value = "surveyPk", defaultValue = "0", required = true) int surveyPk)
+            throws IOException {
+
+        Survey survey = surveyDAO.getSurvey(surveyPk);
+
+        // Make the survey name a safe filename.
+        StringBuilder filename = new StringBuilder();
+        for (char c : survey.getName().toCharArray()) {
+            if (Character.isLetterOrDigit(c)) {
+                filename.append(c);
+            }
+        }
+        filename.append("_template_");
+        filename.append(System.currentTimeMillis());
+        filename.append(".xls");
+
+        response.setContentType("application/vnd.ms-excel");
+        response.setHeader("Content-Disposition", "attachment;filename="
+                + filename);
+
+        bulkDataService.exportSurveyTemplate(survey, response.getOutputStream());
+    }
+    
+    @RequestMapping(value = "/bulkdata/spreadsheetTemplate.htm", method = RequestMethod.GET)
+    public void spreadsheetTemplate(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestParam(value = "surveyPk", required = true) int surveyPk,
+            @RequestParam(value = "censusMethodPk", defaultValue = "0", required = false) int censusMethodPk)
             throws IOException {
 
         Survey survey = surveyDAO.getSurvey(surveyPk);
@@ -222,5 +281,103 @@ public class BulkDataController extends AbstractController {
         view.addObject("databaseError", databaseError);
 
         return view;
+    }
+    
+    @RequestMapping(value=SHAPEFILE_TEMPLATE_URL, method=RequestMethod.GET) 
+    public void getShapefileTemplate(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value="surveyPk", required=true) int surveyPk,
+            @RequestParam(value="censusMethodPk", required=false, defaultValue="0") int censusMethodPk,
+            @RequestParam(value="shapefileType", required=true) String shapefileType) throws Exception {
+        
+        Survey survey = surveyDAO.getSurvey(surveyPk);
+        CensusMethod cm = cmDAO.get(censusMethodPk);
+        
+        ShapefileType shpType;
+        if (ShapefileType.POINT.toString().equals(shapefileType)) {
+            shpType = ShapefileType.POINT;
+        } else if (ShapefileType.MULTI_POLYGON.toString().equals(shapefileType)) {
+            shpType = ShapefileType.MULTI_POLYGON;
+        } else {
+            throw new IllegalArgumentException("shapefileType value not supported: " + shapefileType);
+        }
+
+        // Make the survey name a safe filename.
+        StringBuilder filename = new StringBuilder();
+        filename.append(sanitizeString(survey.getName()));
+        if (cm != null) {
+            filename.append("_");
+            filename.append(sanitizeString(cm.getName()));
+            filename.append("_");
+        }
+        filename.append("_shpTemplate_");
+        filename.append(System.currentTimeMillis());
+        filename.append(".zip");
+
+        response.setContentType("application/vnd.ms-excel");
+        response.setHeader("Content-Disposition", "attachment;filename="
+                + filename);
+
+        ShapeFileWriter shpWriter = new ShapeFileWriter();
+        File zipFile = shpWriter.createZipShapefile(survey, cm, shpType);
+        
+        InputStream in = null;
+        try {
+            in = new FileInputStream(zipFile);
+            IOUtils.copy(in, response.getOutputStream());
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
+    }
+    
+    private String sanitizeString(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (Character.isLetterOrDigit(c)) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+    
+    @RequestMapping(value=SHAPEFILE_UPLOAD_URL, method=RequestMethod.POST)
+    public ModelAndView uploadShapefile(MultipartHttpServletRequest request, HttpServletResponse response) throws Exception {
+        
+        MultipartFile uploadedFile = request.getFile(PARAM_SHAPEFILE_FILE);
+        File tempFile = File.createTempFile("shapefileupload", Long.toString(System.nanoTime()));
+        uploadedFile.transferTo(tempFile);
+        
+        ShapeFileReader reader = new ShapeFileReader(tempFile);
+        
+        RecordKeyLookup klu = new ShapefileRecordKeyLookup();
+        ShapefileToRecordEntryTransformer transformer = new ShapefileToRecordEntryTransformer(klu);
+        User currentUser = getRequestContext().getUser();
+        
+        List<RecordEntry> entries = transformer.shapefileFeatureToRecordEntries(reader.getFeatureIterator(), reader.getSurveyIdList(), reader.getCensusMethodIdList());
+                
+        AttributeDictionaryFactory adf = new ShapefileAttributeDictionaryFactory();
+        AttributeParser parser = new ShapefileAttributeParser();
+        RecordDeserializer rds = new RecordDeserializer(klu, adf, parser);
+        List<RecordDeserializerResult> dsResult = rds.deserialize(currentUser, entries);
+        
+        List<RecordDeserializerResult> resultsInError = new LinkedList<RecordDeserializerResult>();
+        
+        for (RecordDeserializerResult rdr : dsResult) {
+            if (!rdr.getErrorMap().isEmpty()) {
+                resultsInError.add(rdr);
+            }
+        }
+
+        ModelAndView mv = new ModelAndView(SHAPEFILE_IMPORT_SUMMARY_VIEW);
+        
+        if (!resultsInError.isEmpty()) {
+            // we have errors, rollback the transaction
+            requestRollback(request);
+            mv.addObject(MV_PARAM_RESULTS_IN_ERROR, resultsInError);
+        } else {
+            mv.addObject(MV_PARAM_WRITE_COUNT, dsResult.size());
+        }
+        return mv;
     }
 }

@@ -6,90 +6,106 @@ exports.OPTIONALLYTAXONOMIC = 'OPTIONALLYTAXONOMIC';
  * Invoked when the page is created.
  */
 exports.Create =  function() {
-	jQuery('#record-save').click(function (event) {
-	    if(bdrs.mobile.validation.isValidForm('#record-form')) {
-	        bdrs.mobile.pages.record._record();
+    jQuery('#record-save').click(function (event) {
+        if(bdrs.mobile.validation.isValidForm('#record-form')) {
+            bdrs.mobile.pages.record._record();
             jQuery.mobile.changePage("#review", "slide", false, true);
-	    }
-	});
-	jQuery('#record-save-continue').click(function (event) {
-	    if(bdrs.mobile.validation.isValidForm('#record-form')) {
-	        // Save the record.
-		    var record = bdrs.mobile.pages.record._record();
-		    bdrs.mobile.removeParameter("selected-record");
-			jQuery('.recent-taxa-widget').remove();
-			
-			// If we have a census method, then we continue back to the
-			// parent census method.
-		    if (bdrs.mobile.getParameter('censusMethodId') !== undefined) {
-    	        var cmethod;
-		        waitfor(cmethod) {
-		            CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
-		        }
-		        bdrs.mobile.Debug('setting up parent census method');
-		        if(cmethod.parent() !== null ) {
-		            bdrs.mobile.setParameter('censusMethodId', cmethod.parent().id);
-		        }
-	        }
-	        
-	        // Set the parent record as the selected record.
+        }
+    });
+    jQuery('#record-save-continue').click(function (event) {
+        if(bdrs.mobile.validation.isValidForm('#record-form')) {
+            // Save the record.
+            var record = bdrs.mobile.pages.record._record();
+            bdrs.mobile.removeParameter("selected-record");
+            jQuery('.recent-taxa-widget').remove();
+            
+            // If we have a census method, then we continue back to the
+            // parent census method.
+            if (bdrs.mobile.getParameter('censusMethodId') !== undefined) {
+                var cmethod;
+                waitfor(cmethod) {
+                    CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
+                }
+                bdrs.mobile.Debug('setting up parent census method');
+                if(cmethod.parent() !== null ) {
+                    bdrs.mobile.setParameter('censusMethodId', cmethod.parent().id);
+                }
+            }
+            
+            // Set the parent record as the selected record.
             if (bdrs.mobile.getParameter('record-parent') !== undefined) {
                 bdrs.mobile.setParameter('selected-record', bdrs.mobile.getParameter('record-parent'));
                 bdrs.mobile.removeParameter('record-parent');
             } else if(record.parent() !== null) {
                 bdrs.mobile.setParameter('selected-record', record.parent().id);
             }
-			
-		    exports.Show();
-	    }
-	});
-	jQuery('#record-gps').click(function (event) {
-		var position;
-		waitfor(position) {
-			bdrs.mobile.geolocation.getCurrentPosition(resume);
-		}
-		if (position !== undefined) {
-			jQuery('#record-latitude').val(bdrs.mobile.roundnumber(position.coords.latitude, 5));
-        	jQuery('#record-longitude').val(bdrs.mobile.roundnumber(position.coords.longitude, 5));
-			jQuery('#record-accuracy').val(bdrs.mobile.roundnumber(position.coords.accuracy, 5));
-		} else {
-			bdrs.mobile.Debug('Could not get GPS loc');
-		}
-	});
-	
+            
+            exports.Show();
+        }
+    });
+    jQuery('#record-gps').click(function (event) {
+        var position;
+        waitfor(position) {
+            bdrs.mobile.geolocation.getCurrentPosition(resume);
+        }
+        
+        if (position !== undefined) {
+            jQuery('#record-latitude').val(bdrs.mobile.roundnumber(position.coords.latitude, 5));
+            jQuery('#record-longitude').val(bdrs.mobile.roundnumber(position.coords.longitude, 5));
+            jQuery('#record-accuracy').val(bdrs.mobile.roundnumber(position.coords.accuracy, 5));
+        } else {
+            bdrs.mobile.Debug('Could not get GPS loc');
+        }
+    });
+    jQuery('#record-delete').click(function(event) {
 
-	jQuery('#record-when').datepicker();
-	jQuery('#record-time').timepicker();
+        var selectedRecordId = bdrs.mobile.getParameter('selected-record');
+        if (selectedRecordId !== undefined) {
+            var record;
+            waitfor(record) {
+                Record.all().filter('id', '=', selectedRecordId).prefetch('species').one(resume);
+            }
+
+            bdrs.mobile.pages.record.markRecordForDelete(record);
+            jQuery.mobile.changePage("#review", "slide", false, true);
+        }
+    });
+
+    jQuery('#record-when').datepicker();
+    jQuery('#record-time').timepicker();
 }
 
 /**
  * Invoked when the page is displayed.
  */
 exports.Show = function() {
-	var setting;
-	waitfor(setting) {
-		Settings.findBy('key', 'current-survey-id' , resume);
-	}
-	
-	// If editing load the record from the database, otherwise create a blank 
-	// record.
-	var record;
-	var parent = null;
-	// Map of record attributes where { attributeID: attributeValueObj }
-	var attributeValueMap = {}
-	var selectedRecordId = bdrs.mobile.getParameter('selected-record');
-	var isNewRecord = false;
-	if (selectedRecordId === undefined) {
-	    record = new Record();
-	    isNewRecord = true;
-	    if (bdrs.mobile.getParameter('record-parent') !== undefined) {
+    var setting;
+    waitfor(setting) {
+        Settings.findBy('key', 'current-survey-id' , resume);
+    }
+    
+    // If editing load the record from the database, otherwise create a blank 
+    // record.
+    var record;
+    var parent = null;
+    // Map of record attributes where { attributeID: attributeValueObj }
+    var attributeValueMap = {}
+    var selectedRecordId = bdrs.mobile.getParameter('selected-record');
+    bdrs.mobile.Debug("Showing Record with ID: " + selectedRecordId);
+    var isNewRecord = false;
+
+    if (selectedRecordId === undefined) {
+        record = new Record();
+        record.deleted(false);
+        isNewRecord = true;
+        if (bdrs.mobile.getParameter('record-parent') !== undefined) {
             waitfor(parent) {
-                Record.load(bdrs.mobile.getParameter('record-parent'), resume);
+                Record.all().filter('deleted','=',false).filter('id','=',bdrs.mobile.getParameter('record-parent')).one(resume);
             }
         }
-	} else {
+    } else {
         waitfor(record) {
-            Record.all().filter('id', '=', selectedRecordId).prefetch('censusMethod').prefetch('parent').one(resume);
+            Record.all().filter('id', '=', selectedRecordId).filter('deleted','=',false).prefetch('censusMethod').prefetch('parent').one(resume);
         }
         parent = record.parent();
         var attributeValues;
@@ -109,42 +125,42 @@ exports.Show = function() {
     var isCensusMethodRecord = ((bdrs.mobile.getParameter('censusMethodId') !== undefined) || (record.censusMethod() !== null))
     
     bdrs.mobile.Debug('isCensusMethodRecord : ' + isCensusMethodRecord);
-	jQuery('.bdrs-page-record .speciesEntryField').remove();
-	jQuery('.bdrs-page-record .numberSlider').remove();
-	var cmethod = null;
-	
-	var isTaxonomic;
-	var isOptionallyTaxonomic;
-	var isPointIntersect;
-	var pointIntersectStruct = null;
-	
-	if (isCensusMethodRecord) {
-		// we are doing a census type record
-		if (record.censusMethod() === null) {
-		    waitfor(cmethod) {
-			   CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
-		    }
-		} else {
-		    cmethod = record.censusMethod();
-		}
-		bdrs.mobile.Debug('Loaded Census Method : ' + bdrs.mobile.getParameter('censusMethodId'));
+    jQuery('.bdrs-page-record .speciesEntryField').remove();
+    jQuery('.bdrs-page-record .numberSlider').remove();
+    var cmethod = null;
+    
+    var isTaxonomic;
+    var isOptionallyTaxonomic;
+    var isPointIntersect;
+    var pointIntersectStruct = null;
+    
+    if (isCensusMethodRecord) {
+        // we are doing a census type record
+        if (record.censusMethod() === null) {
+            waitfor(cmethod) {
+               CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
+            }
+        } else {
+            cmethod = record.censusMethod();
+        }
+        bdrs.mobile.Debug('Loaded Census Method : ' + bdrs.mobile.getParameter('censusMethodId'));
         bdrs.mobile.pages.record._insertCensusMethodAttributes(record, cmethod, attributeValueMap);
-		
-		isTaxonomic = cmethod.taxonomic() !== bdrs.mobile.pages.record.NONTAXONOMIC;
-		isOptionallyTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.OPTIONALLYTAXONOMIC;
-		
-	} else {
-	    // If there are no census method records, hide the collapsible.
-	    var methodAttrsWrapperElem = jQuery('#record-method-attributes');
+        
+        isTaxonomic = cmethod.taxonomic() !== bdrs.mobile.pages.record.NONTAXONOMIC;
+        isOptionallyTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.OPTIONALLYTAXONOMIC;
+        
+    } else {
+        // If there are no census method records, hide the collapsible.
+        var methodAttrsWrapperElem = jQuery('#record-method-attributes');
         var methodAttrsCollapsible = methodAttrsWrapperElem.parents('[data-role=collapsible]');
         methodAttrsCollapsible.hide();
         methodAttrsWrapperElem.empty();
         
         // No census method means that the record will be optionally taxonomic.
-		isTaxonomic = true;
-		isOptionallyTaxonomic = true;
-	}
-	
+        isTaxonomic = true;
+        isOptionallyTaxonomic = true;
+    }
+    
     // Launch the tracker
     jQuery("#record-tracker").show();
     jQuery("#record-point-intersect").hide();
@@ -165,11 +181,11 @@ exports.Show = function() {
         var siblingCount;
         if(cmethod === null) {
             waitfor(siblingCount) {
-                parent.children().count(resume);
+                parent.children().filter('deleted','=',false).count(resume);
             }
         } else {
             waitfor(siblingCount) {
-                parent.children().filter('censusMethod','=', cmethod.id).count(resume);                
+                parent.children().filter('deleted','=',false).filter('censusMethod','=', cmethod.id).count(resume);                
             }
         }
         
@@ -177,55 +193,55 @@ exports.Show = function() {
         siblingCount += 1;
         siblingCountElem.text(siblingCount);
     }
-    
+
     if(isTaxonomic) {
         // Is Taxonomy Required
         var templateParams = {
             required : !isOptionallyTaxonomic
         };
-	    // add the number slider.
-	    bdrs.template.renderOnlyCallback('recordNumberSlider', templateParams, function(element) {
-		    jQuery('#record-form').prepend(element);
-		    jQuery('#record-number').textinput();
-		    jQuery('#record-number').slider();
-		    jQuery('.bdrs-page-record .numberSlider').fieldcontain();
-	    });
-	
-	    // add the species box.
-	    bdrs.template.renderOnlyCallback('recordSpeciesInput', templateParams, function(element) {
-		    jQuery('#record-form').prepend(element);
-		    bdrs.mobile.restyle(element);
-		    new bdrs.mobile.widget.RecentTaxaWidget(2).after(element);
-		
-		    var scientificName = record.species() === null ? '' : record.species().scientificName();
-		    jQuery('#record-species').val(scientificName).autocomplete({
-			    source: function(request, response) {
-				    var species;
-				    waitfor(species) {
-					    Species.search('*' + request.term + '*').limit(5).list(resume); // @todo add some survey awareness.
-				    }
-				    var names = [];
-				    for (var i = 0; i < species.length; i++) {
-					    names.push({ label : species[i].commonName() + ' - <i>' + species[i].scientificName()+ '</i>', value : species[i].scientificName()});
-				    }
-				    response(names);
-			    },
-			    change: function(event, ui) {
-			        jQuery.mobile.pageLoading(false);
-			        
-			        var scientificName = jQuery('#record-species').val();
-			        var taxon;
+        // add the number slider.
+        bdrs.template.renderOnlyCallback('recordNumberSlider', templateParams, function(element) {
+            jQuery('#record-form').prepend(element);
+            jQuery('#record-number').textinput();
+            jQuery('#record-number').slider();
+            jQuery('.bdrs-page-record .numberSlider').fieldcontain();
+        });
+    
+        // add the species box.
+        bdrs.template.renderOnlyCallback('recordSpeciesInput', templateParams, function(element) {
+            jQuery('#record-form').prepend(element);
+            bdrs.mobile.restyle(element);
+            new bdrs.mobile.widget.RecentTaxaWidget(2).after(element);
+        
+            var scientificName = record.species() === null ? '' : record.species().scientificName();
+            jQuery('#record-species').val(scientificName).autocomplete({
+                source: function(request, response) {
+                    var species;
+                    waitfor(species) {
+                        Species.search('*' + request.term + '*').limit(5).list(resume); // @todo add some survey awareness.
+                    }
+                    var names = [];
+                    for (var i = 0; i < species.length; i++) {
+                        names.push({ label : species[i].commonName() + ' - <i>' + species[i].scientificName()+ '</i>', value : species[i].scientificName()});
+                    }
+                    response(names);
+                },
+                change: function(event, ui) {
+                    jQuery.mobile.pageLoading(false);
+                    
+                    var scientificName = jQuery('#record-species').val();
+                    var taxon;
                     waitfor(taxon) {
                         Species.all().filter('scientificName', '=', scientificName).one(resume);
                     }
    
                     bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
-	                
+                    
                     jQuery.mobile.pageLoading(true);
                 },
-			    html: true
-		    });
-	    });
+                html: true
+            });
+        });
     }
 
     //////////////////////////
@@ -237,66 +253,66 @@ exports.Show = function() {
     // Survey & Taxon Group Attributes
     ////////////////////////////////////
     if (setting === null) {
-	    // trouble in paradise.
-	    bdrs.mobile.Error('Current Survey ID not known');
-	    return;
+        // trouble in paradise.
+        bdrs.mobile.Error('Current Survey ID not known');
+        return;
     } else {
-	    var survey;
-	    waitfor(survey) {
-		    Survey.findBy('server_id', setting.value(), resume);
-	    }
-	    if (survey !== null) {
-	        jQuery.mobile.pageLoading(false);
-		
+        var survey;
+        waitfor(survey) {
+            Survey.findBy('server_id', setting.value(), resume);
+        }
+        if (survey !== null) {
+            jQuery.mobile.pageLoading(false);
+        
             bdrs.mobile.pages.record._insertSurveyAttributes(record, survey, attributeValueMap);
-		    bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
-		
-		    jQuery.mobile.pageLoading(true);
-	    } else {
-		    bdrs.mobile.Error('Currently set survey is not in the database');
-	    }
-	
-	    // If editing, populate the form with data from the database.
-	    var latCoord;
-	    var lonCoord;
-	    var accuracy;
-	
-	    if(record.latitude() === null && record.longitude() === null && record.accuracy() === null) {
-		    var position;
-		    waitfor(position) {
-			    bdrs.mobile.geolocation.getCurrentPosition(resume);
-		    }
-		    if (position !== undefined) {
-			    latCoord = bdrs.mobile.roundnumber(position.coords.latitude, 5);
-			    lonCoord = bdrs.mobile.roundnumber(position.coords.longitude, 5);
-			    accuracy = bdrs.mobile.roundnumber(position.coords.accuracy, 5);
-		    }
-	    } else {
-	        latCoord = record.latitude();
-	        lonCoord = record.longitude();
-		    accuracy = record.accuracy();
-	    }
+            bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
+        
+            jQuery.mobile.pageLoading(true);
+        } else {
+            bdrs.mobile.Error('Currently set survey is not in the database');
+        }
+    
+        // If editing, populate the form with data from the database.
+        var latCoord;
+        var lonCoord;
+        var accuracy;
+    
+        if(record.latitude() === null && record.longitude() === null && record.accuracy() === null) {
+            var position;
+            waitfor(position) {
+                bdrs.mobile.geolocation.getCurrentPosition(resume);
+            }
+            if (position !== undefined) {
+                latCoord = bdrs.mobile.roundnumber(position.coords.latitude, 5);
+                lonCoord = bdrs.mobile.roundnumber(position.coords.longitude, 5);
+                accuracy = bdrs.mobile.roundnumber(position.coords.accuracy, 5);
+            }
+        } else {
+            latCoord = record.latitude();
+            lonCoord = record.longitude();
+            accuracy = record.accuracy();
+        }
         jQuery('#record-latitude').val(latCoord);
         jQuery('#record-longitude').val(lonCoord);
-	    jQuery('#record-accuracy').val(accuracy);
-	
-	    var when = record.when() === null ? bdrs.mobile.getCurrentDate() : bdrs.mobile.formatDate(record.when());
-	    jQuery('#record-when').val(when);
+        jQuery('#record-accuracy').val(accuracy);
+    
+        var when = record.when() === null ? bdrs.mobile.getCurrentDate() : bdrs.mobile.formatDate(record.when());
+        jQuery('#record-when').val(when);
 
         var time = record.time().length === 0 ? bdrs.mobile.getCurrentTime() : record.time(); 
-	    jQuery('#record-time').val(time);
-	
-	    jQuery('#record-notes').val(record.notes());
+        jQuery('#record-time').val(time);
+    
+        jQuery('#record-notes').val(record.notes());
         jQuery('#record-number').val(record.number());
     }
 }
-	
+    
 /**
  * Invoked when the page is hidden.
  */
 exports.Hide = function() {
-	bdrs.mobile.Debug('Record Form Hide');
-	
+    bdrs.mobile.Debug('Record Form Hide');
+    
     bdrs.mobile.removeParameter("censusMethodId");
     bdrs.mobile.removeParameter("selected-record");
     bdrs.mobile.removeParameter('record-parent');
@@ -338,7 +354,7 @@ exports._insertCensusMethodAttributes = function(record, cmethod, attributeValue
     }
     bdrs.mobile.Debug('Triggering CM Expand');
     if(attributes.length > 0) {
-		bdrs.mobile.Debug('Triggering CM Expand 2');
+        bdrs.mobile.Debug('Triggering CM Expand 2');
         methodAttrsCollapsible.show().trigger('expand');
     }
 }
@@ -393,12 +409,12 @@ exports._insertSubCensusMethods = function(record, cmethod) {
     if(cmethod === null) {
         subCensusCollapsibleSet.hide();
     } else {
-	    
-	    var subMethods;
-	    waitfor(subMethods) {
-	       cmethod.children().list(resume);
-	    }
-	    
+        
+        var subMethods;
+        waitfor(subMethods) {
+           cmethod.children().list(resume);
+        }
+        
         var collapsibleElem;
         var buttonElem;
         var childRecords;
@@ -412,16 +428,16 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                 description: subMethods[i].description(),
                 collapsed : true                
             };
-	        waitfor(collapsibleElem) {
-		       bdrs.template.renderOnlyCallback('collapsibleBlock', tmplParams, resume);
-	        }
+            waitfor(collapsibleElem) {
+               bdrs.template.renderOnlyCallback('collapsibleBlock', tmplParams, resume);
+            }
             collapsibleElem.appendTo(subCensusCollapsibleSet);
             
             //////////////////////
-		    // Child Record List
-		    //////////////////////
-		    waitfor(childRecords) {
-                record.children().prefetch('species').filter('censusMethod', '=', subMethods[i]).list(resume);
+            // Child Record List
+            //////////////////////
+            waitfor(childRecords) {
+                record.children().filter('deleted','=',false).prefetch('species').filter('censusMethod', '=', subMethods[i]).list(resume);
             }
 
             if(childRecords.length > 0) {
@@ -449,7 +465,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                 for(var p=0; p<childRecords.length; p++) {
                     childRecordDescriptor = bdrs.mobile.record.util.getDescriptor(childRecords[p]);
                     waitfor(childCount) {
-                        childRecords[i].children().count(resume);
+                        childRecords[p].children().filter('deleted','=',false).count(resume);
                     };
                     
                     isModified = (childRecords[p].uploadedAt() === null) || 
@@ -459,7 +475,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                         isModified ? "Modified" : "Synched",
                         "Last Changed: "+bdrs.mobile.getDaysBetweenAsFormattedString(childRecords[p].modifiedAt(), now)
                     ].join("&nbsp;|&nbsp;");
-                    
+
                     listViewItemTmplParams = {
                         linkId: "record-"+childRecords[p].id,
                         link: "#record",
@@ -474,24 +490,24 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                     listViewItem.appendTo(listView);
                     
                     // Add click handler to the list handler.
-                    listViewItem.find("a").jqmData("recordId", childRecords[i].id);
+                    listViewItem.find("a").jqmData("recordId", childRecords[p].id);
                     listView.find("#"+listViewItemTmplParams.linkId).click(function(event) {
                         var record;
                         waitfor(record) {
-                            Record.load(jQuery(event.currentTarget).jqmData("recordId"), resume);
+                            Record.all().filter('id','=',jQuery(event.currentTarget).jqmData("recordId")).filter('deleted','=',false).one(resume);
                         };
                         
-				        bdrs.mobile.setParameter("selected-record", record.id);
-				        bdrs.mobile.setParameter('record-parent', record.parent().id);
-				        bdrs.mobile.setParameter('censusMethodId', record.censusMethod().id);
-				        
-				        var censusMethod;
-	                    waitfor(censusMethod) {
-	                        CensusMethod.all().filter('id','=',record.censusMethod().id).one(resume);
+                        bdrs.mobile.setParameter("selected-record", record.id);
+                        bdrs.mobile.setParameter('record-parent', record.parent().id);
+                        bdrs.mobile.setParameter('censusMethodId', record.censusMethod().id);
+                        
+                        var censusMethod;
+                        waitfor(censusMethod) {
+                            CensusMethod.all().filter('id','=',record.censusMethod().id).one(resume);
                         }
-				        
-				        var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record.parent(), record);
-				        
+                        
+                        var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record.parent(), record);
+                        
                         if(isPointIntersect) {
                             jQuery.mobile.changePage("#point-intersect");
                         } else {
@@ -517,32 +533,34 @@ exports._insertSubCensusMethods = function(record, cmethod) {
             buttonElem.click(function(event) {
                 if(bdrs.mobile.validation.isValidForm('#record-form')) {
                     // Save the record first.
-		            var record = bdrs.mobile.pages.record._record();
-		            
-		            bdrs.mobile.setParameter("record-parent", record.id);
-		            bdrs.mobile.removeParameter("selected-record");
-		            jQuery('.recent-taxa-widget').remove();
-		        
-		            // Set the desired census method.
-			        var censusMethodId = jQuery(event.currentTarget).jqmData('censusMethodId');
-	                bdrs.mobile.setParameter('censusMethodId', censusMethodId);
-	                
-	                var censusMethod;
-	                waitfor(censusMethod) {
-	                    CensusMethod.all().filter('id','=',censusMethodId).one(resume);
+                    var record = bdrs.mobile.pages.record._record();
+                    
+                    bdrs.mobile.setParameter("record-parent", record.id);
+                    bdrs.mobile.removeParameter("selected-record");
+                    jQuery('.recent-taxa-widget').remove();
+                
+                    // Set the desired census method.
+                    var censusMethodId = jQuery(event.currentTarget).jqmData('censusMethodId');
+                    bdrs.mobile.setParameter('censusMethodId', censusMethodId);
+                    
+                    var censusMethod;
+                    waitfor(censusMethod) {
+                        CensusMethod.all().filter('id','=',censusMethodId).one(resume);
                     }
-                    var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record, new Record());
+                    var childRecord = new Record();
+                    childRecord.deleted(false);
+                    var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record, childRecord);
                     if(isPointIntersect) {
                         jQuery.mobile.changePage("#point-intersect");
                     } else {
                         exports.Show();
                     }
-		        }
+                }
             });
         }
-	    
-	    bdrs.mobile.restyle(subCensusCollapsibleSet);
-	    subCensusCollapsibleSet.show();
+        
+        bdrs.mobile.restyle(subCensusCollapsibleSet);
+        subCensusCollapsibleSet.show();
     }
 };
 
@@ -583,6 +601,82 @@ exports._insertTaxonGroupAttributes = function(taxon, attributeValueMap) {
 };
 
 /**
+ * Recursively checks the specified record and all children for an 
+ * attached species. If found, the counter in the species map is 
+ * incremented.
+ *
+ * @param record the record object to be checked for the presense of an
+ * associated species. 
+ * @param a mapping of the species primary key and a count of records
+ * that refer to that species.
+ * @return the species_map that has been updated by this function.
+ */
+exports._recurseCountRelatedSpecies = function(record, species_map) {
+    var species = record.species();
+    if(species !== undefined && species !== null) {
+        if(species_map[species.id] === undefined) {
+            species_map[species.id] = 1;
+        } else {
+            species_map[species.id] = species_map[species.id] + 1;
+        }
+    }
+
+    var children;
+    waitfor(children) {
+        // Only check for un-deleted children because deleted children will
+        // have already processed their species counts.
+        record.children().filter('deleted','=',false).prefetch('species').list(resume);
+    }
+    for(var i=0; i<children.length; i++) {
+        species_map = exports._recurseCountRelatedSpecies(children[i], species_map);
+    }
+
+    return species_map;
+};
+
+/**
+ * Sets the deleted flag on the specified record and decrements
+ * the SpeciesCount for any species associated with this record or any
+ * child records.
+ *
+ * @param record the Record object to be marked for deletion.
+ */
+exports.markRecordForDelete = function(record) {
+    
+    record.deleted(true);
+    bdrs.mobile.Debug("Record "+record.id+" marked for deletion.")
+
+    // { species.id: number of times the species has been related to a soon to be deleted record }
+    var species_map = {};
+    bdrs.mobile.Debug("Updating Species Count");
+    species_map = exports._recurseCountRelatedSpecies(record, species_map);
+
+    var species_ids = [];
+    for(var species_id in species_map) {
+        if(species_map.hasOwnProperty(species_id)) {
+            species_ids.push(species_id);
+        }
+    }
+
+    var speciesCountCollection;
+    waitfor(speciesCountCollection) {
+        SpeciesCount.all().filter('species', 'in', species_ids).prefetch('species').list(resume);
+    }
+
+    for(var c=0; c<speciesCountCollection.length; c++) {
+        var speciesCount = speciesCountCollection[c];
+        var decrement = species_map[speciesCount.species().id];
+        speciesCount.count(speciesCount.count() - decrement);
+        speciesCount.userCount(speciesCount.userCount() - decrement);
+
+        bdrs.mobile.Debug("Decrementing Species Count: "+speciesCount.id+" : "+
+            speciesCount.species().scientificName()+" by "+decrement);
+    }
+
+    persistence.flush();
+};
+
+/**
  * Private function, does the actual recording.
  */
 exports._record = function() {
@@ -591,103 +685,20 @@ exports._record = function() {
     jQuery(":focus").blur();
     
     jQuery.mobile.pageLoading(false);
-	bdrs.mobile.Debug ('Record called');
-	
-	bdrs.mobile.Debug(jQuery('#record-latitude').val());
-	bdrs.mobile.Debug(jQuery('#record-longitude').val());
-	bdrs.mobile.Debug(jQuery('#record-accuracy').val());
-	bdrs.mobile.Debug(jQuery('#record-when').val());
-	bdrs.mobile.Debug(jQuery('#record-time').val());
-	bdrs.mobile.Debug(jQuery('#record-species').val());
-	
-	var scientificName = jQuery('#record-species').val();
-	var species;
-	waitfor(species) {
-		Species.all().filter('scientificName', '=', scientificName).prefetch('taxonGroup').one(resume);
-	}
-	bdrs.mobile.Debug('Scientific Name for record: ' + scientificName);
-	if (species != undefined) {
-		bdrs.mobile.Debug(species.commonName());
-		bdrs.mobile.Debug(species.scientificName());
-	} else if (scientificName != '') {
-		// Create a field species.
-		var sp = new Species({
-			scientificNameAndAuthor: "Field Species",
-	    	scientificName: "Field Species",
-	    	commonName: scientificName,
-	    	rank: "Field Species",
-	    	author: "Field Species",
-	    	year: ""
-		});
-		
-		// Check for field taxon group
-		var tg;
-		waitfor(tg) {
-			TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
-		}
-		if (tg == null) {
-			tg = new TaxonGroup({
-				name: "Field Species"
-			});
-			persistence.add(tg);
-		}
-		persistence.add(sp);
-		tg.species().add(sp);
-		species = sp;
-		waitfor() {
-			persistence.flush(resume);
-		}
-		bdrs.mobile.Debug('Created a new species: ' + species.scientificName());
-		bdrs.mobile.Debug(species.scientificName());
-	}
-	
-    var setting;
-    waitfor(setting) {
-        Settings.findBy('key', 'current-survey-id', resume);
-    }
-    var survey;
-    waitfor(survey) {
-        Survey.findBy('server_id', setting.value(), resume);
-    }
-	
-	var latitude = jQuery('#record-latitude').val();
-    var longitude = jQuery('#record-longitude').val();
-	var accuracy = jQuery('#record-accuracy').val();
-    var when = bdrs.mobile.parseDate(jQuery('#record-when').val());
-    var time = jQuery('#record-time').val();    
-    var notes = jQuery('#record-notes').val();
-    var number = jQuery('#record-number').val();
-	
-	var record;
+    bdrs.mobile.Debug ('Record called');
+
+    var record;
     var attributeValueMap = {};
     bdrs.mobile.Debug('Pulled attributes from record form');
     var selectedRecordId = bdrs.mobile.getParameter('selected-record');
-	if (selectedRecordId === undefined) {
+    if (selectedRecordId === undefined) {
         record = new Record();
+        record.deleted(false);
         persistence.add(record);
-        survey.records().add(record);
-        if (species != undefined) {
-            species.records().add(record);
-			// Update Species Count index.
-			bdrs.mobile.Debug('Updating species count');
-        	var counter;
-        	waitfor(counter) {
-				SpeciesCount.all().filter('scientificName', '=', species.scientificName()).one(resume);
-        	}
-        	if (counter == null) {
-				bdrs.mobile.Debug('Count not found, creating new one.');
-				counter = new SpeciesCount({scientificName: species.scientificName(), 
-					count: 1 });
-				persistence.add(counter);
-				counter.species(species);
-        	} else {
-        		bdrs.mobile.Debug('Count found, incrementing');
-        		counter.count(counter.count() + 1);
-        	}
-        }
+        
     } else {
         waitfor(record) {
-            Record.all().filter('id', '=', selectedRecordId).one(resume);
+            Record.all().filter('id', '=', selectedRecordId).filter('deleted','=',false).one(resume);
         }
         var attributeValues;
         waitfor(attributeValues) {
@@ -699,11 +710,127 @@ exports._record = function() {
             attributeValueMap[recAttr.attribute().id] = recAttr;
         }
     }
+
+    // Get the Census Method and determine if the record is
+    // taxonomic, non taxonomic or optionally taxonomic
+    var isTaxonomic;
+    var isOptionallyTaxonomic;
+    var cmethod = record.censusMethod();
+
+    if(cmethod === null || cmethod === undefined) {
+        if (bdrs.mobile.getParameter('censusMethodId') !== undefined) {
+            waitfor(cmethod) {
+                CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
+            }
+        }
+    }
+
+    if(cmethod !== null && cmethod !== undefined) {
+        isTaxonomic = cmethod.taxonomic() !== bdrs.mobile.pages.record.NONTAXONOMIC;
+        isOptionallyTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.OPTIONALLYTAXONOMIC;
+    } else {
+        // If there is no census method, the record is
+        // optionally taxonomic by default
+        isTaxonomic = true;
+        isOptionallyTaxonomic = true;
+    }
+    
+    bdrs.mobile.Debug(jQuery('#record-latitude').val());
+    bdrs.mobile.Debug(jQuery('#record-longitude').val());
+    bdrs.mobile.Debug(jQuery('#record-accuracy').val());
+    bdrs.mobile.Debug(jQuery('#record-when').val());
+    bdrs.mobile.Debug(jQuery('#record-time').val());
+    bdrs.mobile.Debug(jQuery('#record-species').val());
+    
+    // If the record is taxonomic or optionally 
+    // taxonomic (with a non empty scientific name)
+    var species = null;
+    var speciesElem = jQuery('#record-species');
+    var scientificName = speciesElem.length === 0 ? '' : speciesElem.val();
+    if(isTaxonomic || (isOptionallyTaxonomic && scientificName.length > 0)) {
+        
+        waitfor(species) {
+            Species.all().filter('scientificName', '=', scientificName).prefetch('taxonGroup').one(resume);
+        }
+        bdrs.mobile.Debug('Scientific Name for record: ' + scientificName);
+        if (species !== undefined && species !== null) {
+            bdrs.mobile.Debug(species.commonName());
+            bdrs.mobile.Debug(species.scientificName());
+        } else if (scientificName !== '') {
+            // Create a field species.
+            var sp = new Species({
+                scientificNameAndAuthor: "Field Species",
+                scientificName: scientificName,
+                commonName: scientificName,
+                rank: "Field Species",
+                author: "Field Species",
+                year: ""
+            });
+            
+            // Check for field taxon group
+            var tg;
+            waitfor(tg) {
+                TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
+            }
+            if (tg == null) {
+                tg = new TaxonGroup({
+                    name: "Field Species"
+                });
+                persistence.add(tg);
+            }
+            persistence.add(sp);
+            tg.species().add(sp);
+            species = sp;
+            waitfor() {
+                persistence.flush(resume);
+            }
+            bdrs.mobile.Debug('Created a new species: ' + species.scientificName());
+            bdrs.mobile.Debug(species.scientificName());
+        }
+
+        species.records().add(record);
+        // Update Species Count index.
+        bdrs.mobile.Debug('Updating species count');
+        var counter;
+        waitfor(counter) {
+            SpeciesCount.all().filter('scientificName', '=', species.scientificName()).one(resume);
+        }
+        if (counter == null) {
+            bdrs.mobile.Debug('Count not found, creating new one.');
+            counter = new SpeciesCount({scientificName: species.scientificName(), 
+                count: 1 , userCount: 1});
+            persistence.add(counter);
+            counter.species(species);
+        } else {
+            bdrs.mobile.Debug('Count found, incrementing');
+            counter.count(counter.count() + 1);
+            counter.userCount(counter.userCount() + 1);
+        }
+    }
+    
+    var setting;
+    waitfor(setting) {
+        Settings.findBy('key', 'current-survey-id', resume);
+    }
+    var survey;
+    waitfor(survey) {
+        Survey.findBy('server_id', setting.value(), resume);
+    }
+    
+    survey.records().add(record);
+
+    var latitude = jQuery('#record-latitude').val();
+    var longitude = jQuery('#record-longitude').val();
+    var accuracy = jQuery('#record-accuracy').val();
+    var when = bdrs.mobile.parseDate(jQuery('#record-when').val());
+    var time = jQuery('#record-time').val();    
+    var notes = jQuery('#record-notes').val();
+    var number = jQuery('#record-number').val();
     
     record.modifiedAt(new Date());
     record.latitude(latitude);
     record.longitude(longitude);
-	record.accuracy(accuracy);
+    record.accuracy(accuracy);
     record.when(when);
     record.time(time);    
     record.notes(notes);
@@ -712,50 +839,45 @@ exports._record = function() {
     if (bdrs.mobile.getParameter('record-parent') !== undefined) {
         var parent;
         waitfor(parent) {
-            Record.load(bdrs.mobile.getParameter('record-parent'), resume);
+            Record.all().filter('deleted','=',false).filter('id','=',bdrs.mobile.getParameter('record-parent')).one(resume);
         }
         parent.children().add(record);
     }
-	 
-	// Survey Attributes
-	var attributes;
+     
+    // Survey Attributes
+    var attributes;
     waitfor(attributes) {
         survey.attributes().order('weight', true).list(resume);
     }
 
     var recAttrFormField;
-	for (var i = 0; i < attributes.length; i++) {
+    for (var i = 0; i < attributes.length; i++) {
         recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attributes[i]);
         recAttrFormField.fromFormField('#record-survey-attributes', record.attributeValues(), attributeValueMap[attributes[i].id]);     
-	}
-	
-	var attributes;
+    }
+    
+    var attributes;
     waitfor(attributes) {
         survey.attributes().list(resume);
     }
     
     // Taxon Group Attributes
-    if(species !== null) {
-	    var taxonGroup = species.taxonGroup();
-	    if(taxonGroup !== null) {
-		    var groupAttributes;
-		    waitfor(groupAttributes) {
-		        taxonGroup.attributes().order('weight', true).filter('tag', '=', false).list(resume);
-		    }
-			for (var i = 0; i < groupAttributes.length; i++) {
-		        recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(groupAttributes[i]);
-		        recAttrFormField.fromFormField('#record-taxongroup-attributes', record.attributeValues(), attributeValueMap[groupAttributes[i].id]);
-	        }     
-	    }
-	}
-    
-    if (bdrs.mobile.getParameter('censusMethodId') !== undefined) {
-        // we are doing a census type record, and don't need the species box.
-        var cmethod;
-        waitfor(cmethod) {
-            CensusMethod.load(bdrs.mobile.getParameter('censusMethodId'), resume);
+    if(species !== null && species !== undefined) {
+        var taxonGroup = species.taxonGroup();
+        if(taxonGroup !== null) {
+            var groupAttributes;
+            waitfor(groupAttributes) {
+                taxonGroup.attributes().order('weight', true).filter('tag', '=', false).list(resume);
+            }
+            for (var i = 0; i < groupAttributes.length; i++) {
+                recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(groupAttributes[i]);
+                recAttrFormField.fromFormField('#record-taxongroup-attributes', record.attributeValues(), attributeValueMap[groupAttributes[i].id]);
+            }     
         }
-        
+    }
+
+
+    if (cmethod !== null && cmethod !== undefined) {
         var cmAttributes;
         waitfor(cmAttributes) {
             cmethod.attributes().order('weight', true).list(resume);
@@ -768,12 +890,12 @@ exports._record = function() {
         }
         cmethod.records().add(record);
     }
-	
-	persistence.flush();
-	
-	jQuery.mobile.pageLoading(true);
-	
-	return record;
+    
+    persistence.flush();
+    
+    jQuery.mobile.pageLoading(true);
+    
+    return record;
 }
 
 exports._getCensusMethodAttribute = function(cmethod, attrName, attrTypeCode) {

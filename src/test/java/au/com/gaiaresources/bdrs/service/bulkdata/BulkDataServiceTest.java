@@ -26,16 +26,20 @@ import org.hibernate.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -71,6 +75,8 @@ public class BulkDataServiceTest extends AbstractControllerTest {
     private LocationService locationService;
     @Autowired
     private LSIDService lsidService;
+    @Autowired
+    private MetadataDAO metadataDAO;
     
     Logger log = Logger.getLogger(getClass());
     
@@ -86,6 +92,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
     Attribute surveyAttr2;
     
     User user;
+    List<User> userList;
     
     TaxonGroup taxongroup;
     IndicatorSpecies species;
@@ -95,6 +102,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         user = userDAO.getUser("admin");
         survey = surveyDAO.createSurvey("my super survey");
         survey.setDescription("a really great survey");
+        survey.setDefaultRecordVisibility(RecordVisibility.CONTROLLED, metadataDAO);
         
         cm = createCensusMethod("c:m:1:", Taxonomic.NONTAXONOMIC);
         testAttr1 = createAttribute("attribute1", "desc1", true, AttributeScope.RECORD, false, "IN");
@@ -132,9 +140,12 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         surveyDAO.updateSurvey(survey);
         
         requestDropDatabase();
+        
+        userList = createTestUsers();
+        
     }
-    
-    @Test
+
+	@Test
     public void testImportSurvey() throws Exception, ParseException {
         InputStream stream = getClass().getResourceAsStream("basic_upload.xls");
         Survey survey = new Survey();
@@ -322,8 +333,13 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         
         Assert.assertEquals(2, recDAO.countAllRecords().intValue());
         
-        //Record r = recDAO.getLatestRecord();
         List<Record> recList = recDAO.getRecords(user);
+        
+        for (Record rec : recList) {
+            Assert.assertEquals("record visibility should be set to the survey's default record visibility", 
+                                survey.getDefaultRecordVisibility(), rec.getRecordVisibility());
+        }
+        
         {
             Record r = getRecordByCensusMethod(recList, cm);
            
@@ -661,12 +677,17 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         bulkDataService.saveRecords(user, bulkUpload, true);
 
         Assert.assertEquals(2, recDAO.countAllRecords().intValue());
-        
-        //Record r = recDAO.getLatestRecord();
+
         List<Record> recList = recDAO.getRecords(user);
+
+        for (Record rec : recList) {
+            Assert.assertEquals("record visibility should be set to the survey's default record visibility", 
+                                survey.getDefaultRecordVisibility(), rec.getRecordVisibility());
+        }
+        
         {
             Record r = getRecordByCensusMethod(recList, cm);
-           
+
             Assert.assertNotNull(r);
             Assert.assertEquals(cm.getId(), r.getCensusMethod().getId());
             
@@ -752,6 +773,39 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         
         Assert.assertEquals(0, errors.size());
         Assert.assertEquals(2, bulkUpload.getRecordUploadList().size());
+    }
+    
+    @Test
+    public void testExportUsers() throws Exception{
+    	
+    	 File spreadSheetTmp = File.createTempFile("BulkDataServiceTest.testExportUsers", ".xls");
+         FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
+         registerStream(outStream);
+
+         bulkDataService.exportUsers(userList, outStream);
+         
+         InputStream inStream = new FileInputStream(spreadSheetTmp);
+         registerStream(inStream);
+         Workbook wb = new HSSFWorkbook(inStream);
+       
+         Sheet usersSheet = wb.getSheet(AbstractBulkDataService.USERS_SHEET_NAME);
+         Assert.assertNotNull(usersSheet);
+         Assert.assertEquals(2, usersSheet.getLastRowNum());
+         // The Headers
+         Assert.assertEquals("Login", usersSheet.getRow(0).getCell(0).getStringCellValue());
+         Assert.assertEquals("Given Name", usersSheet.getRow(0).getCell(1).getStringCellValue());
+         Assert.assertEquals("Surname", usersSheet.getRow(0).getCell(2).getStringCellValue());
+         Assert.assertEquals("Email Address", usersSheet.getRow(0).getCell(3).getStringCellValue());
+        //The users
+         Assert.assertEquals("user", usersSheet.getRow(1).getCell(0).getStringCellValue());
+         Assert.assertEquals("fn", usersSheet.getRow(1).getCell(1).getStringCellValue());
+         Assert.assertEquals("ln", usersSheet.getRow(1).getCell(2).getStringCellValue());
+         Assert.assertEquals("user@mailinator.com", usersSheet.getRow(1).getCell(3).getStringCellValue());
+         Assert.assertEquals("admin", usersSheet.getRow(2).getCell(0).getStringCellValue());
+         Assert.assertEquals("firstn", usersSheet.getRow(2).getCell(1).getStringCellValue());
+         Assert.assertEquals("lastn", usersSheet.getRow(2).getCell(2).getStringCellValue());
+         Assert.assertEquals("admin@mailinator.com", usersSheet.getRow(2).getCell(3).getStringCellValue());
+    	 
     }
     
     private class MyTestRow {
@@ -1039,4 +1093,16 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         a.setTypeCode(typecode);
         return attrDAO.save(a);
     }
+    
+    private List<User> createTestUsers() {
+    	List<User> users = new ArrayList<User>();
+    	PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
+	     String encodedPassword = passwordEncoder.encodePassword("password", null);
+	     User user = userDAO.createUser("user", "fn", "ln", "user@mailinator.com", encodedPassword, "usersIdent", new String[] { "ROLE_USER" });
+	     users.add(user);
+	     User admin = userDAO.createUser("admin", "firstn", "lastn", "admin@mailinator.com", encodedPassword, "adminIdent", new String[] { "ROLE_ADMIN" });
+	     users.add(admin);
+	     return users;
+		
+	}
 }

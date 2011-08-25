@@ -52,12 +52,26 @@ public class RecordAttributeHandler implements OperatorHandler {
                 case STRING_WITH_VALID_VALUES:
                 case IMAGE:
                 case FILE:
+                case BARCODE:
+                case TIME:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getStringValue(), condition.stringValue());
                     break;
                 case INTEGER:
                 case INTEGER_WITH_RANGE:
                     match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().intValue(), condition.intValue());
                     break;
+                case SINGLE_CHECKBOX:
+                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getBooleanValue(), condition.booleanValue());
+                	break;
+                case MULTI_CHECKBOX:
+                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiCheckboxValue(), condition.stringArrayValue());
+                	break;
+                case MULTI_SELECT:
+                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiSelectValue(), condition.stringArrayValue());
+                	break;
                 case DECIMAL:
                     match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().doubleValue(), condition.doubleValue());
                     break;

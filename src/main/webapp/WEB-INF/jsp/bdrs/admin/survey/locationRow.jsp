@@ -13,12 +13,9 @@
             <td>
                 <input type="text" name="add_name_${index}" class="location_name deferred_ketchup(required)"/>
                 <input type="hidden" name="add_location" value="${index}"/>
-            </td>
-            <td>
-                <input type="text" name="add_latitude_${index}" class="location_lat deferred_ketchup(range(-90, 90), number)"/>
-            </td>
-            <td>
-                <input type="text" name="add_longitude_${index}" class="location_lon deferred_ketchup(range(-180, 180), number)"/>
+                <input type="hidden" name="add_location_WKT_${index}" />
+                <input type="hidden" name="add_latitude_${index}" />
+                <input type="hidden" name="add_longitude_${index}" />
             </td>
             <td class="textcenter">
                 <a id="delete_${index}" href="javascript: void(0);" onclick="jQuery(this).parents('tr').hide().find('select, input, textarea').attr('disabled', 'disabled'); return false;">
@@ -30,14 +27,11 @@
     <c:otherwise>
         <tr>
             <td>
-                <input type="text" name="name_${location.id}" class="location_name deferred_ketchup(required)" value="${location.name}"/>
+	            <input type="text" name="name_${location.id}" class="location_name deferred_ketchup(required)" value="${location.name}"/>
                 <input type="hidden" name="location" value="${location.id}"/>
-            </td>
-            <td>
-                <input type="text" name="latitude_${location.id}" value="<%= location.getLocation().getY() %>" class="location_lat deferred_ketchup(range(-90, 90), number)"/>
-            </td>
-            <td>
-                <input type="text" name="longitude_${location.id}" value="<%= location.getLocation().getX() %>" class="location_lon deferred_ketchup(range(-180, 180), number)"/>
+                <input type="hidden" name="location_WKT_${location.id}" value="<%= location.getLocation() %>" />
+                <input type="hidden" name="latitude_${location.id}" value="<%= location.getLocation().getCentroid().getY() %>"/>
+                <input type="hidden" name="longitude_${location.id}" value="<%= location.getLocation().getCentroid().getX() %>"/>
             </td>
             <td class="textcenter">
                 <a id="delete_${location.id}" href="javascript: void(0);" onclick="jQuery(this).parents('tr').hide().find('select, input, textarea').attr('disabled', 'disabled'); return false;">

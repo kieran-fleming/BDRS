@@ -129,28 +129,34 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
             return surveys;
         }
     }
-
     public List<Survey> getActiveSurveysForUser(User user) {
+        return getActiveSurveysForUser(user, null);
+    }
+    public List<Survey> getActiveSurveysForUser(User user, Group group) {
         StringBuilder builder = new StringBuilder();
-
         // Find all surveys that are active, and
         // public or
         // user is in the survey or group
         builder.append("select distinct s");
         builder.append(" from Survey s left join s.users u left join s.groups g");
         builder.append("  where s.active = true");
-        builder.append("   and ((u = :user)");
-        builder.append("         or ");
+        builder.append("   and (");
         builder.append("        (s.public = true)");
         builder.append("         or ");
-        builder.append("        (u.id in (select id from g.users)");
-        builder.append("                  and g.id in (select id from s.groups)");
+        builder.append("        (u = :user or (:user in elements(g.users)");
+        builder.append("                  and g in elements(s.groups))");
         builder.append("        )");
         builder.append("       )");
+        
+        if(group != null){
+            builder.append(" and g = :group");
+        }
         builder.append("   order by s.name");
-
         Query q = getSession().createQuery(builder.toString());
         q.setParameter("user", user);
+        if(group != null){
+            q.setParameter("group", group);
+        }
         return q.list();
     }
 
@@ -262,7 +268,6 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
         } else {
             if(surveys.size() > 1) {
                 log.warn("Multiple surveys with the same name found. Returning the first");
-
             }
             return surveys.get(0);
         }
@@ -373,7 +378,7 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
         q.setParameter("survey", s);
         CustomType geometryType = new CustomType(GeometryUserType.class, null);
         for(Location l: s.getLocations()){
-            pointSet.add(l.getLocation());
+            pointSet.add(l.getLocation().getCentroid());
             
         }
         MultiPoint locationPoints = geometryFactory.createMultiPoint((Point[]) pointSet.toArray(new Point[pointSet.size()]));

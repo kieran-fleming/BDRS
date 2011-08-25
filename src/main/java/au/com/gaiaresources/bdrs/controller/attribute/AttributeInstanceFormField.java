@@ -217,10 +217,10 @@ public class AttributeInstanceFormField extends AbstractAttributeFormField {
     }
 
     /**
-     * Sets the <code>Sttribute</code> represented by this form field.
+     * Sets the <code>Attribute</code> represented by this form field.
      * 
      * @param attribute
-     *            the <code>Sttribute</code> represented by this form field.
+     *            the <code>Attribute</code> represented by this form field.
      */
     public void setAttribute(Attribute attribute) {
         this.attribute = attribute;

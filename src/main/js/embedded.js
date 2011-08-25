@@ -79,7 +79,7 @@ bdrs.embed.widgetBuilder = {
         embedScript.attr({
             "id" : embedParams.targetId,
             "type": "text/javascript",
-            "src": document.location.hostname + (port?":"+port:"") + bdrs.contextPath+"/bdrs/public/embedded/bdrs-embed.js?"+jQuery.param(embedParams)
+            "src": "http://" + document.location.hostname + (port?":"+port:"") + bdrs.contextPath+"/bdrs/public/embedded/bdrs-embed.js?"+jQuery.param(embedParams)
         });
         
         embedSrcElem.text(bdrs.embed.widgetBuilder.elemToString(embedScript[0]));

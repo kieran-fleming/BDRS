@@ -42,9 +42,9 @@ public class HomePageController extends AbstractController {
     private static final String[] MOBILE_TAGS = { "android", "iphone", "ipad" };
     private static final String[] DEVICES_WITH_APP = { "Android"};
 
-    
+    public static final String HOME_URL = "/home.htm";
 
-    @RequestMapping(value = "/home.htm", method = RequestMethod.GET)
+    @RequestMapping(value = HOME_URL, method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request,
             HttpServletResponse response) {
     	
@@ -187,11 +187,11 @@ public class HomePageController extends AbstractController {
             if (rolesList.contains(Role.ADMIN)) {
                 return getRedirectAdminHome();
             } else if (rolesList.contains(Role.SUPERVISOR)) {
-                return "redirect:/teacher/home.htm";
+                return "redirectWithoutModel:/teacher/home.htm";
             } else if (rolesList.contains(Role.POWERUSER)) {
-                return "redirect:/power/home.htm";
+                return "redirectWithoutModel:/power/home.htm";
             } else if (rolesList.contains(Role.USER)) {
-                return "redirect:/user/home.htm";
+                return "redirectWithoutModel:/user/home.htm";
             } 
         }
 

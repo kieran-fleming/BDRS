@@ -38,7 +38,7 @@ import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 
-import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Geometry;
 
 @Controller
 public class LocationBaseController extends AbstractController {
@@ -109,13 +109,7 @@ public class LocationBaseController extends AbstractController {
         // Added Locations
         Map<Integer, Location> addedLocationMap = new HashMap<Integer, Location>();
         for(int rawIndex : addLocationIndexes) {
-            double latitude = Double.parseDouble(request.getParameter("add_latitude_"+rawIndex));
-            double longitude = Double.parseDouble(request.getParameter("add_longitude_"+rawIndex));
-            Point point = locationService.createPoint(latitude, longitude);
-
-            Location location = new Location();
-            location.setName(request.getParameter("add_name_"+rawIndex));
-            location.setLocation(point);
+            Location location = createNewLocation(request, String.valueOf(rawIndex));
             location.setUser(user);
             location = locationDAO.save(location);
             
@@ -125,12 +119,7 @@ public class LocationBaseController extends AbstractController {
         // Updated Locations
         for(int pk : locationIds) {
             Location location = locationMap.remove(pk);
-            double latitude = Double.parseDouble(request.getParameter("latitude_"+pk));
-            double longitude = Double.parseDouble(request.getParameter("longitude_"+pk));
-            Point point = locationService.createPoint(latitude, longitude);
-
-            location.setName(request.getParameter("name_"+pk));
-            location.setLocation(point);
+            location = updateLocation(request, String.valueOf(pk), location);
             location.setUser(user);
             locationDAO.save(location);
         }
@@ -205,6 +194,7 @@ public class LocationBaseController extends AbstractController {
         return mv;
     }
     
+    
     // ----------------------------------------
     // Admin Functionality
     // ----------------------------------------
@@ -217,7 +207,7 @@ public class LocationBaseController extends AbstractController {
         mv.addObject("index", Integer.parseInt(request.getParameter("index")));
         return mv;
     }
-
+    
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editLocations.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyLocations(HttpServletRequest request, HttpServletResponse response) {
@@ -236,15 +226,8 @@ public class LocationBaseController extends AbstractController {
         // Added Locations
         if(request.getParameter("add_location") != null ) {
             for(String rawIndex : request.getParameterValues("add_location")) {
-                double latitude = Double.parseDouble(request.getParameter("add_latitude_"+rawIndex));
-                double longitude = Double.parseDouble(request.getParameter("add_longitude_"+rawIndex));
-                Point point = locationService.createPoint(latitude, longitude);
-
-                Location location = new Location();
-                location.setName(request.getParameter("add_name_"+rawIndex));
-                location.setLocation(point);
+                Location location = createNewLocation(request, rawIndex);
                 locationDAO.save(location);
-
                 locationList.add(location);
             }
         }
@@ -254,12 +237,7 @@ public class LocationBaseController extends AbstractController {
             for(String rawPK : request.getParameterValues("location")) {
                 int pk = Integer.parseInt(rawPK);
                 Location location = locationDAO.getLocation(pk);
-                double latitude = Double.parseDouble(request.getParameter("latitude_"+rawPK));
-                double longitude = Double.parseDouble(request.getParameter("longitude_"+rawPK));
-                Point point = locationService.createPoint(latitude, longitude);
-
-                location.setName(request.getParameter("name_"+rawPK));
-                location.setLocation(point);
+                location = updateLocation(request, rawPK, location);
                 locationDAO.save(location);
 
                 locationList.add(location);
@@ -305,6 +283,44 @@ public class LocationBaseController extends AbstractController {
             mv = new ModelAndView(new RedirectView("/bdrs/admin/survey/listing.htm", true));
         }
         return mv;
+    }
+
+    /**
+     * Convenience method for updating a location from an HTTP request.
+     * @param request The HTTP request
+     * @param id The unique identifier of the location in the request
+     * @param location The existing location object from the DAO
+     * @return The modified Location object
+     */
+    private Location updateLocation(HttpServletRequest request, String id,
+            Location location) {
+        return updateLocation(location, request.getParameter("location_WKT_"+id), request.getParameter("name_"+id));
+    }
+
+    /**
+     * Convenience method for setting the name and location of a Location object
+     * to the given wktString/name
+     * @param location The Location to update
+     * @param wktString The WKT string of the Geometry to set as the location
+     * @param name The name of the location
+     * @return The modified Location object
+     */
+    private Location updateLocation(Location location, String wktString, String name) {
+        Geometry geometry = locationService.createGeometryFromWKT(wktString);
+        location.setName(name);
+        location.setLocation(geometry);
+        return location;
+    }
+    
+    /**
+     * Convenience method for creating a new location from an HTTP request
+     * @param request The request object
+     * @param id The unique identifier of the location in the request
+     * @return The newly created Location object
+     */
+    private Location createNewLocation(HttpServletRequest request, String id) {
+        Location location = new Location();
+        return updateLocation(location, request.getParameter("add_location_WKT_"+id), request.getParameter("add_name_"+id));
     }
 
     private Survey getSurvey(String rawSurveyId) {

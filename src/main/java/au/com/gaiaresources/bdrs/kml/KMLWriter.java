@@ -36,6 +36,7 @@ import au.com.gaiaresources.bdrs.kml.net.opengis.kml.Vec2Type;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -180,8 +181,15 @@ public class KMLWriter {
      */
     public void createPlacemark(String folderName, String label,
             String description, Geometry location, String style) {
+        createPlacemark(folderName, label, description, label, location, style);
+    }
+    
+    public void createPlacemark(String folderName, String label,
+            String description, String id, Geometry location, String style) {
         PlacemarkType placemarkType = objectFactory.createPlacemarkType();
         placemarkType.setName(label);
+        placemarkType.setId(id);
+        
         if(description != null) {
             placemarkType.setDescription(description);
         }
@@ -196,6 +204,8 @@ public class KMLWriter {
             placemarkType.setAbstractGeometryGroup(createPolygon((Polygon) location));
         } else if (location instanceof MultiPolygon) {
             placemarkType.setAbstractGeometryGroup(createMultiPolygon((MultiPolygon)location));
+        } else if (location instanceof MultiLineString) {
+            placemarkType.setAbstractGeometryGroup(createMultiLineString((MultiLineString)location));
         }
     }
 
@@ -215,6 +225,16 @@ public class KMLWriter {
         return objectFactory.createLineString(lineType);
     }
 
+    private JAXBElement<MultiGeometryType> createMultiLineString(MultiLineString multiLineString) {
+        MultiGeometryType mgtype = objectFactory.createMultiGeometryType();
+        for (int i = 0; i < multiLineString.getNumGeometries(); i++)
+        {
+            Geometry g = multiLineString.getGeometryN(i);
+            mgtype.getAbstractGeometryGroup().add(createLineString((LineString)g));
+        }
+        return objectFactory.createMultiGeometry(mgtype);
+    }
+    
     private JAXBElement<MultiGeometryType> createMultiPolygon(MultiPolygon mpoly) {
         MultiGeometryType mgtype = objectFactory.createMultiGeometryType();
         for (int i = 0; i < mpoly.getNumGeometries(); i++)
@@ -224,7 +244,6 @@ public class KMLWriter {
         }
         return objectFactory.createMultiGeometry(mgtype);
     }
-
 
     private JAXBElement<PolygonType> createPolygon(Polygon p) {
         PolygonType polygonType = objectFactory.createPolygonType();

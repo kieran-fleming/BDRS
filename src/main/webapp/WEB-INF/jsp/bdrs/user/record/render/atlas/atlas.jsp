@@ -38,30 +38,31 @@
             </tiles:insertDefinition>
         </span>
     </c:if>
-	<div class="leftCol">
+	<div class="leftCol left">
 		<h3 class="left">
-			<c:forEach items="${ taxon.infoItems }" var="profile">
-			    <jsp:useBean id="profile" type="au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile"/>
-			    <c:if test="${ not empty profile.content }">
-			        <c:choose>
-			            <c:when test="<%= profile.getType().equals(profile.SPECIES_PROFILE_THUMBNAIL) %>">
-			            	<div class="right">
-				                <a class="left" href="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${ profile.content }">
-				                    <img class="thumb" src="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${ profile.content }"/>
-				                </a>
-			                </div>
-			            </c:when>
-			            <c:otherwise>
-			            </c:otherwise>
-			        </c:choose>
-			    </c:if>
-			</c:forEach>
 		    <span class="scientificName">
 			    <c:out value="${ taxon.scientificName }"/>
 		    </span>
 			&nbsp;:&nbsp;
 			<c:out value="${ taxon.commonName }"/>
 		</h3>
+			<c:forEach items="${ taxon.infoItems }" var="profile">
+			    <jsp:useBean id="profile" type="au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile"/>
+			    <c:if test="${ not empty profile.content }">
+			        <c:choose>
+			            <c:when test="<%= profile.getType().equals(profile.SPECIES_PROFILE_THUMBNAIL) %>">
+                                <a class="left" href="http://bie.ala.org.au/species/${ taxon.scientificName }">
+				                <!-- a class="left" href="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${ profile.content }"-->
+				                    <img class="thumb" src="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${ profile.content }"/>
+				                </a>
+			                
+			            </c:when>
+			            <c:otherwise>
+			            </c:otherwise>
+			        </c:choose>
+			    </c:if>
+			</c:forEach>
+		    
 
         <table class="form_table">
             <tbody>
@@ -91,13 +92,11 @@
 	                    <label for="locationName">Location</label>
                     </th>
                     <td>
-                        <textarea name="locationName" id="locationName" class="locationTextArea"
-                            <c:if test="${ record != null && record.location != null }">
-                                value='<c:out value="${ record.location.name }"/>'
-                            </c:if>
-                        ></textarea>
+                        <textarea name="locationName" id="locationName" class="locationTextArea"><c:if test="${ record != null && record.location != null }">${ record.location.name }</c:if></textarea>
                         &nbsp;
+                        <!-- 
                         <a href="javascript: bdrs.survey.location.updateLocation(-1)">Clear</a>
+                        -->
                     </td>
 	            </tr>
 	            
@@ -146,7 +145,7 @@
 		        <c:otherwise>
 		                <div class="textright">
 		                    <!-- only show the delete button if it is an existing record -->
-		                    <c:if test="${record.id != null}">
+		                    <c:if test="${record.id != null} & false">
                                 <input class="form_action" type="button" name="submitDelete" value="Delete Record" onclick="bdrs.survey.deleteRecord()" />
                             </c:if>
                             <input class="form_action" type="submit" name="submit" value="Save Changes"/>
@@ -190,6 +189,7 @@
 
 <script type="text/javascript">
     bdrs.survey.location.LAYER_NAME = 'Position Layer';
+    bdrs.survey.location.LOCATION_LAYER_NAME = 'Location Layer';
     <c:choose>
         <c:when test="${ defaultLocation == null }">
             bdrs.survey.location.DEFAULT_LOCATION_ID = null;
@@ -201,24 +201,35 @@
 
     bdrs.survey.location.updateLocation = function(pk) {
         if(pk > 0) {
-            jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
-                var wkt = new OpenLayers.Format.WKT();
-                var feature = wkt.read(data.location);
-
-                var lat = jQuery('input[name=latitude]').val(feature.geometry.y).blur();
-                var lon = jQuery('input[name=longitude]').val(feature.geometry.x).blur();
-
-                var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
-                layer.removeFeatures(layer.features);
-
-                var lonLat = new OpenLayers.LonLat(
-                    feature.geometry.x, feature.geometry.y);
-                lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
-                                          bdrs.map.GOOGLE_PROJECTION);
-                layer.addFeatures(new OpenLayers.Feature.Vector(
-                    new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat)));
-                
-                bdrs.map.baseMap.setCenter(lonLat, bdrs.map.baseMap.getNumZoomLevels()-1);
+        	jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
+                var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
+	            var feature = wkt.read(data.location);
+	            var point = feature.geometry.getCentroid().transform(
+	                    bdrs.map.GOOGLE_PROJECTION,
+	                    bdrs.map.WGS84_PROJECTION);
+	            var lat = jQuery('input[name=latitude]').val(point.y).blur();
+	            var lon = jQuery('input[name=longitude]').val(point.x).blur();
+	
+	            // add the location point to the map
+	            var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
+	            layer.removeFeatures(layer.features);
+	
+	            var lonLat = new OpenLayers.LonLat(point.x, point.y);
+	            lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
+	                                      bdrs.map.GOOGLE_PROJECTION);
+	            layer.addFeatures(new OpenLayers.Feature.Vector(
+	                new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat)));
+	
+	            // add the location geometry to the map
+	            var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
+		        loclayer.removeFeatures(loclayer.features);
+	
+	            loclayer.addFeatures(feature);
+	
+	            // zoom the map to show the currently selected location
+	            var geobounds = feature.geometry.getBounds();
+	            var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
+	            bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
                 jQuery("#locationName").val(data.name);
                 jQuery("#bookmarkLocation").attr("disabled", "disabled");
                 
@@ -226,8 +237,8 @@
                     bdrs.survey.location.DEFAULT_LOCATION_ID === parseInt(pk,10)) {
                     jQuery("#defaultLocation").attr("checked", "checked");
                 } else {
-                    jQuery("#defaultLocation").removeAttr("checked", "checked");
-                }
+	                jQuery("#defaultLocation").removeAttr("checked", "checked");
+	            }
             });
         }
         else {
@@ -239,46 +250,13 @@
             jQuery("#locationName").val("");
             jQuery("#bookmarkLocation").attr("disabled", "disabled");
         }
-    }
+    };
 
     jQuery(function() {
         // Create the center point of the map if we have one.
         var lat = jQuery('input[name=latitude]');
         var lon = jQuery('input[name=longitude]');
-        var olLonLat = null;
-        if(lat.val().length > 0 && lon.val().length > 0) {
-            olLonLat = new OpenLayers.LonLat(
-                    parseFloat(lon.val()), parseFloat(lat.val()));
-        }
-    
-        var layerName = bdrs.survey.location.LAYER_NAME;
-        var mapOptions = {
-            mapCenter: olLonLat,
-            mapZoom: -1,
-            geocode : {
-                selector: '#geocode',
-                zoom: -1,
-                useKeyHandler: false
-            }
-        };
-        bdrs.map.initBaseMap('base_map', mapOptions);
-        
-        <c:choose>
-            <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
-                var layer = bdrs.map.addPositionLayer(layerName);                          
-            </c:when>
-            <c:otherwise>
-                var layer = bdrs.map.addSingleClickPositionLayer(layerName, 'input[name=latitude]', 'input[name=longitude]');
-            </c:otherwise>
-        </c:choose>
-        
-        // If there is an intial point, add the feature.
-        if(olLonLat !== undefined && olLonLat !== null) {
-            olLonLat = olLonLat.transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION);
-            var feature = new OpenLayers.Feature.Vector(
-                new OpenLayers.Geometry.Point(olLonLat.lon, olLonLat.lat));
-            layer.addFeatures(feature);
-        }
+
 
         var latLonChangeHandler = function() {
             var callback = function(name) {
@@ -419,9 +397,6 @@
             delay: 300
         });
         
-        if (jQuery("#date").val().length === 0) {
-        	jQuery("#date").val(bdrs.util.formatDate(new Date()));
-        }
     });
     
     
@@ -437,7 +412,71 @@
             };
             bdrs.postWith(url, param);
         }
-    }
+    };
+    
+    /**
+    * Prepopulate fields
+    */
+    jQuery(function(){
+        bdrs.form.prepopulate();
+    });
+    
+    /**
+     *  OpenLayers must be done after window load on IE.
+     */
+    jQuery(window).load(function() {
+    	var lat = jQuery('input[name=latitude]');
+        var lon = jQuery('input[name=longitude]');
+    
+        var olLonLat = null;
+        if(lat.val().length > 0 && lon.val().length > 0) {
+            olLonLat = new OpenLayers.LonLat(
+                    parseFloat(lon.val()), parseFloat(lat.val()));
+        }
+
+        var geocodeClickHandler = function(lonLat) {
+            lonLat.transform(bdrs.map.GOOGLE_PROJECTION, bdrs.map.WGS84_PROJECTION);
+            lat.val(bdrs.map.roundLatOrLon(lonLat.lat)).trigger("change");
+            lon.val(bdrs.map.roundLatOrLon(lonLat.lon)).trigger("change");
+        }
+        
+        var layerName = bdrs.survey.location.LAYER_NAME;
+        var mapOptions = {
+            mapCenter: olLonLat,
+            mapZoom: -1,
+            geocode : {
+                selector: '#geocode',
+                zoom: -1,
+                useKeyHandler: false,
+                clickHandler: geocodeClickHandler
+            }
+        };
+        bdrs.map.initBaseMap('base_map', mapOptions);
+//        bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
+        bdrs.map.centerMap(bdrs.map.baseMap, olLonLat, -1);
+        
+        <c:choose>
+            <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
+                var layer = bdrs.map.addPositionLayer(layerName);
+            </c:when>
+            <c:otherwise>
+                var layer = bdrs.map.addSingleClickPositionLayer(bdrs.map.baseMap, layerName, 'input[name=latitude]', 'input[name=longitude]');
+				bdrs.map.addLonLatChangeHandler(layer, 'input[name=longitude]', 'input[name=latitude]');
+            </c:otherwise>
+        </c:choose>
+        
+        // If there is an intial point, add the feature.
+        if(olLonLat !== undefined && olLonLat !== null) {
+            olLonLat = olLonLat.transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION);
+            var feature = new OpenLayers.Feature.Vector(
+                new OpenLayers.Geometry.Point(olLonLat.lon, olLonLat.lat));
+            layer.addFeatures(feature);
+            // zoom to feature extent
+            var geobounds = feature.geometry.getBounds();
+            var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
+            bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), 10);
+        }
+    });
 </script>
 
 

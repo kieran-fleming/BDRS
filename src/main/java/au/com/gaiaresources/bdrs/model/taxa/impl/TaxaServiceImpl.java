@@ -12,16 +12,18 @@ import org.springframework.stereotype.Service;
 
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.region.RegionDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 
 /**
  * Implementation of <code>TaxaService</code>.
@@ -38,6 +40,9 @@ public class TaxaServiceImpl implements TaxaService {
     private RegionDAO regionDAO;
     @Autowired
     private SpeciesProfileDAO speciesProfileDAO;
+    @Autowired
+    private AttributeDAO attributeDAO;  
+    
     
     @Override
     public TaxonGroup createTaxonGroup(String name, boolean includeBehaviour, boolean includeFirstAppearance,
@@ -255,5 +260,67 @@ public class TaxaServiceImpl implements TaxaService {
     	}
     	return infoItems_subset;
 	}
+
+	@Override
+	public Attribute getFieldNameAttribute() {
+	    IndicatorSpecies fieldSpecies = getFieldSpecies();
+	    TaxonGroup fieldNamesGroup = fieldSpecies.getTaxonGroup();
+	    
+	    for(Attribute attr : fieldNamesGroup.getAttributes()) {
+	        if(Attribute.FIELD_NAME_NAME.equals(attr.getName()) &&
+	                Attribute.FIELD_NAME_DESC.equals(attr.getDescription())) {
+	            return attr;
+	        }
+	    }
+	    
+	    // if we got here, there isn't a field name attribute yet - so create one.
+	    Attribute attr = new Attribute();
+	    attr.setDescription(Attribute.FIELD_NAME_DESC);
+	    attr.setName(Attribute.FIELD_NAME_NAME);
+	    attr.setRequired(false);
+	    attr.setTag(false);
+	    attr.setTypeCode(AttributeType.STRING.getCode());
+	    attr = attributeDAO.save(attr);
+	    
+	    fieldNamesGroup.getAttributes().add(attr);
+	    taxaDAO.save(fieldNamesGroup);
+	    
+	    return attr;
+	}
+
+	@Override
+	public IndicatorSpecies getFieldSpecies() {
+	    
+	    IndicatorSpecies fieldSpecies = taxaDAO.getIndicatorSpeciesByScientificName(IndicatorSpecies.FIELD_SPECIES_NAME);
+	    if(fieldSpecies == null) {
+	           TaxonGroup fieldNamesGroup = taxaDAO.getTaxonGroup(TaxonGroup.FIELD_NAMES_GROUP_NAME);
+	            if(fieldNamesGroup == null){
+	                fieldNamesGroup = new TaxonGroup();
+	                fieldNamesGroup.setName(TaxonGroup.FIELD_NAMES_GROUP_NAME);
+	                fieldNamesGroup.setBehaviourIncluded(false);
+	                fieldNamesGroup.setFirstAppearanceIncluded(false);
+	                fieldNamesGroup.setHabitatIncluded(false);
+	                fieldNamesGroup.setLastAppearanceIncluded(false);
+	                fieldNamesGroup.setNumberIncluded(false);
+	                fieldNamesGroup.setWeatherIncluded(false);
+	                fieldNamesGroup = taxaDAO.save(fieldNamesGroup);
+	            }
+	            
+	            fieldSpecies = new IndicatorSpecies();
+	            fieldSpecies.setScientificName(IndicatorSpecies.FIELD_SPECIES_NAME);
+                    fieldSpecies.setCommonName(IndicatorSpecies.FIELD_SPECIES_NAME);
+	            
+	            fieldSpecies.setAuthor("");
+	            fieldSpecies.setScientificNameAndAuthor("");
+	            fieldSpecies.setTaxonGroup(fieldNamesGroup);
+	            fieldSpecies.setTaxonRank(TaxonRank.SPECIES);
+	            fieldSpecies.setYear("");
+	            
+	            fieldSpecies = taxaDAO.save(fieldSpecies);
+	    }
+	    
+	    return fieldSpecies;
+	}
+	    
     
 }

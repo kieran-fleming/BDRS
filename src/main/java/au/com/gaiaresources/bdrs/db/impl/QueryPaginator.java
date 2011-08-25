@@ -1,6 +1,9 @@
 package au.com.gaiaresources.bdrs.db.impl;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
@@ -9,7 +12,10 @@ import org.hibernate.Session;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernatespatial.GeometryUserType;
 import org.springframework.util.StringUtils;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortingCriteria;
@@ -22,8 +28,33 @@ public class QueryPaginator<T extends PersistentImpl> {
     private Logger log = Logger.getLogger(getClass());
     
     private void applyArgToQuery(Query query, Object[] args) {
+        if (args == null) {
+            return;
+        }
         for (int i = 0; i < args.length; i++) {
-            query.setParameter(i, args[i]);
+            Object obj = args[i];
+            if (obj instanceof Geometry) {
+                query.setParameter(i, obj, GeometryUserType.TYPE);
+            } else {
+                query.setParameter(i, obj);
+            }
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void applyArgToQuery(Query query, Map<String, Object> args) {
+        if (args == null) {
+            return;
+        }
+        for (Entry<String, Object> entry : args.entrySet()) {
+            Object obj = entry.getValue();
+            if (obj instanceof Geometry) {
+                query.setParameter(entry.getKey(), obj, GeometryUserType.TYPE);
+            } else if (obj instanceof Collection) {
+                query.setParameterList(entry.getKey(), (Collection)obj);
+            } else {
+                query.setParameter(entry.getKey(), obj);
+            }
         }
     }
 
@@ -35,14 +66,30 @@ public class QueryPaginator<T extends PersistentImpl> {
     }
     
     @SuppressWarnings("unchecked")
+    private List<T> find(Session sesh, String hql, Map<String, Object> args) {
+        Query query = sesh.createQuery(hql);
+        applyArgToQuery(query, args);
+        return query.list();
+    }
+    
+    public PagedQueryResult<T> page(Session session, String hql, Map<String, Object> args,
+                                    PaginationFilter filter, String sortTargetAlias) {
+        return page(session, hql, null, args, filter, sortTargetAlias);
+    }
+    
     public PagedQueryResult<T> page(Session session, String hql, Object[] args,
             PaginationFilter filter, String sortTargetAlias) {
-
-        // [1] total size
+        return page(session, hql, args, null, filter, sortTargetAlias);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private PagedQueryResult<T> page(Session session, String hql, Object[] argArray, Map<String, Object> argMap,
+                                    PaginationFilter filter, String sortTargetAlias) {
+     // [1] total size
         String countHql = "select count(*) "
                 + HqlUtil.removeSelect(HqlUtil.removeOrders(hql));
 
-        List countlist = find(session, countHql, args);
+        List countlist = argArray != null ? find(session, countHql, argArray) : find(session, countHql, argMap); 
 
         int totalCount = ((Long) countlist.get(0)).intValue();
         if (totalCount < 1) {
@@ -91,7 +138,12 @@ public class QueryPaginator<T extends PersistentImpl> {
         }
         Query query = session.createQuery(paginationHql.toString());
         
-        applyArgToQuery(query, args);
+        if (argArray != null) {
+            applyArgToQuery(query, argArray);    
+        } else {
+            applyArgToQuery(query, argMap);
+        }
+        
         if (filter != null) {
             query.setFirstResult(filter.getFirstResult());
             query.setMaxResults(filter.getMaxResult());
@@ -114,7 +166,6 @@ public class QueryPaginator<T extends PersistentImpl> {
      * @param filter
      * @return
      */
-    @SuppressWarnings("unchecked")
     public PagedQueryResult<T> page(Session session, String hql, Object[] args,
             PaginationFilter filter) {
         return page(session, hql, args, filter, null);

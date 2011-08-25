@@ -12,33 +12,33 @@
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editLocations.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
 
-    <div class="map_wrapper" id="map_wrapper">
+<div id="locationsContainer">
+    <div class="map_wrapper locations_map" id="map_wrapper">
         <div id="base_map" class="defaultmap tracker_map"></div>
         <div id="geocode" class="geocode"></div>
     </div>
-
-    <table id="locationTable" class="datatable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            <c:forEach items="${survey.locations}" var="loc" varStatus="status">
-                <tiles:insertDefinition name="surveyLocationRow">
-                    <tiles:putAttribute name="location" value="${loc}"/>
-                    <tiles:putAttribute name="index" value="${status.index}"/>
-                </tiles:insertDefinition>
-            </c:forEach>
-        </tbody>
-    </table>
-    
+<div class="locations_container">
+    <div class="locationList">
+        <table id="locationList" class="datatable locationList">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${survey.locations}" var="loc" varStatus="status">
+                    <tiles:insertDefinition name="surveyLocationRow">
+                        <tiles:putAttribute name="location" value="${loc}"/>
+                        <tiles:putAttribute name="index" value="${status.index}"/>
+                    </tiles:insertDefinition>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
     <div>
         <input id="restrict_locations" 
-            class="vertmiddle" 
+            class="vertmiddle restrict_locations" 
             name="restrict_locations" 
             type="checkbox"
             <c:if test="<%= survey.isPredefinedLocationsOnly() %>">
@@ -49,15 +49,19 @@
             Restrict record locations to this list only
         </label>
     </div>
-
+</div>
+<div class="buttonpanel">
     <div class="textright buttonpanel">
         <input type="submit" class="form_action" value="Save"/>
         <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
     </div>
+</div>
+</div>
 </form>
 
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.location.initLocationMapAndTable('/bdrs/location/ajaxAddSurveyLocationRow.htm');
+        bdrs.location.initLocationMapAndTable(
+                '/bdrs/location/ajaxAddSurveyLocationRow.htm');
     });
 </script>

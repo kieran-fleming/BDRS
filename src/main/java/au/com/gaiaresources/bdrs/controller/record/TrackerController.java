@@ -2,12 +2,8 @@ package au.com.gaiaresources.bdrs.controller.record;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,7 +28,11 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
-import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordEntry;
+import au.com.gaiaresources.bdrs.deserialization.record.RecordKeyLookup;
 import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -47,27 +48,46 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
-import au.com.gaiaresources.bdrs.util.DateFormatter;
-import au.com.gaiaresources.bdrs.util.DateUtils;
-import au.com.gaiaresources.bdrs.util.StringUtils;
 
 @Controller
 public class TrackerController extends AbstractController {
 
     private Logger log = Logger.getLogger(getClass());
     
+    public static final String EDIT_URL = "/bdrs/user/tracker.htm";
+    
     public static final String TAXON_GROUP_ATTRIBUTE_PREFIX = "taxonGroupAttr_";
     public static final String CENSUS_METHOD_ATTRIBUTE_PREFIX = "censusMethodAttr_";
     
     public static final String TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE_KEY = "Tracker.TaxonAndNumberRequiredTogether";
     public static final String TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE = "Species and number must both be blank, or both filled in.";
+    
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_CENSUS_METHOD_ID = "censusMethodId";
+    public static final String PARAM_SPECIES_ID = "species";
+    public static final String PARAM_SPECIES_NAME = "survey_species_search";
+    public static final String PARAM_INDIVIDUAL_COUNT = "number";
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_NOTES = "notes";
+    public static final String PARAM_TIME_HOUR = "time_hour";
+    public static final String PARAM_TIME_MINUTE = "time_minute";
+    public static final String PARAM_DATE = "date";
+    public static final String PARAM_LATITUDE = "latitude";
+    public static final String PARAM_LONGITUDE = "longitude";
+    public static final String PARAM_LOCATION = "location";
+    public static final String PARAM_ACCURACY = "accuracyInMeters";
+    public static final String PARAM_LOCATION_NAME = "locationName";
+    public static final String PARAM_TIME = "time";
+    public static final String PARAM_WKT = "wkt";
+    public static final String PARAM_RECORD_VISIBILITY = "recordVisibility";
+    
+    public static final String MV_WKT = "wkt";
+    public static final String MV_ERROR_MAP = "errorMap";
 
     @Autowired
     private RecordDAO recordDAO;
@@ -79,34 +99,45 @@ public class TrackerController extends AbstractController {
     private LocationDAO locationDAO;
     @Autowired
     private CensusMethodDAO cmDAO;
-
+    
     @Autowired
     private LocationService locationService;
-    @Autowired
-    private FileService fileService;
-    @Autowired
-    private PropertyService propertyService;
     
     @Autowired
     private RedirectionService redirectionService;
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
+    @SuppressWarnings("unchecked")
     @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
-    @RequestMapping(value = "/bdrs/user/tracker.htm", method = RequestMethod.GET)
+    @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,
             HttpServletResponse response,
-            @RequestParam(value = "surveyId", required = true) int surveyId,
+            @RequestParam(value = PARAM_SURVEY_ID, required = true) int surveyId,
             @RequestParam(value = "taxonSearch", required = false) String taxonSearch,
-            @RequestParam(value = "recordId", required = false, defaultValue = "0") int recordId,
+            @RequestParam(value = PARAM_RECORD_ID, required = false, defaultValue = "0") int recordId,
             @RequestParam(value = "guid", required = false) String guid,
-            @RequestParam(value = "censusMethodId", required = false, defaultValue = "0") Integer censusMethodId) {
+            @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         Record record = recordDAO.getRecord(recordId);
         CensusMethod censusMethod = record == null? cmDAO.get(censusMethodId) : record.getCensusMethod();
         
         record = record == null ? new Record() : record;
+        
+        if (!record.canWrite(getRequestContext().getUser())) {
+            // return forbidden as the only way a user could get to this is by playing
+            // around in firebug or attempting to manipulate the query string to try
+            // and edit a record they are not meant to.
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }
+        
+        // if this is a new record...
+        if (record.getId() == null) {
+            // set survey specific record defaults
+            record.setRecordVisibility(survey.getDefaultRecordVisibility());
+        }
         
         IndicatorSpecies species = null;
         
@@ -160,6 +191,7 @@ public class TrackerController extends AbstractController {
                 taxonGroupFormFieldList.add(formField);
             } else if (censusMethodAttributeList.remove(attr)) {
                 formField = formFieldFactory.createRecordFormField(survey, record, attr, recAttr, CENSUS_METHOD_ATTRIBUTE_PREFIX);
+                censusMethodFormFieldList.add(formField);
             }
         }
         // If there were no pre-existing values for the attributes, add 
@@ -169,6 +201,10 @@ public class TrackerController extends AbstractController {
         }
         for (Attribute taxonGroupAttr : taxonGroupAttributeList) {
             taxonGroupFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, taxonGroupAttr, TAXON_GROUP_ATTRIBUTE_PREFIX));
+        }
+        // Add census method form fields
+        for (Attribute cmAttr : censusMethodAttributeList) {
+            censusMethodFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, cmAttr, CENSUS_METHOD_ATTRIBUTE_PREFIX));
         }
 
     	Taxonomic taxonomic;
@@ -190,19 +226,16 @@ public class TrackerController extends AbstractController {
             surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName, species, taxonomic));
         }
         
-        // Add census method form fields
-        for (Attribute cmAttr : censusMethodAttributeList) {
-            censusMethodFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, cmAttr, CENSUS_METHOD_ATTRIBUTE_PREFIX));
-        }
-        
         Collections.sort(surveyFormFieldList);
         Collections.sort(taxonGroupFormFieldList);
         Collections.sort(censusMethodFormFieldList);
         
-        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
-        getRequestContext().removeSessionAttribute("errorMap");
+        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute(MV_ERROR_MAP);
+        getRequestContext().removeSessionAttribute(MV_ERROR_MAP);
         Map<String, String> valueMap = (Map<String, String>)getRequestContext().getSessionAttribute("valueMap");
         getRequestContext().removeSessionAttribute("valueMap");
+        String wktString = (String)getRequestContext().getSessionAttribute(MV_WKT);
+        getRequestContext().removeSessionAttribute(MV_WKT);
         
         Metadata predefinedLocationsMD = survey.getMetadataByKey(Metadata.PREDEFINED_LOCATIONS_ONLY);
         boolean predefinedLocationsOnly = predefinedLocationsMD != null && 
@@ -217,6 +250,7 @@ public class TrackerController extends AbstractController {
         ModelAndView mv = new ModelAndView("tracker");
         mv.addObject("censusMethod", censusMethod);
         mv.addObject("record", record);
+        mv.addObject("recordId", record.getId());
         mv.addObject("survey", survey);
         mv.addObject("locations", locations);
         mv.addObject("surveyFormFieldList", surveyFormFieldList);
@@ -225,7 +259,13 @@ public class TrackerController extends AbstractController {
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("taxonomic", taxonomic);
         
-        mv.addObject("errorMap", errorMap);
+        if (StringUtils.hasLength(wktString)) {
+            mv.addObject(MV_WKT, wktString);
+        } else {
+            mv.addObject(MV_WKT, (record != null && record.getGeometry() != null) ? record.getGeometry().toText() : "");   
+        }
+        
+        mv.addObject(MV_ERROR_MAP, errorMap);
         mv.addObject("valueMap", valueMap);
         
         return mv;
@@ -233,282 +273,104 @@ public class TrackerController extends AbstractController {
 
     @SuppressWarnings("unchecked")
     @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
-    @RequestMapping(value = "/bdrs/user/tracker.htm", method = RequestMethod.POST)
+    @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView saveRecord(MultipartHttpServletRequest request,
             HttpServletResponse response,
-            @RequestParam(value="surveyId", required=true) int surveyPk,
+            @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyPk,
             // We are allowing a null census method ID to indicate a default form
-            @RequestParam(value="censusMethodId", required=false, defaultValue="0") int censusMethodId) throws ParseException, IOException {
-
+            @RequestParam(value=PARAM_CENSUS_METHOD_ID, required=false, defaultValue="0") int censusMethodId) throws ParseException, IOException {
+        
+        log.debug("param wkt : " +  request.getParameter(PARAM_WKT));
+        
         Survey survey = surveyDAO.getSurvey(surveyPk);
-        CensusMethod censusMethod = cmDAO.get(censusMethodId);
-
-        Taxonomic taxonomic;
-    	if(censusMethod != null && censusMethod.getTaxonomic() != null) {
-    		taxonomic = censusMethod.getTaxonomic();
-    	}
-    	else {
-    		taxonomic = Taxonomic.OPTIONALLYTAXONOMIC;
-    	}
         
-        IndicatorSpecies species;
-        try {
-            species = taxaDAO.getIndicatorSpecies(Integer.parseInt(request.getParameter("species")));
-        } catch (NumberFormatException nfe) {
-            species = null;
+        RecordKeyLookup lookup = new TrackerFormRecordKeyLookup();
+        TrackerFormToRecordEntryTransformer transformer = new TrackerFormToRecordEntryTransformer(locationService);
+        TrackerFormAttributeDictionaryFactory adf = new TrackerFormAttributeDictionaryFactory();
+        AttributeParser parser = new WebFormAttributeParser();
+        
+        RecordDeserializer rds = new RecordDeserializer(lookup, adf, parser);
+        List<RecordEntry> entries = transformer.httpRequestParamToRecordMap(request.getParameterMap(), request.getFileMap());
+        List<RecordDeserializerResult> results = rds.deserialize(getRequestContext().getUser(), entries);
+        
+        // there should be exactly 1 result since we are only putting in 1 RecordEntry...
+        if (results.size() != 1) {
+            log.warn("Expecting only 1 deserialization result but got: " + results.size());
         }
+        RecordDeserializerResult res = results.get(0);
         
-        // Validate Mandatory Fields
-        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
-        Map<String, String[]> params = request.getParameterMap();
-        Map<String, String[]> dateRangeParams = new HashMap<String, String[]>(params);
-        dateRangeParams.put("dateRange", 
-                   new String[] {
-                        survey.getStartDate() == null ? "" : DateFormatter.format(survey.getStartDate(), DateFormatter.DAY_MONTH_YEAR),
-                        survey.getEndDate() == null ? "" : DateFormatter.format(survey.getEndDate(), DateFormatter.DAY_MONTH_YEAR) } );
-        
-        boolean isValid = validator.validate(params, ValidationType.REQUIRED_BLANKABLE_STRING, "notes", null)
-                & validator.validate(params, ValidationType.REQUIRED_DEG_LATITUDE, "latitude", null)
-                & validator.validate(params, ValidationType.REQUIRED_DEG_LONGITUDE, "longitude", null)
-                & validator.validate(params, ValidationType.REQUIRED_HISTORICAL_DATE, "date", null)
-                & validator.validate(params, ValidationType.DOUBLE, "accuracyInMeters", null)
-                & validator.validate(dateRangeParams, ValidationType.DATE_WITHIN_RANGE, "date", null);
-
-        boolean isTaxonomicRecord = Taxonomic.TAXONOMIC.equals(taxonomic) || Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic);
-        String speciesSearch = request.getParameter("survey_species_search");
-    	String numberString = request.getParameter("number");
-    	
-        if(isTaxonomicRecord) {
-        	ValidationType numberValidationType;
-        	ValidationType speciesValidationType;
-        	if(Taxonomic.TAXONOMIC.equals(taxonomic)) {
-        		numberValidationType = ValidationType.REQUIRED_POSITIVE_LESSTHAN;
-        		speciesValidationType = ValidationType.REQUIRED_TAXON;
-        	} else {
-        		numberValidationType = ValidationType.POSITIVE_LESSTHAN;
-        		speciesValidationType = ValidationType.TAXON;
-        	}
-        	
-        	isValid &= validator.validate(params, numberValidationType, "number", null);
+        if (!res.isAuthorizedAccess()) {
+            // shouldn't be needed since we RecordDeserializer won't have saved/updated anything yet
+            // but that is with whitebox knowledge so...
+            requestRollback(request);
             
-        	// No need to check if the species primary key has already resolved a species
-            if(species == null) {
-                isValid = isValid & validator.validate(params, speciesValidationType, "survey_species_search", null);
-            }
+            // return forbidden as the only way a user could get to this is by playing
+            // around in firebug or attempting to manipulate the query string to try
+            // and edit a record they are not meant to.
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }
+        
+        if (!res.getErrorMap().isEmpty()) {
+            // an error has occured
+            requestRollback(request);
             
-            // If the record is optionally taxonomic and there is a species with
-            // no number or a number with no species, then there is an error
-            if(Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic)) {
-            	if(		(species == null) &&
-            			(!((speciesSearch.isEmpty() && numberString.isEmpty()) ||
-            			(!speciesSearch.isEmpty() && !numberString.isEmpty())))) {
-            		isValid = false;
-            		Map<String, String> errorMap = validator.getErrorMap();
-            		String errMsg = propertyService.getMessage(
-            				TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE_KEY, 
-            				TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE);
-            		errorMap.put("number", errMsg);
-            		errorMap.put("survey_species_search", errMsg);
-            	}
-            }
-        }
-        
-        AttributeParser attributeParser = new AttributeParser();
-        for(Attribute attr : survey.getAttributes()) {
-            isValid = isValid & attributeParser.validate(validator, attr, params, request.getFileMap());
-        }
-        if(species != null) {
-            for(Attribute attr : species.getTaxonGroup().getAttributes()) {
-                if(!attr.isTag()) {
-                    isValid = isValid & attributeParser.validate(validator, TAXON_GROUP_ATTRIBUTE_PREFIX, attr, params, request.getFileMap());
-                }
-            }
-        }
-        
-        if(!isValid) {
+            // create valueMap to repopulate the form...
+            Map<String, String[]> params = request.getParameterMap();
             Map<String, String> valueMap = new HashMap<String, String>();
-            for(Map.Entry<String, String[]> entry : params.entrySet()) {
-                if(entry.getValue() != null && entry.getValue().length > 0) {
-                    valueMap.put(entry.getKey(), entry.getValue()[0]);
+            for(Map.Entry<String, String[]> paramEntry : params.entrySet()) {
+                if(paramEntry.getValue() != null && paramEntry.getValue().length > 0) {
+                    if(paramEntry.getValue().length == 1) {
+                            valueMap.put(paramEntry.getKey(), paramEntry.getValue()[0]);
+                    } else {
+                            // Not bothering with a csv writer here because the
+                            // jsp template does a simple String.contains to check
+                            // if the the multi select or multi combo should be picked.
+                            StringBuilder b = new StringBuilder();
+                            for(int q = 0; q<paramEntry.getValue().length; q++) {
+                                    b.append(paramEntry.getValue()[q]);
+                                    b.append(',');
+                            }
+                            valueMap.put(paramEntry.getKey(), b.toString());
+                    }
                 }
             }
-            getRequestContext().setSessionAttribute("errorMap", validator.getErrorMap());
+            
+            // collect some details for reporting
+            IndicatorSpecies species;
+            try {
+                species = taxaDAO.getIndicatorSpecies(Integer.parseInt(request.getParameter(PARAM_SPECIES_ID)));
+            } catch (NumberFormatException nfe) {
+                species = null;
+            }
+            
+            getRequestContext().setSessionAttribute(MV_ERROR_MAP, res.getErrorMap());
             getRequestContext().setSessionAttribute("valueMap", valueMap);
+            getRequestContext().setSessionAttribute(MV_WKT, request.getParameter(PARAM_WKT));
             
             ModelAndView mv = new ModelAndView(new RedirectView("/bdrs/user/tracker.htm", true));
+            mv.addObject(MV_ERROR_MAP, res.getErrorMap());
+
             mv.addObject("surveyId", surveyPk);
             mv.addObject("censusMethodId", new Integer(censusMethodId));
             if(species != null) {
                 mv.addObject("taxonSearch", species.getScientificName());
             }
-            String recordId = request.getParameter("recordId");
+            String recordId = request.getParameter(PARAM_RECORD_ID);
             if(recordId != null && !recordId.isEmpty()) {
-                mv.addObject("recordId", Integer.parseInt(recordId));
+                mv.addObject(PARAM_RECORD_ID, Integer.parseInt(recordId));
             }
             getRequestContext().addMessage("form.validation");
             return mv;
         }
-       
-        // At this point we know that, 
-        // the species primary key does not match an indicator species possibly
-        // due to it not being set because javascript being disabled, however
-        // the taxon validator has been run so the scientific name has been
-        // entered so we can search on the name.
         
-        Integer number = null;
-        if (isTaxonomicRecord) {
-        	if(species != null) {
-        		number = new Integer(numberString);
-        	}
-        	else if(!speciesSearch.isEmpty() && !numberString.isEmpty()) {
-        		species = taxaDAO.getIndicatorSpeciesByScientificName(speciesSearch);
-        		number = new Integer(numberString);
-        	}
-        } else {
-        	species = null;
-        	number = null;
-        }
-        
-        User user = getRequestContext().getUser();
-
-        Record record;
-        if (request.getParameter("recordId") != null
-                && !request.getParameter("recordId").isEmpty()) {
-            record = recordDAO.getRecord(Integer.parseInt(request.getParameter("recordId")));
-        } else {
-            record = new Record();
-        }
-
-        // Check if taxonomic record!
-        record.setSpecies(species);
-        record.setNumber(number);
-        
-        record.setUser(user);
-        record.setSurvey(survey);
-        record.setNotes(request.getParameter("notes"));
-        record.setHeld(false);
-        record.setFirstAppearance(false);
-        record.setLastAppearance(false);
-        // is possible to set this to null
-        record.setCensusMethod(censusMethod);
-
-        // Dates
-        int hour = Integer.parseInt(request.getParameter("time_hour"));
-        int minute = Integer.parseInt(request.getParameter("time_minute"));
-
-        Calendar cal = new GregorianCalendar();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-        Date date = dateFormat.parse(request.getParameter("date"));
-        cal.setTime(date);
-        cal.set(Calendar.HOUR_OF_DAY, hour);
-        cal.set(Calendar.MINUTE, minute);
-        cal.clear(Calendar.MILLISECOND);
-        date = cal.getTime();
-        record.setWhen(date);
-        record.setTime(date.getTime());
-        record.setLastDate(date);
-        record.setLastTime(date.getTime());
-
-        // Position
-        double latitude = Double.parseDouble(request.getParameter("latitude"));
-        double longitude = Double.parseDouble(request.getParameter("longitude"));
-        record.setPoint(locationService.createPoint(latitude, longitude));
-        
-        Location loc = null;
-        // First try to get the location by primary key.
-        if(request.getParameter("location") != null) {
-            int locationId = Integer.parseInt(request.getParameter("location"));
-            // At this point locationId may be -1 and therefore loc will be null.
-            loc = locationDAO.getLocation(locationId);
-        }
-        
-        // If the location lookup fails, try to see if we should create
-        // a new location.
-        if(loc == null) {
-            String locationName = request.getParameter("locationName");
-            if(locationName != null && !locationName.isEmpty()) {
-                loc = new Location();
-                loc.setName(locationName);
-                loc.setLocation(locationService.createPoint(latitude, longitude));
-                loc = locationDAO.save(loc);
-            }
-        }
-        // This loc here may still be null but that is ok.
-        record.setLocation(loc);
-        
-        String accuracyStr = request.getParameter("accuracyInMeters");
-        record.setAccuracyInMeters(StringUtils.notEmpty(accuracyStr) ? Double.parseDouble(accuracyStr) : null);
-
-        // Attach the record Attributes.
-        AttributeValue recAttr;
-        List<AttributeValue> attrValuesToDelete = new ArrayList<AttributeValue>();
-
-        // Survey Attributes
-        for (Attribute attribute : survey.getAttributes()) {
-            recAttr = attributeParser.parse(attribute, record, request.getParameterMap(), request.getFileMap());
-            if (attributeParser.isAddOrUpdateAttribute()) {
-                recAttr = recordDAO.saveAttributeValue(recAttr);
-                if (attributeParser.getAttrFile() != null) {
-                    fileService.createFile(recAttr, attributeParser.getAttrFile());
-                }
-                record.getAttributes().add(recAttr);
-            } else {
-                record.getAttributes().remove(recAttr);
-                attrValuesToDelete.add(recAttr);
-            }
-        }
-        
-        if (isTaxonomicRecord && species != null) {
-            // Taxon Group Attributes
-            for (Attribute attribute : species.getTaxonGroup().getAttributes()) {
-                if(!attribute.isTag()) {
-                    recAttr = attributeParser.parse(TAXON_GROUP_ATTRIBUTE_PREFIX, attribute, record, request.getParameterMap(), request.getFileMap());
-                    if (attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = recordDAO.saveAttributeValue(recAttr);
-                        if (attributeParser.getAttrFile() != null) {
-                            fileService.createFile(recAttr, attributeParser.getAttrFile());
-                        }
-                        record.getAttributes().add(recAttr);
-                    } else {
-                        record.getAttributes().remove(recAttr);
-                        attrValuesToDelete.add(recAttr);
-                    }
-                }
-            }
-        }
-        
-        // Census Method Attributes
-        if (censusMethod != null) {
-            for (Attribute attribute : censusMethod.getAttributes()) {
-                if(!attribute.isTag()) {
-                    recAttr = attributeParser.parse(CENSUS_METHOD_ATTRIBUTE_PREFIX, attribute, record, request.getParameterMap(), request.getFileMap());
-                    if (attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = recordDAO.saveAttributeValue(recAttr);
-                        if (attributeParser.getAttrFile() != null) {
-                            fileService.createFile(recAttr, attributeParser.getAttrFile());
-                        }
-                        record.getAttributes().add(recAttr);
-                    } else {
-                        record.getAttributes().remove(recAttr);
-                        attrValuesToDelete.add(recAttr);
-                    }
-                }
-            }
-        }
-        
-        recordDAO.saveRecord(record);
-        for(AttributeValue attrVal : attrValuesToDelete) {
-            recordDAO.saveAttributeValue(attrVal);
-            recordDAO.delete(attrVal);
-        }
-
         ModelAndView mv;
 
         if (request.getParameter("submitAndAddAnother") != null) {
             mv = new ModelAndView(new RedirectView(
                     "/bdrs/user/surveyRenderRedirect.htm", true));
             mv.addObject("surveyId", survey.getId());            
-            mv.addObject("censusMethodId", new Integer(censusMethodId));
+            mv.addObject("censusMethodId", Integer.valueOf(censusMethodId));
             getRequestContext().addMessage(new Message(
                     "bdrs.record.save.successAddAnother"));
         } else {
@@ -524,6 +386,11 @@ public class TrackerController extends AbstractController {
                         true));
                 getRequestContext().addMessage(new Message("bdrs.record.save.success"));
             }
+            
+            // add the record id to the redirection view for record highlighting
+            if (res.getRecord() != null) {
+            	mv.addObject("recordId", res.getRecord().getId());
+            }
         }
 
         return mv;
@@ -535,7 +402,7 @@ public class TrackerController extends AbstractController {
                                                 HttpServletResponse response,
                                                 @RequestParam(value="surveyId", required=true) int surveyPk,
                                                 @RequestParam(value="taxonId", required=true) int taxonPk,
-                                                @RequestParam(value="recordId", required=false, defaultValue="0") int recordPk) {
+                                                @RequestParam(value=PARAM_RECORD_ID, required=false, defaultValue="0") int recordPk) {
  
         Survey survey = surveyDAO.getSurvey(surveyPk);
         IndicatorSpecies taxon = taxaDAO.getIndicatorSpecies(taxonPk);

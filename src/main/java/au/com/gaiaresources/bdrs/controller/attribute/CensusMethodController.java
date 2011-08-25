@@ -23,19 +23,34 @@ import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataHelper;
 import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataRow;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
+import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 
 @Controller
 public class CensusMethodController extends AbstractController {
     
+    public static final String GET_CENSUS_METHOD_FOR_SURVEY_URL = "/bdrs/user/censusMethod/getSurveyCensusMethods.htm";
+    public static final String EDIT_URL = "/bdrs/admin/censusMethod/edit.htm";
+    
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_DRAW_POINT_ENABLED = "drawPoint";
+    public static final String PARAM_DRAW_LINE_ENABLED = "drawLine";
+    public static final String PARAM_DRAW_POLYGON_ENABLED = "drawPolygon";
+    
+    @Autowired
+    SurveyDAO surveyDAO;
     @Autowired
     CensusMethodDAO cmDAO;
     @Autowired
     AttributeDAO attributeDAO;
+    @Autowired
+    MetadataDAO metadataDAO;
     
     private AttributeFormFieldFactory formFieldFactory = new AttributeFormFieldFactory();
     
@@ -43,11 +58,10 @@ public class CensusMethodController extends AbstractController {
     public ModelAndView listing(HttpServletRequest request, HttpServletResponse response) {
         
         ModelAndView mv = new ModelAndView("censusMethodList");
-        //mv.addObject("censusMethodList", cmDAO.get
         return mv;
     }
     
-    @RequestMapping(value = "/bdrs/admin/censusMethod/edit.htm", method = RequestMethod.GET)
+    @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView openEdit(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="censusMethodId", defaultValue="0", required=false) Integer pk) {
         CensusMethod cm;
@@ -72,7 +86,7 @@ public class CensusMethodController extends AbstractController {
     }
     
     @SuppressWarnings("unchecked")
-    @RequestMapping(value = "/bdrs/admin/censusMethod/edit.htm", method = RequestMethod.POST)
+    @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="censusMethodName", required=true) String name,
             @RequestParam(value="taxonomic", required=false, defaultValue="NONTAXONOMIC") String taxonomic,
@@ -81,7 +95,10 @@ public class CensusMethodController extends AbstractController {
             @RequestParam(value="censusMethodId", defaultValue="0", required=false) Integer pk,
             @RequestParam(value="attribute", required=false) int[] attributePkArray,
             @RequestParam(value="add_attribute", required=false) int[] attributeIndexArray,
-            @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList) {
+            @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList,
+            @RequestParam(value=PARAM_DRAW_POINT_ENABLED, defaultValue="false") boolean drawPoint,
+            @RequestParam(value=PARAM_DRAW_LINE_ENABLED, defaultValue="false") boolean drawLine,
+            @RequestParam(value=PARAM_DRAW_POLYGON_ENABLED, defaultValue="false") boolean drawPolygon) {
         
         CensusMethod cm;
         if(pk == 0) {
@@ -94,6 +111,9 @@ public class CensusMethodController extends AbstractController {
         cm.setType(type);
         cm.setDescription(description);
         cm.setTaxonomic(Taxonomic.valueOf(taxonomic));
+        cm.setDrawPointEnabled(drawPoint, metadataDAO);
+        cm.setDrawLineEnabled(drawLine, metadataDAO);
+        cm.setDrawPolygonEnabled(drawPolygon, metadataDAO);
         
         // -- Attributes --
         List<Attribute> attributeList = new ArrayList<Attribute>();
@@ -165,37 +185,32 @@ public class CensusMethodController extends AbstractController {
         response.getWriter().write(builder.toJson());
     }
     
-    @RequestMapping(value="/bdrs/user/censusMethod/getSurveyCensusMethods.htm", method = RequestMethod.GET)
+    @RequestMapping(value=GET_CENSUS_METHOD_FOR_SURVEY_URL, method = RequestMethod.GET)
     public void getSurveyCensusMethods(HttpServletRequest request, HttpServletResponse response,
-            @RequestParam(value="surveyId", required=true) Integer surveyId) throws Exception {
-        PagedQueryResult<CensusMethod> queryResult = cmDAO.search(null, null, surveyId);
+            @RequestParam(value=PARAM_SURVEY_ID, required=true) Integer surveyId) throws Exception {
         
-        List<CensusMethod> censusMethodList = queryResult.getList();
+        Survey survey = surveyDAO.get(surveyId);
+        if (survey == null) {
+            // return empty json object
+            this.writeJson(request, response, "[]");
+			return;
+        }
+        List<CensusMethod> censusMethodList = survey.getCensusMethods();
         JSONArray array = new JSONArray();
         
-        // cover the default case...
-        CensusMethod defaultCensusMethod = new CensusMethod();
-        defaultCensusMethod.setId(0);
-        defaultCensusMethod.setName("Standard Taxonomic (Default)");
-        array.add(defaultCensusMethod.flatten());
-        
+        if (survey.isDefaultCensusMethodProvided()) {
+         // cover the default case...
+            CensusMethod defaultCensusMethod = new CensusMethod();
+            defaultCensusMethod.setId(0);
+            defaultCensusMethod.setName("Standard Taxonomic (Default)");
+            array.add(defaultCensusMethod.flatten());
+        }
         if (censusMethodList != null) {
             for(CensusMethod cm : censusMethodList) {
                 array.add(cm.flatten());
             }
         }
-        
-        // support for JSONP
-        if (request.getParameter("callback") != null) {
-                response.setContentType("application/javascript");              
-                response.getWriter().write(request.getParameter("callback") + "(");
-        } else {
-                response.setContentType("application/json");
-        }
-        response.getWriter().write(array.toString());
-        if (request.getParameter("callback") != null) {
-                response.getWriter().write(");");
-        }
+        writeJson(request, response, array.toString());
     }
     
     // AL - I'm doing it this way to use the tile as a template since we have no javascript templating at the moment and 

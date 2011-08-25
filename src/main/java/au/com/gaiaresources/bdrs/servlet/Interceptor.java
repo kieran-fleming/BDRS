@@ -44,6 +44,8 @@ public class Interceptor implements HandlerInterceptor {
     @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
     
+    public static final String REQUEST_ROLLBACK = "requestRollback";
+    
     @Autowired
     SessionFactory sessionFactory;
     
@@ -63,6 +65,9 @@ public class Interceptor implements HandlerInterceptor {
     private GoogleKeyService gkService;
     
     private static final String GOOGLE_MAP_KEY = "bdrsGoogleMapsKey";
+    private static final String PARAM_PAGE_TITLE = "pageTitle";
+    private static final String MV_USER_ID = "authenticatedUserId";
+    private static final String MV_USER_IS_ADMIN = "isAdmin";
     
     /**
      * 
@@ -155,14 +160,6 @@ public class Interceptor implements HandlerInterceptor {
     	    RequestContext requestContext = RequestContextHolder.getContext();
             modelAndView.getModel().put("context", requestContext);
             
-            String googleMapKey = gkService.getGoogleMapApiKey(request.getServerName());
-            if (googleMapKey == null) {
-                log.error("No google maps key found - google maps will not work");
-                modelAndView.addObject(GOOGLE_MAP_KEY, "");
-            } else {
-                modelAndView.addObject(GOOGLE_MAP_KEY, googleMapKey);
-            }
-            
             // Theming
             Theme theme = null;
             Map<String, ThemeElement> themeElementMap = new HashMap<String, ThemeElement>();
@@ -180,9 +177,31 @@ public class Interceptor implements HandlerInterceptor {
                 modelAndView.getModel().put("themeMap", themeElementMap);
             }
             
+            if (request.getParameter(PARAM_PAGE_TITLE) != null) {
+                modelAndView.addObject(PARAM_PAGE_TITLE, request.getParameter(PARAM_PAGE_TITLE));
+            }
+           
             if (modelAndView.getView() instanceof RedirectView) {
                 requestContext.newTx();
+            } else {
+                // RedirectView by default, exposes model attributes in the URL querystring.
+                // So, only add these model items if we aren't using a redirectview. The items
+                // will get added to the model eventually when the handler for the non redirect
+                // view occurs.
+                String googleMapKey = gkService.getGoogleMapApiKey(request.getServerName());
+                if (googleMapKey == null) {
+                    log.error("No google maps key found - google maps will not work");
+                    modelAndView.getModel().put(GOOGLE_MAP_KEY, "");
+                } else {
+                    modelAndView.getModel().put(GOOGLE_MAP_KEY, googleMapKey);
+                }
+                User loggedInUser = requestContext.getUser();
+                if (loggedInUser != null && loggedInUser.getId() != null) {
+                    modelAndView.getModel().put(MV_USER_ID, loggedInUser.getId().toString());
+                    modelAndView.getModel().put(MV_USER_IS_ADMIN, loggedInUser.isAdmin());
+                }
             }
+            
             if (request.getParameter("format") != null) {
             	if (request.getParameter("format").equalsIgnoreCase("java")) {
 	            	modelAndView.setViewName("jsonDummyView");
@@ -209,9 +228,25 @@ public class Interceptor implements HandlerInterceptor {
     	        (RequestContextHolder.getContext().getHibernate().isOpen()) &&
     			(RequestContextHolder.getContext().getHibernate().getTransaction().isActive())) {
     	    Transaction tx = RequestContextHolder.getContext().getHibernate().getTransaction();
-    	    tx.commit();
+    	    
+    	    Object requestRollback = request.getAttribute(REQUEST_ROLLBACK); 
+    	    if (requestRollback != null && requestRollback instanceof Boolean && ((Boolean)requestRollback) == true) {
+    	        log.info("roll back requested");
+    	        tx.rollback();
+    	    } else {
+    	        tx.commit();
+    	    }
     	}
     	RequestContextHolder.clear();
+    }
+    
+    /**
+     * If called will rollback instead of commit at the end of the request
+     * 
+     * @param request
+     */
+    public static void requestRollback(HttpServletRequest request) {
+        request.setAttribute(Interceptor.REQUEST_ROLLBACK, true);
     }
 
     @SuppressWarnings("unchecked")

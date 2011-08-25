@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.web.servlet.ModelAndView;
-
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -54,11 +54,11 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         // really we will consider anything not "TRUE" to be false
         newMetadataMap.put("otherBool", UserMetaData.FALSE);
         Metadata md;
-        for (String metaKey : newMetadataMap.keySet()) {
-            if (newMetadataMap.get(metaKey) != null) {
+        for (Entry<String, String> entry : newMetadataMap.entrySet()) {
+            if (entry.getValue() != null) {
                 md = new Metadata();
-                md.setKey(metaKey);
-                md.setValue(newMetadataMap.get(metaKey));
+                md.setKey(entry.getKey());
+                md.setValue(entry.getValue());
                 metadataDAO.save(md);
                 newMetatata.add(md);
             }

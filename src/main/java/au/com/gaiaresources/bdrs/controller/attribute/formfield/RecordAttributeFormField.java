@@ -1,10 +1,9 @@
 package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 
-import org.apache.log4j.Logger;
-
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 
@@ -14,9 +13,6 @@ import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
  * {@link AttributeValue}.
  */
 public class RecordAttributeFormField extends AbstractRecordFormField implements TypedAttributeValueFormField {
-
-    private Logger log = Logger.getLogger(getClass());
-
     private TypedAttributeValue recordAttribute;
     private Attribute attribute;
 
@@ -88,4 +84,12 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
 		} 
 		this.recordAttribute = (TypedAttributeValue) attributeValue;
 	}
+	
+    @Override
+    public boolean isDisplayFormField() {
+        return attribute != null && 
+               (AttributeType.HTML.equals(attribute.getType()) || 
+                AttributeType.HTML_COMMENT.equals(attribute.getType()) || 
+                AttributeType.HTML_HORIZONTAL_RULE.equals(attribute.getType()));
+    }
 }

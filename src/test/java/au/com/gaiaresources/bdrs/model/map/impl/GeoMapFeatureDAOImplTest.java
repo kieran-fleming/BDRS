@@ -78,4 +78,16 @@ public class GeoMapFeatureDAOImplTest extends AbstractTransactionalTest {
             Assert.assertTrue(result.contains(f4));
         }
     }
+    
+    @Test
+    public void testNoLayersArray() {
+        List<GeoMapFeature> result = featureDAO.find(new Integer[] { }, null);
+        Assert.assertEquals(0, result.size());
+    }
+    
+    @Test
+    public void testNullLayerId() {
+        List<GeoMapFeature> result = featureDAO.find(null);
+        Assert.assertEquals(0, result.size());
+    }
 }

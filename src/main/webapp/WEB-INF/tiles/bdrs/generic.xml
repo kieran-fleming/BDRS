@@ -18,7 +18,6 @@
         <!-- JavaScript -->
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customJavaScript"/>
-        <put-list-attribute name="customCss"/>
         
         <!-- CSS -->
         <put-list-attribute name="customCss"/>

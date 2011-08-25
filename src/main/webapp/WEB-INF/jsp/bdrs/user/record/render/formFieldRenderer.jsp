@@ -7,6 +7,18 @@
 <tiles:useAttribute name="valueMap" classname="java.util.Map" ignore="true"/>
 
 <c:choose>
+  <c:when test="<%= formField.isDisplayFormField() %>">
+     <%-- Fields for display only, such as, comments, horizontal rules, HTML, etc --%>
+     <tr>
+         <td colspan="2">
+             <tiles:insertDefinition name="attributeRenderer">
+                 <tiles:putAttribute name="formField" value="${formField}"/>
+             </tiles:insertDefinition>
+         </td>
+     </tr>
+  </c:when>
+  <c:otherwise>
+  <c:choose>
     <c:when test="<%= formField.isPropertyFormField() %>">
        <%-- Special Handling for Lat and Lng (Position) --%>
        <c:choose>
@@ -50,7 +62,7 @@
                               <tiles:putAttribute name="locations" value="${ locations }"/>
                               <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                               <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
-                          </tiles:insertDefinition>        
+                          </tiles:insertDefinition>
                       </td>
                   </tr>
               </c:if>
@@ -75,7 +87,7 @@
                                 Individual Count                            
                             </c:when>
                             <c:when test="${ 'accuracyInMeters' == formField.propertyName }">
-                                Accuracy (meters)                            
+                                Coordinate Uncertainty in Meters                            
                             </c:when>
                        </c:choose>
                    </th>
@@ -102,4 +114,6 @@
             </td>
         </tr>
     </c:when>
+</c:choose>
+</c:otherwise>
 </c:choose>

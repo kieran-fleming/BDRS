@@ -12,5 +12,11 @@ bdrs.message = {
     },
     getDom: function() {
         return jQuery(".messages");
-    }
+    },
+	// to be used with $.ajax() for the error property
+	getAjaxErrorFunc: function(msg) {
+		return function(jqXhr, textStatus, errorThrown) {
+			bdrs.message.set(msg + ". Failed with: '" + textStatus + "', Error thrown was: " + errorThrown);
+		};
+	}
 };

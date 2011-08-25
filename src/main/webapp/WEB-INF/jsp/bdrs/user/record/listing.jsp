@@ -25,8 +25,8 @@
                 </td>
                 <td>
                     <jsp:useBean id="rec" type="au.com.gaiaresources.bdrs.model.record.Record" />
-                    <span class="nowrap"><%= rec.getPoint() != null ? rec.getPoint().getX() : rec.getLocation().getLocation().getX() %>,</span>
-                    <span class="nowrap"><%= rec.getPoint() != null ? rec.getPoint().getY() : rec.getLocation().getLocation().getY() %></span>
+                    <span class="nowrap"><%= rec.getPoint() != null ? rec.getPoint().getX() : rec.getLocation().getLocation().getCentroid().getX() %>,</span>
+                    <span class="nowrap"><%= rec.getPoint() != null ? rec.getPoint().getY() : rec.getLocation().getLocation().getCentroid().getY() %></span>
                 </td>
                 <td>
                     <c:out value="${rec.number}"/>

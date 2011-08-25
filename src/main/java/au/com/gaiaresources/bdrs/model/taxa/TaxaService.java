@@ -158,5 +158,13 @@ public interface TaxaService {
     /*Extracts TaxonGoupNames from Map and returns them as a List*/
 	List<String> getTaxonGroupNames(
 			Map<TaxonGroup, List<IndicatorSpecies>> groupData);
+	
+   /**
+    * Returns the Field Species taxon if one exists, otherwise this function
+    * will create a new Field Species.
+    * @return
+    */
+    IndicatorSpecies getFieldSpecies();
 
+    Attribute getFieldNameAttribute();
 }

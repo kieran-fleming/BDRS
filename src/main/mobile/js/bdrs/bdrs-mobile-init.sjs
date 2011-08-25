@@ -1,7 +1,5 @@
 exports.start = function() {
 	
-	document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
-	
 	bdrs.template.render('footer', null, ".footer");
 	bdrs.template.render('header', null, ".header");
 	
@@ -14,7 +12,6 @@ exports.start = function() {
 	}
 
 	jQuery(".bdrs-page-login #login_button").click(function(event) {
-		console.log("set login button link");
 		jQuery.jsonp({
 				url: jQuery(".bdrs-page-login #url").val() + "/webservice/user/validate.htm",
 				data: jQuery(".bdrs-page-login #login_form").serializeArray(),
@@ -72,4 +69,11 @@ exports.start = function() {
 	});
 	
 	jQuery.datepicker.setDefaults({dateFormat : 'dd M yy'});
+	
+	// Phonegap events.
+	document.addEventListener("menubutton", function() {
+		window.plugins.bdrs.exit();
+	}, false);
+
+
 };

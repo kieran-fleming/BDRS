@@ -35,6 +35,7 @@ public class RecordDAOImplSpatialTest extends AbstractControllerTest {
     private UserDAO userDAO;
     
     User admin;
+    User root;
     Survey survey1;
     Survey survey2;
     GeoMapLayer layer1;
@@ -57,6 +58,7 @@ public class RecordDAOImplSpatialTest extends AbstractControllerTest {
         Date now = cal.getTime();
         
         admin = userDAO.getUser("admin");
+        root = userDAO.getUser("root");
         
         survey1 = surveyDAO.createSurvey("my survey");
         survey2 = surveyDAO.createSurvey("second survey");
@@ -66,10 +68,10 @@ public class RecordDAOImplSpatialTest extends AbstractControllerTest {
         g3 = geometryBuilder.createSquare(0, 5, 10);
         g4 = geometryBuilder.createSquare(5, 5, 10);
         
-        r1 = createTestRecord(now, g1, survey1);
-        r2 = createTestRecord(now, g2, survey1);
-        r3 = createTestRecord(now, g3, survey2);
-        r4 = createTestRecord(now, g4, survey2);
+        r1 = createTestRecord(now, g1, survey1, RecordVisibility.OWNER_ONLY, admin);
+        r2 = createTestRecord(now, g2, survey1, RecordVisibility.OWNER_ONLY, admin);
+        r3 = createTestRecord(now, g3, survey2, RecordVisibility.CONTROLLED, root);
+        r4 = createTestRecord(now, g4, survey2, RecordVisibility.CONTROLLED, root);
                       
         layer1 = new GeoMapLayer();
         layer1.setName("aaaa");
@@ -100,32 +102,98 @@ public class RecordDAOImplSpatialTest extends AbstractControllerTest {
         
         {
             Geometry point = geometryBuilder.createPoint(2.5, 2.5);
-            List<Record> result = recordDAO.find(layerIds, point);
+            List<Record> result = recordDAO.find(layerIds, point, null, null);
             Assert.assertEquals(1, result.size());
         }
         
         {
             Geometry point = geometryBuilder.createPoint(2.5, 7.5);
-            List<Record> result = recordDAO.find(layerIds, point);
+            List<Record> result = recordDAO.find(layerIds, point, null, null);
             Assert.assertEquals(2, result.size());
         }
         
         {
             Geometry point = geometryBuilder.createPoint(7.5, 7.5);
-            List<Record> result = recordDAO.find(layerIds, point);
+            List<Record> result = recordDAO.find(layerIds, point, null, null);
             Assert.assertEquals(4, result.size());
         }
     }
     
-    private Record createTestRecord(Date now, Geometry geom, Survey survey) {
+    @Test
+    public void testPointIntersectPublicPrivate() {
+        Integer[] layerIds = new Integer[] { layer1.getId(), layer2.getId() };
+        
+        Geometry point = geometryBuilder.createPoint(2.5, 2.5);
+        {
+            
+            List<Record> result = recordDAO.find(layerIds, point, null, null);
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, true, null);
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, false, null);
+            Assert.assertEquals(0, result.size());
+        }
+    }
+    
+    @Test
+    public void testPointIntersectByUser() {
+        Integer[] layerIds = new Integer[] { layer1.getId(), layer2.getId() };
+        
+        Geometry point = geometryBuilder.createPoint(2.5, 2.5);
+        {
+            List<Record> result = recordDAO.find(layerIds, point, null, null);
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, null, admin.getId());
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, null, root.getId());
+            Assert.assertEquals(0, result.size());
+        }
+    }
+    
+    // user/owner overrides everything. we can always see our own records.
+    @Test
+    public void testPointIntersectPrivateAndUser() {
+        Integer[] layerIds = new Integer[] { layer1.getId(), layer2.getId() };
+        
+        Geometry point = geometryBuilder.createPoint(2.5, 2.5);
+        {
+            List<Record> result = recordDAO.find(layerIds, point, false, admin.getId());
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, true, admin.getId());
+            Assert.assertEquals(1, result.size());
+        }
+        
+        {
+            List<Record> result = recordDAO.find(layerIds, point, null, admin.getId());
+            Assert.assertEquals(1, result.size());
+        }
+    }
+    
+    private Record createTestRecord(Date now, Geometry geom, Survey survey, RecordVisibility publish, User owner) {
         Record rec = new Record();
-        rec.setUser(admin);
+        rec.setUser(owner);
         rec.setCensusMethod(null);
         rec.setSurvey(survey);
         rec.setSpecies(null);
         rec.setWhen(now);
         rec.setLastDate(now);
-        rec.setGeometry(geom);        
+        rec.setGeometry(geom);   
+        rec.setRecordVisibility(publish);
         return rec;
     }
 }

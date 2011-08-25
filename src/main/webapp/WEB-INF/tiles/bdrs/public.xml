@@ -15,7 +15,6 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/viewMap.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>

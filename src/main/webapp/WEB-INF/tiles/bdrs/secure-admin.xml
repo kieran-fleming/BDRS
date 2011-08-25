@@ -157,7 +157,6 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editLocations.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
-            <add-attribute>bdrs/bdrs.css</add-attribute>
         </put-list-attribute>
         <put-list-attribute name="customJavaScript">
             
@@ -168,7 +167,7 @@
         <put-attribute name="location"/>
         <put-attribute name="index"/>
     </definition>
-    
+
     <definition name="userLocationRow" template="/WEB-INF/jsp/bdrs/admin/survey/userLocationRow.jsp">
         <put-attribute name="location"/>
         <put-attribute name="defaultLocation"/>
@@ -273,6 +272,11 @@
 		<put-attribute name="title" value="Edit Website Content"/>
     	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/contentManagement/adminEditContent.jsp"/>
 	</definition>
+	
+	<definition name="adminEmailUsers" extends="admin-template">
+        <put-attribute name="title" value="Email Users and Groups"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/email/adminEmailUsers.jsp"/>
+    </definition>
 	
 	<!-- Test Data -->
     <definition name="testDataDashboard" extends="admin-template">

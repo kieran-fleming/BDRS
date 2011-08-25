@@ -50,6 +50,30 @@ bdrs.map.generatePolygonSLD = function(options) {
 	return sld;
 };
 
+bdrs.map.generateLineSLD = function(options) {
+
+	if (!options) {
+        options = {};
+    }
+    var defaultOptions = {
+        layerName: "DEFAULTNAME",
+        userStyleName: "DEFAULTSYLENAME",
+        fillColor: "FF0000",
+        fillOpacity: "1",
+        strokeColor: "FF0000",
+        strokeOpacity: "1",
+        strokeWidth: "2"
+    };
+	options = jQuery.extend(defaultOptions, options);
+	
+    var sld = '<sld:NamedLayer><sld:Name>'+options.layerName+'</sld:Name><sld:UserStyle><sld:Name>'+options.userStyleName+'</sld:Name><sld:FeatureTypeStyle><sld:Rule>';
+    sld+= '<sld:LineSymbolizer>';
+    sld+= '<sld:Stroke><sld:CssParameter name="stroke">'+options.strokeColor+'</sld:CssParameter><sld:CssParameter name="stroke-opacity">'+options.strokeOpacity+'</sld:CssParameter><sld:CssParameter name="stroke-width">'+options.strokeWidth+'</sld:CssParameter></sld:Stroke></sld:LineSymbolizer>';
+    sld+= '</sld:Rule></sld:FeatureTypeStyle></sld:UserStyle></sld:NamedLayer>'
+	
+    return sld; 
+};
+
 bdrs.map.generatePointSLD = function(options) {  
     if (!options) {
         options = {};
@@ -79,7 +103,7 @@ bdrs.map.generateLineSLD = function(options) {
         layerName: "DEFAULTNAME",
         userStyleName: "DEFAULTSTYLENAME",
         strokeColor: "#EF0000",
-        strokeWidth: "1",
+        strokeWidth: "1"
     };
     options = jQuery.extend(defaultOptions, options);
 
@@ -121,6 +145,10 @@ bdrs.map.generateLayerSLD = function(options) {
 	options.userStyleName = "geoMapFeature_point";
     sld += bdrs.map.generatePointSLD(options);
 	
+	options.layerName = "geoMapFeature_line";
+	options.userStyleName = "geoMapFeature_line";
+	sld += bdrs.map.generateLineSLD(options);
+	
 	// records...
 	 options.layerName = "record_polygon";
     options.userStyleName = "record_polygon";
@@ -130,7 +158,28 @@ bdrs.map.generateLayerSLD = function(options) {
     options.userStyleName = "record_point";
     sld += bdrs.map.generatePointSLD(options);
 	
+	options.layerName = "record_line";
+    options.userStyleName = "record_line";
+    sld += bdrs.map.generateLineSLD(options);
+	
     sld += bdrs.map.generateFooterSLD();
 	return sld;
 };
 
+bdrs.map.initWktOnChangeValidation = function(wktSelector, wktMessageSelector) {
+	$(wktSelector).change(function(value) {
+		
+		var requestParams = {
+			"wkt": $(wktSelector).val()
+		};
+		
+		$.ajax({
+			url:  bdrs.contextPath + "/webservice/location/isValidWkt.htm",
+			data: $.param(requestParams, true),
+			success: function(data, textStatus, jqXhr) {
+				$(wktMessageSelector).text(data.message);
+			},
+			error: bdrs.message.getAjaxErrorFunc("Could not validate WKT string")
+		});
+	});
+};

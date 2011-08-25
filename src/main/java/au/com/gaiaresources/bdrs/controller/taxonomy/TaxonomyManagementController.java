@@ -36,7 +36,8 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
-import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
+import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
@@ -336,14 +337,17 @@ public class TaxonomyManagementController extends AbstractController {
         
         // Must save the taxon before saving the IndicatorSpeciesAttributes
         taxaDAO.save(taxon);
-
+        
+        Map<String, String[]> parameterMap = this.getModifiableParameterMap(request);
+        
         // Taxon Attributes
         List<IndicatorSpeciesAttribute> taxonAttrsToDelete = new ArrayList<IndicatorSpeciesAttribute>();
-        AttributeParser attributeParser = new AttributeParser();
+        WebFormAttributeParser attributeParser = new WebFormAttributeParser();
         IndicatorSpeciesAttribute taxonAttribute;
         for (Attribute attribute : taxon.getTaxonGroup().getAttributes()) {
             if (attribute.isTag()) {
-                taxonAttribute = attributeParser.parse(attribute, taxon, request.getParameterMap(), request.getFileMap());
+                taxonAttribute = attributeParser.parse(attribute, taxon, parameterMap, request.getFileMap());
+
                 if (attributeParser.isAddOrUpdateAttribute()) {
                     taxonAttribute = taxaDAO.save(taxonAttribute);
                     if (attributeParser.getAttrFile() != null) {
@@ -435,7 +439,7 @@ public class TaxonomyManagementController extends AbstractController {
         
         ModelAndView mv = new ModelAndView("profileTableBody");
         mv.addObject("taxonProfileList", speciesProfileTemplate);
-        mv.addObject("newProfileIndex", new Integer(index));
+        mv.addObject("newProfileIndex", Integer.valueOf(index));
         return mv;
     }
     

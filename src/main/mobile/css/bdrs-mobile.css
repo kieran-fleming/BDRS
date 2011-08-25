@@ -17,6 +17,10 @@ ul h1, ul h2, ul h3, ul h4 {
 	max-height: 32px;
 }
 
+.strong {
+    font-weight: bold;
+}
+
 /**
  * Formatting Styles
  */
@@ -58,4 +62,13 @@ ul h1, ul h2, ul h3, ul h4 {
 
 #point-intersect-species-table input[type=text] {
     width: 85%;
+}
+
+.ui-body-b .secondaryAction {
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.ui-body-b .secondaryAction.delete {
+    color: red;
 }

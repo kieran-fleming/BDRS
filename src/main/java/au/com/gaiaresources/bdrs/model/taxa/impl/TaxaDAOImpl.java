@@ -672,8 +672,8 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 	        sesh = getSession();
 	    }
 		List<IndicatorSpecies> species = find(sesh,
-				"select i from IndicatorSpecies i where i.scientificName = ?",
-				scientificName);
+				"select i from IndicatorSpecies i where upper(i.scientificName) = ?",
+				scientificName.toUpperCase());
 		if (species.isEmpty()) {
 			return null;
 		} else {
@@ -687,7 +687,7 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 	
 	@Override
         public List<IndicatorSpecies> getIndicatorSpeciesListByScientificName(String scientificName) {
-            return find("select i from IndicatorSpecies i where i.scientificName = ?", scientificName);
+            return find("select i from IndicatorSpecies i where upper(i.scientificName) = ?", scientificName.toUpperCase());
         }
 
 	@Override

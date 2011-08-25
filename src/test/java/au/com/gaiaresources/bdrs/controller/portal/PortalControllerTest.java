@@ -54,7 +54,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal defaultPortal = portalDAO.getPortal(true);
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
-        defaultPortal = portalDAO.save(defaultPortal);
+        portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
         
@@ -80,7 +80,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal defaultPortal = portalDAO.getPortal(true);
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
-        defaultPortal = portalDAO.save(defaultPortal);
+        portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
         
@@ -145,7 +145,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal defaultPortal = portalDAO.getPortal(true);
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
-        defaultPortal = portalDAO.save(defaultPortal);
+        portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
         
@@ -167,7 +167,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal defaultPortal = portalDAO.getPortal(true);
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
-        defaultPortal = portalDAO.save(defaultPortal);
+        portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
         
@@ -209,7 +209,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal defaultPortal = portalDAO.getPortal(true);
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
-        defaultPortal = portalDAO.save(defaultPortal);
+        portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
         
@@ -228,7 +228,6 @@ public class PortalControllerTest extends AbstractControllerTest {
     
     @Test
     public void testPortalInit() throws Exception {
-        Portal defaultPortal = portalDAO.getPortal(true);
         Portal portal = new Portal();
         portal.setName("myportal");
         portal.setDefault(false);

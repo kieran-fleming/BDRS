@@ -216,7 +216,6 @@ public class ThresholdService implements ConditionOperatorHandler {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
             log.warn(e);
             match = false;
         }

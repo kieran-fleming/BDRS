@@ -1,9 +1,11 @@
 package au.com.gaiaresources.bdrs.controller.map;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -17,7 +19,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,23 +37,28 @@ import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataRow;
 import au.com.gaiaresources.bdrs.db.SessionFactory;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.geometry.GeometryBuilder;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.model.map.AssignedGeoMapLayer;
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeature;
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeatureDAO;
 import au.com.gaiaresources.bdrs.model.map.GeoMapLayer;
 import au.com.gaiaresources.bdrs.model.map.GeoMapLayerDAO;
 import au.com.gaiaresources.bdrs.model.map.GeoMapLayerSource;
+import au.com.gaiaresources.bdrs.model.record.AccessControlledRecordAdapter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.web.JsonService;
 import au.com.gaiaresources.bdrs.spatial.ShapeFileReader;
+import au.com.gaiaresources.bdrs.spatial.ShapeFileWriter;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -64,9 +70,13 @@ public class GeoMapLayerController extends AbstractController {
     public static final String BASE_ADMIN_URL = "/bdrs/admin/mapLayer/";
     public static final String LISTING_URL = BASE_ADMIN_URL + "listing.htm";
     public static final String EDIT_URL = BASE_ADMIN_URL + "edit.htm";
+    public static final String DELETE_LAYER_URL = BASE_ADMIN_URL + "delete.htm";
     
     public static final String LIST_SERVICE_URL = BASE_ADMIN_URL + "listService.htm";
     public static final String GET_LAYER_URL = "/bdrs/map/getLayer.htm";
+    public static final String GET_RECORD_URL = "/bdrs/map/getRecord.htm";
+    
+    public static final String DOWNLOAD_RECORDS_URL = "bdrs/map/downloadRecords.htm";
     
     public static final String GET_FEATURE_SERVICE_URL = "/bdrs/map/getFeatureInfo.htm";
     public static final String CHECK_SHAPEFILE_SERVICE_URL = "/bdrs/map/checkShapefile.htm";
@@ -92,15 +102,24 @@ public class GeoMapLayerController extends AbstractController {
     public static final String PARAM_BUFFER_KM = "buffer";
     public static final String PARAM_MAP_LAYER_ID = "mapLayerId";
     
+    public static final String PARAM_DOWNLOAD_FORMAT = "downloadFormat";
+    
+    public static final String PARAM_LAYER_ID = "layerPk";
+    
     public static final String PARAM_STROKE_COLOR = "strokeColor";
     public static final String PARAM_FILL_COLOR = "fillColor";
     public static final String PARAM_SYMBOL_SIZE = "symbolSize";
     public static final String PARAM_STROKE_WIDTH = "strokeWidth";
     
+    public static final String PARAM_RECORD_ID = "recordPk";
+    
     public static final String JSON_KEY_ITEMS = "items";
     
     public static final String KML_RECORD_FOLDER = "Record";
     public static final String KML_POINT_ICON_ID = "pointIcon";
+    
+    public static final String FORMAT_KML = "kml";
+    public static final String FORMAT_SHAPEFILE = "shapefile";
     
     // var hexColorRegex = new RegExp('#[0-9A-F]{6}', 'i');
     Pattern colorPattern = Pattern.compile("#[0-9A-F]{6}", Pattern.CASE_INSENSITIVE);
@@ -149,6 +168,7 @@ public class GeoMapLayerController extends AbstractController {
     
     private static final int BATCH_SIZE = 20;
     
+    @SuppressWarnings("unchecked")
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_LAYER_PK_SAVE, defaultValue="0", required=false) int mapLayerPk,
@@ -204,6 +224,7 @@ public class GeoMapLayerController extends AbstractController {
                 List<GeoMapFeature> featuresToDelete = featureDAO.find(sesh, gml.getId());
                 
                 List<Attribute> attrToDelete = gml.getAttributes();
+
                 gml.setAttributes(Collections.EMPTY_LIST);
                 layerDAO.update(sesh, gml);
                 
@@ -212,7 +233,7 @@ public class GeoMapLayerController extends AbstractController {
                 }
                 
                 for (Attribute a : attrToDelete) {
-                 // sometimes because of errors during writes of large shapefiles to the
+                    // sometimes because of errors during writes of large shapefiles to the
                     // database we can get AttributeValues that aren't assigned to geo map features.
                     // so....
                     for (AttributeValue av : attrDAO.getAttributeValueObjects(sesh, a)) {
@@ -220,13 +241,10 @@ public class GeoMapLayerController extends AbstractController {
                     }
                     attrDAO.delete(sesh, a);
                 }
+                
                 sesh.flush();
                 
-                List<GeoMapFeature> featuresToAdd = null;
-               
                 sesh.setFlushMode(FlushMode.MANUAL);
-                
-                
                 // now insert the new stuff...
                 ManagedFile mf = mfDAO.getManagedFile(sesh, gml.getManagedFileUUID());
                 File file = fileService.getFile(mf, mf.getFilename()).getFile();
@@ -234,33 +252,33 @@ public class GeoMapLayerController extends AbstractController {
                 ShapeFileReader reader = new ShapeFileReader(file);
     
                 List<Attribute> attributeList = reader.readAttributes();
-                featuresToAdd = reader.readAsMapFeatures(attributeList);
+                List<GeoMapFeature> featuresToAdd = reader.readAsMapFeatures(attributeList);
                 
                 int weight = 1;
                 gml.setAttributes(attributeList);
                 for (Attribute a : gml.getAttributes()) {
                     a.setWeight(++weight);
+                    a.setRunThreshold(false);
                     attrDAO.save(sesh, a);
                 }
                 sesh.flush();
                 
                 int insertCount = 0;
-                int featureCount = 0;
+
                 while (!featuresToAdd.isEmpty()) {
                     // so garbage collection runs on big lists...
                     GeoMapFeature f = featuresToAdd.remove(0);
 
                     for (AttributeValue av : f.getAttributes()) {
+                        av.setRunThreshold(false);
                         attrDAO.save(sesh, av);
                         insertCount = checkBatch(sesh, insertCount);
                     }
                     f.setLayer(gml);
+                    
+                    f.setRunThreshold(false);
                     featureDAO.save(sesh, f);
                     insertCount = checkBatch(sesh, insertCount);
-                    
-                    if (++featureCount % 100 == 0) {
-                        log.debug("feature # " + featureCount);
-                    }
                 }   
                 layerDAO.update(sesh, gml);
                 
@@ -326,26 +344,32 @@ public class GeoMapLayerController extends AbstractController {
         response.setContentType("application/json");
         response.getWriter().write(builder.toJson());
     }
-    
+
     @RequestMapping(value = GET_LAYER_URL, method = RequestMethod.GET)
     public void getLayer(
-            @RequestParam(value = "layerPk", required=true) int layerPk,
+            @RequestParam(value = PARAM_LAYER_ID, required=true) int layerPk,
             HttpServletRequest request, HttpServletResponse response) throws Exception  {
         GeoMapLayer gml = layerDAO.get(layerPk);
+        
+        if (gml == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            log.error("layer id not valid : " + layerPk);
+            return;
+        }
         
         response.setContentType("application/vnd.google-earth.kml+xml");
         response.setHeader("Content-Disposition", "attachment;filename=layer_"+System.currentTimeMillis()+".kml");
         
         if (gml.getLayerSource() == GeoMapLayerSource.KML) {
             if (!StringUtils.hasLength(gml.getManagedFileUUID())) {
-                response.setStatus(400);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 log.error("Layer configured to read a KML managed file but no file UUID is assigned to the layer");
                 return;
             }
             ManagedFile mf = mfDAO.getManagedFile(gml.getManagedFileUUID());
             if (mf == null) {
                 log.error("Can't find managed file with uuid : " + gml.getManagedFileUUID());
-                response.setStatus(404);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
             FileDataSource fsrc = fileService.getFile(mf, mf.getFilename());
@@ -358,16 +382,19 @@ public class GeoMapLayerController extends AbstractController {
         } else if (gml.getLayerSource() == GeoMapLayerSource.SURVEY_KML) {
             if (gml.getSurvey() == null) {
                 log.error("Layer configured to use a survey to produce KML but there is no survey assigned to the layer");
-                response.setStatus(400);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
             
+            Integer[] mapLayerIds = new Integer[] { gml.getId() };
+            User accessingUser = getRequestContext().getUser();                             
+            List<Record> recList = getRecordsToDisplay(mapLayerIds, accessingUser, null);
+            
             try {
-                PagedQueryResult<Record> pagedRecordQuery = recDAO.search(null, gml.getSurvey().getId(), null);
-                List<Record> recordList = pagedRecordQuery.getCount() > 0 ? pagedRecordQuery.getList() : Collections.EMPTY_LIST;
-                KMLUtils.writeRecordsToKML(request.getContextPath(), 
+                KMLUtils.writeRecordsToKML(accessingUser,
+                                           request.getContextPath(), 
                                            request.getParameter("placemark_color"), 
-                                           recordList, 
+                                           recList, 
                                            response.getOutputStream());
             } catch (JAXBException e) {
                 log.error(e);
@@ -379,6 +406,51 @@ public class GeoMapLayerController extends AbstractController {
 
         } else {
             // We are displaying the records using MapServer
+        }
+    }
+    
+    @RequestMapping(value = DOWNLOAD_RECORDS_URL, method = RequestMethod.GET) 
+    public void downloadRecords(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value = PARAM_MAP_LAYER_ID, required=true) Integer[] mapLayerIds,
+            @RequestParam(value = PARAM_DOWNLOAD_FORMAT, required=true) String downloadFormat) throws Exception {
+        
+        User accessingUser = getRequestContext().getUser();
+        List<Record> recordList = getRecordsToDisplay(mapLayerIds, accessingUser, null);
+        RecordDownloadFormat format = RecordDownloadFormat.valueOf(downloadFormat);
+        RecordDownloadWriter.write(request, response, recordList, format, accessingUser);
+    }
+    
+    /**
+     * Get the KML for a single record
+     * 
+     * @param layerPk
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    @RequestMapping(value = GET_RECORD_URL, method = RequestMethod.GET)
+    public void getRecordKml(
+            @RequestParam(value = PARAM_RECORD_ID, required=true) int recordPk,
+            HttpServletRequest request, HttpServletResponse response) throws Exception  {
+        
+        response.setContentType("application/vnd.google-earth.kml+xml");
+        response.setHeader("Content-Disposition", "attachment;filename=layer_"+System.currentTimeMillis()+".kml");
+        
+        try {
+            Record rec = recDAO.getRecord(recordPk);
+            List<Record> recordList = new LinkedList<Record>();
+            recordList.add(rec);
+            KMLUtils.writeRecordsToKML(getRequestContext().getUser(),
+                                       request.getContextPath(), 
+                                       request.getParameter("placemark_color"), 
+                                       recordList, 
+                                       response.getOutputStream());
+        } catch (JAXBException e) {
+            log.error(e);
+            throw e;
+        } catch (IOException e) {
+            log.error(e);
+            throw e;
         }
     }
     
@@ -395,12 +467,20 @@ public class GeoMapLayerController extends AbstractController {
         
         Point point = geomBuilder.createPoint(longitude_x, latitude_y);
         Geometry spatialFilter = bufferKm > 0d ? geomBuilder.bufferInKm(point, bufferKm) : point;
-        List<GeoMapFeature> gmfList = featureDAO.find(mapLayedIds, spatialFilter);
-        List<Record> recList = recDAO.find(mapLayedIds, spatialFilter);
         
+        // 0th page, 10 results per page. Order by geo map feature id.
+        PaginationFilter filter = new PaginationFilter(0, 10);
+        filter.addSortingCriteria("id", SortOrder.ASCENDING);
+        
+        List<GeoMapFeature> gmfList = featureDAO.find(mapLayedIds, spatialFilter, filter).getList();
+        
+        User accessingUser = getRequestContext().getUser();                             
+        List<Record> recList = getRecordsToDisplay(mapLayedIds, accessingUser, spatialFilter);
+
         JSONArray itemArray = new JSONArray();
         for (Record record : recList) {
-            itemArray.add(jsonService.toJson(record));
+            AccessControlledRecordAdapter recordAdapter = new AccessControlledRecordAdapter(record, accessingUser);
+            itemArray.add(jsonService.toJson(recordAdapter));
         }
         for (GeoMapFeature f : gmfList) {
             itemArray.add(jsonService.toJson(f));
@@ -412,11 +492,34 @@ public class GeoMapLayerController extends AbstractController {
         writeJson(request, response, parentObj.toString());
     }
     
+    private List<Record> getRecordsToDisplay(Integer[] mapLayerIds, User accessingUser, Geometry spatialFilter) {
+        List<Record> recList;
+        // if logged in
+        if (accessingUser != null) {
+            // if admin
+            if (accessingUser.isAdmin()) {
+                // as the admin we don't care about the privacy level or the owner of the record
+                recList = recDAO.find(mapLayerIds, spatialFilter, null, null);  
+            } else {
+                // if standard user
+                
+                // the user id shouldn't be null but if it is, set it to 0. This will make the
+                // find method return all of the non private records for the map layer / spatial filter
+                Integer userId = accessingUser.getId() != null ? accessingUser.getId() : 0;
+                recList = recDAO.find(mapLayerIds, spatialFilter, false, userId);  
+            }    
+        } else {
+            // if not logged in
+            recList = recDAO.find(mapLayerIds, spatialFilter, false, null);  
+        }
+        return recList;
+    }
+    
     // time limit of 300 secs / 5 minutes
     public static final int TIME_LIMIT_SECS = 300;
     
     // rough estimate from profiling
-    private static final double SEC_PER_SHAPEFILE_ITEM = 0.007d;  
+    private static final double SEC_PER_SHAPEFILE_ITEM = 0.0019d;  
     private static final double SEC_PER_MIN = 60d;
     
     public static final String JSON_KEY_MESSAGE = "message";
@@ -491,6 +594,11 @@ public class GeoMapLayerController extends AbstractController {
                              + "\n\nThe supported CRS are " + org.apache.commons.lang.StringUtils.join(reader.getSupportedCrsCodes().toArray(), ", "));
         }
         
+        if (!reader.isGeometryValid()) {
+            warn = true;
+            messageArray.add("The file you have selected has one or more invalid geometry objects. This will cause errors during spatial queries. It is recommended that you clean the data.");
+        }
+        
         if (warn) {
             parentObj.put(JSON_KEY_MESSAGE, messageArray);
             parentObj.put(JSON_KEY_STATUS, JSON_STATUS_WARN);
@@ -501,5 +609,31 @@ public class GeoMapLayerController extends AbstractController {
         // we've got through all of that so...
         parentObj.put(JSON_KEY_STATUS, JSON_STATUS_OK);
         writeJson(request, response, parentObj.toString());
+    }
+    
+    /**
+     * Will delete the geo map layer plus any assigned layers the geo map layer was 
+     * a part of.
+     * 
+     * @param request
+     * @param response
+     * @param layerPk
+     * @return
+     */
+    @RequestMapping(value=DELETE_LAYER_URL, method=RequestMethod.POST)
+    public ModelAndView deleteLayer(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value=GEO_MAP_LAYER_PK_SAVE, required=true) int layerPk) {
+        
+        List<AssignedGeoMapLayer> assignedLayerList = layerDAO.getAssignedLayerByLayerId(layerPk);
+        layerDAO.delete(assignedLayerList);
+        List<GeoMapFeature> featuresToDelete = featureDAO.find(layerPk);
+        for (GeoMapFeature f : featuresToDelete) {
+            featureDAO.deleteCascade(f);
+        }
+        layerDAO.delete(layerPk);
+        
+        ModelAndView mv = new ModelAndView(new RedirectView(LISTING_URL, true, true, false));
+        getRequestContext().addMessage("bdrs.geoMapLayer.delete.success");
+        return mv;
     }
 }

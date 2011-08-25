@@ -34,6 +34,10 @@ import au.com.gaiaresources.bdrs.util.StringUtils;
 @Table(name = "ATTRIBUTE")
 @AttributeOverride(name = "id", column = @Column(name = "ATTRIBUTE_ID"))
 public class Attribute extends PortalPersistentImpl {
+    
+    public static final String FIELD_NAME_NAME = "FIELD_NAME";
+    public static final String FIELD_NAME_DESC = "Field Name";
+    
     private String typeCode;
     private boolean required;
     private String name;

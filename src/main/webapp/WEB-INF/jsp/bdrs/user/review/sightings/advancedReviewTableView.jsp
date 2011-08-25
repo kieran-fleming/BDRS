@@ -76,6 +76,13 @@
                 >
                     type
                 </option>
+                <option value="record.user"
+                    <c:if test="${ 'record.user' == sortBy }">
+                        selected="selected"
+                    </c:if>
+                >
+                    user
+                </option>
             </select>
         </div>
         

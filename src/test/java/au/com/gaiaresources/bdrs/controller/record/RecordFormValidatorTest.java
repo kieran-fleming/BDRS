@@ -22,6 +22,7 @@ import au.com.gaiaresources.bdrs.controller.record.validator.TaxonValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.Validator;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -283,26 +284,23 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
                 taxaDAO);
 
         String valid = species.getScientificName();
-        String invalidLower = valid.toLowerCase();
-        String invalidUpper = valid.toUpperCase();
-        String invalid = valid.substring(1, valid.length());
+        String allLower = valid.toLowerCase();
+        String allUpper = valid.toUpperCase();
+        String shortenedName = valid.substring(1, valid.length());
 
         paramMap.put(key, new String[] { valid });
         Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
 
-        paramMap.put(key, new String[] { invalidLower });
-        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
-        Assert.assertTrue(errorMap.containsKey(key));
+        paramMap.put(key, new String[] { allLower });
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
         errorMap.clear();
 
-        paramMap.put(key, new String[] { invalidUpper });
-        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
-        Assert.assertTrue(errorMap.containsKey(key));
+        paramMap.put(key, new String[] { allUpper });
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
         errorMap.clear();
 
-        paramMap.put(key, new String[] { invalid });
-        Assert.assertFalse(validator.validate(paramMap, key, null,  errorMap));
-        Assert.assertTrue(errorMap.containsKey(key));
+        paramMap.put(key, new String[] { shortenedName });
+        Assert.assertTrue(validator.validate(paramMap, key, null,  errorMap));
         errorMap.clear();
     }
     
@@ -375,6 +373,81 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
         paramMap.put(key, new String[] { "Spam" });
         Assert.assertFalse(validator.validate(paramMap, ValidationType.DATE_WITHIN_RANGE, key, null));
         Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+    }
+    
+    @Test
+    public void testValidateRequiredTime() throws Exception {
+        String key = "time";
+        String value = "";
+        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
+
+        // Boundary Test
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REQUIRED_TIME, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+
+        value = "12:00";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REQUIRED_TIME, key, null));
+
+        value = "anyString";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REQUIRED_TIME, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+    }
+    
+    @Test
+    public void testValidateTime() throws Exception {
+        String key = "time";
+        String value = "";
+        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
+
+        // Boundary Test
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.TIME, key, null));
+
+        value = "12:00";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.TIME, key, null));
+
+        value = "anyString";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.TIME, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+    }
+    
+    @Test
+    public void testValidateHtml() throws Exception {
+        String key = "test";
+        String value = "";
+        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
+
+        // Boundary Test
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.HTML, key, null));
+
+        value = "<html><body></body></html>";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.HTML, key, null));
+
+        value = "<br>";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.HTML, key, null));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+        
+        // test that if there is an attribute, its name is used instead of the key
+        // in the error map
+        value = "<br>";
+        paramMap.put(key, new String[] { value });
+        Attribute attr = new Attribute();
+        attr.setName("test");
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.HTML, key, attr));
+        Assert.assertTrue(validator.getErrorMap().containsKey(attr.getName()));
         validator.getErrorMap().clear();
     }
 }

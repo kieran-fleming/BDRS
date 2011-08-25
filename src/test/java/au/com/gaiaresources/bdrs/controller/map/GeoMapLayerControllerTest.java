@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
@@ -37,7 +35,6 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 import au.com.gaiaresources.bdrs.spatial.ShapeFileReader;
@@ -145,7 +142,6 @@ public class GeoMapLayerControllerTest extends AbstractControllerTest {
         
         assertSurveyList(mv);
     }
-    
     
     @Test
     public void testSaveNewAndReturn() throws Exception {
@@ -523,6 +519,8 @@ public class GeoMapLayerControllerTest extends AbstractControllerTest {
         Assert.assertEquals(1, result.getCount());
         GeoMapLayer gml = result.getList().get(0);
         
+        sessionFactory.getCurrentSession().refresh(gml);
+        
         Assert.assertEquals(oldShpLayer.getId(), gml.getId());
         Assert.assertEquals("edited name", gml.getName());
         Assert.assertEquals("edited description", gml.getDescription());
@@ -534,10 +532,8 @@ public class GeoMapLayerControllerTest extends AbstractControllerTest {
         
         assertStyleParams(gml);
         
-        List<Attribute> attributeList = gml.getAttributes();
-        
         List<GeoMapFeature> featureList = featureDAO.find(gml.getId());
-        
+               
         Assert.assertEquals(25, featureList.size());
     }
     
@@ -561,6 +557,7 @@ public class GeoMapLayerControllerTest extends AbstractControllerTest {
         Assert.assertEquals("aaaa", ((JSONObject)rowArray.get(0)).getString("name"));      
     }
     
+    @SuppressWarnings("unchecked")
     private void assertSurveyList(ModelAndView mv) {
         List<Survey> surveyList = (List<Survey>)mv.getModel().get("surveyList");
         Assert.assertNotNull(surveyList);
@@ -624,7 +621,6 @@ public class GeoMapLayerControllerTest extends AbstractControllerTest {
         orphanValue.setAttribute(attributeList.get(0));
         orphanValue.setWeight(0);
         recDAO.saveAttributeValue(orphanValue);
-        
         return layer;
     }
     

@@ -24,8 +24,6 @@ exports.startTimer = function() {
             setTimeout(function(){bdrs.mobile.connectivity.timeoutTriggered();}, 
                         bdrs.mobile.connectivity.getPollingPeriod());
     }
-
-    //    jQuery.ajax("http://localhost:8080/BDRS/webservice/application/ping.htm", {dataType:'jsonp', success:function(){console.log("success");}, error: function(a,b,c){console.log("error"); console.log(c)}, timeout:5000});
 };
 
 exports.timeoutTriggered = function() {

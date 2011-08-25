@@ -6,6 +6,7 @@ import java.util.Properties;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -27,6 +28,8 @@ public class EmailServiceImpl implements EmailService {
     
     private Properties emailProperties;
     
+    private Logger log = Logger.getLogger(getClass());
+    
     private static final String DEFAULT_SENDER_PROPERTY = "default.mail.from";
     private static final String ERROR_MAIL_RECIPIENT_PROPERTY = "error.mail.to";
     private static final String SUBJECT_PREFIX_PROPERTY = "mail.subject.prefix";
@@ -38,6 +41,11 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendMessage(String to, String from, String subject, String message) {
+        sendMessage(new String[]{to}, from, subject, message);
+    }
+    
+    @Override
+    public void sendMessage(String[] to, String from, String subject, String message) {
         SimpleMailMessage m = new SimpleMailMessage();
         m.setTo(to);
         m.setFrom(from == null ? getDefaultFromAddress() : from);
@@ -46,9 +54,19 @@ public class EmailServiceImpl implements EmailService {
         mailSender.send(m);
     }
     
-    public void sendMessage(final String to, final String subject, String templateName, 
-                            Map<String, Object> subsitutionParams) 
+    public void sendMessage(final String to, final String from, final String subject, String message, Map<String, Object> substitutionParams) 
     {
+        String text = templateService.evaluate(message, substitutionParams);
+        mailSender.send(createPreparator(to, from == null ? getDefaultFromAddress() : from, subject, text));
+    }
+
+    public void sendMessage(final String to, final String subject, String templateName, 
+                            Map<String, Object> subsitutionParams) {
+        sendTemplateMessage(to, getDefaultFromAddress(), subject, templateName, subsitutionParams);
+    }
+    
+    @Override
+    public void sendTemplateMessage(String to, String from, String subject, String templateName, Map<String, Object> subsitutionParams) {
         // first check the contentDAO for the template
         // if it is not found, use the file system template
         String templateString = contentDAO.getContentValue(
@@ -59,8 +77,8 @@ public class EmailServiceImpl implements EmailService {
         } else {
             text = templateService.transformToString(templateName, EmailService.class, subsitutionParams);
         }
-        
-        mailSender.send(createPreparator(to, getDefaultFromAddress(), subject, text));
+
+        mailSender.send(createPreparator(to, from, subject, text));
     }
 
     

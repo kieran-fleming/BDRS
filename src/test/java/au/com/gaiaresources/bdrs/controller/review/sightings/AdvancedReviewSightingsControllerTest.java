@@ -16,7 +16,6 @@ import java.util.Set;
 
 import junit.framework.Assert;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import org.hibernate.FlushMode;
 import org.junit.Before;
@@ -66,6 +65,9 @@ import au.com.gaiaresources.bdrs.util.KMLUtils;
  */
 public class AdvancedReviewSightingsControllerTest extends AbstractControllerTest {
     private DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+    
+    private static final String[] months = { "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December" };
     
     @Autowired
     private SurveyDAO surveyDAO;
@@ -145,7 +147,9 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                     groupAttr.setScope(null);
                     groupAttr.setTag(isTag);
 
-                    if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                    if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                    		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                    		AttributeType.MULTI_SELECT.equals(attrType)) {
                         List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                         for (int i = 0; i < 4; i++) {
                             AttributeOption opt = new AttributeOption();
@@ -251,7 +255,9 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                     attr.setScope(scope);
                     attr.setTag(false);
     
-                    if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                    if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                    		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                    		AttributeType.MULTI_SELECT.equals(attrType)) {
                         List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                         for (int i = 0; i < 4; i++) {
                             AttributeOption opt = new AttributeOption();
@@ -350,11 +356,12 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         Set<AttributeValue> attributeList = new HashSet<AttributeValue>();
         Map<Attribute, AttributeValue> expectedRecordAttrMap = new HashMap<Attribute, AttributeValue>();
         for(Attribute attr : survey.getAttributes()) {
+        	List<AttributeOption> opts = attr.getOptions();
             AttributeValue recAttr = new AttributeValue();
             recAttr.setAttribute(attr);
             switch (attr.getType()) {
                 case INTEGER:
-                    Integer i = new Integer(123);
+                    Integer i = Integer.valueOf(123);
                     recAttr.setNumericValue(new BigDecimal(i));
                     recAttr.setStringValue(i.toString());
                     break;
@@ -362,6 +369,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                      String intStr = attr.getOptions().iterator().next().getValue();
                      recAttr.setNumericValue(new BigDecimal(Integer.parseInt(intStr)));
                      recAttr.setStringValue(intStr);
+                     break;
                 case DECIMAL:
                     Double d = new Double(123);
                     recAttr.setNumericValue(new BigDecimal(d));
@@ -379,9 +387,29 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                 case TEXT:
                     recAttr.setStringValue("This is a test text record attribute");
                     break;
-                case STRING_WITH_VALID_VALUES:
-                    recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
+                case BARCODE:
+                    recAttr.setStringValue("#454545");
                     break;
+                case TIME:
+                    recAttr.setStringValue("12:34");
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    recAttr.setStringValue("<hr/>");
+                    break;
+                case STRING_WITH_VALID_VALUES:
+                    recAttr.setStringValue(opts.iterator().next().getValue());
+                    break;
+                case MULTI_CHECKBOX:
+                	recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
+                	break;
+                case MULTI_SELECT:
+                	recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
+                	break;
+                case SINGLE_CHECKBOX:
+                	recAttr.setBooleanValue(Boolean.TRUE.toString());
+                	break;
                 case FILE:
                     recAttr.setStringValue("testDataFile.dat");
                     break;
@@ -427,12 +455,44 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                         case STRING:
                             recAttr.setStringValue("This is a test string record attribute for groups");
                             break;
+                        case BARCODE:
+                            recAttr.setStringValue("#454545");
+                            break;
+                        case TIME:
+                            recAttr.setStringValue("12:34");
+                            break;
+                        case HTML:
+                        case HTML_COMMENT:
+                        case HTML_HORIZONTAL_RULE:
+                            recAttr.setStringValue("<hr/>");
+                            break;
                         case TEXT:
                             recAttr.setStringValue("This is a test text record attribute for groups");
                             break;
                         case STRING_WITH_VALID_VALUES:
                             recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
                             break;
+                        case MULTI_CHECKBOX:
+		                    {
+		                    	List<AttributeOption> opts = attr.getOptions(); 
+		                    	recAttr.setMultiCheckboxValue(new String[]{
+		                    			opts.get(0).getValue(),
+		                    			opts.get(1).getValue()
+		                    	});
+		                	}
+		                    break;
+	                    case MULTI_SELECT:
+	                    	{
+		                    	List<AttributeOption> opts = attr.getOptions(); 
+		                    	recAttr.setMultiSelectValue(new String[]{
+		                    			opts.get(0).getValue(),
+		                    			opts.get(1).getValue()
+		                    	});
+	                    	}
+	                    	break;
+	                    case SINGLE_CHECKBOX:
+	                    	recAttr.setStringValue(Boolean.FALSE.toString());
+	                    	break;
                         case FILE:
                             recAttr.setStringValue("testGroupDataFile.dat");
                             break;
@@ -687,15 +747,12 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
     
     @Test 
     public void testOneMonthFacet() throws Exception {
-        
-        List<Date> dateList = new ArrayList<Date>();
+        List<Long> dateList = new ArrayList<Long>();
         Calendar tmpl = new GregorianCalendar();
         Calendar cal = new GregorianCalendar();
         for(Date d : new Date[]{dateA}) {
             cal.setTime(d);
-            tmpl.setTimeInMillis(0);
-            tmpl.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), 1);
-            dateList.add(tmpl.getTime());
+            dateList.add(Integer.valueOf(cal.get(Calendar.MONTH)).longValue() + 1);
         }
         
         testMonthFacetSelection(dateList, recordCount/2);
@@ -704,14 +761,12 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
     @Test 
     public void testTwoMonthFacet() throws Exception {
         
-        List<Date> dateList = new ArrayList<Date>();
+        List<Long> dateList = new ArrayList<Long>();
         Calendar tmpl = new GregorianCalendar();
         Calendar cal = new GregorianCalendar();
         for(Date d : new Date[]{dateA, dateB}) {
             cal.setTime(d);
-            tmpl.setTimeInMillis(0);
-            tmpl.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), 1);
-            dateList.add(tmpl.getTime());
+            dateList.add(Integer.valueOf(cal.get(Calendar.MONTH)).longValue() + 1);
         }
         
         testMonthFacetSelection(dateList, recordCount);
@@ -859,19 +914,18 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         }
     }
     
-    private void testMonthFacetSelection(List<Date> dateList, int expectedRecordCount) throws Exception {
+    private void testMonthFacetSelection(List<Long> monthlist, int expectedRecordCount) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         
         Calendar cal = new GregorianCalendar();
-        Set<Integer> monthSet = new HashSet<Integer>(dateList.size());
-        for(Date date : dateList) {
-            request.addParameter(MonthFacet.QUERY_PARAM_NAME, String.valueOf(date.getTime()));
-            
-            cal.setTime(date);
-            monthSet.add(cal.get(Calendar.MONTH));
+        
+        Set<Integer> monthSet = new HashSet<Integer>(monthlist.size());
+        for(Long date : monthlist) {
+            request.addParameter(MonthFacet.QUERY_PARAM_NAME, date.toString());
+            monthSet.add(date.intValue());
         }
         
         ModelAndView mv = handle(request, response);
@@ -890,11 +944,10 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedRecordCount, recordList.size());
         
-        
         for(Record rec : recordList) {
             cal.setTime(rec.getWhen());
             Integer monthInt = cal.get(Calendar.MONTH);
-            Assert.assertTrue(monthSet.contains(monthInt));
+            Assert.assertTrue(monthSet.contains(Integer.valueOf(monthInt + 1)));
         }
     }
 }

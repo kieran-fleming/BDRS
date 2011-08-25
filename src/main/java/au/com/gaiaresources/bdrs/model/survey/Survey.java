@@ -3,7 +3,6 @@ package au.com.gaiaresources.bdrs.model.survey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +17,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.apache.log4j.Logger;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
@@ -30,12 +30,13 @@ import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.util.DateUtils;
-import au.com.gaiaresources.bdrs.util.StringUtils;
 
 @Entity
 @FilterDef(name=PortalPersistentImpl.PORTAL_FILTER_NAME, parameters=@ParamDef( name="portalId", type="integer" ) )
@@ -43,7 +44,7 @@ import au.com.gaiaresources.bdrs.util.StringUtils;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "SURVEY")
 @AttributeOverride(name = "id", column = @Column(name = "SURVEY_ID"))
-public class Survey extends PortalPersistentImpl {
+public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
 	private String name;
 	private String description;
     private boolean active;
@@ -64,6 +65,20 @@ public class Survey extends PortalPersistentImpl {
     // Cache of metadata mapped against the key. This is not a database 
     // column or relation.
     private Map<String, Metadata> metadataLookup = null;
+    
+    // the default record publish level
+    // Whatever this is set to will by the default settings of all new records
+    // made for this survey.
+    private static final RecordVisibility DEFAULT_RECORD_VISIBILITY = RecordVisibility.PUBLIC;
+    // the default record publish modifable setting - true means users can alter their 
+    // record publish settings to whatever they choose. False means the records
+    // will have the same publish level as the default record publish level for
+    // the survey.
+    private static final boolean DEFAULT_RECORD_VISIBILITY_MODIFIABLE = true;
+    
+    private static final boolean DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY = true;
+    
+    private Logger log = Logger.getLogger(getClass());
 
     /**
      * {@inheritDoc}
@@ -82,7 +97,7 @@ public class Survey extends PortalPersistentImpl {
      * {@inheritDoc}
      */
     @CompactAttribute
-    @Column(name = "DESCRIPTION")
+    @Column(name = "DESCRIPTION", length=1023)
     public String getDescription() {
         return description;
     }
@@ -275,13 +290,185 @@ public class Survey extends PortalPersistentImpl {
         if(key == null) {
             return null;
         }
-        if(metadataLookup == null) {
-            metadataLookup = new HashMap<String, Metadata>(metadata.size());
-            for(Metadata md : metadata) {
-                metadataLookup.put(md.getKey(), md);
-            }    
+        for (Metadata m : metadata) {
+            if (key.equals(m.getKey())) {
+                return m;
+            }
+        }
+        // not found. return null
+        return null;
+    }
+    
+    /**
+     * The record visibility level the form is set to when creating
+     * a new record
+     * @return
+     */
+    @Transient
+    public RecordVisibility getDefaultRecordVisibility() {
+        Metadata md = getMetadataByKey(Metadata.DEFAULT_RECORD_VIS);
+        return md == null ? DEFAULT_RECORD_VISIBILITY : RecordVisibility.parse(md.getValue());
+    }
+    
+    /**
+     * Set the default default record visibility setting as a metadata object.
+     * Requires the metadata DAO object to save the metadata. Makes the client
+     * code cleaner.
+     * 
+     * @param value
+     * @param mdDAO - the metadata dao, required to save the metadata
+     * @return
+     */
+    @Transient
+    public Metadata setDefaultRecordVisibility(RecordVisibility value, MetadataDAO mdDAO) {
+		if (value == null) {
+            throw new IllegalArgumentException("value cannot be null");
+        } 
+
+        if (mdDAO == null) {
+            throw new IllegalArgumentException("mdDAO cannot be null");
         }
         
-        return metadataLookup.get(key);
+        Metadata md = getMetadataByKey(Metadata.DEFAULT_RECORD_VIS);
+
+        // Find the metadata or create it.
+        if(md == null) {
+            md = new Metadata();
+            md.setKey(Metadata.DEFAULT_RECORD_VIS);
+            // default value: full public (as it is for the Atlas).
+            md.setValue(DEFAULT_RECORD_VISIBILITY.toString());
+        }
+
+        // Set the value and add it to the set.
+        md.setValue(value.toString());
+        
+        if (!metadataContainsKey(md)) {
+            metadata.add(md);
+        }
+        // save it!
+        return mdDAO.save(md);
+    }
+    
+    /**
+     * Can users change the record publish level to whatever they like
+     * 
+     * @return
+     */
+    @Transient 
+    public boolean isRecordVisibilityModifiable() {
+        Metadata md = getMetadataByKey(Metadata.RECORD_VIS_MODIFIABLE);
+        return md == null ? DEFAULT_RECORD_VISIBILITY_MODIFIABLE : Boolean.parseBoolean(md.getValue());
+    }
+    
+    /**
+     * Set the default record visibility modifiable flag as a metadata object.
+     * Requires the metadata DAO object to save the metadata. Makes the client
+     * code cleaner.
+     * 
+     * @param value 
+     * @param mdDAO - the metadata dao, required to save the metadata
+     * @return
+     */
+    @Transient
+    public Metadata setRecordVisibilityModifiable(boolean value, MetadataDAO mdDAO) {
+        if (mdDAO == null) {
+            throw new IllegalArgumentException("mdDAO cannot be null");
+        }
+        
+        Metadata md = getMetadataByKey(Metadata.RECORD_VIS_MODIFIABLE);
+
+        // Find the metadata or create it.
+        if(md == null) {
+            md = new Metadata();
+            md.setKey(Metadata.RECORD_VIS_MODIFIABLE);
+            // default value: full public (as it is for the Atlas).
+            md.setValue(Boolean.valueOf(DEFAULT_RECORD_VISIBILITY_MODIFIABLE).toString());
+        }
+
+        // Set the value and add it to the set.
+        md.setValue(value ? Boolean.TRUE.toString() : Boolean.FALSE.toString());
+        
+        if (!metadataContainsKey(md)) {
+            metadata.add(md);
+        }
+        // save it!
+        return mdDAO.save(md);
+    }
+    
+    /**
+     * Whether or not the survey will have the default census method. Really this corresponds to
+     * NO census method. It will appear as the 'standard taxonomic' form when contributing to the
+     * survey. If you do NOT want this to appear then set this option to false!
+     * @return
+     */
+    @Transient
+    public boolean isDefaultCensusMethodProvided() {
+        Metadata md = getMetadataByKey(Metadata.DEFAULT_CENSUS_METHOD_FOR_SURVEY);
+        return md == null ? DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY : Boolean.parseBoolean(md.getValue());
+    }
+    
+    @Transient
+    public Metadata setDefaultCensusMethodProvided(boolean value, MetadataDAO mdDAO) {
+        if (mdDAO == null) {
+            throw new IllegalArgumentException("mdDAO cannot be null");
+        }
+        
+        Metadata md = getMetadataByKey(Metadata.DEFAULT_CENSUS_METHOD_FOR_SURVEY);
+
+        // Find the metadata or create it.
+        if(md == null) {
+            md = new Metadata();
+            md.setKey(Metadata.DEFAULT_CENSUS_METHOD_FOR_SURVEY);
+            // default value: full public (as it is for the Atlas).
+            md.setValue(Boolean.valueOf(DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY).toString());
+        }
+
+        // Set the value and add it to the set.
+        md.setValue(value ? Boolean.TRUE.toString() : Boolean.FALSE.toString());
+        
+        if (!metadataContainsKey(md)) {
+            metadata.add(md);
+        }
+        
+        return mdDAO.save(md);
+    }
+    
+    // We can't rely on the set to detect whether the metadata item has already been added to it.
+    // I assume it has something to do with the equals() implementation in PortalPersistentImpl.
+    // It can lead to having a duplicate in the set which is of course, bad. I don't want to
+    // override the behaviour of equals() incase something else is relying on it. Check for
+    // existince in the set via metadata key!
+    private boolean metadataContainsKey(Metadata md) {
+        if (md == null) {
+            return false;
+        }
+
+		if (md.getKey() == null) {
+			throw new IllegalArgumentException("Metadata key cannot be null.");
+		}
+
+        for (Metadata m : metadata) {
+            if (md.getKey().equals(m.getKey())) {
+                return true;
+            }
+        }
+        // not found. return null
+        return false;
+    }
+
+    @Override
+    public int compareTo(Survey o) {
+        if (o == null) {
+            return 1;
+        }
+        if (this.getId() == null) {
+            return 1;
+        }
+        if (o.getId() == null) {
+            return -1;
+        }
+        // it's not clear whether compareTo does null checks so leave
+        // the above null checks in.
+        return this.getId().compareTo(o.getId());
     }
 }

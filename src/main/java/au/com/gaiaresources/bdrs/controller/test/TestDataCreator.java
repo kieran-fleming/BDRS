@@ -38,8 +38,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.controller.record.AttributeParser;
 import au.com.gaiaresources.bdrs.controller.taxonomy.TaxonomyManagementController;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
@@ -156,7 +156,9 @@ public class TestDataCreator implements TestDataConstants {
                     attr.setScope(scope);
                     attr.setTag(false);
                     
-                    if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                    if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                    		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                    		AttributeType.MULTI_SELECT.equals(attrType)) {
                         List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                         for(int j=1; j<4; j++) {
                             AttributeOption opt = new AttributeOption();
@@ -290,9 +292,13 @@ public class TestDataCreator implements TestDataConstants {
                         request.setParameter(String.format("add_tag_%d", index), isTag.toString().toLowerCase());
                         //request.setParameter(String.format("add_scope_%d", index), scope.toString());
             
-                        if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                        if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) || 
+                        		AttributeType.MULTI_CHECKBOX.equals(attrType) || 
+                        		AttributeType.MULTI_SELECT.equals(attrType)) {
+                        	
                             request.setParameter(String.format("add_option_%d", index), attributeOptions);
-                        }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
+                        } else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)) {
+                        	
                         	request.setParameter(String.format("add_option_%d", index), rangeIntOptions);
                         }
                         
@@ -474,6 +480,7 @@ public class TestDataCreator implements TestDataConstants {
     }
     
     private void setValueForTaxonAttribute(IndicatorSpeciesAttribute taxonAttr) throws ParseException {
+    	List<AttributeOption> optionList = taxonAttr.getAttribute().getOptions();
         switch(taxonAttr.getAttribute().getType()) {
             case INTEGER:
             case INTEGER_WITH_RANGE:
@@ -489,20 +496,37 @@ public class TestDataCreator implements TestDataConstants {
                 taxonAttr.setStringValue(dateFormat.format(d));
                 taxonAttr.setDateValue(dateFormat.parse(taxonAttr.getStringValue()));
                 break;
-            case STRING:
-                taxonAttr.setStringValue(generateLoremIpsum(3, 3));
+            case TIME:
+                taxonAttr.setStringValue("12:34");
                 break;
+            case HTML:
+            case HTML_COMMENT:
+            case HTML_HORIZONTAL_RULE:
+                taxonAttr.setStringValue("<hr/>");
+                break;
+            case STRING:
             case STRING_AUTOCOMPLETE:
                 taxonAttr.setStringValue(generateLoremIpsum(3, 3));
+                break;
+            case BARCODE:
+                taxonAttr.setStringValue(generateLoremIpsum(1, 1));
                 break;
             case TEXT:
                 taxonAttr.setStringValue(generateLoremIpsum(5, 8));
                 break;
             case STRING_WITH_VALID_VALUES:
-                List<AttributeOption> optionList = taxonAttr.getAttribute().getOptions();
                 String val = optionList.get(random.nextInt(optionList.size())).getValue();
                 taxonAttr.setStringValue(val);
                 break;
+            case MULTI_CHECKBOX:
+            	taxonAttr.setMultiCheckboxValue(new String[]{optionList.get(0).getValue(), optionList.get(1).getValue()});
+            	break;
+            case MULTI_SELECT:
+            	taxonAttr.setMultiCheckboxValue(new String[]{optionList.get(0).getValue(), optionList.get(1).getValue()});
+            	break;
+            case SINGLE_CHECKBOX:
+            	taxonAttr.setBooleanValue(Boolean.TRUE.toString());
+            	break;
             default:
                 throw new RuntimeException();
         }

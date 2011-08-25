@@ -1,9 +1,16 @@
 package au.com.gaiaresources.bdrs.controller.insecure.taxa;
 
+import java.io.Serializable;
+
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 
-public class ComparePersistentImplByWeight implements java.util.Comparator<PersistentImpl>{
+public class ComparePersistentImplByWeight implements java.util.Comparator<PersistentImpl>, Serializable{
     
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @Override
     /**
      * @author kehan

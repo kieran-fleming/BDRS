@@ -10,39 +10,44 @@
     <c:if test="${redirect != null}">
         <input type="hidden" name="redirect" value="${redirect}"/>
     </c:if>
-    <div class="map_wrapper" id="map_wrapper">
+<div id="locationsContainer">
+    <div class="map_wrapper locations_map" id="map_wrapper">
         <div id="base_map" class="defaultmap tracker_map"></div>
         <div id="geocode" class="geocode"></div>
     </div>
-
-    <table id="locationTable" class="datatable">
-        <thead>
-            <tr>
-                <th>Default</th>
-                <th>Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            <c:forEach items="${locations}" var="loc" varStatus="status">
-                <tiles:insertDefinition name="userLocationRow">
-                    <tiles:putAttribute name="location" value="${loc}"/>
-                    <tiles:putAttribute name="index" value="${status.index}"/>
-                </tiles:insertDefinition>
-            </c:forEach>
-        </tbody>
-    </table>
-
+<div class="locations_container">
+    <div class="locationList userlocationList">
+        <table id="locationList" class="datatable locationList">
+            <thead>
+                <tr>
+                    <th>Default</th>
+                    <th>Name</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${locations}" var="loc" varStatus="status">
+                    <tiles:insertDefinition name="userLocationRow">
+                        <tiles:putAttribute name="location" value="${loc}"/>
+                        <tiles:putAttribute name="index" value="${status.index}"/>
+                    </tiles:insertDefinition>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="clear buttonpanel">
     <div class="textright buttonpanel">
         <input type="submit" class="form_action" value="Save"/>
         <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
     </div>
+</div>
+</div>
 </form>
 
 <script type="text/javascript">
     jQuery(function() {
-        bdrs.location.initLocationMapAndTable('/bdrs/location/ajaxAddUserLocationRow.htm');
+        bdrs.location.initLocationMapAndTable(
+            '/bdrs/location/ajaxAddUserLocationRow.htm');
     });
 </script>

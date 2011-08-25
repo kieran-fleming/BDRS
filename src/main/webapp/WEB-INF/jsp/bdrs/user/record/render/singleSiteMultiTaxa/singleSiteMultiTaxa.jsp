@@ -10,15 +10,28 @@
 <%@page import="au.com.gaiaresources.bdrs.model.taxa.AttributeScope"%>
 
 <h1><c:out value="${survey.name}"/></h1>
-
-<span id="script_content" class="hidden">
-	<p>
 	    Click on the map to enter the location of the sighting.
-	</p>
-	
 	<div id="record_base_map_hover_tip">&nbsp;</div>
+	
+	<div class="left">
+	    <a id="mapToggle" class="left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
+	        Collapse
+	    </a>
+	    <!-- Disable KML link for now
+	    <span>&nbsp;|&nbsp;<span/>
+	    <a href="javascript: bdrs.map.downloadKML('#record_filter_form', null);">
+	        Download KML
+	    </a> 
+	    -->
+	</div>
+	
+	<div class="right">
+	    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#base_map', bdrs.map.baseMap)">Enlarge Map</a>
+	</div>
+	
+	<div class="clear"></div>
 	<div class="map_wrapper" id="map_wrapper">
-	    <div id="base_map" class="defaultmap tracker_map"></div>
+	    <div id="base_map" class="defaultmap tracker_map review_map"></div>
 	    <div id="geocode" class="geocode"></div>
 	</div>
 	
@@ -27,6 +40,7 @@
 	</c:if>
 	<input type="hidden" name="surveyId" value="${survey.id}"/>
 	
+	<div id="tableContainer">
 	<table class="form_table">
 	    <tbody>
 	        <c:forEach items="${formFieldList}" var="formField">
@@ -45,7 +59,6 @@
 		    <input type="hidden" id="sighting_index" name="sightingIndex" value="0"/>  
 		    <input class="form_action" type="button" value="Add Sighting" onclick="bdrs.contribute.singleSiteMultiTaxa.addSighting('#sighting_index', '[name=surveyId]', '#sightingTable tbody');"/>
 		</div>
-		
 		<table id="sightingTable" class="datatable">
 		    <thead>
 		       <tr>
@@ -76,6 +89,7 @@
 		</table>
 	</div>
 	
+	</div>
 	<c:choose>
 	    <c:when test="${ preview }">
 	        <div class="textright">
@@ -91,7 +105,6 @@
 	        </form>
 	    </c:otherwise>
 	</c:choose>
-</span>
 
 <noscript>
     <tiles:insertDefinition name="noscriptMessage"></tiles:insertDefinition>
@@ -105,25 +118,40 @@
 
 <script type="text/javascript">
     bdrs.survey.location.LAYER_NAME = 'Position Layer';
-
+	bdrs.survey.location.LOCATION_LAYER_NAME = 'Location Layer';
+    
     bdrs.survey.location.updateLocation = function(pk) {
         if(pk > 0) {
-            jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
-                var wkt = new OpenLayers.Format.WKT();
+        	jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
+                var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
                 var feature = wkt.read(data.location);
+                console.log(feature);
+                var point = feature.geometry.getCentroid().transform(
+                        bdrs.map.GOOGLE_PROJECTION,
+                        bdrs.map.WGS84_PROJECTION);
+                var lat = jQuery('input[name=latitude]').val(point.y).blur();
+                var lon = jQuery('input[name=longitude]').val(point.x).blur();
 
-                var lat = jQuery('input[name=latitude]').val(feature.geometry.y).blur();
-                var lon = jQuery('input[name=longitude]').val(feature.geometry.x).blur();
-
+                // add the location point to the map
                 var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
                 layer.removeFeatures(layer.features);
 
-                var lonLat = new OpenLayers.LonLat(
-                    feature.geometry.y, feature.geometry.x);
+                var lonLat = new OpenLayers.LonLat(point.x, point.y);
                 lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
                                           bdrs.map.GOOGLE_PROJECTION);
                 layer.addFeatures(new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat)));
+
+                // add the location geometry to the map
+                var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
+                loclayer.removeFeatures(loclayer.features);
+
+                loclayer.addFeatures(feature);
+
+                // zoom the map to show the currently selected location
+                var geobounds = feature.geometry.getBounds();
+                var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
+                bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
             });
         }
         else {
@@ -135,27 +163,35 @@
     jQuery(function() {
         var layerName = bdrs.survey.location.LAYER_NAME;
         bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
+        bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
         
         <c:choose>
             <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
-                var layer = bdrs.map.addPositionLayer(layerName);                          
+                var layer = bdrs.map.addPositionLayer(layerName);
             </c:when>
             <c:otherwise>
-                var layer = bdrs.map.addSingleClickPositionLayer(layerName, 'input[name=latitude]', 'input[name=longitude]');
+                var layer = bdrs.map.addSingleClickPositionLayer(bdrs.map.baseMap, layerName, 'input[name=latitude]', 'input[name=longitude]');
+				bdrs.map.addLonLatChangeHandler(layer, 'input[name=longitude]', 'input[name=latitude]');
             </c:otherwise>
         </c:choose>
 
         var lat = jQuery('input[name=latitude]');
         var lon = jQuery('input[name=longitude]');
+        var lonLat;
         if(lat.val().length > 0 && lon.val().length > 0) {
-            var lonLat = new OpenLayers.LonLat(
+            lonLat = new OpenLayers.LonLat(
                     parseFloat(lon.val()), parseFloat(lat.val()));
             lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
                                       bdrs.map.GOOGLE_PROJECTION);
             var feature = new OpenLayers.Feature.Vector(
                 new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat));
             layer.addFeatures(feature);
-            bdrs.map.baseMap.setCenter(lonLat);
-        }
+        } 
+        
+        bdrs.map.centerMap(bdrs.map.baseMap, lonLat);
+        /**
+         * Prepopulate fields
+         */
+        bdrs.form.prepopulate();
     });
 </script>

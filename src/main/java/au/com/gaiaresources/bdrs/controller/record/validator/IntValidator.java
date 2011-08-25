@@ -39,7 +39,7 @@ public class IntValidator extends AbstractValidator {
             String value = getSingleParameter(parameterMap, key);
             if (value != null && !value.isEmpty()) {
                 try {
-                    int val = Integer.parseInt(value, 10);
+                    Integer.parseInt(value, 10);
                     // Otherwise it is valid
                 } catch (NumberFormatException nfe) {
                     if(blank) {

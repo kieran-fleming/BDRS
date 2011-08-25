@@ -3,12 +3,15 @@ package au.com.gaiaresources.bdrs.model.record;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
@@ -33,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
 
@@ -44,7 +48,7 @@ import com.vividsolutions.jts.geom.Point;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "RECORD")
 @AttributeOverride(name = "id", column = @Column(name = "RECORD_ID"))
-public class Record extends PortalPersistentImpl {
+public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
     
     public static final String RECORD_PROPERTY_SPECIES = "species";
     public static final String RECORD_PROPERTY_LOCATION = "location";
@@ -79,6 +83,8 @@ public class Record extends PortalPersistentImpl {
     private Geometry geometry;
     private Double accuracyInMeters;
     private Boolean held;
+    private RecordVisibility recordVisibility = RecordVisibility.OWNER_ONLY;
+
     private Date when;
     private Long time;
     private Date lastDate;
@@ -493,6 +499,22 @@ public class Record extends PortalPersistentImpl {
         this.reviewRequests = reviewRequests;
     }
 
+    /**
+     * The visibility level of the record. Defaults to 'owner only' 
+     * 
+     * @return
+     */
+    @CompactAttribute
+    @Enumerated(EnumType.STRING)
+    @Column(name = "record_visibility")
+    public RecordVisibility getRecordVisibility() {
+        return recordVisibility;
+    }
+
+    public void setRecordVisibility(RecordVisibility value) {
+        this.recordVisibility = value;
+    }
+
     // Many to many is a work around (read hack) to prevent a unique
     // constraint being applied on the metadata id.
     @ManyToMany
@@ -520,11 +542,11 @@ public class Record extends PortalPersistentImpl {
     @Transient
     public Double getLatitude() {
     	Location loc = this.getLocation();
-        if(loc != null && loc.getLocation() != null){
-            return loc.getLocation().getY();
-        }
-        else if(this.getPoint() != null) {
+        if(this.getPoint() != null) {
             return this.getPoint().getY();
+        }
+        else if(loc != null && loc.getLocation() != null){
+            return loc.getLocation().getCentroid().getY();
         }
         else {
             return null;
@@ -534,11 +556,11 @@ public class Record extends PortalPersistentImpl {
     @Transient
     public Double getLongitude() {
     	Location loc = this.getLocation();
-        if(loc != null && loc.getLocation() != null){
-            return loc.getLocation().getX();
-        }
-        else if(this.getPoint() != null) {
+        if(this.getPoint() != null) {
             return this.getPoint().getX();
+        }
+        else if(loc != null && loc.getLocation() != null){
+            return loc.getLocation().getCentroid().getX();
         }
         else {
             return null;
@@ -551,5 +573,72 @@ public class Record extends PortalPersistentImpl {
      */
     public boolean isNotDuplicate(){
         return Boolean.parseBoolean(this.getMetadataValue(Metadata.RECORD_NOT_DUPLICATE));
+    }
+    
+        /**
+     * Returns a list of the AttributeValues ordered by Attribute weight
+     * @return
+     */
+    @Transient
+    public List<AttributeValue> getOrderedAttributes() {
+        return AttributeValueUtil.orderAttributeValues(attributes);
+    }
+
+    /**
+     * Whether or not the details of this record should be hidden when outputing to json,
+     * or any other means.
+     * 
+     * @param accessor
+     * @return
+     */
+    @Transient
+    public boolean hideDetails(User accessor) {
+        boolean isPublic = this.getRecordVisibility() == RecordVisibility.PUBLIC;
+        if (accessor == null) {
+            // ignore accessing user
+            return !isPublic;
+        }
+        if (accessor.getId() == null) {
+            log.warn("Attempting to access record with a non null user with a null id. This _probably_ should not happen");
+            // ignore accessing user
+            return !isPublic;
+        }
+        if (this.getUser() == null || this.getUser().getId() == null) {
+            // record is not yet properly created (user field cannot be null in database).
+            log.warn("Attempting to determine whether a record should have hidden details but the record has no owner");
+            return false;
+        }
+
+        boolean isOwner = accessor.getId().intValue() == this.getUser().getId().intValue();
+        return !isOwner && !isPublic && !accessor.isAdmin();
+    }
+    
+    /**
+     * Whether or not the user attempting to write to this record actually has
+     * write access
+     * 
+     * @param writer
+     * @return
+     */
+    @Transient
+    public boolean canWrite(User writer) {
+        if (writer.getId() == null) {
+            log.warn("Attempting to write to record with a non null user with a null id. This _probably_ should not happen");
+            // user does not exist in database - cannot write.
+            return false;
+        }
+        if (this.getId() == null) {
+            // this is a new record. anyone should be able to write to it.
+            return true;
+        }
+        // at this point we know the record already exists in the database (non null record id).
+        
+        if (this.getUser() == null || this.getUser().getId() == null) {
+            // record is not yet properly created (user field cannot be null in database).
+            log.warn("Attempting to determine whether a record should have hidden details but the record has no owner");
+            return false;
+        }
+        boolean isOwner = writer.getId().intValue() == this.getUser().getId().intValue();
+        return isOwner || writer.isAdmin();
     }
 }

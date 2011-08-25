@@ -31,4 +31,13 @@ public interface FormField extends Comparable<FormField> {
      *         <code>Record</code> false otherwise.
      */
     public boolean isPropertyFormField();
+
+    /**
+     * Returns true if this form field is one that cannot be entered and 
+     * is only displayed on the form such as comments, horizontal rules, 
+     * HTML, etc.
+     * 
+     * @return true if this form field is for display only, false otherwise.
+     */
+    public boolean isDisplayFormField();
 }

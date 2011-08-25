@@ -47,7 +47,7 @@ bdrs.mobile.media = {
 		},
 		
 		test : function(msg){
-						console.log("the message is = " + msg)
+						//console.log("the message is = " + msg)
 					}
 		
 };

@@ -19,34 +19,34 @@
         <meta name="keywords" content="<tiles:getAsString name="metaKeywords"/>"/>
         <meta name="description" content="<tiles:getAsString name="metaDescription"/>"/>
         
-        <script src="${pageContext.request.contextPath}/js/jquery-1.6.2.min.js" type="text/javascript"></script>
+        <!-- Reset all browser specific styles regardless of theming -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-reset.css" type="text/css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-fonts.css" type="text/css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-base.css" type="text/css">
+
+        <!-- Include the BDRS default layout styles -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bdrs/bdrs.css" type="text/css"/>
+
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/base.css" type="text/css"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/ketchup/jquery.ketchup.css" type="text/css"/>
         
-        <c:choose>
-            <c:when test="${ theme != null }">
-                <c:forEach items="${ theme.cssFiles }" var="cssFile">
-		            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ cssFile }" type="text/css">
-		        </c:forEach>
-		        <c:forEach items="${ theme.jsFiles }" var="jsFile">
-		            <script type="text/javascript" src="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ jsFile }"></script>
-		        </c:forEach>
-            </c:when>
-            <c:otherwise>
-                <!-- Reset all browser specific styles -->
-		        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-reset.css" type="text/css">
-		        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-fonts.css" type="text/css">
-		        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-base.css" type="text/css">
+        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-1.6.2.min.js"></script>
+        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.8.11.custom.min.js"></script>
+        <link type="text/css" href="${pageContext.request.contextPath}/css/redmond/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
 		
-		        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/base.css" type="text/css"/>
-		        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/ketchup/jquery.ketchup.css" type="text/css"/>
-		        
-		        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.8.11.custom.min.js"></script>
-		        <link type="text/css" href="${pageContext.request.contextPath}/css/redmond/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
-            </c:otherwise>
-        </c:choose>
-        
+		<!-- custom css goes in before theming css, allows theme to override custom css styling if required -->
         <c:forEach var="cssFile" items="${customCSS}">
             <link rel="stylesheet" href="${pageContext.request.contextPath}/css/${cssFile}" type="text/css"/>
         </c:forEach>
+		
+        <c:if test="${ theme != null }">
+            <c:forEach items="${ theme.cssFiles }" var="cssFile">
+	            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ cssFile }" type="text/css">
+	        </c:forEach>
+	        <c:forEach items="${ theme.jsFiles }" var="jsFile">
+	            <script type="text/javascript" src="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ jsFile }"></script>
+	        </c:forEach>
+        </c:if>
         
         <link rel="stylesheet" href="${pageContext.request.contextPath}/js/colorpicker/css/colorpicker.css" type="text/css"/>
         <script src="${pageContext.request.contextPath}/js/colorpicker/js/colorpicker.js" type="text/javascript"></script>
@@ -79,6 +79,16 @@
                 bdrs.contextPath = '${pageContext.request.contextPath}'; 
                 bdrs.ident = '<%= context.getUser() == null ? "" : context.getUser().getRegistrationKey() %>';
                 bdrs.dateFormat = 'dd M yy';
+				
+				<sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_USER">
+				// This stuff isn't used for anything extremely important.
+				// Messing with these will allow you to pull some extra geom data
+				// from mapserver
+				bdrs.authenticated = true;
+                bdrs.authenticatedUserId = ${authenticatedUserId ? authenticatedUserId : 'null'};
+                bdrs.isAdmin = ${isAdmin ? isAdmin : 'null'};
+				</sec:authorize>
+				
                 bdrs.init();
                 
                 jQuery('form').ketchup();

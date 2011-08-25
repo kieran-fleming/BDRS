@@ -438,7 +438,7 @@ function config(persistence, dialect) {
     }
     persistence.asyncForEach(queries, function(queryTuple, callback) {
         tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err) {
-            console.log(err.message);
+            bdrs.mobile.Error(err.message);
             callback(_, err);
           });
       }, function(result, err) {

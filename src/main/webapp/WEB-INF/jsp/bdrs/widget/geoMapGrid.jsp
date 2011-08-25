@@ -42,7 +42,7 @@
             links.push('<a style="color:blue" href="${editUrl}?geoMapId=' + rowObject.id + '">Edit</a>');
         </c:if> 
         <c:if test="${not empty deleteUrl}">
-            links.push('<a style="color:blue" href="javascript:if(confirm(&quot;Are you sure you want to delete this map?&quot;)) {bdrs.postWith(&quot;${deleteUrl}&quot;, {geoMapPk' + rowObject.id + '});}">Delete</a>');
+            links.push('<a style="color:blue" href="javascript:if(confirm(&quot;Are you sure you want to delete this map?&quot;)) {bdrs.postWith(&quot;${deleteUrl}&quot;, {geoMapPk:' + rowObject.id + '});}">Delete</a>');
         </c:if>
         return links.join(" | ");
     };
@@ -86,7 +86,7 @@
     </c:if>
     
     jQuery("#${widgetId}Pager").jqGrid('navGrid','#${widgetId}Pager',{edit:false,add:false,del:false});
-    jQuery("#${widgetId}Filter}").click(function(){
+    jQuery("#${widgetId}Filter").click(function(){
     // turn the search form into a query string and append it to our url...
         var f = jQuery("#${widgetId}SearchForm").serialize();
         ${widgetId}_GridHelper.setQueryString(f);

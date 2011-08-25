@@ -17,7 +17,7 @@ exports.Show = function() {
 	
 	var records;
     waitfor(records) {
-	    Record.all().prefetch('species').prefetch('censusMethod').filter('parent', '=', null).order('when', false).list(resume);
+	    Record.all().filter('deleted','=',false).prefetch('species').prefetch('censusMethod').filter('parent', '=', null).order('when', false).list(resume);
     };
     
     var descriptor;
@@ -60,14 +60,29 @@ exports.Show = function() {
             bdrs.template.renderOnlyCallback('recordReviewItem', tmplParams, resume);        
         };
         
-        recordReviewItem.find("a").jqmData('recordId', rec.id).click(function(event) {
+        recordReviewItem.appendTo(recordListElem);
+
+        var anchor = recordReviewItem.find("a");
+        anchor.jqmData('recordId', rec.id);
+        anchor.click(function(event) {
             bdrs.mobile.setParameter("selected-record", jQuery(event.currentTarget).jqmData("recordId"));
+            jQuery.mobile.changePage("#record");
         });
         
-        recordReviewItem.appendTo(recordListElem);
     }
-    
+
     recordListElem.listview('refresh');
+
+    // Populate the number of items in the trash can
+    var trashCount;
+    waitfor(trashCount) {
+        Record.all().filter('deleted','=',true).count(resume);
+    }
+    jQuery("#review-trash-count").text(trashCount);
+
+    // Pluralize the subject of the trash can
+    var subject = trashCount === 1 ? "Record" : "Records";
+    jQuery("#review-trash-subject").text(subject);
 }
 
 exports.createRecordReviewItem = function(rec) {

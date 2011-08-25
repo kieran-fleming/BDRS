@@ -71,7 +71,7 @@ GR159DB.transaction(function(transaction) {
 			<jsp:useBean id="location" type="au.com.gaiaresources.bdrs.model.location.Location" />
 			
 			transaction.executeSql("INSERT INTO location (locationid, name, latitude, longitude) VALUES (?,?,?,?);", 
-				["<db:sanitise sql="${location.id}"/>","<db:sanitise sql="${location.name}"/>","<%= location.getLocation().getY() %>","<%= location.getLocation().getX() %>"],  
+				["<db:sanitise sql="${location.id}"/>","<db:sanitise sql="${location.name}"/>","<%= location.getLocation().getCentroid().getY() %>","<%= location.getLocation().getCentroid().getX() %>"],  
 				transactionSucces, 
 				transactionError
 			);

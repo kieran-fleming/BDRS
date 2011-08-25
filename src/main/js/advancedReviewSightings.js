@@ -10,15 +10,15 @@ bdrs.advancedReview = {};
  */
 bdrs.advancedReview.initTabHandlers = function() {
 
-	jQuery("#listViewTab").click(function() {
-		jQuery("input[name=viewType]").val("table");
-		jQuery("#facetForm").submit();
-	});
-	
-	jQuery("#mapViewTab").click(function() {
-		jQuery("input[name=viewType]").val("map");
-		jQuery("#facetForm").submit();
-	});
+    jQuery("#listViewTab").click(function() {
+        jQuery("input[name=viewType]").val("table");
+        jQuery("#facetForm").submit();
+    });
+    
+    jQuery("#mapViewTab").click(function() {
+        jQuery("input[name=viewType]").val("map");
+        jQuery("#facetForm").submit();
+    });
 };
 
 /**
@@ -34,7 +34,7 @@ bdrs.advancedReview.initTableView = function(formSelector,
                                             tableSelector, sortOrderSelector, 
                                             sortBySelector, resultsPerPageSelector) {
     // AJAX load the content for the table
-    var url = bdrs.contextPath + "/review/sightings/advancedReviewJSONSightings.htm?" 
+    var url = bdrs.contextPath + "/review/sightings/advancedReviewJSONSightings.htm?";
     var queryParams = jQuery(formSelector).serialize();
     jQuery.getJSON(url + queryParams, {}, function(recordArray) {
         var html = [];
@@ -57,15 +57,19 @@ bdrs.advancedReview.initTableView = function(formSelector,
             
             // Date
             html.push('<span class="nowrap">');
-            html.push('<a href="');
-            html.push(bdrs.contextPath);
-            html.push('/bdrs/user/surveyRenderRedirect.htm?surveyId=')
-            html.push(record.survey.id)
-            html.push('&recordId=');
-            html.push(record.id);
-            html.push('">');
+            if (bdrs.isAdmin || bdrs.authenticatedUserId == record.user.id) {
+                html.push('<a href="');
+                html.push(bdrs.contextPath);
+                html.push('/bdrs/user/surveyRenderRedirect.htm?surveyId=');
+                html.push(record.survey.id);
+                html.push('&recordId=');
+                html.push(record.id);
+                html.push('">');
+            }
             html.push(bdrs.util.formatDate(new Date(record.when)));
-            html.push('</a>');
+            if (bdrs.isAdmin || bdrs.authenticatedUserId == record.user.id) {
+                html.push('</a>');
+            }
             html.push('</span>');
             
             // Scientific Name
@@ -105,6 +109,14 @@ bdrs.advancedReview.initTableView = function(formSelector,
             }
             html.push('</span>');
             
+            html.push('<span class="username">');
+            if(record.user !== null && record.user !== undefined) {
+                html.push('&nbsp;&nbsp;|&nbsp;&nbsp;');
+                html.push('User:&nbsp;');
+                html.push(record.user.name.replace(/@\S+/i, ""));
+            }
+            html.push('</span>');
+            
             // End of second line
             html.push("</div>");
             
@@ -137,26 +149,59 @@ bdrs.advancedReview.pageSelected = function(pageNumber) {
  * @param mapId the id of the element where the map will be inserted.
  * @param mapOptions options to be used for map initialisation.
  */
-bdrs.advancedReview.initMapView = function(formSelector, mapId, mapOptions) {
+bdrs.advancedReview.initMapView = function(formSelector, mapId, mapOptions, idSelector) {
 
     bdrs.map.initBaseMap(mapId, mapOptions);
+    bdrs.map.centerMap(bdrs.map.baseMap);
     bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
     bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePoupUpHandler);
     
     var queryParams = jQuery(formSelector).serialize();
     var kmlURL = bdrs.contextPath + "/review/sightings/advancedReviewKMLSightings.htm?" + queryParams;
-	
-	var layerOptions = {
-		visible: true,
-        includeClusterStrategy: true
-	};
-	
-    var layer = bdrs.map.addKmlLayer(bdrs.map.baseMap, "Sightings", kmlURL, layerOptions);
+    var selectedId = jQuery(idSelector).val();
+    var context = {
+            getStrokeColor: function(feature) {
+                if (feature.fid == selectedId) {
+                    return "red";
+                } else {
+                    return '#EE9900';
+                }
+            },
+            getFillColor: function(feature) {
+                if (feature.fid == selectedId) {
+                    return "red";
+                } else {
+                    return '#EE9900';
+                }
+            }
+        };
+        
+        var styles = {
+                "default": new OpenLayers.Style({
+                    'strokeWidth': 2,
+    	            'strokeOpacity': 1,
+    	            'strokeColor': '${getStrokeColor}', // using context.getColor
+    	            'fillColor': '${getFillColor}',
+    	            'fillOpacity': 0.8,
+    	            'pointRadius': 5
+                }, {context:context}),
+                "select": new OpenLayers.Style({
+                    fillColor: "#66ccff",
+                    strokeColor: "#3399ff"
+                })
+            };
+
+    var style = new OpenLayers.StyleMap(styles);
+    
+    var layerOptions = {
+        visible: true,
+        includeClusterStrategy: true,
+        styleMap: style
+    };
+
+    var layer = bdrs.map.addKmlLayer(bdrs.map.baseMap, "Sightings", kmlURL, layerOptions, selectedId);
     layer.events.register('loadend', layer, function(event) {
-        var extent = event.object.getDataExtent();
-        if(extent !== null) {
-            bdrs.map.baseMap.zoomToExtent(event.object.getDataExtent(), false);
-        }
+        bdrs.map.centerMapToLayerExtent(bdrs.map.baseMap, layer);
     });
 };
 

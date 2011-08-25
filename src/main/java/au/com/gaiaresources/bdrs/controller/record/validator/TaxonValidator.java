@@ -3,6 +3,8 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
@@ -21,6 +23,8 @@ public class TaxonValidator extends AbstractValidator {
     private static final String TAXON_OR_BLANK_MESSAGE = "Must be a valid scientific name including case (e.g Homo sapien) or blank";
 
     private TaxaDAO taxaDAO;
+    
+    private Logger log = Logger.getLogger(getClass());
 
     /**
     * Creates a new <code>TaxonValidator</code>.
@@ -47,8 +51,8 @@ public class TaxonValidator extends AbstractValidator {
             String value = getSingleParameter(parameterMap, key);
 
             if(value != null && !value.isEmpty()) {
-	            List<IndicatorSpecies> taxaList = taxaDAO.getIndicatorSpeciesListByScientificName(value);
-	
+                    List<IndicatorSpecies> taxaList = taxaDAO.getIndicatorSpeciesByNameSearch(value);
+
 	            if (taxaList.isEmpty() || taxaList.size() > 1) {
 	                if (blank) {
 	                    errorMap.put(key, propertyService.getMessage(TAXON_OR_BLANK_MESSAGE_KEY, TAXON_OR_BLANK_MESSAGE));

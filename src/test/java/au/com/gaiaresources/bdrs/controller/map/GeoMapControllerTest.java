@@ -159,6 +159,13 @@ public class GeoMapControllerTest extends AbstractControllerTest {
         request.addParameter(GeoMapController.PARAM_MAP_LAYER_VISIBLE, "false");
         request.addParameter(GeoMapController.PARAM_MAP_LAYER_VISIBLE, "true");
         
+        request.addParameter(GeoMapController.PARAM_UPPER_ZOOM_LIMIT, "6");
+        request.addParameter(GeoMapController.PARAM_UPPER_ZOOM_LIMIT, "3");
+        
+        request.addParameter(GeoMapController.PARAM_LOWER_ZOOM_LIMIT, "1");
+        request.addParameter(GeoMapController.PARAM_LOWER_ZOOM_LIMIT, "2");
+        
+        
         ModelAndView mv = handle(request, response);
         
         Assert.assertTrue(mv.getView() instanceof RedirectView);
@@ -181,11 +188,17 @@ public class GeoMapControllerTest extends AbstractControllerTest {
         List<AssignedGeoMapLayer> layerList = layerDAO.getForMap(gm.getId());
         Assert.assertEquals(2, layerList.size());
         // we now need to test for order...
-        Assert.assertEquals(layerList.get(0).getLayer(), layer1);
-        Assert.assertEquals(layerList.get(1).getLayer(), layer2);
+        Assert.assertEquals(layer1, layerList.get(0).getLayer());
+        Assert.assertEquals(layer2, layerList.get(1).getLayer());
         
-        Assert.assertEquals(layerList.get(0).isVisible(), false);
-        Assert.assertEquals(layerList.get(1).isVisible(), true);
+        Assert.assertEquals(false, layerList.get(0).isVisible());
+        Assert.assertEquals(true, layerList.get(1).isVisible());
+        
+        Assert.assertEquals(6, layerList.get(0).getUpperZoomLimit().intValue());
+        Assert.assertEquals(3, layerList.get(1).getUpperZoomLimit().intValue());
+        
+        Assert.assertEquals(1, layerList.get(0).getLowerZoomLimit().intValue());
+        Assert.assertEquals(2, layerList.get(1).getLowerZoomLimit().intValue());
     }
     
     @Test
@@ -207,6 +220,11 @@ public class GeoMapControllerTest extends AbstractControllerTest {
         
         request.addParameter(GeoMapController.PARAM_MAP_LAYER_VISIBLE, "true");
         request.addParameter(GeoMapController.PARAM_MAP_LAYER_VISIBLE, "false");
+        
+        request.addParameter(GeoMapController.PARAM_UPPER_ZOOM_LIMIT, "");
+        request.addParameter(GeoMapController.PARAM_UPPER_ZOOM_LIMIT, "");
+        request.addParameter(GeoMapController.PARAM_LOWER_ZOOM_LIMIT, "");
+        request.addParameter(GeoMapController.PARAM_LOWER_ZOOM_LIMIT, "");
         
         ModelAndView mv = handle(request, response);
         
@@ -235,6 +253,11 @@ public class GeoMapControllerTest extends AbstractControllerTest {
         
         Assert.assertEquals(layerList.get(0).isVisible(), true);
         Assert.assertEquals(layerList.get(1).isVisible(), false);
+        
+        Assert.assertEquals(null, layerList.get(0).getUpperZoomLimit());
+        Assert.assertEquals(null, layerList.get(1).getUpperZoomLimit());
+        Assert.assertEquals(null, layerList.get(0).getLowerZoomLimit());
+        Assert.assertEquals(null, layerList.get(1).getLowerZoomLimit());
     }
     
     @Test
@@ -367,9 +390,15 @@ public class GeoMapControllerTest extends AbstractControllerTest {
     }
     
     private AssignedGeoMapLayer createTestAssignedLayer(GeoMap map, GeoMapLayer layer) {
+        return createTestAssignedLayer(map, layer, null, null);
+    }
+    
+    private AssignedGeoMapLayer createTestAssignedLayer(GeoMap map, GeoMapLayer layer, Integer lower, Integer upper) {
         AssignedGeoMapLayer asLayer = new AssignedGeoMapLayer();
         asLayer.setMap(map);
         asLayer.setLayer(layer);
+        asLayer.setLowerZoomLimit(lower);
+        asLayer.setUpperZoomLimit(upper);
         return asLayer;
     }
 }

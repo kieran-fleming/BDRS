@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.model.map.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -121,5 +122,21 @@ public class GeoMapLayerDAOImpl extends AbstractDAOImpl implements GeoMapLayerDA
     @Override
     public GeoMapLayer get(Session sesh, Integer pk) {
         return super.getByID(sesh, GeoMapLayer.class, pk);
+    }
+    
+    @Override
+    public void delete(Integer pk) {
+        GeoMapLayer layer = get(pk);
+        super.delete(layer);
+    }
+
+    @Override
+    public List<AssignedGeoMapLayer> getAssignedLayerByLayerId(int layerId) {
+        Query query = getSession().createQuery("select a from AssignedGeoMapLayer a inner join a.layer l where l.id = " + String.format("%d", layerId));
+        List<AssignedGeoMapLayer> result = (List<AssignedGeoMapLayer>)query.list();
+        if (result == null || result.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+        return result;
     }
 }

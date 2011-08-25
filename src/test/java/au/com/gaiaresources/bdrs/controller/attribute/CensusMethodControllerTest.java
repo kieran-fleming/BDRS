@@ -10,6 +10,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,8 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     CensusMethod m2;
     CensusMethod m3;
     private Survey survey;
+    
+    private Logger log = Logger.getLogger(getClass());
     
     @Before
     public void setup() {
@@ -110,6 +113,8 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
         survey.setActive(true);
         survey.setStartDate(new Date());
         survey.setDescription("Single Site Multi Taxa Survey Description");
+        survey.setDefaultCensusMethodProvided(true, metadataDAO);
+        
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
         metadataDAO.save(md);
         // no attributes
@@ -121,16 +126,11 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
         survey = surveyDAO.save(survey);
     }
     
-    @Test
-    public void testListing() {
-
-    }
-    
     @SuppressWarnings("unchecked")
     @Test
     public void testViewNew() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         
         ModelAndView mv = this.handle(request, response);
         
@@ -145,7 +145,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testViewExisting() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");        
+        request.setRequestURI(CensusMethodController.EDIT_URL);        
         request.setParameter("censusMethodId", m1.getId().toString());
         
         ModelAndView mv = this.handle(request, response);
@@ -163,7 +163,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testEditNew() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         
         testEditing("new census method", null);
     }
@@ -171,7 +171,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testEditExistingAdd() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         request.setParameter("censusMethodId", m1.getId().toString());
         
         testEditing("mama mia", m1.getId());
@@ -180,7 +180,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testSetTaxonomic1() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         request.setParameter("censusMethodId", m1.getId().toString());
         request.setParameter("censusMethodName", m1.getName());
         request.setParameter("taxonomic", "TAXONOMIC");
@@ -196,7 +196,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testSetTaxonomic2() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         request.setParameter("censusMethodId", m1.getId().toString());
         request.setParameter("censusMethodName", m1.getName());
         request.setParameter("taxonomic", "NONTAXONOMIC");
@@ -212,7 +212,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testSetTaxonomic3() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/admin/censusMethod/edit.htm");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
         request.setParameter("censusMethodId", m1.getId().toString());
         request.setParameter("censusMethodName", m1.getName());
         request.setParameter("taxonomic", "OPTIONALLYTAXONOMIC");
@@ -299,7 +299,75 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
         Assert.assertTrue(cmUnderTest.getCensusMethods().contains(m3));
         Assert.assertTrue(Taxonomic.TAXONOMIC.equals(cmUnderTest.getTaxonomic()));
     }
-
+    
+    @Test
+    public void setPointOnly() throws Exception {
+        request.setMethod("POST");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
+        request.setParameter("censusMethodId", m1.getId().toString());
+        request.setParameter("censusMethodName", m1.getName());
+        request.setParameter("taxonomic", "OPTIONALLYTAXONOMIC");
+        request.setParameter(CensusMethodController.PARAM_DRAW_POINT_ENABLED, "true");
+        
+        handle(request, response);
+        
+        List<CensusMethod> censusMethodList = cmDAO.search(null, m1.getName(), null).getList();
+        Assert.assertEquals(censusMethodList.size(), 1);
+        CensusMethod cmUnderTest = censusMethodList.get(0);
+        
+        Assert.assertEquals(false, cmUnderTest.isDrawLineEnabled());
+        Assert.assertEquals(true, cmUnderTest.isDrawPointEnabled());
+        Assert.assertEquals(false, cmUnderTest.isDrawPolygonEnabled());
+    }
+    
+    @Test
+    public void setLineOnly() throws Exception {
+        request.setMethod("POST");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
+        request.setParameter("censusMethodId", m1.getId().toString());
+        request.setParameter("censusMethodName", m1.getName());
+        request.setParameter("taxonomic", "OPTIONALLYTAXONOMIC");
+        request.setParameter(CensusMethodController.PARAM_DRAW_LINE_ENABLED, "true");
+        
+        handle(request, response);
+        
+        List<CensusMethod> censusMethodList = cmDAO.search(null, m1.getName(), null).getList();
+        Assert.assertEquals(censusMethodList.size(), 1);
+        CensusMethod cmUnderTest = censusMethodList.get(0);
+        
+        Assert.assertEquals(true, cmUnderTest.isDrawLineEnabled());
+        Assert.assertEquals(false, cmUnderTest.isDrawPointEnabled());
+        Assert.assertEquals(false, cmUnderTest.isDrawPolygonEnabled());
+    }
+    
+    @Test
+    public void setPolygonOnly() throws Exception {
+        request.setMethod("POST");
+        request.setRequestURI(CensusMethodController.EDIT_URL);
+        request.setParameter("censusMethodId", m1.getId().toString());
+        request.setParameter("censusMethodName", m1.getName());
+        request.setParameter("taxonomic", "OPTIONALLYTAXONOMIC");
+        request.setParameter(CensusMethodController.PARAM_DRAW_POLYGON_ENABLED, "true");
+        
+        handle(request, response);
+        
+        List<CensusMethod> censusMethodList = cmDAO.search(null, m1.getName(), null).getList();
+        Assert.assertEquals(censusMethodList.size(), 1);
+        CensusMethod cmUnderTest = censusMethodList.get(0);
+        
+        Assert.assertEquals(false, cmUnderTest.isDrawLineEnabled());
+        Assert.assertEquals(false, cmUnderTest.isDrawPointEnabled());
+        Assert.assertEquals(true, cmUnderTest.isDrawPolygonEnabled());
+    }
+    
+    @Test
+    public void testDefaultCensusMethodDrawOptions() {
+        CensusMethod cm = new CensusMethod();
+        
+        Assert.assertEquals(true, cm.isDrawPointEnabled());
+        Assert.assertEquals(false, cm.isDrawLineEnabled());
+        Assert.assertEquals(false, cm.isDrawPolygonEnabled());
+    }
     
     @Test
     public void testSearchService() throws Exception {
@@ -355,16 +423,34 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     }
     
     @Test
-    public void testGetCensusMethodForSurvey() throws Exception {
+    public void testGetCensusMethodForSurveyDefaultCensusMethodProvided() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/user/censusMethod/getSurveyCensusMethods.htm");
-        request.setParameter("surveyId", survey.getId().toString());
+        request.setRequestURI(CensusMethodController.GET_CENSUS_METHOD_FOR_SURVEY_URL);
+        request.setParameter(CensusMethodController.PARAM_SURVEY_ID, survey.getId().toString());
         
         this.handle(request,response);
                 
         JSONArray array = (JSONArray)JSONSerializer.toJSON(response.getContentAsString());
         
         // 2 census method items plus the default item
-        Assert.assertEquals(3, array.size());
+        Assert.assertEquals("expect 2 census methods plus the default, 'standard taxonomic' item", 3, array.size());
+    }
+    
+    @Test
+    public void testGetCensusMethodForSurveyNoDefaultCensusMethodProvided() throws Exception {
+        Metadata aaa = survey.setDefaultCensusMethodProvided(false, metadataDAO);
+        
+        surveyDAO.updateSurvey(survey);
+        
+        request.setMethod("GET");
+        request.setRequestURI(CensusMethodController.GET_CENSUS_METHOD_FOR_SURVEY_URL);
+        request.setParameter(CensusMethodController.PARAM_SURVEY_ID, survey.getId().toString());
+        
+        this.handle(request,response);
+                
+        JSONArray array = (JSONArray)JSONSerializer.toJSON(response.getContentAsString());
+        
+        // 2 census method items plus the default item
+        Assert.assertEquals("expect the 2 census methods", 2, array.size());
     }
 }

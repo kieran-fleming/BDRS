@@ -46,8 +46,11 @@
     
     <h3>Map Layers</h3>
 	
-	<p>Assign map layers to this map that you have created earlier 
-    using the <a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">map layer interface</a></p>
+	<ul>
+		<li>Assign map layers to this map that you have created earlier 
+    using the <a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">map layer interface.</a></li>
+	    <li>Zoom limiting will only show the layer when the zoom level is between the numbers indicated. Higher numbers indicate greater zoom.</li>
+	</ul>
 
     <div id="mapLayerContainer">
         <div class="textright buttonpanel">
@@ -58,10 +61,12 @@
             <thead>
                 <tr>
                     <th>&nbsp;</th>
-                    <th>Map Layer Name</th>
-                    <th>Map Layer Description</th>
+                    <th title="The name of the map layer">Map Layer Name</th>
+                    <th title="The description of the map layer">Map Layer Description</th>
+					<th title="The upper zoom level that the layer will appear on. Higher numbers = more zoomed in.">Zoom In Limit</th>
+					<th title="The lower zoom level that the layer will appear on. Lower numbers = more zoomed out.">Zoom Out Limit</th>
 					<th title="Whether the map layer will be visible upon map loading">Visible</th>
-                    <th>Delete</th>
+                    <th title="Remove the map layer from this map">Delete</th>
                 </tr>
             </thead>
             <tbody id="mapLayersTbody">
@@ -85,39 +90,77 @@
     </tiles:insertDefinition>
 </div>
 
-<div style="display:none">
-    <table>
-       <tbody id="rowTemplate">
-            <tr>
-                <td class="drag_handle">
-                    <input type="hidden" value="0" class="sort_weight" />         
-                </td>                                                                                       
-                <td>                                                                                        
-                    <label>${'${'}name}</label>
-                    <input type="hidden" value="${'${'}id}" name="mapLayerPk" />                                 
-                </td>                                                                                       
-                <td>                                                                                        
-                    <label>${'${'}description}</label>                                                           
-                </td>
-                <td class="textcenter">
-                    {{if (visible == true)}}
-                       <input type="hidden" name="mapLayerVisible" value="false" disabled="disabled" />
-                       <input type="checkbox" name="mapLayerVisible" value="true" checked="checked" onchange="mapLayerVisibleChanged(jQuery(this));" />
-                    {{else}}
-                       <input type="hidden" name="mapLayerVisible" value="false" />
-                       <input type="checkbox" name="mapLayerVisible" value="true"  onchange="mapLayerVisibleChanged(jQuery(this));" />
-                    {{/if}}
-                </td>                                                                                   
-                <td class="textcenter">                                                                     
-                    <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').hide().find('select, input, textarea').attr('disabled', 'disabled').removeClass(); return false;">   
-                    <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>                                                                         
-                    </a>                                                                                    
-                </td>                                                                                       
-            </tr>    
-        </tbody> 
-    </table>
-</div>
 
+<script id="rowTemplate" type="text/x-jquery-tmpl">
+	<tr>
+        <td class="drag_handle">
+            <input type="hidden" value="0" class="sort_weight" />         
+        </td>
+        <td>
+            <label>${'${'}name}</label>
+            <input type="hidden" value="${'${'}id}" name="mapLayerPk" />                                 
+        </td>
+        <td>
+            <label>${'${'}description}</label>                                                           
+        </td>
+        <td class="textcenter">
+            <select style="width:7em" name="upperZoomLimit" onchange="upperZoomLimitChanged(jQuery(this));">
+                <option value="">No Limit</option>
+                <option value="0" {{if (lowerZoomLimit == 0)}} selected="selected" {{/if}}>0</option>
+                <option value="1" {{if (upperZoomLimit == 1)}} selected="selected" {{/if}}>1</option>
+                <option value="2" {{if (upperZoomLimit == 2)}} selected="selected" {{/if}}>2</option>
+                <option value="3" {{if (upperZoomLimit == 3)}} selected="selected" {{/if}}>3</option>
+                <option value="4" {{if (upperZoomLimit == 4)}} selected="selected" {{/if}}>4</option>
+                <option value="5" {{if (upperZoomLimit == 5)}} selected="selected" {{/if}}>5</option>
+                <option value="6" {{if (upperZoomLimit == 6)}} selected="selected" {{/if}}>6</option>
+                <option value="7" {{if (upperZoomLimit == 7)}} selected="selected" {{/if}}>7</option>
+                <option value="8" {{if (upperZoomLimit == 8)}} selected="selected" {{/if}}>8</option>
+                <option value="9" {{if (upperZoomLimit == 9)}} selected="selected" {{/if}}>9</option>
+                <option value="10" {{if (upperZoomLimit == 10)}} selected="selected" {{/if}}>10</option>
+                <option value="11" {{if (upperZoomLimit == 11)}} selected="selected" {{/if}}>11</option>
+                <option value="12" {{if (upperZoomLimit == 12)}} selected="selected" {{/if}}>12</option>
+                <option value="13" {{if (upperZoomLimit == 13)}} selected="selected" {{/if}}>13</option>
+                <option value="14" {{if (upperZoomLimit == 14)}} selected="selected" {{/if}}>14</option>
+                <option value="15" {{if (upperZoomLimit == 15)}} selected="selected" {{/if}}>15</option>
+            </select>
+        </td>
+        <td class="textcenter">
+            <select style="width:7em" name="lowerZoomLimit" onchange="lowerZoomLimitChanged(jQuery(this));">
+            	<option value="">No Limit</option>
+                <option value="0" {{if (lowerZoomLimit == 0)}} selected="selected" {{/if}}>0</option>
+                <option value="1" {{if (lowerZoomLimit == 1)}} selected="selected" {{/if}}>1</option>
+                <option value="2" {{if (lowerZoomLimit == 2)}} selected="selected" {{/if}}>2</option>
+                <option value="3" {{if (lowerZoomLimit == 3)}} selected="selected" {{/if}}>3</option>
+                <option value="4" {{if (lowerZoomLimit == 4)}} selected="selected" {{/if}}>4</option>
+                <option value="5" {{if (lowerZoomLimit == 5)}} selected="selected" {{/if}}>5</option>
+                <option value="6" {{if (lowerZoomLimit == 6)}} selected="selected" {{/if}}>6</option>
+                <option value="7" {{if (lowerZoomLimit == 7)}} selected="selected" {{/if}}>7</option>
+                <option value="8" {{if (lowerZoomLimit == 8)}} selected="selected" {{/if}}>8</option>
+                <option value="9" {{if (lowerZoomLimit == 9)}} selected="selected" {{/if}}>9</option>
+                <option value="10" {{if (lowerZoomLimit == 10)}} selected="selected" {{/if}}>10</option>
+                <option value="11" {{if (lowerZoomLimit == 11)}} selected="selected" {{/if}}>11</option>
+                <option value="12" {{if (lowerZoomLimit == 12)}} selected="selected" {{/if}}>12</option>
+                <option value="13" {{if (lowerZoomLimit == 13)}} selected="selected" {{/if}}>13</option>
+                <option value="14" {{if (lowerZoomLimit == 14)}} selected="selected" {{/if}}>14</option>
+                <option value="15" {{if (lowerZoomLimit == 15)}} selected="selected" {{/if}}>15</option>
+            </select>
+        </td>
+        <td class="textcenter">
+            {{if (visible == true)}}
+               <input type="hidden" name="mapLayerVisible" value="false" disabled="disabled" />
+               <input type="checkbox" name="mapLayerVisible" value="true" checked="checked" onchange="mapLayerVisibleChanged(jQuery(this));" />
+            {{else}}
+               <input type="hidden" name="mapLayerVisible" value="false" />
+               <input type="checkbox" name="mapLayerVisible" value="true"  onchange="mapLayerVisibleChanged(jQuery(this));" />
+            {{/if}}
+        </td>                                                                                   
+        <td class="textcenter">                                                                     
+            <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').hide().find('select, input, textarea').attr('disabled', 'disabled').removeClass(); return false;">   
+            <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>                                                                         
+            </a>                                                                                    
+        </td>                                                                                       
+    </tr>    
+</script>
 
 <script type="text/javascript">
     $(function() {
@@ -133,11 +176,14 @@
                     if (rowId) {
 	                    var rowData = addMapLayerGrid_GridHelper.getRowData(rowId);
 	                    
+						// setup default values here...
 	                    var data = {
 	                        "id": rowId,
 	                        "name": rowData.name,
 	                        "description": rowData.description,
-							"visible": true
+							"visible": true,
+							"upperZoomLimit": null,
+							"lowerZoomLimit": null
 	                    };
 	                    addTableRow(data);
 	                }
@@ -162,12 +208,64 @@
                 "id": <c:out value="${assignedLayer.layer.id}" />,
                 "name": '<c:out value="${assignedLayer.layer.name}" />',
                 "description": '<c:out value="${assignedLayer.layer.description}"/>',
-                "visible": <c:out value="${assignedLayer.visible}" />
+                "visible": <c:out value="${assignedLayer.visible}" />,
+				"upperZoomLimit": <c:out value="${assignedLayer.upperZoomLimit != null ? assignedLayer.upperZoomLimit : 'null'}" />,
+				"lowerZoomLimit": <c:out value="${assignedLayer.lowerZoomLimit != null ? assignedLayer.lowerZoomLimit : 'null'}" />
             };
             addTableRow(data);
         }
         </c:forEach>
+		
+		// trigger change events so the enabling/disabling occurs.
+		jQuery('select').change();
     });
+	
+    // select: the select node
+    // siblingSelector: the selector for sibling select node for the table row
+    // bEnableWhenHigher: effects the check for whether the value of the
+    // current select node should be higher or lower than the sibling select node.
+	var enableDisableOptions = function (select, siblingSelector, bEnableWhenHigher) {
+		var selector = siblingSelector;
+		var value = select.val();
+        var siblingValue = select.parent().siblings().children(selector).val();     
+        var enableOptions = select.parent().siblings().children(selector).children().filter(function() {
+            if (value === "") {
+                return true;
+            }
+            var intValue = parseInt(value);
+            var intSiblingValue = parseInt(jQuery(this).val());
+			
+			return bEnableWhenHigher ? intSiblingValue <= intValue : intValue <= intSiblingValue; 
+        });
+		enableOptions.removeAttr('disabled');
+		
+		var disableOptions = select.parent().siblings().children(selector).children().filter(function() {
+            if (value === "") {
+                return false;
+            }
+            var intValue = parseInt(value);
+            var intSiblingValue = parseInt(jQuery(this).val());
+			
+			return bEnableWhenHigher ? intSiblingValue > intValue : intValue > intSiblingValue
+        });
+        disableOptions.attr('disabled','disabled');
+		
+		if (value !== "" && siblingValue !== "") {
+            if (bEnableWhenHigher ? (parseInt(siblingValue) > parseInt(value)) : (parseInt(value) > parseInt(siblingValue))) {
+                select.parent().siblings().children(selector).val(value);
+            }
+        }
+	};
+	
+	var upperZoomLimitChanged = function(select) {
+		var selector = 'select[name="lowerZoomLimit"]';
+		enableDisableOptions(select, selector, true);
+	};
+	
+	var lowerZoomLimitChanged = function(select) {
+		var selector = 'select[name="upperZoomLimit"]';
+        enableDisableOptions(select, selector, false);
+	};
 	
 	var mapLayerVisibleChanged = function(checkbox) {
         if (checkbox.attr('checked')) {

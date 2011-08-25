@@ -7,14 +7,22 @@
  * @requires OpenLayers/Strategy.js
  */
 
+// avoid file import ordering issues
+if (window.bdrs === undefined) {
+	window.bdrs = {};
+}
+if (bdrs.map === undefined) {
+	bdrs.map = {};
+}
+
 /**
- * Class: OpenLayers.Strategy.BdrsCluster
+ * Class: bdrs.map.BdrsCluster
  * Strategy for vector feature clustering with hacks to deselect the currently selected node on reclustering (i.e. on zoom)
  *
  * Inherits from:
  *  - <OpenLayers.Strategy>
  */
-OpenLayers.Strategy.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
+bdrs.map.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
 
     /**
      * Constructor: OpenLayers.Strategy.Cluster
@@ -47,28 +55,39 @@ OpenLayers.Strategy.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, 
                 this.resolution = resolution;
                 var clusters = [];
                 var feature, clustered, cluster;
+
+                var selected = this.layer.selectedFeatures.slice();
+                var select = new OpenLayers.Control.SelectFeature(this.layer);
+                var selectedFid = (selected && selected.length > 0 ) ? selected[0].fid : -1;
+                
                 for(var i=0; i<this.features.length; ++i) {
                     feature = this.features[i];
                     if(feature.geometry) {
-                        clustered = false;
-                        for(var j=clusters.length-1; j>=0; --j) {
-                            cluster = clusters[j];
-                            if(this.shouldCluster(cluster, feature)) {
-                                this.addToCluster(cluster, feature);
-                                clustered = true;
-                                break;
-                            }
-                        }
+						
+						clustered = false;
+						// only points are clustered
+						if (feature.geometry.CLASS_NAME === "OpenLayers.Geometry.Point" &&
+								feature.fid != this.ignoreId && 
+								feature.fid !== selectedFid) {
+                            for (var j = clusters.length - 1; j >= 0; --j) {
+								cluster = clusters[j];
+								// can only add to modifiable clusters.
+								if (cluster.isModifiable && this.shouldCluster(cluster, feature)) {
+									this.addToCluster(cluster, feature);
+									clustered = true;
+									break;
+								}
+							}					
+						} 
                         if(!clustered) {
                             clusters.push(this.createCluster(this.features[i]));
                         }
                     }
                 }
-                
+
                 // Close popups and unselect features!
                 if (this.layer.selectPopUpControl) {
                     // clone the selected features array
-                    var selected = this.layer.selectedFeatures.slice();
                     for (var selectedIdx=0; selectedIdx < selected.length; ++selectedIdx) {
                         this.layer.selectPopUpControl.unselect(selected[selectedIdx]);
                     }
@@ -89,7 +108,7 @@ OpenLayers.Strategy.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, 
                             }
                         }
                     }
-                    this.clustering = true;
+					this.clustering = true;
                     // A legitimate feature addition could occur during this
                     // addFeatures call.  For clustering to behave well, features
                     // should be removed from a layer before requesting a new batch.
@@ -98,9 +117,53 @@ OpenLayers.Strategy.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, 
                     this.clustering = false;
                 }
                 this.clusters = clusters;
+                
+                // re-select the features here
+                for (var selectedIdx=0; selectedIdx < selected.length; ++selectedIdx) {
+                	var fid = selected[selectedIdx].fid;
+                    if (fid) {
+                        var hlFeature = this.layer.getFeatureByFid(fid);
+                        if (hlFeature) {
+                            select.select(hlFeature);
+                        }
+                    }
+                }
             }
         }
     },
+	
+	    /**
+     * Method: createCluster
+     * Given a feature, create a cluster.
+     *
+     * Parameters:
+     * feature - {<OpenLayers.Feature.Vector>}
+     *
+     * Returns:
+     * {<OpenLayers.Feature.Vector>} A cluster.
+     */
+    createCluster: function(feature) {
+		var geom;
+		var modifiable;
 
-    CLASS_NAME: "OpenLayers.Strategy.BdrsCluster" 
+        if (feature.geometry.CLASS_NAME === "OpenLayers.Geometry.Point") {
+            var center = feature.geometry.getBounds().getCenterLonLat();
+			geom = new OpenLayers.Geometry.Point(center.lon, center.lat);
+			var selectedFid = (this.layer.selectedFeatures.length > 0 ? this.layer.selectedFeatures[0].fid : -1);
+			modifiable = feature.fid != this.ignoreId && feature.fid != selectedFid;
+        } else {
+			// other geometry types are never clustered
+            geom = feature.geometry;
+            modifiable = false;
+		}
+		
+        var cluster = new OpenLayers.Feature.Vector(geom, {count: 1});
+		// duck punch isModifiable - can only add to modifiable clusters
+		cluster.isModifiable = modifiable;
+        cluster.cluster = [feature];
+        cluster.fid = feature.fid;
+        return cluster;
+    },
+
+    CLASS_NAME: "bdrs.map.BdrsCluster" 
 });

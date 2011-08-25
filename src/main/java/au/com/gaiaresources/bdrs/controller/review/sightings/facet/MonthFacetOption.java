@@ -13,31 +13,19 @@ import edu.emory.mathcs.backport.java.util.Arrays;
  */
 public class MonthFacetOption extends FacetOption {
     
-    private Date date;
+	private static final String[] months = { "January", "February", "March", "April", "May", "June",
+	                                         "July", "August", "September", "October", "November", "December" };
+    
+	private Long month; // starts at 0
 
-    public MonthFacetOption(Date date, Long count, String[] selectedOpts) {
-        super(new SimpleDateFormat("MMM yyyy").format(date), String.valueOf(date.getTime()), count,
-              Arrays.binarySearch(selectedOpts, String.valueOf(date.getTime())) > -1);
-        
-        this.date = new Date(date.getTime());;      
+    public MonthFacetOption(Long month, Long count, String[] selectedOpts) {
+        super(months[month.intValue()-1], month.toString(), count,
+        		Arrays.binarySearch(selectedOpts, month.toString()) > -1);
+        this.month = month;    
     }
 
     public Predicate getPredicate() {
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(date);
-        
-        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
-        cal.set(Calendar.HOUR_OF_DAY, cal.getActualMinimum(Calendar.HOUR_OF_DAY));
-        cal.set(Calendar.MINUTE, cal.getActualMinimum(Calendar.MINUTE));
-        cal.set(Calendar.SECOND, cal.getActualMinimum(Calendar.SECOND));
-        Date startDate = cal.getTime();
-        
-        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-        cal.set(Calendar.HOUR_OF_DAY, cal.getActualMaximum(Calendar.HOUR_OF_DAY));
-        cal.set(Calendar.MINUTE, cal.getActualMaximum(Calendar.MINUTE));
-        cal.set(Calendar.SECOND, cal.getActualMaximum(Calendar.SECOND));
-        Date endDate = cal.getTime();
-        
-        return new Predicate("(record.when >= ? and record.when <= ?)", startDate, endDate);
+        return new Predicate("month(record.when) = ?)", month.intValue());
     }
+    
 }

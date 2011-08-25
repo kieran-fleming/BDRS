@@ -1,15 +1,19 @@
 exports._point_data = {};
 exports._point_data.substrateMethod = null;
 exports._point_data.substrateAttr = null;
+exports._point_data.pointNumberAttr = null;
 exports._point_data.obsMethod = null;
 exports._point_data.obsHeightAttr = null;
-exports._point_data.obsFloweringAttr = null;
 
 exports._point_data.parentRecord = null;
 exports._point_data.substrateRecord = null;
 exports._point_data.substrateRecAttr = null;
+exports._point_data.pointNumRecAttr = null;
 
 exports._last_selected_substrate = null;
+
+// { species.id : last_height_value}
+exports._last_height = {};
 
 /**
  * Invoked when the page is created.
@@ -28,11 +32,16 @@ exports.Create =  function() {
 
             exports.Hide();
             exports._point_data.substrateRecord = new Record();
+            exports._point_data.substrateRecord.deleted(false);
             
             exports.Show();
         }
     });
     
+    jQuery("#pi-delete-substrate").click(function() {
+        bdrs.mobile.pages.record.markRecordForDelete(exports._point_data.substrateRecord);
+        jQuery.mobile.changePage("#review", "slide", false, true);
+    });
     
     jQuery('#pi-gps').click(function (event) {
 		var position;
@@ -68,7 +77,7 @@ exports.Show = function() {
     var isNewRecord = false;
     var record = exports._point_data.substrateRecord;
         
-    // if new record/.
+    // if new record
     if(exports._point_data.substrateRecord.parent() === null || exports._point_data.substrateRecord.parent() === undefined) {
 		isNewRecord = true;
         // Adding a record
@@ -76,9 +85,10 @@ exports.Show = function() {
             Record.all().
                 filter('parent','=',exports._point_data.parentRecord.id).
                 filter('censusMethod','=',exports._point_data.substrateMethod.id).
+                filter('deleted','=',false).
                 count(resume);
         }
-        count += 1;
+        
     	// Setup default form values...
        	bdrs.mobile.Debug('Default Values');
 		var when = bdrs.mobile.getCurrentDate();
@@ -163,13 +173,30 @@ exports.Show = function() {
            bdrs.template.renderCallback('recordPointIntersect-substrate-radio', tmplParams, '#point-intersect-substrate', resume);
         }
     }
+
+    ////////////////////////
+    // Point Number
+    ////////////////////////
+    if(exports._point_data.pointNumberAttr !== null && exports._point_data.pointNumberAttr !== undefined) {
+        var formField = new bdrs.mobile.attribute.AttributeValueFormField(exports._point_data.pointNumberAttr);
+        waitfor() {
+            formField.toFormField('#point-intersect-substrate-point-number', attributeValueMap[exports._point_data.pointNumberAttr.id], resume);
+        }
+        
+        var pointNumElem = jQuery('#point-intersect-substrate-point-number').find('input');
+        if(pointNumElem.val().trim().length === 0) {
+            pointNumElem.val(count);
+        }
+        // Note that this may be null or undefined.
+        exports._point_data.pointNumRecAttr = attributeValueMap[exports._point_data.pointNumberAttr.id];
+    }
     
     ////////////////////////
     // Taxonomy Table
     ////////////////////////
     var obsRecords;
     waitfor(obsRecords) {
-        exports._point_data.substrateRecord.children().prefetch('species').list(resume);
+        exports._point_data.substrateRecord.children().filter('deleted','=',false).prefetch('species').list(resume);
     }
     for(var p=0; p<obsRecords.length; p++) {
         exports._insertObservationRow(obsRecords[p], obsRecords[p].species());
@@ -182,7 +209,7 @@ exports.Show = function() {
     // For the moment just grab a random sample of taxa
     var quickListTaxa;
     waitfor(quickListTaxa) {
-        SpeciesCount.all().order('count', false).limit(15).prefetch('species').list(resume);
+        SpeciesCount.all().order('userCount', false).limit(15).prefetch('species').list(resume);
     }
     for(var j=0; j<quickListTaxa.length; j++) {
         var taxon = quickListTaxa[j].species();
@@ -248,9 +275,10 @@ exports.Hide = function() {
 	bdrs.mobile.Debug('Point Intersect Form Hide');
 	
 	jQuery("#point-intersect-substrate").empty();
+    jQuery("#point-intersect-substrate-point-number").empty();
 	jQuery("#point-intersect-taxonomy-quicklist").empty();
 	jQuery("#point-intersect-species-table-content").empty();
-	jQuery("#pi-obs-index").val(0);
+    jQuery("#pi-obs-index").val(0);
 	exports._point_data.substrateRecord = null;
 	exports._point_data.substrateRecAttr = null;
 	
@@ -260,17 +288,25 @@ exports.Hide = function() {
 }
 
 exports.isPointIntersect = function(cmethod, parentRecord, substrateRecord) {
+    bdrs.mobile.Debug("Testing for Point Intersect");
     var isPointIntersect = false;
 
     // The census method must be called POINT_INTERSECT_SUBSTRATE
     if(cmethod.type() === 'POINT_INTERSECT_SUBSTRATE') {
+        bdrs.mobile.Debug("Point Intersect Substrate Method Found.");
+
         exports._point_data.substrateMethod = cmethod;
 
-        // The census method must have at least one attribute of type SV with name SUBSTRATE.    
+        // The census method __may__ also have at least one attribute of type IN with name POINT_NUMBER.
+        var pointNumAttrs = 
+            bdrs.mobile.pages.record._getCensusMethodAttribute(cmethod,'POINT_NUMBER',bdrs.mobile.attribute.type.INTEGER);
+        exports._point_data.pointNumberAttr = pointNumAttrs.length === 0 ? null : pointNumAttrs[0];
+        
+        // The census method must have at least one attribute of type SV with name SUBSTRATE.
         var substrateMethodAttributes = 
             bdrs.mobile.pages.record._getCensusMethodAttribute(cmethod,'SUBSTRATE',bdrs.mobile.attribute.type.STRING_WITH_VALID_VALUES);
-
         if(substrateMethodAttributes.length > 0) {
+            bdrs.mobile.Debug("Point Intersect Substrate Attribute Found");
             exports._point_data.substrateAttr = substrateMethodAttributes[0];
 
             // The substrate method must have at least one optionally taxonomic child method called OBSERVATION             
@@ -283,25 +319,23 @@ exports.isPointIntersect = function(cmethod, parentRecord, substrateRecord) {
                     list(resume);
             }
             if(obsMethod.length > 0) {
+                bdrs.mobile.Debug("Point Intersect Substrate Observation Method Found");
                 exports._point_data.obsMethod = obsMethod[0];
                 
-                // The observation method must have at least one height attribute and one flowering attribute.
+                // The observation method must have at least one height attribute.
                 var heightAttr = 
                     bdrs.mobile.pages.record._getCensusMethodAttribute(obsMethod[0],'HEIGHT',bdrs.mobile.attribute.type.DECIMAL);
                 if(heightAttr.length > 0) {
+                    bdrs.mobile.Debug("Point Intersect Substrate Observation Height Attribute Found");
                     exports._point_data.obsHeightAttr = heightAttr[0];
                     
-                    var floweringAttr = 
-                        bdrs.mobile.pages.record._getCensusMethodAttribute(obsMethod[0],'FLOWERING',bdrs.mobile.attribute.type.STRING_WITH_VALID_VALUES);
-                    if(floweringAttr.length > 0) {
-                        exports._point_data.obsFloweringAttr = floweringAttr[0];
-                        
-                        // And finally if you get all the way down here, congratulations, you have a 
-                        // point intersect module.
-                        isPointIntersect = true;
-                        exports._point_data.parentRecord = parentRecord;
-                        exports._point_data.substrateRecord = substrateRecord;
-                    }
+                    // And finally if you get all the way down here, congratulations, you have a 
+                    // point intersect module.
+                    isPointIntersect = true;
+                    exports._point_data.parentRecord = parentRecord;
+                    exports._point_data.substrateRecord = substrateRecord;
+
+                    bdrs.mobile.Debug("isPointIntersect = " + isPointIntersect);
                 }
             }
         }
@@ -314,7 +348,6 @@ exports.isPointIntersect = function(cmethod, parentRecord, substrateRecord) {
 exports._insertObservationRow = function(obsRecord, species) {
     var id;
     var height = '';
-    var flowering = '';
     if(obsRecord === null || obsRecord === undefined) {
         // Adding a new row
         // Get and increment the index
@@ -323,8 +356,12 @@ exports._insertObservationRow = function(obsRecord, species) {
         indexElem.val(index+1);
         id = index;
         
-        height = '';
-        flowering = '';
+        height = ''
+        if(species !== undefined && 
+            species !== null && 
+            exports._last_height[species.id] !== undefined) {
+            height = exports._last_height[species.id];
+        }
         
     } else {
         // Adding an editing row
@@ -341,18 +378,7 @@ exports._insertObservationRow = function(obsRecord, species) {
         if(heightRecAttr !== undefined && heightRecAttr !== null) {
             height = heightRecAttr.value();
         }
-        
-        var floweringRecAttr;
-        waitfor(floweringRecAttr) {
-            AttributeValue.all().
-                filter('record','=',obsRecord.id).
-                filter('attribute','=',exports._point_data.obsFloweringAttr.id).
-                order('weight', true).
-                one(resume);
-        };
-        if(floweringRecAttr !== undefined && floweringRecAttr !== null) {
-            flowering = floweringRecAttr.value();
-        }
+
     }
     
     // Render the content layout where we will later inject the content.
@@ -392,41 +418,15 @@ exports._insertObservationRow = function(obsRecord, species) {
     waitfor() {
         bdrs.template.renderCallback('recordPointIntersect-height', heightTmplParams, '#block-b-'+rowTmplParams.id, resume);
     }
-    
-    // Injecting the Flowering (Phenology)
-    var optionTmplParams = [];
-    
-    var attrOpts;
-    waitfor(attrOpts) {
-        exports._point_data.obsFloweringAttr.options().list(resume);
-    }
-    
-    var opt;
-    for(var i=0; i<attrOpts.length; i++) {
-        opt = attrOpts[i];
-        optionTmplParams.push({
-            value: opt.value(),
-            text: opt.value(),
-            selected: opt.value() === flowering
-        });
-    }
 
-    var optionElements;		    
-    waitfor (optionElements) { 
-        bdrs.template.renderOnlyCallback('recordPointIntersect-flowering-option', optionTmplParams, resume); 
+    // Delete button
+    var delTmplParams = {id:id};
+    waitfor(){
+        bdrs.template.renderCallback('recordPointIntersect-delete', delTmplParams, '#block-c-'+rowTmplParams.id, resume);
     }
-    
-    var tmpSelect = jQuery("<select></select>");
-    optionElements.appendTo(tmpSelect);
-    
-    var floweringTmplParams = {
-        id: id,
-        required: true,
-        options: tmpSelect.html()
-    }
-    waitfor() {
-        bdrs.template.renderCallback('recordPointIntersect-flowering', floweringTmplParams, '#block-c-'+rowTmplParams.id, resume);
-    }
+    var delButton = jQuery("a#"+id)
+    delButton.jqmData('id', id);
+    delButton.click(exports._delete_observation);
 };
 
 exports._getCensusMethodAttribute = function(cmethod, attrName, attrTypeCode) {
@@ -485,19 +485,24 @@ exports._savePoint = function() {
 	substrateRec.attributeValues().add(substrateRecAttr);
 	substrateRecAttr.value(jQuery("[name=radio-choice-pi-substrate]:checked").val());
 	exports._last_selected_substrate = substrateRecAttr.value();
+
+    if(exports._point_data.pointNumberAttr !== null && exports._point_data.pointNumberAttr !== undefined) {
+        //exports._point_data.pointNumRecAttr
+        var formField = new bdrs.mobile.attribute.AttributeValueFormField(exports._point_data.pointNumberAttr);
+        formField.fromFormField('#point-intersect-substrate-point-number', substrateRec.attributeValues(), exports._point_data.pointNumRecAttr);     
+    }
 	    
     // Save the updated observed species
     var substrateRecChildren;
     waitfor(substrateRecChildren) {
-        substrateRec.children().list(resume);
+        substrateRec.children().filter('deleted','=',false).list(resume);
     }
     for(var y=0; y<substrateRecChildren.length; y++) {
         var obsRec = substrateRecChildren[y];
         var speciesElem = jQuery("#pi-taxonomy-species-"+obsRec.id);
         var heightElem = jQuery("#pi-taxonomy-height-"+obsRec.id);
-        var floweringElem = jQuery("#pi-taxonomy-flowering-"+obsRec.id);
         
-        if(speciesElem.length > 0 && heightElem.length > 0 && floweringElem.length > 0) {
+        if(speciesElem.length > 0 && heightElem.length > 0) {
             obsRec.modifiedAt(now);
 	        obsRec.when(now);
 	        obsRec.time([now.getHours(), now.getMinutes(), now.getSeconds()].join(':'));
@@ -520,21 +525,7 @@ exports._savePoint = function() {
                 heightRecAttr.attribute(exports._point_data.obsHeightAttr);
             }
             heightRecAttr.value(heightElem.val());
-            
-            var floweringRecAttr;
-            waitfor(floweringRecAttr) {
-                AttributeValue.all().
-                    filter('record','=',obsRec.id).
-                    filter('attribute','=',exports._point_data.obsFloweringAttr.id).
-                    order('weight', true).
-                    one(resume);
-            };
-            if(floweringRecAttr === undefined && floweringRecAttr === null) {
-                floweringRecAttr = new AttributeValue();
-	            obsRec.attributeValues().add(floweringRecAttr);
-	            floweringRecAttr.attribute(exports._point_data.obsFloweringAttr);
-            }
-            floweringRecAttr.value(floweringElem.val());
+            exports._last_height[obsRec.species.id] = heightRecAttr.value();
         }
     }
 	
@@ -543,11 +534,11 @@ exports._savePoint = function() {
     for(var i=0; i<index; i++) {
         var speciesElem = jQuery("#pi-taxonomy-species-"+i);
         var heightElem = jQuery("#pi-taxonomy-height-"+i);
-        var floweringElem = jQuery("#pi-taxonomy-flowering-"+i);
         
-        if(speciesElem.length > 0 && heightElem.length > 0 && floweringElem.length > 0) {
+        if(speciesElem.length > 0 && heightElem.length > 0) {
             // Observation Record
             var obsRec = new Record();
+            obsRec.deleted(false);
             obsRec.parent(substrateRec);
 	        obsRec.censusMethod(exports._point_data.obsMethod);
             obsRec.survey(survey);
@@ -557,6 +548,7 @@ exports._savePoint = function() {
 	        obsRec.latitude(lat);
 	        obsRec.longitude(lon);
 	        obsRec.accuracy(accuracy);
+
 			// Field Species check.
 			var species = exports._getSpeciesByScientificName(speciesElem.val())         
 			if (species != undefined) {
@@ -600,12 +592,7 @@ exports._savePoint = function() {
 	        obsRec.attributeValues().add(heightRecAttr);
             heightRecAttr.attribute(exports._point_data.obsHeightAttr);
 	        heightRecAttr.value(heightElem.val());
-	        
-	        // Flowering Record Attribute
-	        var floweringRecAttr = new AttributeValue();
-	        obsRec.attributeValues().add(floweringRecAttr);
-	        floweringRecAttr.attribute(exports._point_data.obsFloweringAttr);
-	        floweringRecAttr.value(floweringElem.val());
+            exports._last_height[obsRec.species().id] = heightRecAttr.value();
 	        
 	        // Update Species Count index.
 			bdrs.mobile.Debug('Updating species count');
@@ -615,13 +602,17 @@ exports._savePoint = function() {
         	}
         	if (counter == null) {
 				bdrs.mobile.Debug('Count not found, creating new one.');
-				counter = new SpeciesCount({scientificName: obsRec.species().scientificName(), 
-					count: 1 });
+				counter = new SpeciesCount({
+                    scientificName: obsRec.species().scientificName(), 
+					count: 1,
+                    userCount: 1
+                });
 				persistence.add(counter);
 				counter.species(obsRec.species());
         	} else {
         		bdrs.mobile.Debug('Count found, incrementing');
         		counter.count(counter.count() + 1);
+                counter.userCount(counter.userCount() + 1);
         	}
         }
     }
@@ -638,4 +629,23 @@ exports._getSpeciesByScientificName = function(scientificName) {
 	return species;
 };
 
+/**
+ * Deletes an observation record. 
+ */
+exports._delete_observation = function(event) {
+    var button = jQuery(event.currentTarget);
+    // This record Id may be an index or a primary key.
+    var recordId = button.jqmData('id');
+    var record;
+    waitfor(record) {
+        Record.all().filter('id', '=', recordId).one(resume);
+    }
+
+    // If the id was a primary key, then retrieve the record and mark it deleted.
+    if(record !== undefined && record !== null) {
+        bdrs.mobile.pages.record.markRecordForDelete(record);
+    }
+
+    jQuery("#block-a-"+recordId+", #block-b-"+recordId+", #block-c-"+recordId).remove();
+};
 

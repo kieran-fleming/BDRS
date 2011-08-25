@@ -184,7 +184,6 @@ exports.save = function(id,data){
 		taxonGroupMap[allTaxonGroups[i].server_id()] = allTaxonGroups[i];
 	}
 	bdrs.mobile.Debug('Cached taxon groups...');
-	console.log(taxonGroupMap);
 
 	bdrs.mobile.Debug(" startspecies (" + data.indicatorSpecies.length + ")");
 	var counter = 0;

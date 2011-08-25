@@ -13,14 +13,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.service.property.PropertyService;
-import au.com.gaiaresources.bdrs.service.threshold.ActionHandler;
-import au.com.gaiaresources.bdrs.service.threshold.ComplexTypeOperator;
-import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
-import au.com.gaiaresources.bdrs.service.threshold.actionhandler.EmailActionHandler;
-import au.com.gaiaresources.bdrs.service.threshold.actionhandler.HoldRecordHandler;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.location.Location;
@@ -45,6 +38,12 @@ import au.com.gaiaresources.bdrs.model.threshold.Operator;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.service.threshold.ActionHandler;
+import au.com.gaiaresources.bdrs.service.threshold.ComplexTypeOperator;
+import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
+import au.com.gaiaresources.bdrs.service.threshold.actionhandler.EmailActionHandler;
+import au.com.gaiaresources.bdrs.service.threshold.actionhandler.HoldRecordHandler;
 
 public class ThresholdServiceTest extends AbstractControllerTest {
 
@@ -224,11 +223,27 @@ public class ThresholdServiceTest extends AbstractControllerTest {
             case STRING_WITH_VALID_VALUES:
             case IMAGE:
             case FILE:
+            case HTML:
+            case HTML_COMMENT:
+            case HTML_HORIZONTAL_RULE:
                 attributeTypeValueLookup.put(at, at.getCode());
+                break;
+            case BARCODE:
+                attributeTypeValueLookup.put(at, "#999999");
+                break;
+            case TIME:
+                attributeTypeValueLookup.put(at, "12:34");
                 break;
             case INTEGER:
                 attributeTypeValueLookup.put(at, new BigDecimal(101));
                 break;
+            case MULTI_CHECKBOX:
+            case MULTI_SELECT:
+            	attributeTypeValueLookup.put(at, new String[]{at.getCode()});
+            	break;
+            case SINGLE_CHECKBOX:
+            	attributeTypeValueLookup.put(at, Boolean.TRUE.toString());
+            	break;
             case INTEGER_WITH_RANGE:
             	attributeTypeValueLookup.put(at, new BigDecimal(intWithRangeValue));
                 break;
@@ -273,7 +288,9 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 attr.setScope(scope);
                 attr.setTag(false);
 
-                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                		AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -291,6 +308,12 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 	rangeList.add(taxaDAO.save(lower));
                 	rangeList.add(taxaDAO.save(upper));
                 	attr.setOptions(rangeList);
+                }else if(AttributeType.BARCODE.equals(attrType)){
+                	List<AttributeOption> regExpList = new ArrayList<AttributeOption>();
+                	AttributeOption regExp = new AttributeOption();
+                	regExp.setValue("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+                	regExpList.add(taxaDAO.save(regExp));
+                	attr.setOptions(regExpList);
                 }
 
                 //attr = taxaDAO.save(attr);
@@ -305,12 +328,26 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 case STRING_WITH_VALID_VALUES:
                 case IMAGE:
                 case FILE:
+                case BARCODE:
+                case TIME:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     recAttr.setStringValue((String) attributeTypeValueLookup.get(attrType));
                     break;
                 case INTEGER:
                 case INTEGER_WITH_RANGE:
                     recAttr.setNumericValue((BigDecimal) attributeTypeValueLookup.get(attrType));
                     break;
+                case SINGLE_CHECKBOX:
+                	recAttr.setBooleanValue(attributeTypeValueLookup.get(attrType).toString());
+                	break;
+                case MULTI_CHECKBOX:
+                	recAttr.setMultiCheckboxValue((String[])attributeTypeValueLookup.get(attrType));
+                	break;
+                case MULTI_SELECT:
+                	recAttr.setMultiSelectValue((String[])attributeTypeValueLookup.get(attrType));
+                	break;
                 case DECIMAL:
                     recAttr.setNumericValue((BigDecimal) attributeTypeValueLookup.get(attrType));
                     break;
@@ -382,6 +419,13 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         case STRING_WITH_VALID_VALUES:
                         case IMAGE:
                         case FILE:
+                        case HTML:
+                        case HTML_COMMENT:
+                        case HTML_HORIZONTAL_RULE:
+                            condition.setValue((String) attributeTypeValueLookup.get(attrType));
+                            falseValue = condition.getValue() + "Wrong";
+                            break;
+                        case TIME:
                             condition.setValue((String) attributeTypeValueLookup.get(attrType));
                             falseValue = condition.getValue() + "Wrong";
                             break;
@@ -390,6 +434,20 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                             condition.setValue(((BigDecimal) attributeTypeValueLookup.get(attrType)).intValue());
                             falseValue = condition.getValue() + "1";
                             break;
+                        case MULTI_CHECKBOX:
+                        	condition.setValue(new String[]{"a","b","c"});
+                        	falseValue = condition.getValue();
+                        	condition.setValue((String[])attributeTypeValueLookup.get(attrType));
+                        	break;
+                        case MULTI_SELECT:
+                        	condition.setValue(new String[]{"a","b","c"});
+                        	falseValue = condition.getValue();
+                        	condition.setValue((String[])attributeTypeValueLookup.get(attrType));
+                        	break;
+                        case SINGLE_CHECKBOX:
+                        	condition.setValue((String)attributeTypeValueLookup.get(attrType));
+                        	falseValue = Boolean.FALSE.toString();
+                        	break;
                         case DECIMAL:
                             condition.setValue(((BigDecimal) attributeTypeValueLookup.get(attrType)).doubleValue());
                             falseValue = condition.getValue() + "1";
@@ -397,6 +455,10 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         case DATE:
                             condition.setValue((Date) attributeTypeValueLookup.get(attrType));
                             falseValue = "09 Dec 2010";
+                            break;
+                        case BARCODE:
+                            condition.setValue((String)attributeTypeValueLookup.get(attrType));
+                            falseValue = "012t6589#";
                             break;
                         default:
                             Assert.assertTrue(false);
@@ -534,6 +596,24 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         public List<MockEmailMessage> getMessageQueue() {
             return messageQueue;
         }
+
+        @Override
+        public void sendMessage(String[] to, String from, String subject,
+                String message) {
+            messageQueue.add(new MockEmailMessage(to, from, subject, message));
+        }
+
+        @Override
+        public void sendMessage(String to, String from, String subject,
+                String message, Map<String, Object> substitutionParams) {
+            messageQueue.add(new MockEmailMessage(to, from, subject, message));
+        }
+
+        @Override
+        public void sendTemplateMessage(String to, String from, String subject,
+                String templateName, Map<String, Object> subsitutionParams) {
+            messageQueue.add(new MockEmailMessage(to, from, subject, templateName, subsitutionParams));
+        }
     }
     
     @SuppressWarnings("unused")
@@ -552,10 +632,26 @@ public class ThresholdServiceTest extends AbstractControllerTest {
             this.templateName = templateName;
             this.substitutionParams = substitutionParams;
         }
+        
+        MockEmailMessage(String to, String from, String subject, String templateName,
+                         Map<String, Object> substitutionParams) {
+            this.to = to;
+            this.from = from;
+            this.subject = subject;
+            this.templateName = templateName;
+            this.substitutionParams = substitutionParams;
+        }
 
         MockEmailMessage(String to, String from, String subject, String message) {
 
             this.to = to;
+            this.from = from;
+            this.subject = subject;
+            this.message = message;
+        }
+        
+        MockEmailMessage(String[] to, String from, String subject, String message) {
+            this.to = to[0];
             this.from = from;
             this.subject = subject;
             this.message = message;

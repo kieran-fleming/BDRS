@@ -19,7 +19,7 @@ public abstract class AbstractAttributeFormField implements AttributeFormField {
      */
     @Override
     public int compareTo(AttributeFormField other) {
-        return new Integer(this.getWeight()).compareTo(other.getWeight());
+        return Integer.valueOf(this.getWeight()).compareTo(other.getWeight());
     }
 
     /**

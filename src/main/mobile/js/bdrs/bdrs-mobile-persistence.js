@@ -45,7 +45,8 @@ var Record = persistence.define('Record', {
 	    notes: "TEXT",
 		number: "INT",
 		modifiedAt: "DATE",
-		uploadedAt: "DATE"
+		uploadedAt: "DATE",
+		deleted: "BOOL"
 	});
 Record.hasMany('attributeValues', AttributeValue, 'record');
 Record.hasMany('children', Record, 'parent');
@@ -127,7 +128,7 @@ var CensusMethod = persistence.define('CensusMethod', {
 	name: "TEXT",
 	description: "TEXT",
 	type: "TEXT",
-	taxonomic: "BOOL"
+	taxonomic: "TEXT"
 });
 CensusMethod.hasMany('attributes', Attribute, 'censusMethod');
 CensusMethod.hasMany('records', Record, 'censusMethod');
@@ -161,7 +162,8 @@ Survey.is(ServerObject);
 
 var SpeciesCount = persistence.define('SpeciesCount', {
 		scientificName: "TEXT",
-		count: "NUMERIC"
+		count: "NUMERIC",
+		userCount: "NUMERIC"
 	});
 SpeciesCount.hasOne('species', Species, 'count');
 

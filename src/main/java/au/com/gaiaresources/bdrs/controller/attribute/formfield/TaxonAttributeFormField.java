@@ -88,7 +88,7 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
      */
     @Override
     public int compareTo(FormField other) {
-        return new Integer(this.getWeight()).compareTo(other.getWeight());
+        return Integer.valueOf(this.getWeight()).compareTo(other.getWeight());
     }
 
 }

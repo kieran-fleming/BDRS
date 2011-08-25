@@ -257,8 +257,16 @@ public interface RecordDAO extends TransactionDAO {
      * @param sesh the session to use for this query.
      * @return the list of distinct months and the count of records that match.
      */
-    List<Pair<Date, Long>> getDistinctMonths(Session sesh);
+    List<Pair<Long, Long>> getDistinctMonths(Session sesh);
 
+    /**
+     * Queries all records for a list of distinct years and the count of records
+     * for that month.
+     * @param sesh the session to use for this query.
+     * @return the list of distinct months and the count of records that match.
+     */
+    List<Pair<Long, Long>> getDistinctYears(Session sesh);
+    
     /**
      * Queries all records for a list of distinct census method types
      * and the count of records for each type
@@ -282,12 +290,25 @@ public interface RecordDAO extends TransactionDAO {
     List<Pair<String, Long>> getDistinctAttributeTypes(Session sesh,
             AttributeType[] attributeTypes);
             
+
     /**
      * spatial query for records
      * 
-     * @param mapLayerId the ids of the maplayers the record must be associated with
-     * @param intersectGeom the geometry to use for the intersection spatial query
+     * @param mapLayerId - the map layer id
+     * @param intersectGeom - the geometry to intersect with
+     * @param isPrivate - whether the record has to be private. true: publish is OWNER_ONLY
+     * false: publish is anything but OWNER_ONLY. null: don't care
+     * @param userId - The id of the owner of the record. If the user passed here matches the owner of the record
+     * the record will be returned regardless of the isPrivate flag.
      * @return
      */
-    List<Record> find(Integer[] mapLayerId, Geometry intersectGeom);
+    List<Record> find(Integer[] mapLayerId, Geometry intersectGeom, Boolean isPrivate, Integer userId);
+    
+    /**
+     * Returns a count number of records, ordered by id, starting with offset.
+     * @param count
+     * @param offset
+     * @return
+     */
+    public List<Record> getRecords(int count, int offset);
 }

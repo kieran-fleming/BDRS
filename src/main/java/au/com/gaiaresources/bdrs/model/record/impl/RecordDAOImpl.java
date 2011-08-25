@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,7 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -346,8 +348,12 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
 //                        attribute.setStringValue(attrFile.getOriginalFilename());
 //                        
 //                    }
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                 case STRING:
                 case STRING_WITH_VALID_VALUES:
+                case BARCODE:
                 case TEXT:
                     attribute.setStringValue((String) attValue.getValue());
                     break;
@@ -423,7 +429,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         if(record.getPoint()!=null){
             point = record.getPoint();
         }else if(record.getLocation()!= null){
-            point = record.getLocation().getLocation();
+            point = record.getLocation().getLocation().getCentroid();
         }
         else{
             log.warn("Record Needs to have a point or a location associated with it");
@@ -751,29 +757,49 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
     
     @Override
-    public List<Pair<Date, Long>> getDistinctMonths(Session sesh) {
+    public List<Pair<Long, Long>> getDistinctMonths(Session sesh) {
         StringBuilder b = new StringBuilder();
-        b.append(" select distinct year(r.when), month(r.when), count(r)");
+        b.append(" select distinct month(r.when), count(r)");
         b.append(" from Record as r");
-        b.append(" group by year(r.when), month(r.when)");
-        b.append(" order by year(r.when) asc, month(r.when) asc");
+        b.append(" group by month(r.when)");
+        b.append(" order by month(r.when) asc");
         
         if(sesh == null) {
             sesh = super.getSessionFactory().getCurrentSession();
         }
         Query q = sesh.createQuery(b.toString());
 
-        Calendar cal = new GregorianCalendar();
-        cal.setTimeInMillis(0);
         // Should get back a list of Object[]
-        List<Pair<Date, Long>> results = 
-            new ArrayList<Pair<Date, Long>>();
+        List<Pair<Long, Long>> results = 
+            new ArrayList<Pair<Long, Long>>();
         for(Object rowObj : q.list()) {
             Object[] row = (Object[])rowObj;
             // Month is zero based so we need to subtract by one.
-            cal.set(Integer.parseInt(row[0].toString(), 10), 
-                    Integer.parseInt(row[1].toString(), 10)-1, 1);
-            results.add(new Pair<Date, Long>(cal.getTime(), (Long)row[2]));
+            results.add(new Pair<Long, Long>(Long.parseLong(row[0].toString()), (Long)row[1]));
+        }
+        return results;
+    }
+    
+    @Override
+    public List<Pair<Long, Long>> getDistinctYears(Session sesh) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select distinct year(r.when), count(r)");
+        b.append(" from Record as r");
+        b.append(" group by year(r.when)");
+        b.append(" order by year(r.when) asc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+
+        // Should get back a list of Object[]
+        List<Pair<Long, Long>> results = 
+            new ArrayList<Pair<Long, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            // Month is zero based so we need to subtract by one.
+            results.add(new Pair<Long, Long>(Long.parseLong(row[0].toString()), (Long)row[1]));
         }
         return results;
     }
@@ -818,7 +844,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         if(sesh == null) {
             sesh = super.getSessionFactory().getCurrentSession();
         }
-        log.debug("Count query is : " + b.toString());
+        
         Query q = sesh.createQuery(b.toString());
 
         // Should get back a list of Object[]
@@ -831,19 +857,52 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
 
     @Override
-    public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom) {
+    public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom, Boolean isPrivate, Integer userId) {
         StringBuilder hb = new StringBuilder();
-        hb.append("select rec from Record rec inner join rec.survey survey where survey.id in ");
+        hb.append("select distinct rec from Record rec inner join rec.survey survey where survey.id in ");
         hb.append(" (select s.id from GeoMapLayer layer inner join layer.survey s where layer.id in (:layerIds)) ");
         if (intersectGeom != null) {
             hb.append(" and intersects(:geom, rec.geometry) = true");
         }
+        List<String> orSection = new LinkedList<String>();
+        if (isPrivate != null) {
+            if (isPrivate) {
+                orSection.add("rec.recordVisibility = '" + RecordVisibility.OWNER_ONLY + "'");
+            } else {
+                orSection.add("rec.recordVisibility != '" + RecordVisibility.OWNER_ONLY + "'");
+            }
+        }
+        if (userId != null) {
+            orSection.add("rec.user.id = " + userId.toString());
+        }
+        
+        if (orSection.size() > 0) {
+            boolean firstItem = true;
+            hb.append(" and (");
+            for (String clause : orSection) {
+                if (firstItem) {
+                    firstItem = false;
+                } else {
+                    hb.append(" or ");
+                }
+                hb.append(clause);
+            }
+            hb.append(")");
+        }
+
         Query q = getSession().createQuery(hb.toString());
         q.setParameterList("layerIds", mapLayerId);
         if (intersectGeom != null) {
             q.setParameter("geom", intersectGeom, GeometryUserType.TYPE);
         }
         return (List<Record>)q.list();
+    }
+    
+    public List<Record> getRecords(int count, int offset) {
+    	Query q = getSession().createQuery("from Record r order by r.id");
+    	q.setMaxResults(count);
+    	q.setFirstResult(offset);
+    	return q.list();
     }
 }
 

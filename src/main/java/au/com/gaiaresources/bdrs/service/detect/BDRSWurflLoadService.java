@@ -142,7 +142,6 @@ public class BDRSWurflLoadService {
 					 }
 		        }
 		        
-		        
 		        // save to the database
 		        sesh.flush();
 		        sesh.clear();
@@ -157,7 +156,7 @@ public class BDRSWurflLoadService {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}finally{
+			} finally {
 				//close InputSTream
 				if(inputStream != null){
 					inputStream.close();

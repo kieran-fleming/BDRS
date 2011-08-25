@@ -31,4 +31,12 @@ public abstract class AbstractFormField  implements FormField  {
 	public void setPrefix(String prefix) {
 	    this.prefix = prefix;
 	}
+	
+	/**
+         * {@inheritDoc}
+         */
+	@Override
+	public boolean isDisplayFormField() {
+	    return false;
+	}
 }

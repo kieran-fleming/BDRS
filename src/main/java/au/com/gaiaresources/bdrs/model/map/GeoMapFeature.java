@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.model.map;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.AttributeOverride;
@@ -11,6 +12,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -21,6 +23,7 @@ import org.hibernate.annotations.Type;
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -74,5 +77,14 @@ public class GeoMapFeature extends PortalPersistentImpl {
     }
     public void setLayer(GeoMapLayer layer) {
         this.layer = layer;
+    }
+    
+    /**
+     * Returns a list of the AttributeValues ordered by Attribute weight
+     * @return
+     */
+    @Transient
+    public List<AttributeValue> getOrderedAttributes() {
+        return AttributeValueUtil.orderAttributeValues(attributes);
     }
 }

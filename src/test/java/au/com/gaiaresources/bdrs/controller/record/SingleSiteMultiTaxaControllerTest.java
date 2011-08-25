@@ -7,8 +7,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,14 +23,15 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
-import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordAttributeFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordAttributeFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
@@ -36,10 +39,10 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
@@ -49,23 +52,27 @@ import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
     @Autowired
-    private SurveyDAO surveyDAO;
+    protected SurveyDAO surveyDAO;
     @Autowired
-    private TaxaDAO taxaDAO;
+    protected TaxaDAO taxaDAO;
     @Autowired
-    private MetadataDAO metadataDAO;
+    protected MetadataDAO metadataDAO;
     @Autowired
-    private RecordDAO recordDAO;
+    protected RecordDAO recordDAO;
     @Autowired
-    private RedirectionService redirectionService;
+    protected RedirectionService redirectionService;
 
-    private Survey survey;
-    private TaxonGroup taxonGroup;
-    private IndicatorSpecies speciesA;
-    private IndicatorSpecies speciesB;
+    protected Survey survey;
+    protected TaxonGroup taxonGroup;
+    protected IndicatorSpecies speciesA;
+    protected IndicatorSpecies speciesB;
 
     @Before
     public void setUp() throws Exception {
+        setup(SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA);
+    }
+    
+    protected void setup(SurveyFormRendererType renderType) {
         taxonGroup = new TaxonGroup();
         taxonGroup.setName("Birds");
         taxonGroup = taxaDAO.save(taxonGroup);
@@ -95,7 +102,9 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 attr.setScope(scope);
                 attr.setTag(false);
 
-                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
+                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                		AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -112,11 +121,14 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         }
 
         survey = new Survey();
+        // make sure that the survey's record visibility is applied...
+        survey.setDefaultRecordVisibility(RecordVisibility.CONTROLLED, metadataDAO);
         survey.setName("SingleSiteMultiTaxaSurvey 1234");
+        survey.setName(renderType.getName()+" 1234");
         survey.setActive(true);
         survey.setStartDate(new Date());
-        survey.setDescription("Single Site Multi Taxa Survey Description");
-        Metadata md = survey.setFormRendererType(SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA);
+        survey.setDescription(renderType.getName()+" Survey Description");
+        Metadata md = survey.setFormRendererType(renderType);
         metadataDAO.save(md);
         survey.setAttributes(attributeList);
         survey = surveyDAO.save(survey);
@@ -129,14 +141,18 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
      */
     @Test
     public void testAddRecord() throws Exception {
+        testAddRecord("/bdrs/user/singleSiteMultiTaxa.htm", "singleSiteMultiTaxa");
+    }
+    
+    protected void testAddRecord(String URI, String viewName) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/user/singleSiteMultiTaxa.htm");
+        request.setRequestURI(URI);
         request.setParameter("surveyId", survey.getId().toString());
 
         ModelAndView mv = handle(request, response);
-        ModelAndViewAssert.assertViewName(mv, "singleSiteMultiTaxa");
+        ModelAndViewAssert.assertViewName(mv, viewName);
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "record");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "survey");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "preview");
@@ -178,21 +194,25 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
      */
     @Test
     public void testAjaxAddSightingRow() throws Exception {
+        testAjaxAddSightingRow("/bdrs/user/singleSiteMultiTaxa/sightingRow.htm", "singleSiteMultiTaxaRow");
+    }
+    
+    public void testAjaxAddSightingRow(String URI, String viewName) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/user/singleSiteMultiTaxa/sightingRow.htm");
+        request.setRequestURI(URI);
 
         Map<String, String> param = new HashMap<String, String>();
         param.put("surveyId", survey.getId().toString());
         // Try 3 requests
         for (int i = 0; i < 3; i++) {
-            param.put("sightingIndex", new Integer(i).toString());
+            param.put("sightingIndex", Integer.valueOf(i).toString());
 
             request.setParameters(param);
 
             ModelAndView mv = handle(request, response);
-            ModelAndViewAssert.assertViewName(mv, "singleSiteMultiTaxaRow");
+            ModelAndViewAssert.assertViewName(mv, viewName);
 
             String expectedPrefix = String.format(SingleSiteMultiTaxaController.PREFIX_TEMPLATE, i);
             ModelAndViewAssert.assertModelAttributeAvailable(mv, "formFieldList");
@@ -255,10 +275,14 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
     	testSaveRecord("201");
     }
     public void testSaveRecord(String intWithRangeValue) throws Exception {
+        testSaveRecord(intWithRangeValue, "/bdrs/user/singleSiteMultiTaxa.htm");
+    }
+    
+    protected void testSaveRecord(String intWithRangeValue, String URI) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/user/singleSiteMultiTaxa.htm");
+        request.setRequestURI(URI);
 
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
@@ -291,8 +315,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 speciesB }) {
             params.put(String.format("%d_survey_species_search", sightingIndex), taxon.getScientificName());
             params.put(String.format("%d_species", sightingIndex), taxon.getId().toString());
-            params.put(String.format("%d_number", sightingIndex), new Integer(
-                    sightingIndex + 21).toString());
+            params.put(String.format("%d_number", sightingIndex), Integer.valueOf(sightingIndex + 21).toString());
 
             String recordPrefix = String.format("%d_", sightingIndex);
             String prefix;
@@ -316,7 +339,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
                 switch (attr.getType()) {
                 case INTEGER:
-                    Integer val = new Integer(sightingIndex + 30);
+                    Integer val = Integer.valueOf(sightingIndex + 30);
                     value = val.toString();
                     valueMap.put(attr, val);
                     break;
@@ -335,6 +358,11 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                     break;
                 case STRING_AUTOCOMPLETE:
                 case STRING:
+                case BARCODE:
+                case TIME:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     value = String.format("String %d", sightingIndex);
                     valueMap.put(attr, value);
                     break;
@@ -346,6 +374,17 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                     value = attr.getOptions().get(sightingIndex).getValue();
                     valueMap.put(attr, value);
                     break;
+                case MULTI_CHECKBOX:
+                case MULTI_SELECT:
+                	List<AttributeOption> opts = attr.getOptions(); 
+                	request.addParameter(key, opts.get(0).getValue());
+                	request.addParameter(key, opts.get(1).getValue());
+                	value = null;
+                	break;
+                case SINGLE_CHECKBOX:
+                	value = String.valueOf(true);
+                	valueMap.put(attr, value);
+                	break;
                 case FILE:
                     String file_filename = String.format("attribute_%d", attr.getId());
                     MockMultipartFile mockFileFile = new MockMultipartFile(key,
@@ -367,7 +406,9 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                             + attr.getType().toString(), false);
                     break;
                 }
-                params.put(key, value);
+                if(value != null) {
+                	params.put(key, value);
+                }
             }
             sightingIndex += 1;
         }
@@ -421,11 +462,42 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 case STRING_AUTOCOMPLETE:
                 case STRING:
                 case TEXT:
+                case BARCODE:
+                case TIME:
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(expected, recAttr.getStringValue());
                     break;
                 case STRING_WITH_VALID_VALUES:
                     Assert.assertEquals(expected, recAttr.getStringValue());
                     break;
+                case MULTI_CHECKBOX:
+	                {
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	for(String val : recAttr.getMultiCheckboxValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+	            	}
+	                break;
+	            case MULTI_SELECT:
+	            	{
+	                	Set<String> optionSet = new HashSet<String>();
+	                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+	                		optionSet.add(opt.getValue());
+	                	}
+	                	for(String val : recAttr.getMultiSelectValue()){
+	                		Assert.assertTrue(optionSet.contains(val));
+	                	}
+	            	}
+	            	break;
+	            case SINGLE_CHECKBOX:
+	            	Assert.assertEquals(Boolean.parseBoolean(expected.toString()), 
+	            			Boolean.parseBoolean(recAttr.getStringValue()));
+	            	break;  
                 case FILE:
                 case IMAGE:
                     String filename = ((MockMultipartFile) expected).getOriginalFilename();
@@ -444,6 +516,12 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         request.setParameter("submitAndAddAnother", "submitAndAddAnother");
         mv = handle(request, response);
         Assert.assertEquals(4, recordDAO.countAllRecords().intValue());
+        
+        // get all the records.
+        List<Record> recList = recordDAO.search(null, null, null).getList();
+        for (Record r : recList) {
+            Assert.assertEquals("record should be set to same visibility as the survey default record visibility", survey.getDefaultRecordVisibility(), r.getRecordVisibility());
+        }
 
         Assert.assertTrue(mv.getView() instanceof RedirectView);
         redirect = (RedirectView) mv.getView();

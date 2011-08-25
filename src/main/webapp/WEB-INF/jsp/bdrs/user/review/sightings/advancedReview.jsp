@@ -5,6 +5,7 @@
 <h1>Advanced Review</h1>
 
 <form id="facetForm" method="GET" action="">
+    <input type="hidden" name="recordId" value = "${ recordId }"/>
 	<div class="alaSightingsContent">
 	    <div class="facetCol left">
 	        <div class="columnBanner">Refine results for</div>
@@ -63,6 +64,7 @@
 		        <c:choose>
 		           <c:when test="${ mapViewSelected }">
 	                    <tiles:insertDefinition name="advancedReviewMapView">
+		                    <tiles:putAttribute name="recordId" value="${ recordId }"/>
 	                    </tiles:insertDefinition>
 		           </c:when>
 		           <c:otherwise>
@@ -96,5 +98,10 @@
       bdrs.advancedReview.initFacets('#facetForm', '.facet');
       bdrs.advancedReview.initTabHandlers();
       bdrs.advancedReview.initRecordDownload("#facetForm", "#recordDownload");
+   });
+
+   jQuery(window).load(function() {
+      bdrs.advancedReview.initMapView('#facetForm',  
+              'atlasSightingsMap', { geocode: { selector: '#geocode' }}, '#recordId');
    });
 </script>

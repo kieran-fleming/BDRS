@@ -65,6 +65,9 @@ public class Metadata extends PortalPersistentImpl {
     public static final String FORM_RENDERER_TYPE = "FormRendererType";
     public static final String SURVEY_LOGO = "SurveyLogo";
     public static final String PREDEFINED_LOCATIONS_ONLY = "PredefinedLocationsOnly";
+    public static final String DEFAULT_RECORD_VIS = "defaultRecordVisbility";
+    public static final String RECORD_VIS_MODIFIABLE = "recordVisibilityModifiable";
+    public static final String DEFAULT_CENSUS_METHOD_FOR_SURVEY = "defaultCensusMethodProvidedForSurvey";
     
     // SpeciesProfile Keys
     public static final String SCIENTIFIC_NAME_SOURCE_DATA_ID = "ScientificNameSourceDataId";
@@ -74,6 +77,13 @@ public class Metadata extends PortalPersistentImpl {
     // IndicatorSpecies Keys
     public static final String TAXON_SOURCE_DATA_ID = "TaxonSourceDataID";
     public static final String TAXON_SOURCE = "TaxonSource";
+    public static final String TAXON_FAMILY = "TaxonFamily";
+    public static final String TAXON_KINGDOM = "TaxonKingdom";
+    
+    // Census Method Keys
+    public static final String CENSUS_METHOD_POINT = "censusMethodPoint";
+    public static final String CENSUS_METHOD_LINE = "censusMethodLine";
+    public static final String CENSUS_METHOD_POLYGON = "censusMethodPolygon";
     
     // Record Property
     /**

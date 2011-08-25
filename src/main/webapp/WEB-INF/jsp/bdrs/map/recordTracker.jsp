@@ -65,7 +65,7 @@
         </c:if>
 
         jQuery('#record_filter_form :submit').click();
-
+        bdrs.map.centerMap(bdrs.map.baseMap);
     });
 
 </script>

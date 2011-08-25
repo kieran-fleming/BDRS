@@ -21,17 +21,27 @@ exports.Show = function() {
 	jQuery('.bdrs-page-dump-data .data').html(data);
 	
 	// Guard for HTML5 only version.
-	if (bdrs.mobile.fileMgrExists()) {
-		var writeSuccess = function(evt) {
-			bdrs.mobile.Debug("Write has succeeded");
-		};
-		
-		var paths = navigator.fileMgr.getRootPaths();
-		var writer = new FileWriter(paths[0] + "bdrs-mobile.txt");
-		writer.onwrite = writeSuccess;
-		writer.write(data);
+	if (bdrs.mobile.fileIO.exists()) {
+		var d = new Date();
+	    var filepath = [
+	        d.getFullYear(),
+	        bdrs.mobile.zerofill((d.getMonth()+1), 2),
+	        bdrs.mobile.zerofill(d.getDate(),2),
+	        '_',
+	        bdrs.mobile.zerofill(d.getHours(),2),
+	        bdrs.mobile.zerofill(d.getMinutes(),2),
+	        bdrs.mobile.zerofill(d.getSeconds(),2)
+	    ].join('');
+	    filepath = "bdrs/dump-data/" + filepath + ".txt";
+
+	    bdrs.mobile.Debug("File will be written to: " + filepath);
+	    bdrs.mobile.Debug("Writing File");
+	    waitfor() {
+	        bdrs.mobile.fileIO.writeFile(filepath, data, resume, resume);
+	    }
+	    bdrs.mobile.Debug("Writing Completed");
 	} else {
-	    bdrs.mobile.Debug("Dump data not executed. No file manager.");
+	    bdrs.mobile.Debug("Dump data not executed. No File system.");
 	}
 }
 	

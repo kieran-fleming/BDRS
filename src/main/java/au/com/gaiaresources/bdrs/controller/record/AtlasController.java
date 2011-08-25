@@ -115,6 +115,10 @@ public class AtlasController extends AbstractController {
         
         record = record == null ? new Record() : record;
         
+        // Set record visibility to survey default. Setting via web form not supported.
+        // Survey's default record visibility can be set in the 'admin -> projects' interface
+        record.setRecordVisibility(survey.getDefaultRecordVisibility());
+        
         IndicatorSpecies species = null;
         
         if (guid != null && !guid.isEmpty()) {
@@ -177,26 +181,52 @@ public class AtlasController extends AbstractController {
             	taxon.setTaxonRank(rank);
             	
             	// Common Name
-            	taxon.setCommonName(ob.getString("commonName"));
-            	md = new Metadata();
-                md.setKey(Metadata.COMMON_NAME_SOURCE_DATA_ID);
-                md.setValue(ob.getString("commonNameGUID"));
-                metadataDAO.save(md);
-                taxon.getMetadata().add(md);
-                
-            	// Group
-            	String family = ob.getString("family");
-            	if (family != null) {
-            		TaxonGroup g = taxaDAO.getTaxonGroup(family);
-	            	if (g == null) {
-	            		g = taxaDAO.createTaxonGroup(family, false, false, false, false, false, true);
-	            	}
-	            	taxon.setTaxonGroup(g);
+            	if (ob.containsKey("commonName")) {
+	            	taxon.setCommonName(ob.getString("commonName"));
+	            	md = new Metadata();
+	                md.setKey(Metadata.COMMON_NAME_SOURCE_DATA_ID);
+	                md.setValue(ob.getString("commonNameGUID"));
+	                metadataDAO.save(md);
+	                taxon.getMetadata().add(md);
             	} else {
-            		TaxonGroup g = taxaDAO.createTaxonGroup("Other", false, false, false, false, false, true);
-            		taxon.setTaxonGroup(g);
+            		taxon.setCommonName(taxon.getScientificName());
             	}
-
+                
+            	// Group/Family
+            	if (ob.containsKey("family")) {
+	            	String family = ob.getString("family");
+	            	if (family != null && !family.isEmpty() && !family.equalsIgnoreCase("null")) {
+	            		TaxonGroup g = taxaDAO.getTaxonGroup(family);
+		            	if (g == null) {
+		            		g = taxaDAO.createTaxonGroup(family, false, false, false, false, false, true);
+		            	}
+		            	taxon.setTaxonGroup(g);
+		            	md = new Metadata();
+		                md.setKey(Metadata.TAXON_FAMILY);
+		                md.setValue(family);
+		                metadataDAO.save(md);
+		                taxon.getMetadata().add(md);
+	            	} else {
+	            		TaxonGroup g = taxaDAO.getTaxonGroup("Other");
+	            		if (g == null) {
+	            			g = taxaDAO.createTaxonGroup("Other", false, false, false, false, false, true);
+	            		}
+	            		taxon.setTaxonGroup(g);
+	            	}
+            	}
+            	
+            	// Kingdom
+            	if (ob.containsKey("kingdom")) {
+	            	String kingdom = ob.getString("kingdom");
+	            	if (kingdom != null) {
+	            		md = new Metadata();
+		                md.setKey(Metadata.TAXON_KINGDOM);
+		                md.setValue(kingdom);
+		                metadataDAO.save(md);
+		                taxon.getMetadata().add(md);
+	            	}
+            	}
+            	
                 // Images.
             	// Thumbnail
             	if (ob.containsKey("thumbnail")) {

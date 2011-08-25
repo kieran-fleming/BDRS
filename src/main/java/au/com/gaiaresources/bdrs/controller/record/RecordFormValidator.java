@@ -2,8 +2,7 @@ package au.com.gaiaresources.bdrs.controller.record;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.log4j.Logger;
+import java.util.TreeMap;
 
 import au.com.gaiaresources.bdrs.controller.record.validator.DateValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.DoubleRangeValidator;
@@ -11,8 +10,10 @@ import au.com.gaiaresources.bdrs.controller.record.validator.DoubleValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.DynamicDateRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.DynamicIntRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.HistoricalDateValidator;
+import au.com.gaiaresources.bdrs.controller.record.validator.HtmlValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.IntRangeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.IntValidator;
+import au.com.gaiaresources.bdrs.controller.record.validator.RegExpValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.StringValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.TaxonValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.Validator;
@@ -25,8 +26,6 @@ import au.com.gaiaresources.bdrs.service.property.PropertyService;
  * validate POST parameters.
  */
 public class RecordFormValidator {
-	
-	Logger log = Logger.getLogger(getClass());
 
     private Map<ValidationType, Validator> validatorMap;
     
@@ -45,7 +44,8 @@ public class RecordFormValidator {
         
         this.propertyService = propertyService;
         this.taxaDAO = taxaDAO;
-        errorMap = new HashMap<String, String>();
+        // use treemap as we would like the order of the errors to be deterministic
+        errorMap = new TreeMap<String, String>();
         createValidators();
     }
     
@@ -56,6 +56,11 @@ public class RecordFormValidator {
         validatorMap.put(ValidationType.STRING, new StringValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_BLANKABLE_STRING, new StringValidator(propertyService, true, true));
         validatorMap.put(ValidationType.REQUIRED_NONBLANK_STRING, new StringValidator(propertyService, true, false));
+        
+        validatorMap.put(ValidationType.HTML, new HtmlValidator(propertyService, false, true));
+
+        validatorMap.put(ValidationType.BARCODE, new RegExpValidator(propertyService, false, true));
+        validatorMap.put(ValidationType.REQUIRED_BARCODE, new RegExpValidator(propertyService, true, false));
         
         validatorMap.put(ValidationType.INTEGER, new IntValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_INTEGER, new IntValidator(propertyService, true, false));
@@ -77,6 +82,8 @@ public class RecordFormValidator {
         validatorMap.put(ValidationType.REQUIRED_DATE, new DateValidator(propertyService, true, false));
         validatorMap.put(ValidationType.REQUIRED_HISTORICAL_DATE, new HistoricalDateValidator(propertyService, true, false));
         validatorMap.put(ValidationType.DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, true, false));
+        validatorMap.put(ValidationType.REQUIRED_TIME, new RegExpValidator(propertyService, true, false, "\\d{2}:\\d{2}"));
+        validatorMap.put(ValidationType.TIME, new RegExpValidator(propertyService, false, true, "(\\d{2}:\\d{2})?"));
         
         validatorMap.put(ValidationType.REQUIRED_TAXON, new TaxonValidator(propertyService, true, false, taxaDAO));
         validatorMap.put(ValidationType.TAXON, new TaxonValidator(propertyService, false, true, taxaDAO));
@@ -113,6 +120,6 @@ public class RecordFormValidator {
             return v.validate(parameterMap, key, attribute, errorMap);
         }
     }
-
 }
+
 

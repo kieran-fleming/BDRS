@@ -1,5 +1,9 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
+import java.io.IOError;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -16,14 +20,20 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.util.CSVUtils;
 
 /**
  * The value of an attribute attached to a record.
@@ -37,10 +47,15 @@ import au.com.gaiaresources.bdrs.file.FileService;
 @Table(name = "ATTRIBUTE_VALUE")
 @AttributeOverride(name = "id", column = @Column(name = "ATTRIBUTE_VALUE_ID"))
 public class AttributeValue extends PortalPersistentImpl implements TypedAttributeValue {
+	
+	private Logger log = Logger.getLogger(getClass());
+	
     private Attribute attribute;
     private BigDecimal numericValue;
-    private String stringValue = "Not recorded";
+    private String stringValue = NOT_RECORDED;
     private Date dateValue;
+    
+    public static final String NOT_RECORDED = "Not recorded";
 
     /**
      * Populates the <code>numericValue</code> or <code>dateValue</code> from
@@ -154,5 +169,52 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
         } else {
             return "";
         }
+    }
+    
+    @Override
+    public String toString() {
+        return getStringValue();
+    }
+
+    @Transient
+    public String[] getMultiSelectValue() {
+        return CSVUtils.fromCSVString(this.getStringValue());
+    }
+    
+    @Transient
+    public String[] getMultiCheckboxValue() {
+    	return getMultiSelectValue();
+    }
+    
+    @Transient
+    public boolean hasMultiCheckboxValue(String val) {
+    	return hasMultiSelectValue(val);
+    }
+    
+    @Transient
+    public void setMultiCheckboxValue(String[] values) {
+        setStringValue(CSVUtils.toCSVString(values));
+    }
+    
+    @Transient
+    public boolean hasMultiSelectValue(String val) {
+    	String[] values = this.getMultiSelectValue();
+    	Arrays.sort(values);
+    	return Arrays.binarySearch(values, val) >= 0;
+    }
+    
+    @Transient
+    public void setMultiSelectValue(String[] values) {
+        this.setMultiCheckboxValue(values);
+    }
+
+    @Transient
+    public Boolean getBooleanValue() {
+        return Boolean.valueOf(getStringValue());
+    }
+
+    @Transient
+    public void setBooleanValue(String value) {
+        this.setStringValue(Boolean.valueOf(value).toString());
     }
 }

@@ -28,12 +28,13 @@ public class UserDetails implements org.springframework.security.core.userdetail
      */
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
-    	String roles = "";
+    	StringBuilder roles = new StringBuilder();
     	for (String role : user.getRoles())
     	{
-    		roles += role + ",";
+    		roles.append(role);
+    		roles.append(",");
     	}
-        return AuthorityUtils.commaSeparatedStringToAuthorityList(roles);
+        return AuthorityUtils.commaSeparatedStringToAuthorityList(roles.toString());
     }
 
     /**

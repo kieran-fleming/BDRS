@@ -8,6 +8,7 @@ import org.hibernate.classic.Session;
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -154,7 +155,17 @@ public interface SurveyDAO extends TransactionDAO {
      * @return survey
      */
     List<Survey> getActiveSurveysForUser(User user);
-
+    /**
+     * Find all surveys that are active, and is public or user is in the survey
+     * or group and the survey is part of a particular group
+     * 
+     * @param user
+     *            the user to search for.
+     * @param group
+     *            the group to limit the search by           
+     * @return survey
+     */
+    List<Survey> getActiveSurveysForUser(User user, Group group);
     /**
      * Find all species attached to the specified survey where the scientific
      * name or common name contains the 'species' string fragment.
@@ -238,4 +249,5 @@ public interface SurveyDAO extends TransactionDAO {
     List<Survey> getSurveys(IndicatorSpecies taxon);
     
     PagedQueryResult<Survey> search(PaginationFilter filter);
+
 }

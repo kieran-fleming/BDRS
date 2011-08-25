@@ -13,13 +13,58 @@ exports.init = function() {
     bdrs.mobile.Debug("Synchronization Service Started");
 };
 
-exports.synchronize  = function() {
+exports._recurse_is_deleted = function(record) {
+    if(record.deleted()) {
+        return true;
+    }
+
+    var parent;
+    waitfor(parent) {
+        record.fetch('parent',resume);
+    }
+
+    if(parent !== null && parent !== undefined) {
+        return exports._recurse_is_deleted(parent);
+    } else {
+        return false;
+    }
+};
+
+exports._get_modified_records = function() {
     var lastSyncTime = bdrs.mobile.syncService.getLastSyncTime();
+    // First get all modified records. 
+    // This set of records will not be deleted themselves, but may be 
+    // a child of a deleted record.
     var modifiedRecords;
     waitfor(modifiedRecords) {
-        Record.all().filter('modifiedAt', '>', lastSyncTime).prefetch('censusMethod').prefetch('survey').prefetch('species').list(resume);
+        var query = Record.all();
+        
+        query = query.filter('modifiedAt', '>', lastSyncTime);
+        query = query.filter('deleted', '=', false);
+
+        query = query.prefetch('censusMethod');
+        query = query.prefetch('survey');
+        query = query.prefetch('species');
+
+        query = query.list(resume);
     };
-    
+
+    var recordArray = [];
+    for(var i=0;i<modifiedRecords.length; i++) {
+        var record = modifiedRecords[i];
+        if(!exports._recurse_is_deleted(record)) {
+            recordArray.push(record);
+        }
+    }
+
+    return recordArray;
+};
+
+exports.synchronize  = function() {
+    bdrs.mobile.Debug("Synchronize");
+    var modifiedRecords = exports._get_modified_records();
+    bdrs.mobile.Debug("Modified Record Count: " + modifiedRecords.length);
+
     var recLookup = {};
     var recAttrLookup = {};
     var idLookup = {
@@ -51,7 +96,13 @@ exports.synchronize  = function() {
         
         // Taxonomy
         var species = rec.species();
-        recJSON.taxon_id = species === null ? null : species.server_id();
+        if(species === null) {
+            recJSON.taxon_id = null;
+            recJSON.scientificName = null;
+        } else {
+            recJSON.taxon_id = species.server_id();
+            recJSON.scientificName = species.scientificName();
+        }
         
         // Record Attributes
         var attributeValues;

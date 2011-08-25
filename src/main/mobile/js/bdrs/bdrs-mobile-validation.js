@@ -40,7 +40,7 @@ bdrs.mobile.validation.IntegerValidator = function() {
 };
 
 bdrs.mobile.validation.IntegerWithRangeValidator = function() {
-		
+	
 	this.isValid = function(elem) {
 		
 		var rangeAttributes = elem.attr('range').split(' ');
@@ -53,7 +53,11 @@ bdrs.mobile.validation.IntegerWithRangeValidator = function() {
 	        return '${label} must be a number in the range of ' + rangeAttributes[0] + ' and ' + rangeAttributes[1];  
 	    };
 		
-		return rangeAttributes[0] <= elem.val() && elem.val() <= rangeAttributes[1] ? true : false;
+	    var minRange = parseInt(rangeAttributes[0]);
+	    var maxRange = parseInt(rangeAttributes[1]);
+	    var theValue = parseInt(elem.val());
+	    
+		return minRange <= theValue && theValue <= maxRange ? true : false;
 		
 	};
 	
@@ -154,6 +158,43 @@ bdrs.mobile.validation.LongitudeValidator = function() {
     return this;
 };
 
+bdrs.mobile.validation.RegExpValidator = function() {
+	var regExp ="";
+	
+	this.isValid = function(elem) {
+		this.regExp = elem.attr('regexp');
+		var pattern = new RegExp(elem.attr('regexp'));
+		return pattern.test(elem.val());
+	};
+	
+    this.getHeader = function() {
+        return 'Value does not match regExp';
+    };
+    
+    this.getMessage = function() {
+        return '${label} must match format ' + this.regExp;  
+    };
+    
+    return this;
+};
+
+bdrs.mobile.validation.MultiCheckboxRequiredValidator = function() {
+
+    this.isValid = function(elem) {
+        return elem.parents("fieldset").find(":checked").length > 0;
+    };
+
+    this.getHeader = function() {
+        return 'Field is required';  
+    };
+
+    this.getMessage = function() {
+        return '${label} is required.';
+    };
+
+    return this;
+};
+
 // Validators
 bdrs.mobile.validation.validators = {};
 bdrs.mobile.validation.validators.required = new bdrs.mobile.validation.RequiredValidator();
@@ -163,6 +204,8 @@ bdrs.mobile.validation.validators.decimal = new bdrs.mobile.validation.DecimalVa
 bdrs.mobile.validation.validators.date = new bdrs.mobile.validation.DateValidator();
 bdrs.mobile.validation.validators.latitude = new bdrs.mobile.validation.LatitudeValidator();
 bdrs.mobile.validation.validators.longitude = new bdrs.mobile.validation.LongitudeValidator();
+bdrs.mobile.validation.validators.regExp = new bdrs.mobile.validation.RegExpValidator();
+bdrs.mobile.validation.validators.multiCheckboxRequired = new bdrs.mobile.validation.MultiCheckboxRequiredValidator();
 
 
 /**
@@ -171,9 +214,14 @@ bdrs.mobile.validation.validators.longitude = new bdrs.mobile.validation.Longitu
  * @param the input that for the label to be retrieved.
  */
 bdrs.mobile.validation.getLabelForInput = function(inputElement) {
-    var elemId = inputElement.attr('id');
-    var label = jQuery('label[for='+elemId+']');
-    return label.length > 0 ? label : null;
+    if(inputElement.attr("type") === "checkbox") {
+        var heading = inputElement.parents("fieldset").find("[role=heading]");
+        return heading.length > 0 ? heading : null;
+    } else {
+        var elemId = inputElement.attr('id');
+        var label = jQuery('label[for='+elemId+']');
+        return label.length > 0 ? label : null;
+    }
 };
     
 /**

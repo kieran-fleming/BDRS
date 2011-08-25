@@ -6,10 +6,10 @@ package au.com.gaiaresources.bdrs.controller.record.validator;
 import java.util.Date;
 import java.util.Map;
 
-import au.com.gaiaresources.bdrs.controller.record.ValidationType;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.util.DateUtils;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 /**
  * @author stephanie

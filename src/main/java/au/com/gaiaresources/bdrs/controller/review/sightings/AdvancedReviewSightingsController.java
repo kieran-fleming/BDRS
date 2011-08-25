@@ -35,6 +35,7 @@ import au.com.gaiaresources.bdrs.controller.review.sightings.facet.MultimediaFac
 import au.com.gaiaresources.bdrs.controller.review.sightings.facet.SurveyFacet;
 import au.com.gaiaresources.bdrs.controller.review.sightings.facet.TaxonGroupFacet;
 import au.com.gaiaresources.bdrs.controller.review.sightings.facet.UserFacet;
+import au.com.gaiaresources.bdrs.controller.review.sightings.facet.YearFacet;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
@@ -44,6 +45,7 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
@@ -63,6 +65,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
     public static final String SEARCH_QUERY_PARAM_NAME = "searchText";
     public static final String RESULTS_PER_PAGE_QUERY_PARAM_NAME = "resultsPerPage";
     public static final String PAGE_NUMBER_QUERY_PARAM_NAME = "pageNumber";
+    public static final String LATEST_RECORD_ID = "recordId";
     
     public static final String DEFAULT_RESULTS_PER_PAGE = "20";
     public static final String DEFAULT_PAGE_NUMBER = "1";
@@ -74,6 +77,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
         temp.add("species.commonName"); 
         temp.add("location.name");
         temp.add("censusMethod.type");
+        temp.add("record.user");
         VALID_SORT_PROPERTIES = Collections.unmodifiableSet(temp);
     }
     
@@ -132,6 +136,11 @@ public class AdvancedReviewSightingsController extends AbstractController{
         // thereby leaving a page number higher than the total page count.
         mv.addObject("pageNumber", Math.min(pageCount, pageNumber.longValue()));
 
+        // Add an optional parameter to set a record to highlight
+        if (!StringUtils.nullOrEmpty(request.getParameter(LATEST_RECORD_ID))) {
+            mv.addObject(LATEST_RECORD_ID, request.getParameter(LATEST_RECORD_ID));
+        }
+        
         return mv;
     }
     
@@ -164,7 +173,9 @@ public class AdvancedReviewSightingsController extends AbstractController{
                                                      request.getParameter(SEARCH_QUERY_PARAM_NAME),
                                                      null, null);
         response.setContentType(KMLUtils.KML_CONTENT_TYPE);
-        KMLUtils.writeRecordsToKML(request.getContextPath(), 
+
+        KMLUtils.writeRecordsToKML(getRequestContext().getUser(),
+                                   request.getContextPath(), 
                                    null, 
                                    recordList, 
                                    response.getOutputStream());
@@ -250,8 +261,10 @@ public class AdvancedReviewSightingsController extends AbstractController{
     private List<Facet> getFacetList(Map<String, String[]> parameterMap) {
         
         List<Facet> facetList = new ArrayList<Facet>();
+        facetList.add(new UserFacet(recordDAO, parameterMap));
         facetList.add(new TaxonGroupFacet(recordDAO, parameterMap));
         facetList.add(new MonthFacet(recordDAO, parameterMap));
+        facetList.add(new YearFacet(recordDAO, parameterMap));
         
         boolean addSurveyFacet = true;
         if(parameterMap.get(SURVEY_ID_QUERY_PARAM_NAME) != null && 
@@ -268,7 +281,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
             facetList.add(new SurveyFacet(recordDAO, parameterMap));
         }
         
-        facetList.add(new UserFacet(recordDAO, parameterMap));
         facetList.add(new MultimediaFacet(recordDAO, parameterMap));
         facetList.add(new CensusMethodTypeFacet(recordDAO, parameterMap));
         

@@ -144,5 +144,9 @@
         <c:if test="${location != null}">
             jQuery("#location").change();
         </c:if>
-    });
+        /**
+         * Prepopulate fields
+         */
+        bdrs.form.prepopulate();
+        });
 </script>

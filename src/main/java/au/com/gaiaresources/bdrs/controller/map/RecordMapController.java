@@ -5,6 +5,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
@@ -24,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
@@ -45,6 +49,7 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.spatial.ShapeFileWriter;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 
@@ -168,32 +173,32 @@ public class RecordMapController extends AbstractController {
                                       @RequestParam(value="taxon_group", defaultValue="0") int taxonGroupPk,
                                       @RequestParam(value="date_start", defaultValue="01 Jan 1970") Date startDate,
                                       @RequestParam(value="date_end", defaultValue="01 Jan 9999") Date endDate,
-                                      @RequestParam(value="limit", defaultValue="300") int limit)
-        throws JAXBException, IOException, ParseException {
-
-        response.setContentType(KMLUtils.KML_CONTENT_TYPE);
-        response.setHeader("Content-Disposition", "attachment;filename=layer_"+System.currentTimeMillis()+".kml");
-
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-            dateFormat.setLenient(false);
-
-            List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
-                    surveyPk, taxonGroupPk, startDate, endDate,
-                    speciesScientificNameSearch, limit);
-
-            KMLUtils.writeRecordsToKML(request.getContextPath(), 
-                                       request.getParameter("placemark_color"), 
-                                       recordList, 
-                                       response.getOutputStream());
-
-        } catch (JAXBException e) {
-            log.error(e);
-            throw e;
-        } catch (IOException e) {
-            log.error(e);
-            throw e;
+                                      @RequestParam(value="limit", defaultValue="300") int limit,
+                                      @RequestParam(value="downloadFormat", defaultValue="KML") String downloadFormat)
+        throws Exception {
+        
+        // Protect from unauthorized access
+        User currentUser = getRequestContext().getUser();
+        if (currentUser == null || currentUser.getId() == null) {
+            // user not logged in. cannot access 'my sightings'
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        } else {
+            // if not an admin but the user is requesting records of someone who is not them...
+            if (!currentUser.isAdmin() && userPk != currentUser.getId().intValue()) {
+                log.warn("User has attempted unauthorized access to all records. user id : " 
+                         + currentUser.getId() != null ? currentUser.getId() : "unknown");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
         }
+        
+        RecordDownloadFormat format = RecordDownloadFormat.valueOf(downloadFormat);
+        List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
+                                                      surveyPk, taxonGroupPk, startDate, endDate,
+                                                      speciesScientificNameSearch, limit);
+                
+        RecordDownloadWriter.write(request, response, recordList, format, currentUser);
     }
 
     @RequestMapping(value = KMLUtils.GET_RECORD_PLACEMARK_PNG_URL, method = RequestMethod.GET)

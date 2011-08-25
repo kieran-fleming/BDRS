@@ -225,4 +225,5 @@ public interface TaxaDAO {
     void delete(IndicatorSpecies taxon);
 
     void delete(TaxonGroup taxonGroup);
+
 }

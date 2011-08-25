@@ -24,6 +24,11 @@
     <!-- KML View -->
     <bean id="kmlView" class="au.com.gaiaresources.bdrs.servlet.view.KMLView" />
     
+	<!-- Redirect View Resolver -->
+    <bean id="redirectViewResolver"
+        class="au.com.gaiaresources.bdrs.servlet.view.RedirectViewResolver">
+    </bean>
+	
     <!-- Use the method annotations -->
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
         <property name="alwaysUseFullPath" value="true"/>

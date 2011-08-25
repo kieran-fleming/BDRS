@@ -87,6 +87,9 @@ exports.Create = function() {
     	window.location="test.html";
   	});
   	
+  	//Download survey details
+  	bdrs.mobile.survey.getAllRemote();
+  	
 }
 	
 exports.Show = function() {

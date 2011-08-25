@@ -63,8 +63,9 @@ public class DateFormatter {
      */
     public static Date parse(String date, String format) {
         try {
-            return getFormatter(format).parse(date);
-        } catch (ParseException pe) {
+            if (!StringUtils.nullOrEmpty(date))
+                return getFormatter(format).parse(date);
+        } catch (Exception pe) {
             logger.error("Failed to parse " + date + " into format " + format, pe);
         }
         return null;

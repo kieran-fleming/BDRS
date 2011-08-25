@@ -29,6 +29,10 @@ public class RenderController extends AbstractController {
     private PreferenceDAO prefsDAO;
     
     private Logger log = Logger.getLogger(this.getClass());
+    
+    public static final String SURVEY_RENDER_REDIRECT_URL = "/bdrs/user/surveyRenderRedirect.htm";
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_SURVEY_ID = "surveyId";
 
     /**
      * Redirects the request to the appropriate survey renderer depending upon
@@ -41,7 +45,7 @@ public class RenderController extends AbstractController {
      */
     @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN})
     @SuppressWarnings("unchecked")
-    @RequestMapping(value = "/bdrs/user/surveyRenderRedirect.htm", method = RequestMethod.GET)
+    @RequestMapping(value = SURVEY_RENDER_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView surveyRendererRedirect(HttpServletRequest request,
             HttpServletResponse response) {
     	
@@ -77,8 +81,18 @@ public class RenderController extends AbstractController {
             case SINGLE_SITE_MULTI_TAXA:
                 // The single site multiple taxa form is only used for adding
                 // records. 
-                if(request.getParameter("recordId") == null) {
+                if(request.getParameter(PARAM_RECORD_ID) == null) {
                     redirectURL = "singleSiteMultiTaxa.htm";
+                    
+                } else {
+                    redirectURL = "tracker.htm";
+                }
+                break;
+            case SINGLE_SITE_ALL_TAXA:
+                // The single site all taxa form is only used for adding
+                // records. 
+                if(request.getParameter("recordId") == null) {
+                    redirectURL = "singleSiteAllTaxa.htm";
                     
                 } else {
                     redirectURL = "tracker.htm";
@@ -95,7 +109,7 @@ public class RenderController extends AbstractController {
 
         ModelAndView mv = new ModelAndView(new RedirectView(redirectURL));
         mv.addAllObjects(request.getParameterMap());
-        mv.addObject("surveyId", surveyId);
+        mv.addObject(PARAM_SURVEY_ID, surveyId);
         return mv;
     }
 }

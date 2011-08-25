@@ -63,7 +63,7 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     public List<Record> getRecords(Location userLocation, Integer extendKms) {
-        return recordDAO.getRecords(geometryBuilder.bufferInKm(userLocation.getLocation(), extendKms.doubleValue()));
+        return recordDAO.getRecords(geometryBuilder.bufferInKm(userLocation.getLocation().getCentroid(), extendKms.doubleValue()));
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
+import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -76,7 +77,6 @@ public class YearlySightingsController extends AbstractController {
                                     @RequestParam(value="recordId", required=false, defaultValue="0") int recordId) {
 
         Survey survey = surveyDAO.getSurvey(surveyId);
-        User user = getRequestContext().getUser();
 
         // Jan Feb Mar
         // 1
@@ -209,7 +209,7 @@ public class YearlySightingsController extends AbstractController {
                         rec.setSpecies(species);
                         rec.setUser(user);
                         rec.setLocation(location);
-                        rec.setPoint(location.getLocation());
+                        rec.setPoint(location.getLocation().getCentroid());
                         rec.setHeld(false);
 
                         Date recordTime = new Date(time);
@@ -224,7 +224,7 @@ public class YearlySightingsController extends AbstractController {
                     
                     // Record Attributes
                     AttributeValue recAttr;
-                    AttributeParser attributeParser = new AttributeParser();
+                    WebFormAttributeParser attributeParser = new WebFormAttributeParser();
                     for(Attribute attribute : survey.getAttributes()) {
                         if(AttributeScope.SURVEY.equals(attribute.getScope())) {
                             recAttr = attributeParser.parse(attribute, rec, request.getParameterMap(), request.getFileMap());

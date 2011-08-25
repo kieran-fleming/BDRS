@@ -11,7 +11,7 @@ exports.RecentTaxaWidget = function(limit) {
     this.getRecentTaxonomy = function() {
     	var countList;
     	waitfor(countList) {
-			SpeciesCount.all().order('count', false).limit(limit).prefetch('species').list(resume);    
+            SpeciesCount.all().order('userCount', false).limit(limit).prefetch('species').list(resume);    
         }
         var taxonList = [];
         for (var i = 0; i < countList.length; i++) {

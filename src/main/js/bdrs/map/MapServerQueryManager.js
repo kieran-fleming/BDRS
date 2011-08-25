@@ -25,9 +25,9 @@ bdrs.map.MapServerQueryManager = function(options) {
 			layerName: "geoMapFeature_polygon_highlight",
             userStyleName: "geoMapFeature_polygon_highlight",
             fillColor: "#FF0000",
-            fillOpacity: "0.4",
+            fillOpacity: "0.2",
             strokeColor: "#FF0000",
-            strokeOpacity: "0.4",
+            strokeOpacity: "0.2",
             strokeWidth: "2"
 		});
 		
@@ -40,6 +40,23 @@ bdrs.map.MapServerQueryManager = function(options) {
             size: "10"
 		});
 		
+		sld += bdrs.map.generateLineSLD({
+			layerName: "record_line_highlight",
+			userStyleName: "record_line_highlight",
+            strokeColor: "#FF0000",
+            strokeWidth: "2"
+		});
+		
+		sld += bdrs.map.generatePolygonSLD({
+			layerName: "record_polygon_highlight",
+            userStyleName: "record_polygon_highlight",
+            fillColor: "#FF0000",
+            fillOpacity: "0.2",
+            strokeColor: "#FF0000",
+            strokeOpacity: "0.2",
+            strokeWidth: "2"
+		});
+		
 		sld += bdrs.map.generatePointSLD({
             layerName: "geoMapFeature_point_highlight",
             userStyleName: "geoMapFeature_point_highlight",
@@ -49,8 +66,15 @@ bdrs.map.MapServerQueryManager = function(options) {
             size: "10"
         });
 		
-		sld += bdrs.map.generateFooterSLD();
+		sld += bdrs.map.generateLineSLD({
+            layeName: "geoMapFeature_line_highlight",
+            userStyleName: "geoMapFeature_line_highlight",
+            strokeColor: "#FF0000",
+            strokeWidth: "2"
+        });
 		
+		sld += bdrs.map.generateFooterSLD();
+
 		if (this.highlightLayer) {
             this.highlightLayer.mergeNewParams({
 				"RECORD_ID": recordId,

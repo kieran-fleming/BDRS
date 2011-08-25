@@ -19,25 +19,25 @@
 
 <form method="POST">
     <input type="hidden" name="group_pk" value="${censusMethod.id}" />
-    <table>
+    <table class="form_table">
         <tr>
-            <td>Census Method Name:</td>
+            <th>Census Method Name:</th>
             <td><input class="validate(required, maxlength(200))" type="text" style="width:40em" name="censusMethodName" value="<c:out value="${censusMethod.name}" />" size="40"  autocomplete="off"></td>
         </tr>
         <tr>
-            <td>Description:</td>
+            <th>Description:</th>
             <td>
-                <input type="text" maxlength="1023" name="description" value="<c:out value="${censusMethod.description}"/>"/> 
+            	<textarea maxlength="1023" rows="4" name="description"><c:out value="${censusMethod.description}"/></textarea>
             </td>
         </tr>
         <tr>
-            <td>Type:</td>
+            <th>Type:</th>
             <td>
                 <input type="text" name="type" value="<c:out value="${censusMethod.type}"/>"/> 
             </td>
         </tr>
         <tr>
-            <td>Taxonomic:</td>
+            <th>Taxonomic:</th>
             <td>
             	<select name="taxonomic">
                     <c:forEach var="taxonomicChoice" items="<%= Taxonomic.values() %>">
@@ -53,6 +53,24 @@
                     </c:forEach>
                 </select>
             </td>
+        </tr>
+		<tr>
+			<th title="The record will be a single point on the map">Enter record as a point:</th>
+			<td title="The record will be a single point on the map">
+				<input type="checkbox" value="true" name="drawPoint" <c:if test="${censusMethod.drawPointEnabled}">checked="checked"</c:if> />
+			</td>
+		</tr>
+		<tr>
+            <th title="The record will be a line on the map">Enter record as a line:</th>
+            <td title="The record will be a line on the map">
+            	<input type="checkbox" value="true" name="drawLine" <c:if test="${censusMethod.drawLineEnabled}">checked="checked"</c:if> />
+		    </td>
+        </tr>
+		<tr>
+            <th title="The record will be a polygon on the map">Enter record as a polygon:</th>
+            <td title="The record will be a polygon on the map">
+            	<input type="checkbox" value="true" name="drawPolygon" <c:if test="${censusMethod.drawPolygonEnabled}">checked="checked"</c:if> />
+			</td>
         </tr>
     </table>
     

@@ -5,7 +5,13 @@ public enum ValidationType {
     STRING,
     REQUIRED_BLANKABLE_STRING,
     REQUIRED_NONBLANK_STRING,
-
+    
+    HTML,
+    
+    BARCODE,
+    REQUIRED_BARCODE,
+    
+    TIME,
     REQUIRED_TIME,
     
     INTEGER, 

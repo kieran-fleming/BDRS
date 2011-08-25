@@ -74,7 +74,7 @@
     </c:if>
     
     jQuery("#${widgetId}Pager").jqGrid('navGrid','#${widgetId}Pager',{edit:false,add:false,del:false});
-    jQuery("#${widgetId}Filter}").click(function(){
+    jQuery("#${widgetId}Filter").click(function(){
     // turn the search form into a query string and append it to our url...
         var f = jQuery("#${widgetId}SearchForm").serialize();       
         ${widgetId}Grid.setQueryString(f);

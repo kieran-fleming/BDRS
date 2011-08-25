@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.AttributeOverride;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -16,7 +15,6 @@ import javax.persistence.Transient;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.IndexColumn;
@@ -33,6 +31,9 @@ import au.com.gaiaresources.bdrs.file.FileService;
 @Table(name = "TAXON_GROUP")
 @AttributeOverride(name = "id", column = @Column(name = "TAXON_GROUP_ID"))
 public class TaxonGroup extends PortalPersistentImpl {
+    
+    public static final String FIELD_NAMES_GROUP_NAME = "Field Names";
+    
     private String name;
     private String image;
     private String thumbNail;

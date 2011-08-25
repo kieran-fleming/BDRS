@@ -25,7 +25,7 @@
                 <th>Name:</th>
                 <td>
                     <input type="text" name="name" class="validate(required)"
-                        maxlength="18"
+                        maxlength="255"
                         value="<c:out value="${survey.name}" default=""/>"
                     />
                 </td>
@@ -33,7 +33,7 @@
             <tr>
                 <th>Description:</th>
                 <td>
-                    <textarea name="description"><c:out value="${survey.description}"/></textarea>
+                    <textarea name="description" class="validate(maxlength(1023))"><c:out value="${survey.description}"/></textarea>
                 </td>
             </tr>
             <tr>
@@ -113,7 +113,7 @@
                         <c:forEach items="<%=SurveyFormRendererType.values()%>" var="rendererType">
                             <jsp:useBean id="rendererType" type="au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType" />
                             <div>
-	                            <input type="radio" class="vertmiddle" name="rendererType"
+	                            <input onchange="editSurveyPage.rendererTypeChanged(jQuery(this));" type="radio" class="vertmiddle" name="rendererType"
 	                                id="<%= rendererType.toString() %>"
 	                                value="<%= rendererType.toString() %>"
 	                                <c:if test="<%= rendererType.equals(survey.getFormRendererType()) || (survey.getFormRendererType() == null && SurveyFormRendererType.DEFAULT.equals(rendererType)) %>">
@@ -131,8 +131,40 @@
                     </fieldset>
                 </td>
             </tr>
+			<tr>
+                <th title="The default visibility setting when creating a new record">Default Record Visibility:</th>
+                <td>
+                    <fieldset>
+                        <c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
+                            <jsp:useBean id="recVis" type="au.com.gaiaresources.bdrs.model.record.RecordVisibility" />
+                            <div>
+                                <input type="radio" class="vertmiddle" name="defaultRecordVis"
+                                    id="<%= recVis.toString() %>"
+                                    value="<%= recVis.toString() %>"
+                                    <c:if test="<%= recVis.equals(survey.getDefaultRecordVisibility()) %>">
+                                        checked="checked"
+                                    </c:if>
+                                />
+                                <label for="<%= recVis.toString() %>">
+                                    <%= recVis.getDescription() %>
+                                </label>
+                            </div>
+                        </c:forEach>
+                    </fieldset>
+                </td>
+            </tr>
+			<tr>
+                <th title="Whether non-admins can change the visibility of their records">Record visibility modifiable by users:</th>
+                <td>
+                    <input type="checkbox" name="recordVisModifiable" value="true"
+                        <c:if test="${survey.recordVisibilityModifiable}">
+                            checked="checked"
+                        </c:if>
+                    />
+                </td>
+            </tr>
             <tr>
-                <th>Publish:</th>
+                <th title="Is the survey accessible for read access">Publish:</th>
                 <td>
                     <input type="checkbox" name="active"
                         <c:if test="${survey.active}">
@@ -151,3 +183,29 @@
         </c:if>
     </div>
 </form>
+
+
+<script type="text/javascript">
+	editSurveyPage = {
+	   rendererTypeChanged: function() {
+	       var value = $('input:radio[name=rendererType]:checked').val();
+		   var recordVisCheckBox = jQuery('input[name=recordVisModifiable]');
+		   if (value === 'DEFAULT') {
+		      recordVisCheckBox.removeAttr('disabled');
+		   } else if (value === 'SINGLE_SITE_MULTI_TAXA') {
+		      recordVisCheckBox.attr('disabled', 'disabled');
+		   } else if (value === 'SINGLE_SITE_ALL_TAXA') {
+              recordVisCheckBox.attr('disabled', 'disabled');
+           } else if (value === 'ATLAS') {
+              recordVisCheckBox.attr('disabled', 'disabled');
+           } else {
+		      // not expected value. default to disable the control.
+			  recordVisCheckBox.attr('disabled', 'disabled');
+		   }
+	   }	
+	};
+	
+	jQuery(function() {
+		editSurveyPage.rendererTypeChanged();
+	});
+</script>
