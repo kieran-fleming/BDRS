@@ -11,7 +11,8 @@ import au.com.gaiaresources.bdrs.model.record.Record;
  */
 public enum AttributeScope {
     SURVEY("Survey"),
-    RECORD("Record");
+    RECORD("Record"),
+    LOCATION("Location");
     
     private String name;
     

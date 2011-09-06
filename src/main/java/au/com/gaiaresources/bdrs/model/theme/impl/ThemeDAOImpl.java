@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.model.theme.impl;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
+import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 @Repository
@@ -82,6 +84,50 @@ public class ThemeDAOImpl extends AbstractDAOImpl implements ThemeDAO {
     @Override
     public void delete(ThemeElement themeElement) {
         super.deleteByQuery(themeElement);
+    }
+    
+    @Override
+    public List<ThemePage> getThemePages(int themeId) {
+        List<ThemePage> result = Collections.EMPTY_LIST;
+        try {
+            disablePortalFilter();
+            result = find("from ThemePage where theme.id = " + String.format("%d", themeId));
+        } finally {
+            enablePortalFilter();
+        }
+        return result;
+    }
+
+    @Override
+    public ThemePage getThemePage(int themeId, String key) {
+        if (key == null) {
+            return null;
+        }
+        List<ThemePage> result = Collections.EMPTY_LIST;
+        try {
+            disablePortalFilter();
+            Query q = getSession().createQuery("from ThemePage where theme.id = :themeId and key = :key");
+            q.setParameter("themeId", themeId);
+            q.setParameter("key", key);
+            result = q.list();
+            
+        } finally {
+            enablePortalFilter();
+        }
+        if (result.size() > 1) {
+            log.warn("more than 1 item returned for ThemeDAO.getThemePage - duplicate theme page keys in the theme. Returning first result");
+        }
+        return result.isEmpty() ? null : result.get(0);
+    }
+    
+    @Override
+    public void delete(ThemePage page) {
+        super.delete(page);
+    }
+    
+    @Override
+    public ThemePage save(ThemePage page) {
+        return super.save(page);
     }
     
     private void enablePortalFilter() {

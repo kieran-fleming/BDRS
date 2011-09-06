@@ -105,8 +105,8 @@
    });
 
     // set the popups to only open on command, not page open
-    $('#savePopup').dialog({ autoOpen: false });
-    $('#popupDialog').dialog({ autoOpen: false });
+    $('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
+    $('#popupDialog').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
     
     changeTemplate = function() {
         // set the subject to the template name less the "email/" prefix
@@ -276,7 +276,7 @@
     $.browser.msie8 = $.browser.msie && /msie 8\.0/i.test(userAgent);
     $.browser.msie7 = $.browser.msie && /msie 7\.0/i.test(userAgent);
     $.browser.msie6 = !$.browser.msie8 && !$.browser.msie7 && $.browser.msie && /msie 6\.0/i.test(userAgent);
-    function load() {        
+    function load() {
         var o = { showcheck: true
         };
         o.cbiconpath = "${pageContext.request.contextPath}/images/wdTree/icons/";

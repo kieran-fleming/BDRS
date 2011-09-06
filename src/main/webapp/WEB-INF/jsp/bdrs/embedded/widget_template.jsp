@@ -4,7 +4,6 @@
 
 <html class="embed">
     <head>
-           
         <%@page import="au.com.gaiaresources.bdrs.model.theme.Theme"%>
         <script src="${pageContext.request.contextPath}/js/jquery-1.6.2.min.js" type="text/javascript"></script>
         

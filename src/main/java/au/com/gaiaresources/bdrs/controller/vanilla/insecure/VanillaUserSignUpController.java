@@ -24,6 +24,7 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData;
 import au.com.gaiaresources.bdrs.service.user.UserMetaDataService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData.UserMetaDataType;
@@ -82,7 +83,9 @@ public class VanillaUserSignUpController extends AbstractController {
         if (hasErrors(email, firstName, lastName)) {
             return "usersignup";
         }
-        User saveResult = registrationService.signUp(username, email, firstName, lastName, password, "ROLE_USER");
+        String contextPath = ContentInitialiserService.getRequestURL(request);
+        
+        User saveResult = registrationService.signUp(username, email, firstName, lastName, password, contextPath, "ROLE_USER");
 
         List<UserMetaData> metaList = umdService.getMetadataMap(request);
 

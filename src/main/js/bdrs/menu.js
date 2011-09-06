@@ -50,7 +50,9 @@ bdrs.menu.populateSurveyItems = function(registrationKey, contribMenuSelector, p
 			
             for(var j=0; j<data.length; ++j) {
                 var censusMethod = data[j];
-                var cmMenuItem = jQuery("<li></li>");
+                var cmMenuItem = jQuery("<li "+(j == data.length-1 ? "class=\"menutop\"" : "")+"></li>");
+                var cmElemId = "method_"+censusMethod.id;
+                cmMenuItem.attr({id:cmElemId});
                 var link =  jQuery("<a></a>").attr({
                     'href': bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId="+surveyId+"&censusMethodId="+censusMethod.id
                 }).text(censusMethod.name);

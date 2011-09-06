@@ -402,73 +402,75 @@ public class TrackerControllerTest extends RecordFormTest {
         Set<AttributeValue> attributeList = new HashSet<AttributeValue>();
         Map<Attribute, AttributeValue> expectedRecordAttrMap = new HashMap<Attribute, AttributeValue>();
         for(Attribute attr : survey.getAttributes()) {
-        	List<AttributeOption> opts = attr.getOptions(); 
-            AttributeValue recAttr = new AttributeValue();
-            recAttr.setAttribute(attr);
-            switch (attr.getType()) {
-            case INTEGER:
-                Integer i = Integer.valueOf(123);
-                recAttr.setNumericValue(new BigDecimal(i));
-                recAttr.setStringValue(i.toString());
-                break;
-            case INTEGER_WITH_RANGE:
-                Integer j = new Integer(intWithRangeValue);
-                recAttr.setNumericValue(new BigDecimal(j));
-                recAttr.setStringValue(intWithRangeValue);
-            case DECIMAL:
-                Double d = new Double(123);
-                recAttr.setNumericValue(new BigDecimal(d));
-                recAttr.setStringValue(d.toString());
-                break;
-            case DATE:
-                Date date = new Date(System.currentTimeMillis());
-                recAttr.setDateValue(date);
-                recAttr.setStringValue(dateFormat.format(date));
-                break;
-            case STRING_AUTOCOMPLETE:
-            case STRING:
-                recAttr.setStringValue("This is a test string record attribute");
-                break;
-            case BARCODE:
-                recAttr.setStringValue("#123456");
-                break;
-            case TIME:
-                recAttr.setStringValue("12:34");
-                break;
-            case HTML:
-            case HTML_COMMENT:
-            case HTML_HORIZONTAL_RULE:
-                recAttr.setStringValue("<hr/>");
-                break;
-            case TEXT:
-                recAttr.setStringValue("This is a test text record attribute");
-                break;
-            case STRING_WITH_VALID_VALUES:
-                recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
-                break;
-            case MULTI_CHECKBOX:
-            	recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
-            	break;
-            case MULTI_SELECT:
-            	recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
-            	break;
-            case SINGLE_CHECKBOX:
-            	recAttr.setBooleanValue(Boolean.TRUE.toString());
-            	break;
-            case FILE:
-                recAttr.setStringValue("testDataFile.dat");
-                break;
-            case IMAGE:
-                recAttr.setStringValue("testImgFile.png");
-                break;
-            default:
-                Assert.assertTrue("Unknown Attribute Type: "
-                        + attr.getType().toString(), false);
-                break;
+            if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                List<AttributeOption> opts = attr.getOptions();
+                AttributeValue recAttr = new AttributeValue();
+                recAttr.setAttribute(attr);
+                switch (attr.getType()) {
+                case INTEGER:
+                    Integer i = Integer.valueOf(123);
+                    recAttr.setNumericValue(new BigDecimal(i));
+                    recAttr.setStringValue(i.toString());
+                    break;
+                case INTEGER_WITH_RANGE:
+                    Integer j = new Integer(intWithRangeValue);
+                    recAttr.setNumericValue(new BigDecimal(j));
+                    recAttr.setStringValue(intWithRangeValue);
+                case DECIMAL:
+                    Double d = new Double(123);
+                    recAttr.setNumericValue(new BigDecimal(d));
+                    recAttr.setStringValue(d.toString());
+                    break;
+                case DATE:
+                    Date date = new Date(System.currentTimeMillis());
+                    recAttr.setDateValue(date);
+                    recAttr.setStringValue(dateFormat.format(date));
+                    break;
+                case STRING_AUTOCOMPLETE:
+                case STRING:
+                    recAttr.setStringValue("This is a test string record attribute");
+                    break;
+                case BARCODE:
+                    recAttr.setStringValue("#123456");
+                    break;
+                case TIME:
+                    recAttr.setStringValue("12:34");
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    recAttr.setStringValue("<hr/>");
+                    break;
+                case TEXT:
+                    recAttr.setStringValue("This is a test text record attribute");
+                    break;
+                case STRING_WITH_VALID_VALUES:
+                    recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
+                    break;
+                case MULTI_CHECKBOX:
+                    recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
+                    break;
+                case MULTI_SELECT:
+                    recAttr.setMultiCheckboxValue(new String[]{opts.get(0).getValue(), opts.get(1).getValue()});
+                    break;
+                case SINGLE_CHECKBOX:
+                    recAttr.setBooleanValue(Boolean.TRUE.toString());
+                    break;
+                case FILE:
+                    recAttr.setStringValue("testDataFile.dat");
+                    break;
+                case IMAGE:
+                    recAttr.setStringValue("testImgFile.png");
+                    break;
+                default:
+                    Assert.assertTrue("Unknown Attribute Type: "
+                            + attr.getType().toString(), false);
+                    break;
+                }
+                recAttr = recordDAO.saveAttributeValue(recAttr);
+                attributeList.add(recAttr);
+                expectedRecordAttrMap.put(attr, recAttr);
             }
-            recAttr = recordDAO.saveAttributeValue(recAttr);
-            attributeList.add(recAttr);
-            expectedRecordAttrMap.put(attr, recAttr);
         }
 
         for (Attribute attr : record.getSpecies().getTaxonGroup().getAttributes()) {
@@ -763,76 +765,78 @@ public class TrackerControllerTest extends RecordFormTest {
         String key;
         String value;
         for (Attribute attr : survey.getAttributes()) {
-            key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
-            value = "";
-            switch (attr.getType()) {
-            case INTEGER:
-                value = "123";
-                break;
-            case INTEGER_WITH_RANGE:
-                value = intWithRangeValue;
-                break;
-            case DECIMAL:
-                value = "456.7";
-                break;
-            case DATE:
-                value = dateFormat.format(today);
-                break;
-            case STRING_AUTOCOMPLETE:
-            case STRING:
-                value = "Test Survey Attr String";
-                break;
-            case BARCODE:
-                value = "#123456";
-                break;
-            case TIME:
-                value = "12:34";
-                break;
-            case TEXT:
-                value = "Test Survey Attr Text";
-                break;
-            case STRING_WITH_VALID_VALUES:
-                value = attr.getOptions().iterator().next().getValue();
-                break;
-            case MULTI_CHECKBOX:
-            case MULTI_SELECT:
-                List<AttributeOption> opts = attr.getOptions(); 
-                request.addParameter(key, opts.get(0).getValue());
-                request.addParameter(key, opts.get(1).getValue());
-                value = null;
-                break;
-            case SINGLE_CHECKBOX:
-                value = String.valueOf(true);
-                break;
-            case FILE:
-                String file_filename = String.format("attribute_%d", attr.getId());
-                MockMultipartFile mockFileFile = new MockMultipartFile(key,
-                        file_filename, "audio/mpeg", file_filename.getBytes());
-                ((MockMultipartHttpServletRequest) request).addFile(mockFileFile);
-                value = file_filename;
-                break;
-            case IMAGE:
-                String image_filename = String.format("attribute_%d", attr.getId());
-                MockMultipartFile mockImageFile = new MockMultipartFile(key,
-                        image_filename, "image/png", image_filename.getBytes());
-                ((MockMultipartHttpServletRequest) request).addFile(mockImageFile);
-                value = image_filename;
-                break;
-            case HTML:
-            case HTML_COMMENT:
-            case HTML_HORIZONTAL_RULE:
-                value = "<hr/>";
-                break;
-            default:
-                Assert.assertTrue("Unknown Attribute Type: "
-                        + attr.getType().toString(), false);
-                break;
+            if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
+                value = "";
+                switch (attr.getType()) {
+                case INTEGER:
+                    value = "123";
+                    break;
+                case INTEGER_WITH_RANGE:
+                    value = intWithRangeValue;
+                    break;
+                case DECIMAL:
+                    value = "456.7";
+                    break;
+                case DATE:
+                    value = dateFormat.format(today);
+                    break;
+                case STRING_AUTOCOMPLETE:
+                case STRING:
+                    value = "Test Survey Attr String";
+                    break;
+                case BARCODE:
+                    value = "#123456";
+                    break;
+                case TIME:
+                    value = "12:34";
+                    break;
+                case TEXT:
+                    value = "Test Survey Attr Text";
+                    break;
+                case STRING_WITH_VALID_VALUES:
+                    value = attr.getOptions().iterator().next().getValue();
+                    break;
+                case MULTI_CHECKBOX:
+                case MULTI_SELECT:
+                    List<AttributeOption> opts = attr.getOptions();
+                    request.addParameter(key, opts.get(0).getValue());
+                    request.addParameter(key, opts.get(1).getValue());
+                    value = null;
+                    break;
+                case SINGLE_CHECKBOX:
+                    value = String.valueOf(true);
+                    break;
+                case FILE:
+                    String file_filename = String.format("attribute_%d", attr.getId());
+                    MockMultipartFile mockFileFile = new MockMultipartFile(key,
+                            file_filename, "audio/mpeg", file_filename.getBytes());
+                    ((MockMultipartHttpServletRequest) request).addFile(mockFileFile);
+                    value = file_filename;
+                    break;
+                case IMAGE:
+                    String image_filename = String.format("attribute_%d", attr.getId());
+                    MockMultipartFile mockImageFile = new MockMultipartFile(key,
+                            image_filename, "image/png", image_filename.getBytes());
+                    ((MockMultipartHttpServletRequest) request).addFile(mockImageFile);
+                    value = image_filename;
+                    break;
+                case HTML:
+                case HTML_COMMENT:
+                case HTML_HORIZONTAL_RULE:
+                    value = "<hr/>";
+                    break;
+                default:
+                    Assert.assertTrue("Unknown Attribute Type: "
+                            + attr.getType().toString(), false);
+                    break;
+                }
+                if(value != null) {
+                    params.put(key, value);
+                }
+                // Otherwise value added directly to the request parameters
+                // this is to support adding an "array" of values.
             }
-            if(value != null) {
-                params.put(key, value);
-            } 
-            // Otherwise value added directly to the request parameters
-            // this is to support adding an "array" of values. 
         }
 
         for (Attribute attr : speciesA.getTaxonGroup().getAttributes()) {

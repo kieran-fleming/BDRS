@@ -56,7 +56,7 @@ public class ContentServiceTest extends AbstractControllerTest {
         request.setRequestURI("/webservice/content/loadContent.htm");
         request.setParameter(ContentService.KEY, testKey);
 
-        ModelAndView mv = handle(request, response);
+        handle(request, response);
 
         Assert.assertEquals("application/json", response.getContentType());
         JSONObject json = (JSONObject) JSONSerializer.toJSON(response.getContentAsString());

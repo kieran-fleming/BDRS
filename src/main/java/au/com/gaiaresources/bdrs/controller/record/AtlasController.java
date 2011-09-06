@@ -18,6 +18,7 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
@@ -48,15 +49,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
-import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.image.ImageService;
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -349,7 +341,7 @@ public class AtlasController extends AbstractController {
             Attribute fileAttr = null;
             AttributeValue fileRecAttr = null;
             for(Attribute attr : attributeList) {
-                if(fileAttr == null && AttributeType.FILE.equals(attr.getType())) {
+                if(!AttributeScope.LOCATION.equals(attr.getScope()) && fileAttr == null && AttributeType.FILE.equals(attr.getType())) {
                     // Attribute found.
                     fileAttr = attr;
                     // Try to locate matching record attribute

@@ -15,9 +15,11 @@
         <type>String</type>
     </metadata>
      -->
+     <!-- 
     <metadata>
         <key>emailNewsletter</key>
         <displayName>Receive newsletter via e-mail?</displayName>
         <type>Boolean</type>
     </metadata>
+    -->
 </profile>

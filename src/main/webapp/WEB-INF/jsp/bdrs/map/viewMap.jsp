@@ -5,19 +5,21 @@
 <h1>${geoMap.name}</h1>
 <p>${geoMap.description}</p>
 
-
-<div class="left">
-    <div>
-        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'KML');">
-            Download KML for records
-        </a>
-        <span>&nbsp;|&nbsp;<span/>
-        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'SHAPEFILE');">
-            Download SHP for records
-        </a>
-    </div>
-</div>
-
+<!-- for now, only allow download of records when the map has no anonymous access -->
+<!-- consider adding map metadata to have the option of allowing record downloads -->
+<c:if test="${!geoMap.anonymousAccess}">
+    <div class="left">
+	    <div>
+	        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'KML');">
+	            Download KML for records
+	        </a>
+	        <span>&nbsp;|&nbsp;<span/>
+	        <a href="javascript: bdrs.map.downloadRecordsForActiveLayers(bdrs.map.baseMap, 'SHAPEFILE');">
+	            Download SHP for records
+	        </a>
+	    </div>
+	</div>
+</c:if>
 
 <div class="right">
     <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#view_base_map', bdrs.map.baseMap)">Enlarge Map</a>
@@ -35,7 +37,8 @@
 
 <script type="text/javascript">
 
-    jQuery(function() {
+    jQuery(window).load(function() {
+		
         <c:choose>
 	        <c:when test="${geoMap.anonymousAccess}">
                 bdrs.map.initBaseMap('view_base_map', {isPublic:true, ajaxFeatureLookup: true, geocode:{selector:'#geocode'}});
@@ -91,8 +94,11 @@
 
         // Add select for KML stuff
         bdrs.map.addSelectHandler(bdrs.map.baseMap, layerArray);
-        bdrs.map.centerMap(bdrs.map.baseMap);
+		
+		// In order to force correct map centering in IE7
+	    jQuery("#view_base_map").removeClass("defaultmap");
+		bdrs.map.centerMap(bdrs.map.baseMap);
+		jQuery("#view_base_map").addClass("defaultmap");
     });
-
 
 </script>

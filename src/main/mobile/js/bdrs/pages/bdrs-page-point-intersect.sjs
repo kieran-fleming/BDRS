@@ -57,7 +57,7 @@ exports.Create =  function() {
 		}
 	});
 	
-	jQuery('#pi-when').datepicker();
+	jQuery('#pi-when').datepicker({maxDate: new Date()});
 	jQuery('#pi-time').timepicker();
 }
 

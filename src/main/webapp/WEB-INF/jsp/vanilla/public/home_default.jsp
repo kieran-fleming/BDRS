@@ -17,9 +17,7 @@
     <div class="right_col">
         <div style="height: 33.5em;">
             <h3 class="nopad_top">
-                <a href="http://www.birdsaustralia.com.au/conservation/our-projects.html">
-                    Our Projects
-                </a>
+                Our Projects
             </h3>
             <p>
                 Click on an image of a project you are interested in to sign in and 

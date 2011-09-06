@@ -107,7 +107,7 @@ public class SingleSiteController extends AbstractController {
      * @param latitude the latitude of the sighting
      * @param longitude the longitude of the sighting
      * @param date the calendar date of the sighting
-     * @param time the time when the sighting occured
+     * @param time the time when the sighting occurred
      * @param notes additional notes to be attached to all records
      * @param sightingIndex the number of records to be saved.
      * @return 
@@ -189,18 +189,20 @@ public class SingleSiteController extends AbstractController {
             AttributeValue recAttr;
             String prefix;
             for(Attribute attribute : survey.getAttributes()) {
-                prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix : recordPrefix;  
-                recAttr = attributeParser.parse(prefix, attribute, record, request.getParameterMap(), request.getFileMap());
-                if(attributeParser.isAddOrUpdateAttribute()) {
-                    recAttr = recordDAO.saveAttributeValue(recAttr);
-                    if(attributeParser.getAttrFile() != null) {
-                        fileService.createFile(recAttr, attributeParser.getAttrFile());
+                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix : recordPrefix;
+                    recAttr = attributeParser.parse(prefix, attribute, record, request.getParameterMap(), request.getFileMap());
+                    if(attributeParser.isAddOrUpdateAttribute()) {
+                        recAttr = recordDAO.saveAttributeValue(recAttr);
+                        if(attributeParser.getAttrFile() != null) {
+                            fileService.createFile(recAttr, attributeParser.getAttrFile());
+                        }
+                        record.getAttributes().add(recAttr);
                     }
-                    record.getAttributes().add(recAttr);
-                }
-                else {
-                    record.getAttributes().remove(recAttr);
-                    recordDAO.delete(recAttr);
+                    else {
+                        record.getAttributes().remove(recAttr);
+                        recordDAO.delete(recAttr);
+                    }
                 }
             }
             
@@ -245,7 +247,9 @@ public class SingleSiteController extends AbstractController {
         String prefix = String.format(PREFIX_TEMPLATE, sightingIndex);
         List<FormField> formFieldList = new ArrayList<FormField>();
         for(Attribute attribute : survey.getAttributes()) {
-            if(!AttributeScope.SURVEY.equals(attribute.getScope()) && !attribute.isTag()) {
+            if(!AttributeScope.SURVEY.equals(attribute.getScope()) &&
+                    !AttributeScope.LOCATION.equals(attribute.getScope()) &&
+                    !attribute.isTag()) {
                 formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, null, prefix));
             }
         }
@@ -281,11 +285,10 @@ public class SingleSiteController extends AbstractController {
         List<FormField> sightingRowFormFieldList = new ArrayList<FormField>();
         List<FormField> formFieldList = new ArrayList<FormField>();
         for(Attribute attribute : survey.getAttributes()) {
-            if(!attribute.isTag()) {
+            if(!attribute.isTag() && !AttributeScope.LOCATION.equals(attribute.getScope())) {
                 if(AttributeScope.SURVEY.equals(attribute.getScope())) {
                     formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
-                }
-                else {
+                } else {
                     sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
                 }
             }

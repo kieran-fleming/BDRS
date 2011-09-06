@@ -139,13 +139,10 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
             
         // else do the initialisation
         Portal p = super.save(sesh, portal);
-        try
-        {
+        try {
             // seed portal with essential data...
             new PortalInitialiser().init(p);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("Could not initialise portal. Rolling back transaction...", e);
             throw e;
         }

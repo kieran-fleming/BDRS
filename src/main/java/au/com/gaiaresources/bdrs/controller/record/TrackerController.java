@@ -14,6 +14,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -46,11 +47,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
@@ -197,7 +193,9 @@ public class TrackerController extends AbstractController {
         // If there were no pre-existing values for the attributes, add 
         // the blank fields now.
         for (Attribute surveyAttr : surveyAttributeList) {
-            surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, surveyAttr));
+            if(!AttributeScope.LOCATION.equals(surveyAttr.getScope())) {
+                surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, surveyAttr));
+            }
         }
         for (Attribute taxonGroupAttr : taxonGroupAttributeList) {
             taxonGroupFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, taxonGroupAttr, TAXON_GROUP_ATTRIBUTE_PREFIX));

@@ -231,7 +231,6 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         
         Set<AttributeValue> avSet = new HashSet<AttributeValue>();
         // lets add some records to the surveys!
-        record = new Record();
         record.setAccuracyInMeters(1d);
         record.setBehaviour("jumping");
         record.setSurvey(survey);

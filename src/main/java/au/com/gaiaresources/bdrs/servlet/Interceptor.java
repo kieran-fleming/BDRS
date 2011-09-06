@@ -33,6 +33,7 @@ import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
+import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.UserDetails;
@@ -65,7 +66,8 @@ public class Interceptor implements HandlerInterceptor {
     private GoogleKeyService gkService;
     
     private static final String GOOGLE_MAP_KEY = "bdrsGoogleMapsKey";
-    private static final String PARAM_PAGE_TITLE = "pageTitle";
+    public static final String PARAM_PAGE_TITLE = "pageTitle";
+    public static final String PARAM_PAGE_DESCRIPTION = "pageDescription";
     private static final String MV_USER_ID = "authenticatedUserId";
     private static final String MV_USER_IS_ADMIN = "isAdmin";
     
@@ -140,7 +142,9 @@ public class Interceptor implements HandlerInterceptor {
             // the user may be the root user which has no portal id.
             // User rebind = (User)c.getHibernate().get(User.class, c.getUser().getId());    
             User rebind = userDAO.getUser(c.getUser().getId());
-            ((au.com.gaiaresources.bdrs.security.UserDetails)c.getUserDetails()).setUser(rebind);
+            if (rebind != null && c.getUserDetails() != null) {
+                ((au.com.gaiaresources.bdrs.security.UserDetails)c.getUserDetails()).setUser(rebind);
+            }
         }
         if(c.getPortal() == null) {
             c.setTheme(null);
@@ -176,10 +180,6 @@ public class Interceptor implements HandlerInterceptor {
                 }
                 modelAndView.getModel().put("themeMap", themeElementMap);
             }
-            
-            if (request.getParameter(PARAM_PAGE_TITLE) != null) {
-                modelAndView.addObject(PARAM_PAGE_TITLE, request.getParameter(PARAM_PAGE_TITLE));
-            }
            
             if (modelAndView.getView() instanceof RedirectView) {
                 requestContext.newTx();
@@ -199,6 +199,17 @@ public class Interceptor implements HandlerInterceptor {
                 if (loggedInUser != null && loggedInUser.getId() != null) {
                     modelAndView.getModel().put(MV_USER_ID, loggedInUser.getId().toString());
                     modelAndView.getModel().put(MV_USER_IS_ADMIN, loggedInUser.isAdmin());
+                }
+                if (theme != null && theme.getId() != null) {
+                    // if performance becomes an issue consider caching the ThemePages using a service.
+                    // remember to invalidate the cache when changing the theme!
+                    
+                    // the page key will be the view name
+                    ThemePage themePage = themeDAO.getThemePage(theme.getId().intValue(), modelAndView.getViewName());
+                    if (themePage != null) {
+                        modelAndView.addObject(PARAM_PAGE_TITLE, themePage.getTitle());
+                        modelAndView.addObject(PARAM_PAGE_DESCRIPTION, themePage.getDescription());
+                    }
                 }
             }
             

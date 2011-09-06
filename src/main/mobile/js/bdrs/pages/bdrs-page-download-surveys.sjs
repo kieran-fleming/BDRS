@@ -1,9 +1,15 @@
 exports.Create = function() {
-	
-	bdrs.mobile.survey.getAllRemote();
 },
 
 exports.Show = function() {
+
+	// show download in progress dialog
+	jQuery.mobile.pageLoading(false);
+	waitfor(){
+		bdrs.mobile.survey.getAllRemote(resume);
+	}
+	// hide download in progress dialog
+	jQuery.mobile.pageLoading(true);
 	
 	var allSurveys = bdrs.mobile.survey.getAll();
 	//Render surveys as list items
@@ -24,8 +30,7 @@ exports.Show = function() {
 	// check all checkboxes with class local
 	jQuery('.bdrs-page-download-surveys .local').attr('checked', 'true');
 	
-	// Yes, We are crazy.
-	jQuery('.bdrs-page-download-surveys .surveyListContainer').remove().appendTo(jQuery('.bdrs-page-download-surveys')).page();
+	bdrs.mobile.restyle('.bdrs-page-download-surveys .surveyListContainer');
 	
 	// Add click Handler to surveys
 	jQuery('.bdrs-page-download-surveys .downloadSurvey').change(function(event){

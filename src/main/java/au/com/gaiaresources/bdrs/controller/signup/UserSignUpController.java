@@ -1,5 +1,8 @@
 package au.com.gaiaresources.bdrs.controller.signup;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.TransactionStatus;
@@ -17,6 +20,7 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaProtected;
 
 @Controller
@@ -44,7 +48,8 @@ public class UserSignUpController extends AbstractController {
      * @return
      */
     @RequestMapping(value = "/usersignup.htm", method = RequestMethod.POST)
-    public String save(@ModelAttribute("user") final UserSignUpForm u, BindingResult result) {
+    public String save(HttpServletRequest request, HttpServletResponse response, 
+            @ModelAttribute("user") final UserSignUpForm u, BindingResult result) {
         if (result.hasErrors()) {
             return "usersignup";
 
@@ -60,11 +65,11 @@ public class UserSignUpController extends AbstractController {
                 result.rejectValue("userName", "UserSignUpForm.userName[unique]");
                 return "usersignup";
             }else{
-
+                final String contextPath = ContentInitialiserService.getRequestURL(request);
                 User saveResult = doInTransaction(new TransactionCallback<User>() {
                     public User doInTransaction(TransactionStatus status) {
                         return registrationService.signUp(u.getUserName(), u.getEmailAddress(), u.getFirstName(),
-                                                          u.getLastName(), u.getPassword());
+                                                          u.getLastName(), u.getPassword(), contextPath);
                     }
                 });
 

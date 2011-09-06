@@ -16,6 +16,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -38,13 +39,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -153,7 +147,10 @@ public class ApplicationService extends AbstractController {
         JSONArray taxonGroupArray = new JSONArray();
         JSONArray censusMethodArray = new JSONArray();
         for (Attribute a : survey.getAttributes()) {
-            attArray.add(a.flatten(1, true, true));
+            // Not sending any location scoped attributes because they do not get populated by the recording form.
+            if(!AttributeScope.LOCATION.equals(a.getScope())) {
+                attArray.add(a.flatten(1, true, true));
+            }
         }
         log.debug("Flattened attributes in  :" + (System.currentTimeMillis() - now));now = System.currentTimeMillis();
         

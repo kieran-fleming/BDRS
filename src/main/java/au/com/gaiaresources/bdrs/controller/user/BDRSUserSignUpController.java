@@ -1,5 +1,8 @@
 package au.com.gaiaresources.bdrs.controller.user;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,6 +19,7 @@ import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaProtected;
 
 @Controller
@@ -43,7 +47,8 @@ public class BDRSUserSignUpController extends AbstractController {
      * @return
      */
     @RequestMapping(value = "/bdrs/usersignup.htm", method = RequestMethod.POST)
-    public String save(@ModelAttribute("user") final UserSignUpForm u, BindingResult result) {
+    public String save(HttpServletRequest request, HttpServletResponse response, 
+            @ModelAttribute("user") final UserSignUpForm u, BindingResult result) {
         if (result.hasErrors()) {
             return "usersignup";
 
@@ -55,11 +60,12 @@ public class BDRSUserSignUpController extends AbstractController {
                 return "usersignup";
 
             } else {
-
+                final String contextPath = ContentInitialiserService.getRequestURL(request);
+                
                 User saveResult = doInTransaction(new TransactionCallback<User>() {
                     public User doInTransaction(TransactionStatus status) {
                         return registrationService.signUp(u.getEmailAddress(), u.getEmailAddress(), u.getFirstName(),
-                                                          u.getLastName(), u.getPassword(), "ROLE_USER");
+                                                          u.getLastName(), u.getPassword(), contextPath, "ROLE_USER");
                     }
                 });
 

@@ -75,24 +75,26 @@
 /*****************************************/
 /* Styling for the popups in viewMap.jsp */
 /*****************************************/
-.olFramedCloudPopupContent h1 {
+#content .olFramedCloudPopupContent h1 {
 	color: #333333;
     font-size: 135%;
     font-weight: bold;
     padding: 10px 0;
 }
 
-.olFramedCloudPopupContent table {
-	
+#content .olFramedCloudPopupContent table {
+
 }
 
-.olFramedCloudPopupContent th,
-.olFramedCloudPopupContent td {
+#content .olFramedCloudPopupContent tr,
+#content .olFramedCloudPopupContent th,
+#content .olFramedCloudPopupContent td {
+    line-height: normal;
     padding: 0;
     margin: 0;
 }
 
-.olFramedCloudPopupContent tbody th {
+#content .olFramedCloudPopupContent tbody th {
     text-align: right;
     padding-right: 1em;
 }
@@ -451,8 +453,9 @@ html {
     background: #ECECEC;
 }
 
+/* so the embedded widget blend seamlessly into target page */
 html.embed {
-    background: white;
+    background: transparent;
 }
 
 .maximise {
@@ -1138,4 +1141,12 @@ h3.field_guide_header {
 .messageUserMiniMap {
     width:400px;
 	height:300px;
+}
+
+/**************************************/
+/*   bulk data download templates and */
+/*   upload records                   */
+/**************************************/
+table.bulkDataTableForm tbody tr th {
+	width: 30%
 }

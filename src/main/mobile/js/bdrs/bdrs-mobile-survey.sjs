@@ -2,7 +2,7 @@
  * Retrieves the users surveys from the server
  * and stores them on the device.
  */
-exports.getAllRemote = function() {
+exports.getAllRemote = function(callback) {
 	var response;
 	waitfor(response) {
 		var jqxhr = jQuery.ajax(
@@ -43,9 +43,9 @@ exports.getAllRemote = function() {
 		}	
 		waitfor() {
 			persistence.flush(resume);
-		}			
+		}
 	}
-	
+	callback();
 },
 
 /**
@@ -187,8 +187,16 @@ exports.save = function(id,data){
 
 	bdrs.mobile.Debug(" startspecies (" + data.indicatorSpecies.length + ")");
 	var counter = 0;
+	
+	//get array of server_ids of species that exist in this survey
+	var indicatorSpeciesServerIds = data.indicatorSpecies_server_ids.species;
+	
+	//A). Create new database species and add them to the survey
 	for ( var i = 0; i < data.indicatorSpecies.length; i++) {
 		var species = data.indicatorSpecies[i];
+		
+		//Remove server_id of species from the indicatorSpeciesServerIds list as the information of the species is already in data.indicatorSpecies.
+		indicatorSpeciesServerIds.splice(indicatorSpeciesServerIds.indexOf(species.server_id),1);
 		
 		// create a species
 		var sp = new Species({
@@ -319,8 +327,32 @@ exports.save = function(id,data){
       			});
 			}
 		}
+		
+		//save species in survey
+		var survey;
+		waitfor(survey) {
+			Survey.findBy('server_id', data.indicatorSpecies_server_ids.id, resume);
+		}
+		survey.species().add(sp);
 	}
-	
+
+	//B). Add references from species to this survey for species that already exist in another survey.
+	for ( var j = 0; j < indicatorSpeciesServerIds.length; j++) {
+		var species_server_id = indicatorSpeciesServerIds[j];
+		//get  existing species
+		var existingSpecies;
+		waitfor(existingSpecies){
+			Species.findBy('server_id', species_server_id, resume);
+		}
+		//get survey
+		var survey;
+		waitfor(survey) {
+			Survey.findBy('server_id', data.indicatorSpecies_server_ids.id, resume);
+		}
+		//add existing species to survey
+		survey.species().add(existingSpecies);
+	}
+
 	bdrs.mobile.Debug("stop species and attributes: " + new Date());
 	waitfor() {
 		persistence.flush(function() {

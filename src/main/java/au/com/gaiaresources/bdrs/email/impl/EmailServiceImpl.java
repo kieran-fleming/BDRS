@@ -15,6 +15,7 @@ import org.springframework.mail.javamail.MimeMessagePreparator;
 
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
@@ -70,8 +71,12 @@ public class EmailServiceImpl implements EmailService {
         // first check the contentDAO for the template
         // if it is not found, use the file system template
         String templateString = contentDAO.getContentValue(
-            "email/"+templateName.substring(0, templateName.indexOf(".")));
+            "email/"+templateName.substring(0, templateName.indexOf(".")), 
+            (Portal) subsitutionParams.get("portal"),
+            (String) subsitutionParams.get("contextPath"));
         String text = "";
+        // this is probably unnecessary now as the contentDAO should handle loading 
+        // the file system value when the value does not exist
         if (!StringUtils.nullOrEmpty(templateString)) {
             text = templateService.evaluate(templateString, subsitutionParams);
         } else {

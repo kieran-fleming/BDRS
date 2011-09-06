@@ -76,6 +76,8 @@
 		        
 		        <value>au.com.gaiaresources.bdrs.model.theme.Theme</value>
 		        <value>au.com.gaiaresources.bdrs.model.theme.ThemeElement</value>
+		        <value>au.com.gaiaresources.bdrs.model.theme.ThemePage</value>
+		        
 		        <value>au.com.gaiaresources.bdrs.model.method.CensusMethod</value>
 		        <value>au.com.gaiaresources.bdrs.model.map.GeoMapLayer</value>
 		        <value>au.com.gaiaresources.bdrs.model.map.GeoMap</value>

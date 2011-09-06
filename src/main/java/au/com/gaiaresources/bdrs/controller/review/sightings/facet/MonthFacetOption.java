@@ -25,7 +25,7 @@ public class MonthFacetOption extends FacetOption {
     }
 
     public Predicate getPredicate() {
-        return new Predicate("month(record.when) = ?)", month.intValue());
+        return new Predicate("(month(record.when) = ?)", month.intValue());
     }
     
 }

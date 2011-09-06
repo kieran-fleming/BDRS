@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
+
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
@@ -32,11 +34,6 @@ import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyService;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 
 public class XlsRecordRow implements RecordRow {
 
@@ -102,7 +99,13 @@ public class XlsRecordRow implements RecordRow {
             headerCell.setCellValue(entry.getKey());
             setCellStyle(headerCell, recordHeaderStyle);
         }
-        colIndex = writeAttributeHeader(survey.getAttributes(), superHeaderRow, row, colIndex, recordHeaderStyle);
+        List<Attribute> attributesForHeader = new ArrayList<Attribute>();
+        for(Attribute a : survey.getAttributes()) {
+            if(!AttributeScope.LOCATION.equals(a.getScope())) {
+                attributesForHeader.add(a);
+            }
+        }
+        colIndex = writeAttributeHeader(attributesForHeader, superHeaderRow, row, colIndex, recordHeaderStyle);
         
         for (CensusMethod cm : censusMethods) {
             Cell censusMethodTitleCell = superHeaderRow.createCell(colIndex);
@@ -149,6 +152,8 @@ public class XlsRecordRow implements RecordRow {
         if (rec.getSpecies() != null) {
             colIndex = writeRowTaxonomy(row, rec, colIndex);
         } else {
+            // Two blank cells. One for the scientific name the other for the common name.
+            colIndex = writeRowBlank(row, colIndex);
             colIndex = writeRowBlank(row, colIndex);
         }
 
@@ -162,6 +167,8 @@ public class XlsRecordRow implements RecordRow {
         colIndex = writeRowTime(row, rec, colIndex);
         if (rec.getNumber() != null) {
             colIndex = writeRowCount(row, rec, colIndex);
+        } else {
+            colIndex = writeRowBlank(row, colIndex);
         }
         colIndex = writeRowNotes(row, rec, colIndex);
         colIndex = writeRowAttributes(row, rec, colIndex);
@@ -338,26 +345,28 @@ public class XlsRecordRow implements RecordRow {
 
         // Check attribute fields
         for (Attribute attrib : survey.getAttributes()) {
-            if (!AttributeType.FILE.equals(attrib.getType())
-                    && !AttributeType.IMAGE.equals(attrib.getType())) {
-                
-                Cell namespaceCell = superHeaderRow.getCell(colIndex);
-                if (namespaceCell != null) {
-                    String value = namespaceCell.getStringCellValue();
-                    if (StringUtils.hasLength(value)) {
-                        namespaceHeaderIdx.put(colIndex, namespaceCell.getStringCellValue());
-                    }
-                }
+            if(!AttributeScope.LOCATION.equals(attrib.getScope())) {
+                if (!AttributeType.FILE.equals(attrib.getType())
+                        && !AttributeType.IMAGE.equals(attrib.getType())) {
 
-                headerName = attrib.getDescription();
-                cellValue = row.getCell(colIndex++).getStringCellValue();
-                if (!headerName.equals(cellValue)) {
-                    // The header does not exactly match what we expect
-                    throw new ParseException("Unexpected header value \""
-                            + cellValue + "\"", colIndex);
+                    Cell namespaceCell = superHeaderRow.getCell(colIndex);
+                    if (namespaceCell != null) {
+                        String value = namespaceCell.getStringCellValue();
+                        if (StringUtils.hasLength(value)) {
+                            namespaceHeaderIdx.put(colIndex, namespaceCell.getStringCellValue());
+                        }
+                    }
+
+                    headerName = attrib.getDescription();
+                    cellValue = row.getCell(colIndex++).getStringCellValue();
+                    if (!headerName.equals(cellValue)) {
+                        // The header does not exactly match what we expect
+                        throw new ParseException("Unexpected header value \""
+                                + cellValue + "\"", colIndex);
+                    }
+                    attributeHeader.add(headerName);
+                    completeHeader.add(headerName);
                 }
-                attributeHeader.add(headerName);
-                completeHeader.add(headerName);
             }
         }
         
@@ -467,9 +476,11 @@ public class XlsRecordRow implements RecordRow {
         //Map<String, Attribute> attributeMap = new HashMap<String, Attribute>();
         namedAttributeMap.put(SURVEY_ATTR_NAMESPACE, new HashMap<String, Attribute>());
         for (Attribute attr : survey.getAttributes()) {
-            //attributeMap.put(attr.getDescription(), attr);
-            //namedAttributeMap.put()
-            namedAttributeMap.get(SURVEY_ATTR_NAMESPACE).put(attr.getDescription(), attr);
+            if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                //attributeMap.put(attr.getDescription(), attr);
+                //namedAttributeMap.put()
+                namedAttributeMap.get(SURVEY_ATTR_NAMESPACE).put(attr.getDescription(), attr);
+            }
         }
         
         for (CensusMethod cm : censusMethods) {

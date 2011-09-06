@@ -2,9 +2,15 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
-<h1>Choose User Locations</h1>
+<tiles:insertDefinition name="title">
+    <tiles:putAttribute name="title" value="Choose User Locations"/>
+</tiles:insertDefinition>
+
 <p>
-    Click on the map below to add a location for this user.
+    Here you can set up your commonly visited sampling or work locations.  
+	By setting up locations through this form, you will be able to simply pick 
+	the name from a list instead of having to enter co-ordinate information 
+	to the site.  
 </p>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/location/editUserLocations.htm">
     <c:if test="${redirect != null}">

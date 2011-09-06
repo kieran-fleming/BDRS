@@ -3,12 +3,26 @@
 
 <h1>Bulk Data</h1>
 <p>
-    On this page you can contribute a spreadsheet full of records to a project.
+    While you can upload datum one by one through the individual recording forms, 
+	you can also contribute a bulk amount of data through this Bulk Upload page.  
+	There are some restrictions to this:
 </p>
 
-<h3>Select File Format</h3>
+<ul>
+	<li>You have to download a template in either ESRI Shapefile or Microsoft Excel format</li>
+	<li>You then fill out the details in that template, and</li>
+	<li>You then upload the data through the Upload method at the bottom of the form.</li>
+</ul>
+
+<p>
+	Please note: all co-ordinates must be in the Geographic (WGS84) Latitude &ndash; Longitude projection, 
+	and if you are using Excel you must have decimal degrees.  If you change the format of the 
+	template before loading it, it will not pass the upload method.
+</p>
+
+<h3>Step 1: Select File Format</h3>
 <div>
-	<table>
+	<table class="bulkDataTableForm">
         <tbody>
             <tr>
                 <th>
@@ -37,7 +51,7 @@
         </ul>
 	</p>
 	
-	<h3>Download Template Spreadsheet</h3>
+	<h3>Step 2: Download Template Spreadsheet</h3>
 	<div class="textright">
 	    <a id="downloadTemplateToggle" href="javascript: void(0);">Collapse</a>
 	</div>
@@ -47,7 +61,7 @@
 	        locations and a taxonomy checklist included in the downloaded template.
 	    </p>
 	    <form id="downloadTemplateForm" action="${pageContext.request.contextPath}/bulkdata/spreadsheetTemplate.htm" method="get">
-	        <table class="form_table">
+	        <table class="form_table bulkDataTableForm">
 	            <tbody>
 	                <tr>
 	                    <th>
@@ -81,7 +95,7 @@
 	    </form>
 	</div>
 	
-	<h3>Upload Spreadsheet</h3>
+	<h3>Step 3: Upload Spreadsheet</h3>
 	<div class="textright">
 	    <a id="uploadSpreadsheetToggle" href="javascript: void(0);">Collapse</a>
 	</div>
@@ -106,10 +120,10 @@
         </ul>
     </p>
 	
-	<h3>Download Template Shapefile</h3>
+	<h3>Step 2: Download Template Shapefile</h3>
 
 	<form id="downloadShapefileTemplateForm" action="${pageContext.request.contextPath}/bulkdata/shapefileTemplate.htm" method="get">
-            <table>
+            <table class="form_table bulkDataTableForm">
                 <tbody>
                 	<tr>
                         <th>
@@ -118,7 +132,7 @@
                         <td>
                             <select id="shapefileType" name="shapefileType">
                                 <option value="POINT">Point</option>
-								<option value="MULTIPOLYGON">Multi-Polygon</option>
+								<option value="MULTI_POLYGON">Multi-Polygon</option>
                             </select>
                         </td>
                     </tr>
@@ -163,14 +177,14 @@
             </div>
         </form>
 	
-	<h3>Upload Shapefile</h3>
+	<h3>Step 3: Upload Shapefile</h3>
     <div>
     	<form id="uploadShapefileForm" action="${pageContext.request.contextPath}/bulkdata/uploadShapefile.htm" method="post" enctype="multipart/form-data">
-		    <table>
+		    <table class="form_table bulkDataTableForm">
 		        <tbody>
 		            <tr>
 		                <th>
-		                    <label class="strong" for="shapefileInput">Shapefile:</label>
+		                    <label class="strong" for="shapefileInput">Upload file:</label>
 		                </th>
 		                <td>
 		                    <input id="shapefileInput" name="shapefile" type="file"/>

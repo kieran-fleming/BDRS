@@ -169,6 +169,7 @@
             width: 'auto',
             modal: true,
             autoOpen: false,
+            zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
             buttons: {
                 "Ok": function() {
                     var rowId = addMapLayerGrid_GridHelper.getSelected();                    

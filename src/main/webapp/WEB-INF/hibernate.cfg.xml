@@ -53,6 +53,7 @@
         
         <mapping class="au.com.gaiaresources.bdrs.model.theme.Theme"/>
         <mapping class="au.com.gaiaresources.bdrs.model.theme.ThemeElement"/>
+        <mapping class="au.com.gaiaresources.bdrs.model.theme.ThemePage"/>
         
         <mapping class="au.com.gaiaresources.bdrs.model.method.CensusMethod"/>
         

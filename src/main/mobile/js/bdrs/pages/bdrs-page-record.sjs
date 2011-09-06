@@ -71,7 +71,7 @@ exports.Create =  function() {
         }
     });
 
-    jQuery('#record-when').datepicker();
+    jQuery('#record-when').datepicker({maxDate: new Date()});
     jQuery('#record-time').timepicker();
 }
 
@@ -216,15 +216,25 @@ exports.Show = function() {
             var scientificName = record.species() === null ? '' : record.species().scientificName();
             jQuery('#record-species').val(scientificName).autocomplete({
                 source: function(request, response) {
-                    var species;
-                    waitfor(species) {
-                        Species.search('*' + request.term + '*').limit(5).list(resume); // @todo add some survey awareness.
-                    }
-                    var names = [];
-                    for (var i = 0; i < species.length; i++) {
-                        names.push({ label : species[i].commonName() + ' - <i>' + species[i].scientificName()+ '</i>', value : species[i].scientificName()});
-                    }
-                    response(names);
+	            	//get current surveyId
+	        		var currentSurveyId;
+	        		waitfor(){
+	        			Settings.findBy('key', 'current-survey-id' , function(setting) {
+	        				currentSurveyId = setting.value();		
+	        				resume();
+	                    });
+	        		}
+	        		//get species for current survey
+	                	Survey.findBy('server_id', currentSurveyId, function(currentSurvey){
+	                		currentSurvey.species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(null,function(speciesList){
+	                			var names = [];
+	                			speciesList.forEach(function(aSpecies){
+	                				//add the names of the found species to the response
+	                                names.push({ label : aSpecies.commonName() + ' - <i>' + aSpecies.scientificName()+ '</i>', value : aSpecies.scientificName()});
+	                			});
+	                			response(names);
+	                		});
+	                	});
                 },
                 change: function(event, ui) {
                     jQuery.mobile.pageLoading(false);

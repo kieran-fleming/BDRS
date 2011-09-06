@@ -48,7 +48,7 @@ bdrs.admin.adminEditContent =  {
 		resetCurrentContent: function() {
             var answer = confirm("Are you sure? The current content will be reset and any changes will be lost!")
             if (answer) {
-                window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm&key=" + getKey();
+                window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm?key=" + bdrs.admin.adminEditContent.getKey();
             }
         },
         clearContent: function() {

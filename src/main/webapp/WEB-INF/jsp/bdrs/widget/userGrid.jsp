@@ -24,7 +24,7 @@
 	    </table>
     </form>
 <div class="buttonpanel textright">
-    <button id="${widgetId}Filter" class="form_action">Filter</button>
+    <input type="button" id="${widgetId}Filter" class="form_action" value="Filter"/>
 </div>
 
 <div id="${widgetId}Wrapper">

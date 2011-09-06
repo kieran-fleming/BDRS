@@ -15,7 +15,15 @@
 
 <html>
     <head>
-        <title><tiles:getAsString name="siteName"/> | <tiles:getAsString name="title"/></title>
+		<c:choose>
+		    <c:when test="${not empty pageTitle}">
+		        <title><tiles:getAsString name="siteName"/> | ${pageTitle}</title>
+		    </c:when>
+		    <c:otherwise>
+		        <title><tiles:getAsString name="siteName"/> | <tiles:getAsString name="title"/></title>
+		    </c:otherwise>
+		</c:choose>
+
         <meta name="keywords" content="<tiles:getAsString name="metaKeywords"/>"/>
         <meta name="description" content="<tiles:getAsString name="metaDescription"/>"/>
         
@@ -81,14 +89,16 @@
                 bdrs.dateFormat = 'dd M yy';
 				
 				<sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_USER">
-				// This stuff isn't used for anything extremely important.
-				// Messing with these will allow you to pull some extra geom data
-				// from mapserver
-				bdrs.authenticated = true;
+				<%--   
+				    This stuff isn't used for anything extremely important.
+				    Messing with these will allow you to pull some extra geom data
+				    from mapserver
+				--%>
+                bdrs.authenticated = true;
                 bdrs.authenticatedUserId = ${authenticatedUserId ? authenticatedUserId : 'null'};
                 bdrs.isAdmin = ${isAdmin ? isAdmin : 'null'};
-				</sec:authorize>
-				
+                </sec:authorize>
+
                 bdrs.init();
                 
                 jQuery('form').ketchup();

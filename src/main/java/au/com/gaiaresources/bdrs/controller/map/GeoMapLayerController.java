@@ -480,7 +480,7 @@ public class GeoMapLayerController extends AbstractController {
         JSONArray itemArray = new JSONArray();
         for (Record record : recList) {
             AccessControlledRecordAdapter recordAdapter = new AccessControlledRecordAdapter(record, accessingUser);
-            itemArray.add(jsonService.toJson(recordAdapter));
+            itemArray.add(jsonService.toJson(recordAdapter, request.getContextPath()));
         }
         for (GeoMapFeature f : gmfList) {
             itemArray.add(jsonService.toJson(f));

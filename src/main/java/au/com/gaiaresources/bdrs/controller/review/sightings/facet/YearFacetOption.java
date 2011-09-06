@@ -21,7 +21,7 @@ public class YearFacetOption extends FacetOption {
     }
 
     public Predicate getPredicate() {
-        return new Predicate("year(record.when) = ?)", year.intValue());
+        return new Predicate("(year(record.when) = ?)", year.intValue());
     }
     
 }

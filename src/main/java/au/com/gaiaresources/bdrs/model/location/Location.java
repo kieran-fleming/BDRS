@@ -3,15 +3,9 @@ package au.com.gaiaresources.bdrs.model.location;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
@@ -42,6 +36,7 @@ public class Location extends PortalPersistentImpl {
     private User user;
     private String name;
     private Set<Region> regions = new HashSet<Region>();
+    private Set<AttributeValue> attributes = new HashSet<AttributeValue>();
 
     /**
      * Get the coordinate of the <code>Location</code>.
@@ -106,4 +101,17 @@ public class Location extends PortalPersistentImpl {
         this.regions = regions;
     }
 
+    @CompactAttribute
+    @OneToMany
+    /**
+     * Get the set of attributes that were recorded for the species.
+     * @return {@link Set} of {@link RecordAttribute}
+     */
+    public Set<AttributeValue> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Set<AttributeValue> attributes) {
+        this.attributes = attributes;
+    }
 }

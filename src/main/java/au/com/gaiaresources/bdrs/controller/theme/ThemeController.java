@@ -53,6 +53,7 @@ import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
+import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
@@ -686,6 +687,24 @@ public class ThemeController extends AbstractController {
                 themeElementList.add(themeElement);
             }
             
+            // delete all of the old theme pages...
+            List<ThemePage> pagesToDelete = themeDAO.getThemePages(theme.getId().intValue());
+            for (ThemePage delPage : pagesToDelete) {
+                themeDAO.delete(delPage);
+            }
+            
+            JSONArray themePageArray = config.getJSONArray("theme_pages");
+
+            for (int i=0; i<themePageArray.size(); ++i) {
+                JSONObject jsonPage = themePageArray.getJSONObject(i);
+                ThemePage page = new ThemePage();
+                page.setKey(jsonPage.getString("key"));
+                page.setTitle(getJsonString(jsonPage, "title"));
+                page.setDescription(getJsonString(jsonPage, "description"));
+                page.setTheme(theme);
+                themeDAO.save(page);
+            }
+            
             theme.setThemeElements(themeElementList);
             themeDAO.save(theme);
             
@@ -695,5 +714,20 @@ public class ThemeController extends AbstractController {
         } catch(JSONException je) {
             throw new JSONException("Error parsing configuration file. There is a format error in the configuration file.", je);
         }
+    }
+    
+    /**
+     * JSONObject will throw an exception if the key does not exist. This
+     * returns gracefully with null
+     * 
+     * @param obj the json object
+     * @param key the key of the property you want to retrieve
+     * @return
+     */
+    private String getJsonString(JSONObject obj, String key) {
+        if (obj.containsKey(key)) {
+            return obj.getString(key);
+        }
+        return null;
     }
 }

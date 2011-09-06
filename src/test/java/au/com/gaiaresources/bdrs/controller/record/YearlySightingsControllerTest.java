@@ -221,84 +221,86 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         Set<AttributeValue> attributeSet = new HashSet<AttributeValue>();
         Map<Attribute, AttributeValue> expectedRecordAttrMap = new HashMap<Attribute, AttributeValue>();
         for(Attribute attr : survey.getAttributes()) {
-            AttributeValue recAttr = new AttributeValue();
-            recAttr.setAttribute(attr);
-            switch (attr.getType()) {
-                case INTEGER:
-                    Integer i = Integer.valueOf(123);
-                    recAttr.setNumericValue(new BigDecimal(i));
-                    recAttr.setStringValue(i.toString());
-                    break;
-                case INTEGER_WITH_RANGE:
-               	 Integer j = Integer.valueOf(intWithRangeValue);
-                    recAttr.setNumericValue(new BigDecimal(j));
-                    recAttr.setStringValue(intWithRangeValue);
-                case DECIMAL:
-                    Double d = new Double(123);
-                    recAttr.setNumericValue(new BigDecimal(d));
-                    recAttr.setStringValue(d.toString());
-                    break;
-                case DATE:
-                    Date date = new Date(System.currentTimeMillis());
-                    recAttr.setDateValue(date);
-                    recAttr.setStringValue(dateFormat.format(date));
-                    break;
-                case STRING_AUTOCOMPLETE:
-                case STRING:
-                    recAttr.setStringValue("This is a test string record attribute");
-                    break;
-                case TEXT:
-                    recAttr.setStringValue("This is a test text record attribute");
-                    break;
-                case STRING_WITH_VALID_VALUES:
-                    recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
-                    break;
-                case BARCODE:
-                    recAttr.setStringValue("#343434");
-                    break;
-                case TIME:
-                    recAttr.setStringValue("12:34");
-                    break;
-                case HTML:
-                case HTML_COMMENT:
-                case HTML_HORIZONTAL_RULE:
-                    recAttr.setStringValue("<hr/>");
-                    break;
-                case MULTI_CHECKBOX:
-	                {
-	                	List<AttributeOption> opts = attr.getOptions(); 
-	                	recAttr.setMultiCheckboxValue(new String[]{
-	                			opts.get(0).getValue(),
-	                			opts.get(1).getValue()
-	                	});
-	            	}
-	                break;
-	            case MULTI_SELECT:
-	            	{
-	                	List<AttributeOption> opts = attr.getOptions(); 
-	                	recAttr.setMultiSelectValue(new String[]{
-	                			opts.get(0).getValue(),
-	                			opts.get(1).getValue()
-	                	});
-	            	}
-	            	break;
-	            case SINGLE_CHECKBOX:
-	            	recAttr.setStringValue(Boolean.FALSE.toString());
-	            	break;
-                case FILE:
-                    recAttr.setStringValue("testDataFile.dat");
-                    break;
-                case IMAGE:
-                    recAttr.setStringValue("testImgFile.png");
-                    break;
-                default:
-                    Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
-                    break;
+            if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                AttributeValue recAttr = new AttributeValue();
+                recAttr.setAttribute(attr);
+                switch (attr.getType()) {
+                    case INTEGER:
+                        Integer i = Integer.valueOf(123);
+                        recAttr.setNumericValue(new BigDecimal(i));
+                        recAttr.setStringValue(i.toString());
+                        break;
+                    case INTEGER_WITH_RANGE:
+                     Integer j = Integer.valueOf(intWithRangeValue);
+                        recAttr.setNumericValue(new BigDecimal(j));
+                        recAttr.setStringValue(intWithRangeValue);
+                    case DECIMAL:
+                        Double d = new Double(123);
+                        recAttr.setNumericValue(new BigDecimal(d));
+                        recAttr.setStringValue(d.toString());
+                        break;
+                    case DATE:
+                        Date date = new Date(System.currentTimeMillis());
+                        recAttr.setDateValue(date);
+                        recAttr.setStringValue(dateFormat.format(date));
+                        break;
+                    case STRING_AUTOCOMPLETE:
+                    case STRING:
+                        recAttr.setStringValue("This is a test string record attribute");
+                        break;
+                    case TEXT:
+                        recAttr.setStringValue("This is a test text record attribute");
+                        break;
+                    case STRING_WITH_VALID_VALUES:
+                        recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
+                        break;
+                    case BARCODE:
+                        recAttr.setStringValue("#343434");
+                        break;
+                    case TIME:
+                        recAttr.setStringValue("12:34");
+                        break;
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        recAttr.setStringValue("<hr/>");
+                        break;
+                    case MULTI_CHECKBOX:
+                        {
+                            List<AttributeOption> opts = attr.getOptions();
+                            recAttr.setMultiCheckboxValue(new String[]{
+                                    opts.get(0).getValue(),
+                                    opts.get(1).getValue()
+                            });
+                        }
+                        break;
+                    case MULTI_SELECT:
+                        {
+                            List<AttributeOption> opts = attr.getOptions();
+                            recAttr.setMultiSelectValue(new String[]{
+                                    opts.get(0).getValue(),
+                                    opts.get(1).getValue()
+                            });
+                        }
+                        break;
+                    case SINGLE_CHECKBOX:
+                        recAttr.setStringValue(Boolean.FALSE.toString());
+                        break;
+                    case FILE:
+                        recAttr.setStringValue("testDataFile.dat");
+                        break;
+                    case IMAGE:
+                        recAttr.setStringValue("testImgFile.png");
+                        break;
+                    default:
+                        Assert.assertTrue("Unknown Attribute Type: "+attr.getType().toString(), false);
+                        break;
+                }
+
+                recAttr = recordDAO.saveAttributeValue(recAttr);
+                attributeSet.add(recAttr);
+                expectedRecordAttrMap.put(attr, recAttr);
             }
-            
-            recAttr = recordDAO.saveAttributeValue(recAttr);
-            attributeSet.add(recAttr);
-            expectedRecordAttrMap.put(attr, recAttr);
         }
         
         // Add a record to the Survey

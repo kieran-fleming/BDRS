@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -31,11 +32,6 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.util.DateFormatter;
@@ -292,7 +288,9 @@ public class RecordDeserializer {
             Map<Attribute, String> attrFilenameMap = attrDictFact.createFileKeyDictionary(survey, taxonGroup, censusMethod);
 
             for(Attribute attr : survey.getAttributes()) {
-                isValid = isValid & attributeParser.validate(validator, attrNameMap.get(attr), attrFilenameMap.get(attr), attr, params, entry.getFileMap());
+                if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                    isValid = isValid & attributeParser.validate(validator, attrNameMap.get(attr), attrFilenameMap.get(attr), attr, params, entry.getFileMap());
+                }
             }
             if(species != null) {
                 for(Attribute attr : species.getTaxonGroup().getAttributes()) {
@@ -436,16 +434,18 @@ public class RecordDeserializer {
     
             // Survey Attributes
             for (Attribute attribute : survey.getAttributes()) {
-                recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), attribute, record, entry.getDataMap(), entry.getFileMap());
-                if (attributeParser.isAddOrUpdateAttribute()) {
-                    recAttr = recordDAO.saveAttributeValue(recAttr);
-                    if (attributeParser.getAttrFile() != null) {
-                        fileService.createFile(recAttr, attributeParser.getAttrFile());
+                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), attribute, record, entry.getDataMap(), entry.getFileMap());
+                    if (attributeParser.isAddOrUpdateAttribute()) {
+                        recAttr = recordDAO.saveAttributeValue(recAttr);
+                        if (attributeParser.getAttrFile() != null) {
+                            fileService.createFile(recAttr, attributeParser.getAttrFile());
+                        }
+                        record.getAttributes().add(recAttr);
+                    } else {
+                        record.getAttributes().remove(recAttr);
+                        attrValuesToDelete.add(recAttr);
                     }
-                    record.getAttributes().add(recAttr);
-                } else {
-                    record.getAttributes().remove(recAttr);
-                    attrValuesToDelete.add(recAttr);
                 }
             }
             

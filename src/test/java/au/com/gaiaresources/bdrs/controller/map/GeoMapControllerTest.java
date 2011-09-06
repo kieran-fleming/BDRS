@@ -384,7 +384,7 @@ public class GeoMapControllerTest extends AbstractControllerTest {
         request.setMethod("GET");
         request.setRequestURI(GeoMapController.VIEW_MAP_URL);
         request.setParameter(GeoMapController.GEO_MAP_PK_VIEW, map4.getId().toString());
-        ModelAndView mv = handle(request, response);
+        handle(request, response);
         
         Assert.assertEquals(401, response.getStatus());
     }

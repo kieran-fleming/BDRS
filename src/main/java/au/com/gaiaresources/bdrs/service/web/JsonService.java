@@ -3,10 +3,8 @@ package au.com.gaiaresources.bdrs.service.web;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -17,7 +15,6 @@ import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.model.map.GeoMapFeature;
 import au.com.gaiaresources.bdrs.model.record.AccessControlledRecordAdapter;
-import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 
@@ -58,7 +55,14 @@ public class JsonService {
      * @param hideDetails - whether or not we should hide the details of the record. In general, on a public map we will hide the details
      * @return
      */
-    public JSONObject toJson(AccessControlledRecordAdapter record, boolean hideDetails) {
+    public JSONObject toJson(AccessControlledRecordAdapter record, String contextPath) {
+        if (contextPath == null) {
+            throw new IllegalArgumentException("String, contextPath, cannot be null");
+        }
+        if (record == null) {
+            throw new IllegalArgumentException("AccessControlledRecordAdapter, record, cannot be null");
+        }
+        
         Map<String, Object> attrMap = new HashMap<String, Object>(16);
         
         addToAttributeMap(attrMap, RECORD_KEY_USER, record.getUser().getFirstName() + " " + record.getUser().getLastName());
@@ -77,7 +81,7 @@ public class JsonService {
         }
         addToAttributeMap(attrMap, RECORD_KEY_NOTES, record.getNotes());
         addToAttributeMap(attrMap, RECORD_KEY_HABITAT, record.getHabitat());
-        addToAttributeMap(attrMap, JSON_KEY_ATTRIBUTES, getOrderedAttributes(record.getOrderedAttributes()));
+        addToAttributeMap(attrMap, JSON_KEY_ATTRIBUTES, getOrderedAttributes(record.getOrderedAttributes(), contextPath));
         addToAttributeMap(attrMap, RECORD_KEY_BEHAVIOUR, record.getBehaviour());   
         
         addToAttributeMap(attrMap, RECORD_KEY_WHEN, record.getWhen().getTime());
@@ -93,15 +97,13 @@ public class JsonService {
         return JSONObject.fromObject(attrMap);
     }
     
-    public JSONObject toJson(AccessControlledRecordAdapter recordAdapter) {
-        return toJson(recordAdapter, false);
-    }
-    
     public JSONObject toJson(GeoMapFeature feature) {
         Map<String, Object> attrMap = new HashMap<String, Object>(3);
         attrMap.put(JSON_KEY_ID, feature.getId());
         attrMap.put(JSON_KEY_TYPE, JSON_ITEM_TYPE_MAP_FEATURE);
-        attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(feature.getOrderedAttributes()));
+        // it's ok to use an empty context path here since GeoMapFeatures cannot have file attributes
+        // which is the only type that requires the contextPath to create the download link
+        attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(feature.getOrderedAttributes(), ""));
         return JSONObject.fromObject(attrMap);
     }
     
@@ -114,15 +116,15 @@ public class JsonService {
         }
     }
     
-    private JSONArray getOrderedAttributes(List<AttributeValue> attributeValues) {
+    private JSONArray getOrderedAttributes(List<AttributeValue> attributeValues, String contextPath) {
         JSONArray array = new JSONArray();
         for (AttributeValue av : attributeValues) {
-            array.add(toJson(av));
+            array.add(toJson(av, contextPath));
         }
         return array;
     }
     
-    private JSONObject toJson(AttributeValue av) {
+    private JSONObject toJson(AttributeValue av, String contextPath) {
         Attribute attr = av.getAttribute();
         JSONObject obj = new JSONObject();
         String key = StringUtils.hasLength(attr.getDescription()) ? attr.getDescription() : attr.getName();
@@ -146,13 +148,26 @@ public class JsonService {
 		    case STRING_WITH_VALID_VALUES:
 		        obj.accumulate(key, av.getStringValue());
 		        break;
+		    // allow download of files and image attribute types
 		    case IMAGE:
 		    case FILE:
-		        // ignore
+		        obj.accumulate(key, getAttributeValueFileDownloadLink(av, contextPath));
 		        break;
 		    default:
 		        // ignore
         }
         return obj;
+    }
+    
+    private String getAttributeValueFileDownloadLink(AttributeValue av, String contextPath) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<a href=\"");
+        sb.append(contextPath);
+        sb.append("/files/download.htm?className=au.com.gaiaresources.bdrs.model.taxa.AttributeValue&id=");
+        sb.append(av.getId().toString());
+        sb.append("&fileName=");
+        sb.append(av.getStringValue());
+        sb.append("\">Download file</a>");
+        return sb.toString();
     }
 }

@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import junit.framework.Assert;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONNull;
@@ -47,12 +48,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.util.CSVUtils;
@@ -512,7 +507,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         List<Map<String,Object>> recAttrs = new ArrayList<Map<String, Object>>();
         if(record == null) {
             for(Attribute attr : survey.getAttributes()) {
-                if(!AttributeType.FILE.equals(attr.getType())) {
+                if(!AttributeType.FILE.equals(attr.getType()) && !AttributeScope.LOCATION.equals(attr.getScope())) {
                     recAttrs.add(createJSONRecordAttribute(attr, null, blankRecAttr));
                 }
             }

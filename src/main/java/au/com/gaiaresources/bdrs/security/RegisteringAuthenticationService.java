@@ -31,7 +31,6 @@ public class RegisteringAuthenticationService extends AuthenticationService {
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException, DataAccessException {
     	User u = userDAO.getUser(userName);
         if (u == null) {
-        	UsernameNotFoundException e = new UsernameNotFoundException("User " + userName + " not found.");
         	// new user, need to create
     		u = userDAO.createUser(userName, 
     				"", // first

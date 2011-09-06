@@ -60,4 +60,32 @@ public interface ThemeDAO {
      * @return the theme element specified by the primary key.
      */
     public ThemeElement getThemeElement(int themeElementId);
+    
+    /**
+     * Gets the list of customised theme pages for the theme id no matter the portal
+     * @param themeId the primary key of the theme to get pages for
+     * @return the list of pages
+     */
+    public List<ThemePage> getThemePages(int themeId);
+    
+    /**
+     * Get the theme page for the given theme id and the page key
+     * @param themeId the primary key of the theme the page belongs to
+     * @param key the unique key that links the page to a view
+     * @return
+     */
+    public ThemePage getThemePage(int themeId, String key);
+    
+    /**
+     * Deletes the theme page
+     * @param page the page to be deleted
+     */
+    public void delete(ThemePage page);
+    
+    /**
+     * Saves a theme page
+     * @param page the page to be saved
+     * @return the saved page
+     */
+    public ThemePage save(ThemePage page);
 }

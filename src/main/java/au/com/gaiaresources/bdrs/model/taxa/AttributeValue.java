@@ -1,14 +1,11 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
-import java.io.IOError;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import javax.persistence.AttributeOverride;
@@ -26,14 +23,11 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.util.CSVUtils;
+
 
 /**
  * The value of an attribute attached to a record.

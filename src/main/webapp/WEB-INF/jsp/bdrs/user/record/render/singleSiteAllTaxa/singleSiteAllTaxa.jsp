@@ -160,7 +160,7 @@
         }
     }
 
-    jQuery(function() {
+    jQuery(window).load(function() {
         var layerName = bdrs.survey.location.LAYER_NAME;
         bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
         bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);

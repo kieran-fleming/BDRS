@@ -39,7 +39,7 @@ public class DoubleValidator extends AbstractValidator {
             String value = getSingleParameter(parameterMap, key);
             if (value != null && !value.isEmpty()) {
                 try {
-                    double val = Double.parseDouble(value);
+                    Double.parseDouble(value);
                     // Otherwise it is valid
                 } catch (NumberFormatException nfe) {
                     if(blank) {

@@ -101,11 +101,15 @@ input[type=button].form_action {
     /* Drop Shadow */
     /*box-shadow: 0px 0px 8px #DBDBDB;
     -moz-box-shadow: 0px 0px 8px #DBDBDB;
-    -webkit-box-shadow: 0px 0px 8px #DBDBDB;
-    -ms-filter: /* IE8+ */
+    -webkit-box-shadow: 0px 0px 8px #DBDBDB;*/
+    /* IE8+ */
+    /*-ms-filter: 
         "filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=0, OffY=0, Color=#DBDBDB, Positive=true)"
         ;
-    filter: /* IE<8 */ filter : progid :
+        */
+    /* IE<8 */
+    /*
+    filter:  filter : progid :
         DXImageTransform.Microsoft.dropshadow ( OffX = 0, OffY = 0, Color =
         #DBDBDB, Positive = true );*/
 }

@@ -1,20 +1,20 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+
 <%@page import="java.awt.Color"%>
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
-<c:choose>
-	<c:when test="${not empty pageTitle}">
-		<h1>${pageTitle}</h1>
-	</c:when>
-	<c:otherwise>
-		<h1>My Sightings</h1>
-	</c:otherwise>
-</c:choose>
+<tiles:insertDefinition name="title">
+    <tiles:putAttribute name="title" value="My Sightings"/>
+</tiles:insertDefinition>
 
 <p>
-    Filter your records by
+	This form allows you to filter your records very simply, by project, 
+	by a date range and by the number you want to display on the map.  
+	By changing these fields, the map and the list below the map will update 
+	when you click on "Load Records"
 </p>
 
 <form id="record_filter_form" method="get" action="${pageContext.request.contextPath}/map/addRecordBaseMapLayer.htm">
@@ -282,7 +282,11 @@
         });
 
         jQuery("#record_filter_form").submit();
+		
+		// In order to force correct map centering in IE7 when there are no records to center over
+        jQuery("#record_base_map").removeClass("defaultmap");
         bdrs.map.centerMap(bdrs.map.baseMap);
+        jQuery("#record_base_map").addClass("defaultmap");
     });
 
 </script>

@@ -10,6 +10,7 @@ import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFacto
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 
 public class TrackerFormAttributeDictionaryFactory implements
@@ -28,8 +29,10 @@ public class TrackerFormAttributeDictionaryFactory implements
         
         if (survey.getAttributes() != null) {
             for (Attribute attribute : survey.getAttributes()) {
-                String paramKey = WebFormAttributeParser.getFileKey("", attribute);
-                addKey(result, check, paramKey, attribute, "Survey");
+                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    String paramKey = WebFormAttributeParser.getFileKey("", attribute);
+                    addKey(result, check, paramKey, attribute, "Survey");
+                }
             }
         }
         
@@ -62,8 +65,10 @@ public class TrackerFormAttributeDictionaryFactory implements
         
         if (survey.getAttributes() != null) {
             for (Attribute attribute : survey.getAttributes()) {
-                String paramKey = WebFormAttributeParser.getParamKey("", attribute);
-                addKey(result, check, paramKey, attribute, "Survey");
+                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    String paramKey = WebFormAttributeParser.getParamKey("", attribute);
+                    addKey(result, check, paramKey, attribute, "Survey");
+                }
             }
         }
         

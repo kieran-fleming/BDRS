@@ -26,7 +26,7 @@ public class UserSignupControllerTest extends AbstractControllerTest {
         request.setAttribute("user", u);
       
         BindingResult bresult = new BeanPropertyBindingResult(u, "user");
-        controller.save(u, bresult);
+        controller.save(request, response, u, bresult);
         
         User newuser = userDAO.getUser("jimmy");
         Assert.assertEquals("jimmy", newuser.getName());

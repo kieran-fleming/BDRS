@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
@@ -119,8 +120,10 @@ public class ShapefileAttributeDictionaryFactory implements
         for (Survey survey : surveyList) {
             if (survey.getAttributes() != null) {
                 for (Attribute attribute : survey.getAttributes()) {
-                    String paramKey = attribute.getName();
-                    addKey(result, check, paramKey, attribute, "Survey");
+                    if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                        String paramKey = attribute.getName();
+                        addKey(result, check, paramKey, attribute, "Survey");
+                    }
                 }
             }
         }

@@ -325,89 +325,90 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             Map<Attribute, Object> valueMap;
             recordScopeAttributeValueMapping.put(taxon, attributeValueMapping);
             for (Attribute attr : survey.getAttributes()) {
+                if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                    if (AttributeScope.SURVEY.equals(attr.getScope())) {
+                        prefix = surveyPrefix;
+                        valueMap = surveyScopeAttributeValueMapping;
+                    } else {
+                        prefix = recordPrefix;
+                        valueMap = attributeValueMapping;
+                    }
 
-                if (AttributeScope.SURVEY.equals(attr.getScope())) {
-                    prefix = surveyPrefix;
-                    valueMap = surveyScopeAttributeValueMapping;
-                } else {
-                    prefix = recordPrefix;
-                    valueMap = attributeValueMapping;
-                }
+                    key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, prefix, attr.getId());
+                    value = "";
 
-                key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, prefix, attr.getId());
-                value = "";
-
-                switch (attr.getType()) {
-                case INTEGER:
-                    Integer val = Integer.valueOf(sightingIndex + 30);
-                    value = val.toString();
-                    valueMap.put(attr, val);
-                    break;
-                case INTEGER_WITH_RANGE:
-                	valueMap.put(attr, intWithRangeValue);
-                    break;
-                case DECIMAL:
-                    value = String.format("50.%d", sightingIndex);
-                    valueMap.put(attr, Double.parseDouble(value));
-                    break;
-                case DATE:
-                    Date date = new Date(System.currentTimeMillis());
-                    value = dateFormat.format(date);
-                    // Reparsing the date strips out the hours, minutes and seconds
-                    valueMap.put(attr, dateFormat.parse(value));
-                    break;
-                case STRING_AUTOCOMPLETE:
-                case STRING:
-                case BARCODE:
-                case TIME:
-                case HTML:
-                case HTML_COMMENT:
-                case HTML_HORIZONTAL_RULE:
-                    value = String.format("String %d", sightingIndex);
-                    valueMap.put(attr, value);
-                    break;
-                case TEXT:
-                    value = String.format("Text %d", sightingIndex);
-                    valueMap.put(attr, value);
-                    break;
-                case STRING_WITH_VALID_VALUES:
-                    value = attr.getOptions().get(sightingIndex).getValue();
-                    valueMap.put(attr, value);
-                    break;
-                case MULTI_CHECKBOX:
-                case MULTI_SELECT:
-                	List<AttributeOption> opts = attr.getOptions(); 
-                	request.addParameter(key, opts.get(0).getValue());
-                	request.addParameter(key, opts.get(1).getValue());
-                	value = null;
-                	break;
-                case SINGLE_CHECKBOX:
-                	value = String.valueOf(true);
-                	valueMap.put(attr, value);
-                	break;
-                case FILE:
-                    String file_filename = String.format("attribute_%d", attr.getId());
-                    MockMultipartFile mockFileFile = new MockMultipartFile(key,
-                            file_filename, "audio/mpeg",
-                            file_filename.getBytes());
-                    ((MockMultipartHttpServletRequest) request).addFile(mockFileFile);
-                    valueMap.put(attr, mockFileFile);
-                    break;
-                case IMAGE:
-                    String image_filename = String.format("attribute_%d", attr.getId());
-                    MockMultipartFile mockImageFile = new MockMultipartFile(
-                            key, image_filename, "image/png",
-                            image_filename.getBytes());
-                    ((MockMultipartHttpServletRequest) request).addFile(mockImageFile);
-                    valueMap.put(attr, mockImageFile);
-                    break;
-                default:
-                    Assert.assertTrue("Unknown Attribute Type: "
-                            + attr.getType().toString(), false);
-                    break;
-                }
-                if(value != null) {
-                	params.put(key, value);
+                    switch (attr.getType()) {
+                    case INTEGER:
+                        Integer val = Integer.valueOf(sightingIndex + 30);
+                        value = val.toString();
+                        valueMap.put(attr, val);
+                        break;
+                    case INTEGER_WITH_RANGE:
+                        valueMap.put(attr, intWithRangeValue);
+                        break;
+                    case DECIMAL:
+                        value = String.format("50.%d", sightingIndex);
+                        valueMap.put(attr, Double.parseDouble(value));
+                        break;
+                    case DATE:
+                        Date date = new Date(System.currentTimeMillis());
+                        value = dateFormat.format(date);
+                        // Reparsing the date strips out the hours, minutes and seconds
+                        valueMap.put(attr, dateFormat.parse(value));
+                        break;
+                    case STRING_AUTOCOMPLETE:
+                    case STRING:
+                    case BARCODE:
+                    case TIME:
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        value = String.format("String %d", sightingIndex);
+                        valueMap.put(attr, value);
+                        break;
+                    case TEXT:
+                        value = String.format("Text %d", sightingIndex);
+                        valueMap.put(attr, value);
+                        break;
+                    case STRING_WITH_VALID_VALUES:
+                        value = attr.getOptions().get(sightingIndex).getValue();
+                        valueMap.put(attr, value);
+                        break;
+                    case MULTI_CHECKBOX:
+                    case MULTI_SELECT:
+                        List<AttributeOption> opts = attr.getOptions();
+                        request.addParameter(key, opts.get(0).getValue());
+                        request.addParameter(key, opts.get(1).getValue());
+                        value = null;
+                        break;
+                    case SINGLE_CHECKBOX:
+                        value = String.valueOf(true);
+                        valueMap.put(attr, value);
+                        break;
+                    case FILE:
+                        String file_filename = String.format("attribute_%d", attr.getId());
+                        MockMultipartFile mockFileFile = new MockMultipartFile(key,
+                                file_filename, "audio/mpeg",
+                                file_filename.getBytes());
+                        ((MockMultipartHttpServletRequest) request).addFile(mockFileFile);
+                        valueMap.put(attr, mockFileFile);
+                        break;
+                    case IMAGE:
+                        String image_filename = String.format("attribute_%d", attr.getId());
+                        MockMultipartFile mockImageFile = new MockMultipartFile(
+                                key, image_filename, "image/png",
+                                image_filename.getBytes());
+                        ((MockMultipartHttpServletRequest) request).addFile(mockImageFile);
+                        valueMap.put(attr, mockImageFile);
+                        break;
+                    default:
+                        Assert.assertTrue("Unknown Attribute Type: "
+                                + attr.getType().toString(), false);
+                        break;
+                    }
+                    if(value != null) {
+                        params.put(key, value);
+                    }
                 }
             }
             sightingIndex += 1;

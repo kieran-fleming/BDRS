@@ -8,7 +8,10 @@ bdrs_embed = {
         frame.setAttribute('src', 'http://${ domain }:${ port }${ contextPath }/bdrs/public/embedded/redirect.htm?a=b<c:forEach var="entry" items="${ paramMap }"><jsp:useBean id="entry" type="java.util.Map.Entry"/>&<c:out value="${ entry.key }"/>=<%= URLEncoder.encode(String.valueOf(entry.getValue())) %></c:forEach>');
         frame.setAttribute('width', <c:out value="${ width }"/>);
         frame.setAttribute('height', <c:out value="${ height }"/>);
-        frame.setAttribute('style', 'border: none;');
+        frame.setAttribute('style', 'border: none;FILTER: chroma(color=#FFFFFF)');
+		frame.setAttribute('scrolling', 'no');
+		frame.setAttribute('frameborder', '0');
+		frame.setAttribute('allowtransparency', 'true');
         
         <c:choose>
 	        <c:when test="${ targetId == null }">

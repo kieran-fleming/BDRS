@@ -34,7 +34,7 @@ $.fn.ketchup.messages = {
   'uniqueAndRequired':  'All values must be unique and not blank.',
   'time':				'Must be of format hh:mm.',
   'timeOrBlank':		'Must be of format hh:mm or blank.',
-  'optionallyTaxonomicSpeciesAndNumber': 'The Species and Number must both be blank, or both filled in.',
+  'optionallyTaxonomicSpeciesAndNumber': 'The Species and Number must both be blank, or both filled in.<br/>The Species must be an item from the list.',
   'color':              'Must be a valid hex color starting with #',
   'uuid':               'Not a valid file UUID',
   'regExp':				'Must fit regular expression $arg1',

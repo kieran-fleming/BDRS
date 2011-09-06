@@ -17,8 +17,8 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
-import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 
 @Controller
 public class ContentService extends AbstractController {
@@ -31,6 +31,8 @@ public class ContentService extends AbstractController {
     public static final String SUCCESS = "success";
 
     private Logger log = Logger.getLogger(getClass());
+
+    private ContentInitialiserService contentInitService = new ContentInitialiserService();
     
     @RolesAllowed( { Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/webservice/content/saveContent.htm", method = RequestMethod.POST)
@@ -57,27 +59,26 @@ public class ContentService extends AbstractController {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No key passed to load content");
             throw new Exception("No key passed to load content");
         }
-        String content = getContent(key);
+        String content = getContent(key, ContentInitialiserService.getRequestURL(request));
         JSONObject result = new JSONObject();
         result.put("content", content);
         response.getWriter().write(result.toString());
         response.setContentType("application/json");
     }
 
-    private String getContent(String key) throws Exception {
+    private String getContent(String key, String contextPath) throws Exception {
         Content item = contentDAO.getContent(key);
         if (item == null) {
             log.warn("Didn't find content \"" + key + "\" in the DAO, " +
                     "loading default value.");
             // couldn't find the content in the DAO,
             // load the default from the file
-            PortalInitialiser pi = new PortalInitialiser();
             Portal currentPortal = getRequestContext().getPortal();
             if (currentPortal == null) {
                 // something has gone seriously wrong for this to happen...
                 throw new Exception("The portal cannot be null");
             }
-            item = pi.initContent(contentDAO, currentPortal, key, null);
+            item = contentInitService.initContent(contentDAO, currentPortal, key, null, contextPath);
             if (item == null) {
                 log.warn("Couldn't load default for content \"" + key + "\".");
                 return "";

@@ -61,7 +61,6 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
-import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.Interceptor;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaInterceptor;
@@ -105,14 +104,14 @@ public class TestDataCreator implements TestDataConstants {
             count = count + (random.nextBoolean() ? random.nextInt(rand) : -random.nextInt(rand));
         }
         // Always create these user role stereotypes
-        regService.signUp("user", "user@gaiabdrs.com", "user", "user", "password", Role.USER, true);
-        regService.signUp("poweruser", "poweruser@gaiabdrs.com", "poweruser", "poweruser", "password", Role.POWERUSER, true);
-        regService.signUp("supervisor", "supervisor@gaiabdrs.com", "supervisor", "supervisor", "password", Role.SUPERVISOR, true);
+        regService.signUp("user", "user@gaiabdrs.com", "user", "user", "password", null, Role.USER, true);
+        regService.signUp("poweruser", "poweruser@gaiabdrs.com", "poweruser", "poweruser", "password", null, Role.POWERUSER, true);
+        regService.signUp("supervisor", "supervisor@gaiabdrs.com", "supervisor", "supervisor", "password", null, Role.SUPERVISOR, true);
         
         for (int i=0; i<count; ++i) {
             String firstName = generateRandomPersonFirstName();
             String lastName = generateRandomPersonLastName();
-            regService.signUp(firstName.toLowerCase(), firstName + "@gaiabdrs.com", firstName, lastName, firstName.toLowerCase(), Role.USER, true);
+            regService.signUp(firstName.toLowerCase(), firstName + "@gaiabdrs.com", firstName, lastName, firstName.toLowerCase(), null, Role.USER, true);
         }
     }
     
@@ -213,7 +212,7 @@ public class TestDataCreator implements TestDataConstants {
     public void createBasicSurvey() {
         
         String surveyName = "Basic Survey";
-        Metadata surveyLogoMD = new Metadata(Metadata.SURVEY_LOGO, surveyName+".png");
+        //Metadata surveyLogoMD = new Metadata(Metadata.SURVEY_LOGO, surveyName+".png");
         Survey survey = new Survey();
         
         survey.setName(surveyName);

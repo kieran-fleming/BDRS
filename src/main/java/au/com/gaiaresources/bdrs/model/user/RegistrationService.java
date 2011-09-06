@@ -25,7 +25,8 @@ public class RegistrationService {
     private PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
     
     public User signUp(String userName, String emailAddress, String firstName,
-            String lastName, String password, String role, Boolean autoCompleteSignup, Boolean requireAdminApproval) {
+            String lastName, String password, String contextPath, String role, 
+            Boolean autoCompleteSignup, Boolean requireAdminApproval) {
         // Create the user object.
         String encodedPassword = passwordEncoder.encodePassword(password, null);
         String registrationKey = passwordEncoder.encodePassword(StringUtils.generateRandomString(10, 50), userName);
@@ -38,6 +39,7 @@ public class RegistrationService {
         	Map<String, Object> params = new HashMap<String, Object>();
         	params.put("newUser", user);
         	params.put("portal", RequestContextHolder.getContext().getPortal());
+                params.put("contextPath", contextPath);
         	if(requireAdminApproval){
         		// Send approval request email to administrators.
         		 String[] searchRoles = {Role.ADMIN};
@@ -58,18 +60,18 @@ public class RegistrationService {
     }
 
     public User signUp(String userName, String emailAddress, String firstName,
-            String lastName, String password, String role, Boolean autoCompleteSignup) {
-    	return signUp(userName, emailAddress, firstName, lastName, password, role, autoCompleteSignup, false);
+            String lastName, String password, String contextPath, String role, Boolean autoCompleteSignup) {
+    	return signUp(userName, emailAddress, firstName, lastName, password, contextPath, role, autoCompleteSignup, false);
     }
 
     public User signUp(String userName, String emailAddress, String firstName,
-            String lastName, String password, String role) {
-        return signUp(userName, emailAddress, firstName, lastName, password, role, false);
+            String lastName, String password, String contextPath, String role) {
+        return signUp(userName, emailAddress, firstName, lastName, password, contextPath, role, false);
     }
 
     public User signUp(String userName, String emailAddress, String firstName,
-            String lastName, String password) {
-        return signUp(userName, emailAddress, firstName, lastName, password, Role.SUPERVISOR);
+            String lastName, String password, String contextPath) {
+        return signUp(userName, emailAddress, firstName, lastName, password, contextPath, Role.SUPERVISOR);
     }
 
     public void completeRegistration(String registrationKey) {

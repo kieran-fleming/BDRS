@@ -69,9 +69,6 @@ Attribute.hasMany('options', AttributeOption, 'attribute');
 Attribute.hasMany('attributeValues', AttributeValue, 'attribute');
 Attribute.is(ServerObject);
 
-var SurveySpecies = persistence.define('SurveySpecies',{
-});
-
 var SpeciesAttribute = persistence.define('SurveyAttribute', {
 	numericValue : "NUMERIC",
 	stringValue : "TEXT",
@@ -102,7 +99,6 @@ var Species = persistence.define('Species', {
 Species.hasMany('speciesAttributes', SpeciesAttribute, 'species');
 Species.hasMany('infoItems', SpeciesProfile, 'species');
 Species.hasMany('records', Record, 'species');
-Species.hasMany('surveySpecies', SurveySpecies, 'species');
 Species.is(ServerObject);
 Species.textIndex('scientificName');
 Species.textIndex('commonName');
@@ -154,10 +150,11 @@ var Survey = persistence.define('Survey', {
 	    date: "DATE"
 	});
 Survey.hasMany('locations', Location, 'survey');
-Survey.hasMany('surveySpecies', SurveySpecies, 'survey');
+Survey.hasMany('species', Species, 'survey');
 Survey.hasMany('attributes', Attribute, 'survey');
 Survey.hasMany('records', Record, 'survey');
 Survey.hasMany('censusMethods', CensusMethod, 'survey');
+Species.hasMany('surveys', Survey, 'species');
 Survey.is(ServerObject);
 
 var SpeciesCount = persistence.define('SpeciesCount', {

@@ -10,6 +10,9 @@
         <put-attribute name="content" value="/WEB-INF/jsp/template/theme/static_public.jsp"/>
     </definition>
     
+    <!-- page title renderer. allows page title overriding -->
+    <definition name="title" template="/WEB-INF/jsp/bdrs/title.jsp"></definition>
+    
     <!-- map viewer -->
     <definition name="viewMap" extends="template">
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/viewMap.jsp"/>

@@ -19,7 +19,7 @@
         </p>
     </c:if>
     <tiles:insertAttribute name="extraContent"/>
-    <table class="form_table">
+    <table class="form_table bulkDataTableForm">
         <tbody>
             <tr>
                 <th>
@@ -41,7 +41,7 @@
             </tr>
             <tr>
                 <th>
-                    <label class="strong" for="spreadsheetInput">Spreadsheet:</label>
+                    <label class="strong" for="spreadsheetInput">Upload file:</label>
                 </th>
                 <td>
                     <input id="spreadsheetInput" name="spreadsheet" type="file"/>

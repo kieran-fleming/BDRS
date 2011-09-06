@@ -110,34 +110,6 @@ public class BulkDataController extends AbstractController {
 
         bulkDataService.exportSurveyTemplate(survey, response.getOutputStream());
     }
-    
-    @RequestMapping(value = "/bulkdata/spreadsheetTemplate.htm", method = RequestMethod.GET)
-    public void spreadsheetTemplate(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            @RequestParam(value = "surveyPk", required = true) int surveyPk,
-            @RequestParam(value = "censusMethodPk", defaultValue = "0", required = false) int censusMethodPk)
-            throws IOException {
-
-        Survey survey = surveyDAO.getSurvey(surveyPk);
-
-        // Make the survey name a safe filename.
-        StringBuilder filename = new StringBuilder();
-        for (char c : survey.getName().toCharArray()) {
-            if (Character.isLetterOrDigit(c)) {
-                filename.append(c);
-            }
-        }
-        filename.append("_template_");
-        filename.append(System.currentTimeMillis());
-        filename.append(".xls");
-
-        response.setContentType("application/vnd.ms-excel");
-        response.setHeader("Content-Disposition", "attachment;filename="
-                + filename);
-
-        bulkDataService.exportSurveyTemplate(survey, response.getOutputStream());
-    }
 
     @RequestMapping(value = "/bulkdata/upload.htm", method = RequestMethod.POST)
     public ModelAndView upload(MultipartHttpServletRequest req,

@@ -79,7 +79,7 @@ public class KMLUtils {
         for(Record record : recordList) {
             label = String.format("Record #%d", record.getId());
             AccessControlledRecordAdapter recAdapter = new AccessControlledRecordAdapter(record, currentUser);
-            description = jsonService.toJson(recAdapter).toString();
+            description = jsonService.toJson(recAdapter, contextPath).toString();
             
             Geometry geom = record.getGeometry();
             if (geom != null) {

@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -74,8 +78,8 @@ public class SetupController extends AbstractController {
     private RecordDAO recordDAO;
 
 
-	@RequestMapping(value = "/admin/setup.htm", method = RequestMethod.GET)
-    public String render() {
+    @RequestMapping(value = "/admin/setup.htm", method = RequestMethod.GET)
+    public String render(HttpServletRequest request, HttpServletResponse response) {
 
 		// region
 		ArrayList<BigDecimal[]> points = new ArrayList<BigDecimal[]>();
@@ -139,7 +143,8 @@ public class SetupController extends AbstractController {
         	            String username = "user."+lastname;
         	            u = registrationService.signUp(username,
         	                                           username+"@example.com",
-        	                                           "User", lastname, "password");
+        	                                           "User", lastname, "password", 
+        	                                           ContentInitialiserService.getRequestURL(request));
         	            registrationService.completeRegistration(u.getRegistrationKey());
         	            u.setRoles(new String[]{  Role.USER });
         	            u.setActive(Boolean.TRUE);

@@ -39,6 +39,7 @@ import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
+import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
@@ -68,6 +69,9 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
     private static final String TEST_JS_DEFAULT_CONTENT = "function foobar(a){ var b=3;var c=a+b;return c;}";
     private static final String TEST_JS_CUSTOM_CONTENT = "function foobar(a){ var b=8;var c=a+b;return c;}";
     
+    private static final Map<String, String> TEST_THEME_PAGE_1;
+    private static final Map<String, String> TEST_THEME_PAGE_2;
+    
     private static final String TEST_IMAGE_FILE_PATH = "images/testImage.png";
     
     private static final Map<String, String> DEFAULT_CONFIG_VALUES;
@@ -85,6 +89,18 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         customTemp.put("js.foobar.b", "8");
         
         CUSTOM_CONFIG_VALUES = Collections.unmodifiableMap(customTemp);
+        
+        Map<String, String> page1 = new HashMap<String, String>();
+        page1.put("key", "mySightings");
+        page1.put("title", "Simple Review");
+        page1.put("description", "simple review description");
+        TEST_THEME_PAGE_1 = Collections.unmodifiableMap(page1);
+        
+        Map<String, String> page2 = new HashMap<String, String>();
+        page2.put("key", "userLocations");
+        page2.put("title", "My Locations");
+        page2.put("description", "my locations description");
+        TEST_THEME_PAGE_2 = Collections.unmodifiableMap(page2);
     }
     
     
@@ -369,6 +385,8 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         BufferedImage processedImg = ImageIO.read(new File(processedDir, TEST_IMAGE_FILE_PATH));
         Assert.assertEquals(IMAGE_WIDTH, processedImg.getWidth());
         Assert.assertEquals(IMAGE_HEIGHT, processedImg.getHeight());
+        
+        assertThemePage(theme.getId().intValue());
     }
     
     @Autowired
@@ -411,20 +429,56 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         Assert.assertEquals(redirService.getAdminHomeUrl(), redirect.getUrl());
     }
     
+    /**
+     * This only gets used in tests where we expect the theme to be processed from the
+     * zipped theme file
+     * @param themeId
+     */
+    private void assertThemePage(int themeId) {
+        List<ThemePage> pageList = themeDAO.getThemePages(themeId);
+        Assert.assertEquals(2, pageList.size());
+        
+        ThemePage p1 = getByKey(pageList, TEST_THEME_PAGE_1.get("key"));
+        Assert.assertNotNull("expect test page 1", p1);
+        Assert.assertEquals("check titles", TEST_THEME_PAGE_1.get("title"), p1.getTitle());
+        Assert.assertEquals("check descriptions", TEST_THEME_PAGE_1.get("description"), p1.getDescription());
+        
+        ThemePage p2 = getByKey(pageList, TEST_THEME_PAGE_2.get("key"));
+        Assert.assertNotNull("expect teset page 2", p2);
+        Assert.assertEquals("check titles", TEST_THEME_PAGE_2.get("title"), p2.getTitle());
+        Assert.assertEquals("check descriptions", TEST_THEME_PAGE_2.get("description"), p2.getDescription());
+    }
+    
+    private ThemePage getByKey(List<ThemePage> list, String key) {
+        for (ThemePage p : list) {
+            if (key.equals(p.getKey())) {
+                return p;
+            }
+        }
+        return null;
+    }
+    
     private byte[] createTestTheme(Map<String, String> configValues) throws Exception {
         Map<String, byte[]> files = new HashMap<String, byte[]>();
         files.put(TEST_CSS_FILE_PATH, createMemoryFile(TEST_CSS_RAW_CONTENT));
         files.put(TEST_TEMPLATE_FILE_PATH, createMemoryFile(TEST_TEMPLATE_RAW_CONTENT));
         files.put(TEST_JS_FILE_PATH, createMemoryFile(TEST_JS_RAW_CONTENT));
         files.put(TEST_IMAGE_FILE_PATH, createTestImage());
+        
+        List<Map<String,String>> themePageList = new ArrayList<Map<String,String>>();
+        themePageList.add(TEST_THEME_PAGE_1);
+        themePageList.add(TEST_THEME_PAGE_2);
+        
         files.put(ThemeController.THEME_CONFIG_FILENAME, createConfigFile(
                                                                           new String[]{TEST_CSS_FILE_PATH}, 
                                                                           new String[]{TEST_JS_FILE_PATH}, 
-                                                                          configValues));
+                                                                          configValues,
+                                                                          themePageList));
         return createZip(files);
     }
     
-    private byte[] createConfigFile(String[] cssFilePathArray, String[] jsFilePathArray, Map<String,String> configValues) throws IOException {
+    private byte[] createConfigFile(String[] cssFilePathArray, String[] jsFilePathArray, Map<String,String> configValues,
+            List<Map<String,String>> themePageList) throws IOException {
         
         JSONArray cssFiles = new JSONArray();
         for(String css : cssFilePathArray) {
@@ -446,11 +500,21 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
             
             themeElements.add(elem);
         }
+        
+        JSONArray themePages = new JSONArray();
+        for (Map<String, String> page : themePageList) {
+            JSONObject pageElem = new JSONObject();
+            for(Map.Entry<String, String> entry : page.entrySet()) {
+                pageElem.accumulate(entry.getKey(), entry.getValue());
+            }
+            themePages.add(pageElem);
+        }
 
         JSONObject config = new JSONObject();
         config.accumulate("css_files", cssFiles);
         config.accumulate("js_files", jsFiles);
         config.accumulate("theme_elements", themeElements);
+        config.accumulate("theme_pages", themePages);
         
         return createMemoryFile(config.toString());
     }

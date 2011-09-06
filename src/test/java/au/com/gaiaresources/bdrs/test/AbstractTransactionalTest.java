@@ -41,7 +41,7 @@ public abstract class AbstractTransactionalTest extends
     public final void primeDatabase() {
         dropDatabase = false;
         try {
-            Portal portal = new PortalInitialiser().initRootPortal();
+            Portal portal = new PortalInitialiser().initRootPortal(null);
             defaultPortal = portal;
             Session sesh = sessionFactory.getCurrentSession();
             FilterManager.setPortalFilter(sesh, portal);

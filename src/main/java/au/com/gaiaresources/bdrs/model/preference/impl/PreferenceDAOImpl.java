@@ -149,10 +149,6 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
      */
     @Override
     public Preference getPreferenceByKey(Session sesh, String key) {
-        if (sesh == null) {
-            sesh = getSessionFactory().getCurrentSession();
-        }
-
         Portal portal = RequestContextHolder.getContext().getPortal();
         if (prefCache.containsKey(portal)) {
             Preference pref = prefCache.get(portal).get(key);
@@ -208,9 +204,6 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
 
     @Override
     public void delete(Session sesh, Preference pref) {
-        if (sesh == null) {
-            sesh = getSessionFactory().getCurrentSession();
-        }
         if(pref.getPortal() == null) {
             log.warn("Unable to delete system preference");
             return;
@@ -234,9 +227,6 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
 
     @Override
     public Map<String, Preference> getPreferences(Session sesh) {
-        if (sesh == null) {
-            sesh = getSessionFactory().getCurrentSession();
-        }
         Portal portal = RequestContextHolder.getContext().getPortal();
         if (prefCache.containsKey(portal)) {
 

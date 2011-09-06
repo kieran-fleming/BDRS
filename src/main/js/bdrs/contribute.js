@@ -226,6 +226,13 @@ bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector
         
         // Attach the datepickers
         bdrs.initDatePicker();
+        // attach the validation
+        var species_elem = jQuery("[name="+sightingIndex+"_species]");
+        species_elem.addClass("validate(optionallyTaxonomicSpeciesAndNumber([name="+sightingIndex+"_number]))");
+        
+        var count_elem = jQuery("[name="+sightingIndex+"_number]");
+        count_elem.addClass("validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name="+sightingIndex+"_species]))");
+        
         search_elem.parents("tr").ketchup();
     });
 };
@@ -257,6 +264,7 @@ bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, 
 	      
 	      // Attach the datepickers
 	      bdrs.initDatePicker();
+	      
 	      search_elem.parents("tr").ketchup();
   	  },
   	  async: false

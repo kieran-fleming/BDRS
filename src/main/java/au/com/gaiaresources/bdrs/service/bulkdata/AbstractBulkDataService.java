@@ -17,6 +17,7 @@ import java.util.Set;
 
 import javax.security.sasl.AuthenticationException;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -45,10 +46,6 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyService;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
@@ -330,12 +327,16 @@ public abstract class AbstractBulkDataService {
         Cell columnHeaderCell = row.createCell(colIndex++);
         columnHeaderCell.setCellValue("Column");
 
+        Cell scopeHeaderCell = row.createCell(colIndex++);
+        scopeHeaderCell.setCellValue("Scope");
+
         Cell descriptionHeaderCell = row.createCell(colIndex++);
         descriptionHeaderCell.setCellValue("Description");
 
         if (helpHeaderStyle != null) {
             columnHeaderCell.setCellStyle(helpHeaderStyle);
             descriptionHeaderCell.setCellStyle(helpHeaderStyle);
+            scopeHeaderCell.setCellStyle(helpHeaderStyle);
         }
 
         // Precanned Darwin Core Values
@@ -346,6 +347,10 @@ public abstract class AbstractBulkDataService {
             row = helpSheet.createRow(rowIndex++);
             colIndex = 0;
             row.createCell(colIndex++).setCellValue(attr.getName());
+
+            String scopeName = attr.getScope() == null ? "" : attr.getScope().getName();
+            row.createCell(colIndex++).setCellValue(scopeName);
+
             row.createCell(colIndex++).setCellValue(attr.getDescription());
         }
     }
@@ -721,10 +726,12 @@ public abstract class AbstractBulkDataService {
                 }
     
                 for (Attribute surveyAttr : survey.getAttributes()) {
-                    String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, surveyAttr.getDescription());
-                    if (org.springframework.util.StringUtils.hasLength(recAttrValue)) {
-                        AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, surveyAttr, recAttrValue);
-                        recAttrSet.add(recAttr);
+                    if(!AttributeScope.LOCATION.equals(surveyAttr)) {
+                        String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, surveyAttr.getDescription());
+                        if (org.springframework.util.StringUtils.hasLength(recAttrValue)) {
+                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, surveyAttr, recAttrValue);
+                            recAttrSet.add(recAttr);
+                        }
                     }
                 }
                 

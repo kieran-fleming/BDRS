@@ -20,6 +20,7 @@ import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 /**
@@ -95,11 +96,13 @@ public class UserMessageController extends AbstractController {
         emailParams.put("userLastName", rec.getUser().getLastName());
         emailParams.put("viewRecordUrl", redirService.getViewRecordUrl(rec));
         emailParams.put("contactText", text);
+        emailParams.put("portal", getRequestContext().getPortal());
+        emailParams.put("contextPath", ContentInitialiserService.getRequestURL(request));
         
         emailService.sendTemplateMessage(rec.getUser().getEmailAddress(), 
                                           replyEmail,
                                           "Someone has contact you regarding a record you have created", 
-                                          "contactRecordOwner.vm", 
+                                          "ContactRecordOwner.vm", 
                                           emailParams);
         
         if (sendToSelf) {
@@ -109,11 +112,11 @@ public class UserMessageController extends AbstractController {
             emailService.sendTemplateMessage(replyEmail, 
                                              replyEmail,
                                              "You have contacted someone regarding a record they have created", 
-                                             "contactRecordOwnerSendToSelf.vm", 
+                                             "ContactRecordOwnerSendToSelf.vm", 
                                              emailParams);
         }
         
-        ModelAndView mv = new ModelAndView(new RedirectView(redirService.getHomeUrl(), true));
+        ModelAndView mv = new ModelAndView(new RedirectView(redirService.getMySightingsUrl(rec.getSurvey()), true));
         getRequestContext().addMessage("bdrs.user.message.success");
         return mv;
     }

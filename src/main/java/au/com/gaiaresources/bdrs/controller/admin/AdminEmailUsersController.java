@@ -26,9 +26,9 @@ import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
-import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 import edu.emory.mathcs.backport.java.util.TreeSet;
 
 /**
@@ -58,7 +58,7 @@ public class AdminEmailUsersController extends AbstractController {
         List<String> keys = contentDAO.getKeysLike("email");
         // add the default portal initializer email keys as well if not present
         Set<String> uniqueKeys = new TreeSet(keys);
-        uniqueKeys.addAll(getItemsStartingWith(PortalInitialiser.CONTENT.keySet(),"email"));
+        uniqueKeys.addAll(getItemsStartingWith(ContentInitialiserService.CONTENT.keySet(),"email"));
         mav.addObject("keys", uniqueKeys);
         return mav;
     }
@@ -76,7 +76,10 @@ public class AdminEmailUsersController extends AbstractController {
         for (String string : addresses) {
             String address = string.trim();
             User toUser = userDAO.getUserByEmailAddress(address);
-            emailService.sendMessage(address, from, subject, content, createSubstitutionParams(toUser, fromUser, content));
+            Map<String, Object> subParams = createSubstitutionParams(toUser, fromUser, content);
+            subParams.put("bdrs.application.url", request.getContextPath() + "/portal/" + getRequestContext().getPortal().getId() + "/home.htm");
+            subParams.put("portal.id", getRequestContext().getPortal().getId());
+            emailService.sendMessage(address, from, subject, content, subParams);
         }
     }
     

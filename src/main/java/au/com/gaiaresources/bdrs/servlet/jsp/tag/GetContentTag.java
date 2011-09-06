@@ -1,7 +1,5 @@
 package au.com.gaiaresources.bdrs.servlet.jsp.tag;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,9 +7,6 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.log4j.Logger;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -38,13 +33,13 @@ public class GetContentTag extends TagSupport {
         ApplicationContext ac = WebApplicationContextUtils.getWebApplicationContext(pageContext.getServletContext());
         ContentDAO contentDAO = ac.getBean(ContentDAO.class);
         TemplateService templateService = ac.getBean(TemplateService.class);
-       
-        String value = contentDAO.getContentValue(key);
+        
+        Portal portal = RequestContextHolder.getContext().getPortal();
+        String value = contentDAO.getContentValue(key, portal);
         if (value == null) {
             value = "Error: Could not fetch content for key: " + key + ". Inform the webmaster";
         }
         
-        Portal portal = RequestContextHolder.getContext().getPortal();
         User currentUser = RequestContextHolder.getContext().getUser();
 
         Map<String, Object> params = new HashMap<String, Object>();

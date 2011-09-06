@@ -14,7 +14,7 @@
 <input value="${USER_ID}" type="hidden" />
 <div class="input_container">
 <h2>Change Details</h2>
-<p>Please edit the account details below. Leave the password blank if you want to leave this unchanged.</p>
+<p>You can change your details through the form below.  If you leave the password field blank it will not be changed.</p>
           
     <c:if test="${editAs == 'admin'}">
     <jsp:useBean id="assignedRoles" type="java.util.ArrayList" scope="request"/>

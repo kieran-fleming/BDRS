@@ -50,6 +50,16 @@ bdrs.map.SHADOW_Z_INDEX = 10;
 bdrs.map.MARKER_Z_INDEX = 11;
 
 
+bdrs.isIE7 = function() {
+    return ($.browser.msie  && parseInt($.browser.version) == 7);
+}
+
+// This can be set in the theme custom javascript in which 
+// case we don't want to override it.
+if (bdrs.MODAL_DIALOG_Z_INDEX === undefined) {
+	bdrs.MODAL_DIALOG_Z_INDEX = 4001;
+}
+
 // Dynamic post helper
 bdrs.postWith = function(to, p){
     var myForm = document.createElement("form");
@@ -624,7 +634,7 @@ bdrs.map.addSelectHandler = function(map, layers){
 // minClass - the class to apply when the map is minimised
 // mapSelector - the selector of the actual map div - not the wrapper
 // map - the map javascript object
-bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map){
+bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map){	
     var content = jQuery(contentSelector);
     var trigger = jQuery(triggerSelector);
     if (content.hasClass("maximise")) {
@@ -636,6 +646,16 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
         trigger.text(maximiseLabel);
         trigger.css("position", "static");
         jQuery(".mapLogoMax").removeClass("mapLogoMax").addClass("mapLogoMin");
+		
+		if (bdrs.isIE7()) {
+			jQuery(mapSelector).css({
+	            position: "relative",
+	            top: null,
+	            bottom: null,
+	            left: null,
+	            right: null
+	        });	
+		}
     }
     else {
         // minimise the map!
@@ -646,8 +666,8 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
             bottom: 0,
             left: 0,
             right: 0,
-            backgroundColor: 'white',
-            zIndex: 1500
+            backgroundColor: 'transparent',
+            zIndex: 3000
         });
         content.addClass("maximise");
         jQuery(mapSelector).removeClass(minClass).addClass(maxClass);
@@ -656,8 +676,18 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
         trigger.css("position", "fixed");
         trigger.css("top", "1px");
         trigger.css("right", "3px");
-        trigger.css("zIndex", "1600");
+        trigger.css("zIndex", "3100");
         jQuery(".mapLogoMin").removeClass("mapLogoMin").addClass("mapLogoMax");
+		
+		if (bdrs.isIE7()) {
+			jQuery(mapSelector).css({
+	            position: "fixed",
+	            top: 0,
+	            bottom: 0,
+	            left: 0,
+	            right: 0
+	        });
+		}
     }
 };
 
@@ -1398,20 +1428,20 @@ bdrs.map.displayPopupPage = function(contentState){
     jQuery(".popupPage" + contentState.currentPage).show();
     if (contentState.currentPage == contentState.itemArray.length - 1) {
         // hide the right arrow
-        jQuery(".shiftContentRight").attr("hidden", "hidden");
+		jQuery(".shiftContentRight").hide();
     }
     else {
         // show the right arrow
-        jQuery(".shiftContentRight").removeAttr("hidden");
+		jQuery(".shiftContentRight").show();
     }
     
     if (contentState.currentPage === 0) {
         // hide the left arrow
-        jQuery(".shiftContentLeft").attr("hidden", "hidden");
+		jQuery(".shiftContentLeft").hide();
     }
     else {
         // show the left arrow
-        jQuery(".shiftContentLeft").removeAttr("hidden");
+		jQuery(".shiftContentLeft").show();
     }
     
     contentState.popup.updateSize();
@@ -1625,7 +1655,10 @@ bdrs.map.zoomToFeatures = function(feature){
 };
 
 bdrs.map.setDefaultCenter = function(map){
-    map.setCenter(new OpenLayers.LonLat(136.5, -28.5).transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION), 3);
+	var latitude = bdrs.map.defaultCenterLat ? bdrs.map.defaultCenterLat : -28.5;
+	var longitude = bdrs.map.defaultCenterLong ?  bdrs.map.defaultCenterLong : 136.5;
+	var zoom = bdrs.map.defaultCenterZoom ? bdrs.map.defaultCenterZoom : 3;
+    map.setCenter(new OpenLayers.LonLat(longitude, latitude).transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION), zoom);
 };
 
 // Attaches for handling when longitude/latitude inputs are changed.
@@ -1835,7 +1868,8 @@ bdrs.map.getSelectedBdrsLayerIds = function(map) {
     for (var i = 0; i < visibleLayers.length; ++i) {
 		// check the duck punched property which indicates
 		// whether the layer is a bdrs layer.
-        if (visibleLayers[i].bdrsLayerId) {
+		// the layer also needs to be in zoom limit range
+        if (visibleLayers[i].bdrsLayerId && visibleLayers[i].calculateInRange()) {
             mapLayerIds.push(visibleLayers[i].bdrsLayerId);
         }
     }
@@ -1894,13 +1928,6 @@ bdrs.map.createFeaturePopup = function(map, googleProjectionLonLatPos, featureAr
     jQuery(".shiftContentRight", popup.contentDiv).click(bdrs.map.getPopupRightHandler(contentState));
     jQuery(".totalPages", popup.contentDiv).text(contentState.itemArray.length);
     
-    /*
-     if (contentState.itemArray.length <= 1) {
-     // set the arrow images to hidden
-     jQuery(".shiftContentLeft").attr("hidden", "hidden");
-     jQuery(".shiftContentRight").attr("hidden", "hidden");
-     }
-     */
     return popup;
 };
 

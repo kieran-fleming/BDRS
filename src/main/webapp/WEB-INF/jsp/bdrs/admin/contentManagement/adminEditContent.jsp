@@ -10,8 +10,8 @@
 <h1>Edit Website Content</h1>
 
 <sec:authorize ifAnyGranted="ROLE_ADMIN">
-<div>
-    <button onclick="bdrs.admin.adminEditContent.resetContent()">Reset all content to default</button>
+<div class="buttonpanel">
+    <input type="button" class="form_action" onclick="bdrs.admin.adminEditContent.resetContent()" value="Reset all content to default" />
 </div>
 </sec:authorize>
 

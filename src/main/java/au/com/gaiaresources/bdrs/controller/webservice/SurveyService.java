@@ -20,6 +20,7 @@ import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -45,12 +46,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -357,28 +352,30 @@ public class SurveyService extends AbstractController {
 
         // set custom fields
         for (Attribute att : surveyatts) {
-            String rec_att_value = request.getParameter("attribute"
-                    + att.getId());
-            AttributeValue recAttr = new AttributeValue();
-            recAttr.setAttribute(att);
-            if (string_codes.contains(att.getType().getCode())) {
-                recAttr.setStringValue(rec_att_value);
-            } else if (numeric_codes.contains(att.getType().getCode())) {
-                if (rec_att_value != null && rec_att_value != "") {
-                    recAttr.setNumericValue(new BigDecimal(rec_att_value));
+            if(!AttributeScope.LOCATION.equals(att.getScope())) {
+                String rec_att_value = request.getParameter("attribute"
+                        + att.getId());
+                AttributeValue recAttr = new AttributeValue();
+                recAttr.setAttribute(att);
+                if (string_codes.contains(att.getType().getCode())) {
+                    recAttr.setStringValue(rec_att_value);
+                } else if (numeric_codes.contains(att.getType().getCode())) {
+                    if (rec_att_value != null && rec_att_value != "") {
+                        recAttr.setNumericValue(new BigDecimal(rec_att_value));
+                    }
+                } else {
+                    if (rec_att_value != null && rec_att_value != "") {
+                        Date date_custom = new SimpleDateFormat("dd MMM yyyy").parse(rec_att_value);
+                        Calendar cal_custom = new GregorianCalendar();
+                        cal_custom.setTime(date_custom);
+                        date_custom = cal_custom.getTime();
+                        recAttr.setDateValue(date_custom);
+                    }
                 }
-            } else {
-                if (rec_att_value != null && rec_att_value != "") {
-                    Date date_custom = new SimpleDateFormat("dd MMM yyyy").parse(rec_att_value);
-                    Calendar cal_custom = new GregorianCalendar();
-                    cal_custom.setTime(date_custom);
-                    date_custom = cal_custom.getTime();
-                    recAttr.setDateValue(date_custom);
-                }
-            }
 
-            // save attribute and store in Set
-            newAttributes.add(recordDAO.saveAttributeValue(recAttr));
+                // save attribute and store in Set
+                newAttributes.add(recordDAO.saveAttributeValue(recAttr));
+            }
         }
         // add the new RecordAttributes to the record
         record.setAttributes(newAttributes);
@@ -452,24 +449,26 @@ public class SurveyService extends AbstractController {
         recordAttributes.clear();
 
         for (Attribute att : surveyatts) {
-            AttributeValue ra = recordAttributesMap.get(att.getId());
-            ra.setAttribute(att);
-            // update record att
-            if (string_codes.contains(att.getType().getCode())) {
-                ra.setStringValue(request.getParameter("attribute"
-                        + att.getId()));
-            } else if (numeric_codes.contains(att.getType().getCode())) {
-                ra.setNumericValue(new BigDecimal(request.getParameter("attribute"
-                        + att.getId())));
-            } else {
-                Date date_custom = new SimpleDateFormat("dd MMM yyyy").parse(request.getParameter("attribute"
-                        + att.getId()));
-                Calendar cal_custom = new GregorianCalendar();
-                cal_custom.setTime(date_custom);
-                date_custom = cal_custom.getTime();
-                ra.setDateValue(date_custom);
+            if(!AttributeScope.LOCATION.equals(att.getScope())) {
+                AttributeValue ra = recordAttributesMap.get(att.getId());
+                ra.setAttribute(att);
+                // update record att
+                if (string_codes.contains(att.getType().getCode())) {
+                    ra.setStringValue(request.getParameter("attribute"
+                            + att.getId()));
+                } else if (numeric_codes.contains(att.getType().getCode())) {
+                    ra.setNumericValue(new BigDecimal(request.getParameter("attribute"
+                            + att.getId())));
+                } else {
+                    Date date_custom = new SimpleDateFormat("dd MMM yyyy").parse(request.getParameter("attribute"
+                            + att.getId()));
+                    Calendar cal_custom = new GregorianCalendar();
+                    cal_custom.setTime(date_custom);
+                    date_custom = cal_custom.getTime();
+                    ra.setDateValue(date_custom);
+                }
+                recordAttributes.add(recordDAO.saveAttributeValue(ra));
             }
-            recordAttributes.add(recordDAO.saveAttributeValue(ra));
         }
         // add the updated RecordAttributes to the record
         record.setAttributes(recordAttributes);

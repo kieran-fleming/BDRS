@@ -9,7 +9,9 @@
 
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
-<h2><c:out value="${censusMethod.name}"/></h2>
+	<!-- using censusmethod description here in case we want to display no text / more indepth text -->
+	<!-- escapeXml false so we can put anchors in the description -->
+<p><c:out value="${censusMethod.description}" escapeXml="false" /></p>
 </c:if>
     Click on the map to enter the location of the sighting.
 <div id="record_base_map_hover_tip">&nbsp;</div>

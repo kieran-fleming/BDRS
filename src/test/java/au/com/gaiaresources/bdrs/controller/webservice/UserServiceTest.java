@@ -36,7 +36,7 @@ public class UserServiceTest extends AbstractControllerTest {
 		 PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
 	     String emailAddr = "user@mailinator.com";
 	     String encodedPassword = passwordEncoder.encodePassword("password", null);
-	     User u = userDAO.createUser("user", "fn", "ln", emailAddr, encodedPassword, "usersIdent", new String[] { "ROLE_USER" });
+	     userDAO.createUser("user", "fn", "ln", emailAddr, encodedPassword, "usersIdent", new String[] { "ROLE_USER" });
 	}
 	
 	
