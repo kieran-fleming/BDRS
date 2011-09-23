@@ -1,7 +1,7 @@
 <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut metus 
-    lacinia tellus posuere elementum. Proin at leo nibh, a hendrerit odio. 
-    Integer consectetur metus eget mauris sagittis in eleifend metus dictum. 
-    Sed sed lacus dui. Nullam sit amet iaculis leo. Fusce vulputate porta eros 
-    in hendrerit. 
+These are alternate forms that allow for the capture of project 
+related data that might not necessarily be taxonomic. A 
+Census method may be defined once in the Manage Census Methods 
+interface, and applied across several different projects. Setting 
+up a census method is similar to setting up a form for a Project.
 </p>

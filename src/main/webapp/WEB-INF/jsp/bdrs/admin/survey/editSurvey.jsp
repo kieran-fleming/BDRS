@@ -1,6 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <%@page import="au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType"%>
 <%@page import="au.com.gaiaresources.bdrs.model.metadata.Metadata"%>
@@ -10,9 +11,11 @@
         <h1>Add Project</h1>
     </c:when>
     <c:otherwise>
-        <h1>Edit ${survey.name}</h1>
+        <h1>Edit Project: <c:out value="${survey.name}"/></h1>
     </c:otherwise>
 </c:choose>
+
+<cw:getContent key="admin/editProject" />
 
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/edit.htm" enctype="multipart/form-data">
     <c:if test="${survey.id != null }">

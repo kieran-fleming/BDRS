@@ -1,8 +1,12 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Portal Setup</h1>
+<h1>Manage Portals</h1>
 <cw:getContent key="root/portalListing" />
+
+<div class="buttonpanel textright">
+    <input class="form_action" type="button" value="Add Portal" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/root/portal/edit.htm'"/>
+</div>
 
 <table class="datatable textcenter">
     <thead>
@@ -37,6 +41,3 @@
         </c:forEach>
     </tbody>
 </table>
-<div class="textright">
-    <input class="form_action" type="button" value="Add Portal" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/root/portal/edit.htm'"/>
-</div>

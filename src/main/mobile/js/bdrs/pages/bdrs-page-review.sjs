@@ -15,9 +15,11 @@ exports.Show = function() {
     
     var recordListElem = jQuery(".bdrs-page-review .recordList");
 	
+    var survey = bdrs.mobile.survey.getDefault();
+    
 	var records;
     waitfor(records) {
-	    Record.all().filter('deleted','=',false).prefetch('species').prefetch('censusMethod').filter('parent', '=', null).order('when', false).list(resume);
+    	Record.all().filter('deleted','=',false).and(new persistence.PropertyFilter('survey','=',survey.id)).prefetch('species').prefetch('censusMethod').filter('parent', '=', null).order('when', false).list(resume);
     };
     
     var descriptor;

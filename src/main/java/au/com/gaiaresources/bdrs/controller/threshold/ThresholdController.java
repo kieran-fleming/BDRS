@@ -43,6 +43,9 @@ public class ThresholdController extends AbstractController {
 
     public static final String THRESHOLD_CLASS_DISPLAYNAME_PLURAL_TEMPLATE = "%s.plural";
     public static final String THRESHOLD_CLASS_DISPLAYNAME_TEMPLATE = "%s";
+    
+    public static final String PARAM_NAME = "name";
+    public static final String PARAM_DESCRIPTION = "description";
 
     @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
@@ -158,7 +161,9 @@ public class ThresholdController extends AbstractController {
             @RequestParam(value = "new_condition", required = false) int[] newConditionIndex,
             @RequestParam(value = "condition_pk", required = false) int[] conditionPks,
             @RequestParam(value = "new_action", required = false) int[] newActionIndex,
-            @RequestParam(value = "action_pk", required = false) int[] actionPks)
+            @RequestParam(value = "action_pk", required = false) int[] actionPks,
+            @RequestParam(value = PARAM_NAME, required = true) String name,
+            @RequestParam(value = PARAM_DESCRIPTION, required = true) String description)
             throws ClassNotFoundException {
 
         Class<?> klass = Class.forName(className);
@@ -166,6 +171,8 @@ public class ThresholdController extends AbstractController {
                 : thresholdDAO.getThreshold(thresholdPk);
         threshold.setClassName(klass.getCanonicalName());
         threshold.setEnabled(isEnabled);
+        threshold.setName(name);
+        threshold.setDescription(description);
 
         // Conditions
         Map<Integer, Condition> conditionMap = new HashMap<Integer, Condition>();

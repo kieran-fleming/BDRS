@@ -356,21 +356,23 @@ ul.menu ul ul ul ul li a{
 .center_col,
 .right_col {
     width: 31.5%;
-    float: left;
 }
 
 .left_col {
     padding-right: 10px;
     text-align: center;
+    float: left;
 }
 
 .center_col {
     padding-right: 10px;
     padding-left: 10px;
+    float: left;
 }
 
 .right_col {
-    padding-left: 10px; 
+    padding-left: 10px;
+    float: right;
 }
 
 .nopad_top {
@@ -405,6 +407,7 @@ ul.menu ul ul ul ul li a{
 
 #statistics table {
     padding: 0px;
+    width: auto;
 }
 
 #statistics table th,
@@ -419,7 +422,6 @@ ul.menu ul ul ul ul li a{
 #statistics table td {
     text-align: left;
 }
-
 /************************************/
 /* Header Styling                   */
 /************************************/

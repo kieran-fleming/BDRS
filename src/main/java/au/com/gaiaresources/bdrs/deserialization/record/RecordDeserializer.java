@@ -8,15 +8,18 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.config.AppContext;
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
 import au.com.gaiaresources.bdrs.controller.record.ValidationType;
@@ -40,6 +43,7 @@ import au.com.gaiaresources.bdrs.util.StringUtils;
 public class RecordDeserializer {
 
     private RecordDAO recordDAO = AppContext.getBean(RecordDAO.class);
+    private AttributeDAO attributeDAO = AppContext.getBean(AttributeDAO.class);
     private SurveyDAO surveyDAO = AppContext.getBean(SurveyDAO.class);
     private TaxaDAO taxaDAO = AppContext.getBean(TaxaDAO.class);
     private LocationDAO locationDAO = AppContext.getBean(LocationDAO.class);
@@ -288,9 +292,9 @@ public class RecordDeserializer {
             Map<Attribute, String> attrFilenameMap = attrDictFact.createFileKeyDictionary(survey, taxonGroup, censusMethod);
 
             for(Attribute attr : survey.getAttributes()) {
-                if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+                if(attrDictFact.getDictionaryAttributeScope().contains(attr.getScope())) {
                     isValid = isValid & attributeParser.validate(validator, attrNameMap.get(attr), attrFilenameMap.get(attr), attr, params, entry.getFileMap());
-                }
+                } 
             }
             if(species != null) {
                 for(Attribute attr : species.getTaxonGroup().getAttributes()) {
@@ -337,7 +341,10 @@ public class RecordDeserializer {
             record.setSpecies(species);
             record.setNumber(number);
             
-            record.setUser(user);
+            // Preserve the original owner of the record if this is a record edit.
+            if (record.getUser() == null) {
+            	record.setUser(user);
+            }
             record.setSurvey(survey);
             record.setNotes(entry.getValue(klu.getNotesKey()));
             record.setHeld(false);
@@ -429,21 +436,22 @@ public class RecordDeserializer {
             record.setAccuracyInMeters(StringUtils.notEmpty(accuracyStr) ? Double.parseDouble(accuracyStr) : null);
     
             // Attach the record Attributes.
-            AttributeValue recAttr;
-            List<AttributeValue> attrValuesToDelete = new ArrayList<AttributeValue>();
-    
+            TypedAttributeValue recAttr;
+            List<TypedAttributeValue> attrValuesToDelete = new ArrayList<TypedAttributeValue>();
+            Set recAtts = record.getAttributes();
             // Survey Attributes
             for (Attribute attribute : survey.getAttributes()) {
-                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
-                    recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), attribute, record, entry.getDataMap(), entry.getFileMap());
+                if(attrDictFact.getDictionaryAttributeScope().contains(attribute.getScope())) {
+                    recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), 
+                                                    attribute, record, entry.getDataMap(), entry.getFileMap());
                     if (attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = recordDAO.saveAttributeValue(recAttr);
+                        recAttr = attributeDAO.save(recAttr);
                         if (attributeParser.getAttrFile() != null) {
                             fileService.createFile(recAttr, attributeParser.getAttrFile());
                         }
-                        record.getAttributes().add(recAttr);
+                        recAtts.add(recAttr);
                     } else {
-                        record.getAttributes().remove(recAttr);
+                        recAtts.remove(recAttr);
                         attrValuesToDelete.add(recAttr);
                     }
                 }
@@ -455,13 +463,13 @@ public class RecordDeserializer {
                     if(!attribute.isTag()) {
                         recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), attribute, record, entry.getDataMap(), entry.getFileMap());
                         if (attributeParser.isAddOrUpdateAttribute()) {
-                            recAttr = recordDAO.saveAttributeValue(recAttr);
+                            recAttr = attributeDAO.save(recAttr);
                             if (attributeParser.getAttrFile() != null) {
                                 fileService.createFile(recAttr, attributeParser.getAttrFile());
                             }
-                            record.getAttributes().add(recAttr);
+                            recAtts.add(recAttr);
                         } else {
-                            record.getAttributes().remove(recAttr);
+                            recAtts.remove(recAttr);
                             attrValuesToDelete.add(recAttr);
                         }
                     }
@@ -474,13 +482,13 @@ public class RecordDeserializer {
                     if(!attribute.isTag()) {
                         recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), attribute, record, entry.getDataMap(), entry.getFileMap());
                         if (attributeParser.isAddOrUpdateAttribute()) {
-                            recAttr = recordDAO.saveAttributeValue(recAttr);
+                            recAttr = attributeDAO.save(recAttr);
                             if (attributeParser.getAttrFile() != null) {
                                 fileService.createFile(recAttr, attributeParser.getAttrFile());
                             }
-                            record.getAttributes().add(recAttr);
+                            recAtts.add(recAttr);
                         } else {
-                            record.getAttributes().remove(recAttr);
+                            recAtts.remove(recAttr);
                             attrValuesToDelete.add(recAttr);
                         }
                     }
@@ -489,9 +497,9 @@ public class RecordDeserializer {
             recordDAO.saveRecord(record);
             rsResult.setRecord(record);
             
-            for(AttributeValue attrVal : attrValuesToDelete) {
-                recordDAO.saveAttributeValue(attrVal);
-                recordDAO.delete(attrVal);
+            for(TypedAttributeValue attrVal : attrValuesToDelete) {
+                attributeDAO.save(attrVal);
+                attributeDAO.delete(attrVal);
             }
         }
         return results;

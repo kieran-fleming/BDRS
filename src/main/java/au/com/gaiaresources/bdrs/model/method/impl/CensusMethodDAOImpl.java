@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.model.method.impl;
 
+import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
@@ -21,7 +22,15 @@ public class CensusMethodDAOImpl extends AbstractDAOImpl implements CensusMethod
     
     @Override
     public CensusMethod get(Integer pk) {
-        return super.getByID(CensusMethod.class, pk);
+        return this.get(super.getSession(), pk);
+    }
+    
+    @Override
+    public CensusMethod get(Session session, Integer pk) {
+        if(session == null) {
+            session = super.getSession();
+        }
+        return (CensusMethod)session.get(CensusMethod.class, pk);
     }
 
     @Override

@@ -24,7 +24,7 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData;
 import au.com.gaiaresources.bdrs.service.user.UserMetaDataService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData.UserMetaDataType;
@@ -80,10 +80,11 @@ public class VanillaUserSignUpController extends AbstractController {
             @RequestParam(value = "password", required = true) String password)
             throws Exception {
 
-        if (hasErrors(email, firstName, lastName)) {
-            return "usersignup";
+        String redirect = hasErrors(email, firstName, lastName);
+        if (redirect != null) {
+            return redirect;
         }
-        String contextPath = ContentInitialiserService.getRequestURL(request);
+        String contextPath = ContentService.getRequestURL(request);
         
         User saveResult = registrationService.signUp(username, email, firstName, lastName, password, contextPath, "ROLE_USER");
 
@@ -133,30 +134,31 @@ public class VanillaUserSignUpController extends AbstractController {
      *            the binding result to pass errors to
      * @return true if there ARE binding errors, false if there aren't.
      */
-    private boolean hasErrors(String email, String firstName, String lastName) {
-        int errCount = 0;
+    private String hasErrors(String email, String firstName, String lastName) {
+        String redirect = null;
         if (userDAO.getUserByEmailAddress(email) != null) {
             // The username (email address) is already taken.
             getRequestContext().addMessage(new Message(
                     "UserSignUpForm.emailAddress[unique]"));
-            ++errCount;
+            redirect = "redirect:/reminder.htm";
+        } else {
+            if (empty(firstName)) {
+                getRequestContext().addMessage(new Message(
+                        "UserSignUpForm.firstName[not.blank]"));
+                redirect = "redirect:usersignup.htm";
+            }
+            if (empty(lastName)) {
+                getRequestContext().addMessage(new Message(
+                        "UserSignUpForm.lastName[not.blank]"));
+                redirect = "redirect:usersignup.htm";
+            }
+            if (empty(email)) {
+                getRequestContext().addMessage(new Message(
+                        "UserSignUpForm.emailAddress[not.blank]"));
+                redirect = "redirect:usersignup.htm";
+            }
         }
-        if (empty(firstName)) {
-            getRequestContext().addMessage(new Message(
-                    "UserSignUpForm.firstName[not.blank]"));
-            ++errCount;
-        }
-        if (empty(lastName)) {
-            getRequestContext().addMessage(new Message(
-                    "UserSignUpForm.lastName[not.blank]"));
-            ++errCount;
-        }
-        if (empty(email)) {
-            getRequestContext().addMessage(new Message(
-                    "UserSignUpForm.emailAddress[not.blank]"));
-            ++errCount;
-        }
-        return errCount != 0;
+        return redirect;
     }
 
     /**

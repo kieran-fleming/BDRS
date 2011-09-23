@@ -19,7 +19,7 @@ import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaProtected;
 
 @Controller
@@ -60,7 +60,7 @@ public class BDRSUserSignUpController extends AbstractController {
                 return "usersignup";
 
             } else {
-                final String contextPath = ContentInitialiserService.getRequestURL(request);
+                final String contextPath = ContentService.getRequestURL(request);
                 
                 User saveResult = doInTransaction(new TransactionCallback<User>() {
                     public User doInTransaction(TransactionStatus status) {

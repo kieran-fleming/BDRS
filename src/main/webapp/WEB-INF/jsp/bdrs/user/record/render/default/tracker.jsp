@@ -9,35 +9,15 @@
 
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
-	<!-- using censusmethod description here in case we want to display no text / more indepth text -->
-	<!-- escapeXml false so we can put anchors in the description -->
-<p><c:out value="${censusMethod.description}" escapeXml="false" /></p>
+    <!-- using censusmethod description here in case we want to display no text / more indepth text -->
+    <!-- escapeXml false so we can put anchors in the description -->
+    <p><c:out value="${censusMethod.description}" escapeXml="false" /></p>
 </c:if>
-    Click on the map to enter the location of the sighting.
-<div id="record_base_map_hover_tip">&nbsp;</div>
 
-<div class="left">
-    <a id="mapToggle" class="left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
-        Collapse
-    </a>
-    <!-- Disable KML link for now
-    <span>&nbsp;|&nbsp;<span/>
-    <a href="javascript: bdrs.map.downloadKML('#record_filter_form', null);">
-        Download KML
-    </a> 
-    -->
-</div>
-
-<div class="right">
-    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#base_map', bdrs.map.baseMap)">Enlarge Map</a>
-</div>
-
-<div class="clear"></div>
-
-<div class="map_wrapper" id="map_wrapper">
-    <div id="base_map" class="defaultmap tracker_map review_map"></div>
-    <div id="geocode" class="geocode"></div>
-</div>
+<tiles:insertDefinition name="recordEntryMap">
+    <tiles:putAttribute name="survey" value="${survey}"/>
+    <tiles:putAttribute name="censusMethod" value="${censusMethod}"/>
+</tiles:insertDefinition>
 
 <c:if test="${ not preview }">
     <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/tracker.htm" enctype="multipart/form-data">
@@ -49,34 +29,34 @@
     <c:if test="${record != null}">
         <input type="hidden" name="recordId" value="${record.id}"/>
     </c:if>
-	
-	<p class="error textcenter" id="wktMessage">
+    
+    <p class="error textcenter" id="wktMessage">
     </p>
-	<input type="hidden" name="wkt" value="${wkt}" />
-	
-	<c:if test="${!survey.recordVisibilityModifiable}">
+    <input type="hidden" name="wkt" value="${wkt}" />
+    
+    <c:if test="${!survey.recordVisibilityModifiable}">
         <input type="hidden" name="recordVisibility" value="${survey.defaultRecordVisibility}" />
     </c:if>
     
     <table class="form_table">
         <tbody>
      
-    		<c:if test="${survey.recordVisibilityModifiable}">
-        		<tr>
+            <c:if test="${survey.recordVisibilityModifiable}">
+                <tr>
                     <th title="Who will be able to view your record. \nOwner only means only you will be able to see the record. \nControlled will allow others to see that when and where you have contributed but no additional data will be supplied. \nFull public will show all details of the record to all other users.">Record Visibility</th>
                     <td>
                         <select name="recordVisibility">
-                        	<c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
+                            <c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
                             <jsp:useBean id="recVis" type="au.com.gaiaresources.bdrs.model.record.RecordVisibility" />
                                 <option value="<%= recVis.toString() %>"
-								<c:if test="<%= recVis.equals(record.getRecordVisibility()) %>">selected="selected"</c:if>
-								>
-								<%= recVis.getDescription() %></option>
+                                <c:if test="<%= recVis.equals(record.getRecordVisibility()) %>">selected="selected"</c:if>
+                                >
+                                <%= recVis.getDescription() %></option>
                             </c:forEach>
                         </select>
                     </td>
                 </tr>
-    		</c:if>
+            </c:if>
 
             <c:forEach items="${surveyFormFieldList}" var="formField">
                 <tiles:insertDefinition name="formFieldRenderer">
@@ -111,7 +91,7 @@
     <c:when test="${ preview }">
         <div class="textright">
             <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
-            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editLocations.htm?surveyId=${survey.id}'"/>
+            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
         </div>
     </c:when>
     <c:otherwise>
@@ -124,160 +104,7 @@
 </c:choose>
 
 <script type="text/javascript">
-    bdrs.survey.location.LAYER_NAME = 'Position Layer';
-    bdrs.survey.location.LOCATION_LAYER_NAME = 'Location Layer';
-	
-	// make some page scope constants
-	var trackerForm = {
-		latSelector: "input[name=latitude]",
-        longSelector: "input[name=longitude]",
-        wktSelector: "input[name=wkt]"
-	};
-	
-    bdrs.survey.location.updateLocation = function(pk) {
-        if(pk > 0) {
-            jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
-                var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
-                var feature = wkt.read(data.location);
-                var point = feature.geometry.getCentroid().transform(
-                        bdrs.map.GOOGLE_PROJECTION,
-                        bdrs.map.WGS84_PROJECTION);
-                var lat = jQuery(trackerForm.latSelector).val(point.y).blur();
-                var lon = jQuery(trackerForm.longSelector).val(point.x).blur();
-
-                // add the location point to the map
-                var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
-                layer.removeFeatures(layer.features);
-
-                var lonLat = new OpenLayers.LonLat(point.x, point.y);
-                lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
-                                          bdrs.map.GOOGLE_PROJECTION);
-                layer.addFeatures(new OpenLayers.Feature.Vector(
-                    new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat)));
-
-                // add the location geometry to the map
-                var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
-                loclayer.removeFeatures(loclayer.features);
-
-                loclayer.addFeatures(feature);
-
-                // zoom the map to show the currently selected location
-                var geobounds = feature.geometry.getBounds();
-                var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
-                bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
-            });
-        }
-        else {
-            jQuery('input[name=latitude]').val("").blur();
-            jQuery('input[name=longitude]').val("").blur();
-        }
-    }
-	
-	var toolActivatedHandler = function(toolId) {
-		if (toolId == bdrs.map.control.DRAW_POINT) {
-			jQuery(trackerForm.longSelector).removeAttr('disabled');
-			jQuery(trackerForm.latSelector).removeAttr('disabled');
-		} else {
-			jQuery(trackerForm.longSelector).attr('disabled', 'disabled');
-            jQuery(trackerForm.latSelector).attr('disabled', 'disabled');
-		}
-	};
-
     jQuery(window).load(function() {
-		
-		bdrs.map.initWktOnChangeValidation('input[name=wkt]', '#wktMessage');
-		
-        var layerName = bdrs.survey.location.LAYER_NAME;
-        bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
-        bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
-
-        <c:choose>
-            <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
-                var layer = bdrs.map.addPositionLayer(layerName);
-            </c:when>
-            <c:otherwise>
-			
-				var layer = bdrs.map.addSingleFeatureDrawLayer(bdrs.map.baseMap, layerName, {
-					latSelector: trackerForm.latSelector,
-					longSelector: trackerForm.longSelector,
-					wktSelector: trackerForm.wktSelector,
-					toolActivatedHandler: toolActivatedHandler,
-					initialDrawTool: ${not empty wkt ? 'bdrs.map.control.DRAG_FEATURE' : 'bdrs.map.control.DRAW_POINT'},
-					<c:choose>
-					   <c:when test="${censusMethod != null}">
-					       drawPoint: ${censusMethod.drawPointEnabled},
-						   drawLine: ${censusMethod.drawLineEnabled},
-						   drawPolygon: ${censusMethod.drawPolygonEnabled}
-					   </c:when>
-					   <c:otherwise>
-					       // default for non census method forms
-					       drawPoint: true,
-                           drawLine: false,
-                           drawPolygon: false
-					   </c:otherwise>
-					</c:choose>
-				});
-				
-				bdrs.map.addLonLatChangeHandler(layer, trackerForm.longSelector, trackerForm.latSelector);
-            </c:otherwise>
-        </c:choose>
-
-        var lat = jQuery(trackerForm.latSelector);
-        var lon = jQuery(trackerForm.longSelector);
-		var wkt = jQuery(trackerForm.wktSelector);
-        var point;
-        
-		if (wkt.val().length > 0) {
-			var geom = OpenLayers.Geometry.fromWKT(wkt.val());
-			if (geom) {
-				geom.transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION);
-
-				var feature = new OpenLayers.Feature.Vector(geom);
-				layer.addFeatures(feature);
-				
-				// zoom the map to show the currently selected location
-                var geobounds = feature.geometry.getBounds();
-                var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
-                bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
-			}
-		} else if(lat.val().length > 0 && lon.val().length > 0) {
-            var lonLat = new OpenLayers.LonLat(
-                    parseFloat(lon.val()), parseFloat(lat.val()));
-            lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
-                                      bdrs.map.GOOGLE_PROJECTION);
-            point = new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat);
-            layer.addFeatures(new OpenLayers.Feature.Vector(point));
-            
-            bdrs.map.centerMap(bdrs.map.baseMap, lonLat, 10);
-        } else if (jQuery('select[name=location]').val() > 0) {
-			// add the location on initial screen render
-            jQuery.ajax({
-                url: '${pageContext.request.contextPath}/webservice/location/getLocationById.htm?id='+jQuery('select[name=location]').val(), 
-                success: function(data) {
-                    var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
-                    var feature = wkt.read(data.location);
-
-                    // add the location geometry to the map
-                    var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
-                    loclayer.removeFeatures(loclayer.features);
-
-                    loclayer.addFeatures(feature);
-
-                    // zoom the map to show the currently selected location
-                    var geobounds = feature.geometry.getBounds();
-                    if (point) {
-                        geobounds.extend(point);
-                    }
-                    var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
-                    bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
-                },
-                async: false
-            });
-        } else {
-			// default center map
-            bdrs.map.centerMap(bdrs.map.baseMap, null, 3);
-        }
-        
         // Species Autocomplete
         jQuery("#survey_species_search").autocomplete({
             source: function(request, callback) {

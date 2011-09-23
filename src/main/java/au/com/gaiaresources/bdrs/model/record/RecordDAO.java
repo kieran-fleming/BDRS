@@ -153,7 +153,9 @@ public interface RecordDAO extends TransactionDAO {
 	List<Record> getLatestRecords(User user, String scientificNameSearch,
 			int limit);
 
+	@Deprecated
 	AttributeValue saveAttributeValue(AttributeValue recAttr);
+	@Deprecated
 	AttributeValue updateAttributeValue(AttributeValue recAttr);
 
 	List<Record> getRecords(String userRegistrationKey, int surveyPk,
@@ -172,6 +174,7 @@ public interface RecordDAO extends TransactionDAO {
 	 * @return a List of Records which then need to be attached to the record
 	 *         (record.setAttributes()) and saved using the RecordDAO
 	 */
+	@Deprecated
 	Set<AttributeValue> saveAttributeValues(Record r,
 			Map<Attribute, Object> attributeMap);
 
@@ -209,6 +212,7 @@ public interface RecordDAO extends TransactionDAO {
 	 * @return the <code>AttributeValue</code> with the provided primary key or
 	 *         null if one does not exist.
 	 */
+	@Deprecated
 	AttributeValue getAttributeValue(int recordAttributePk);
 
 	/**
@@ -231,6 +235,7 @@ public interface RecordDAO extends TransactionDAO {
     List<IndicatorSpecies> getLastSpecies(int userPk, int limit);
 
     void delete(Record record);
+    @Deprecated
     void delete(AttributeValue recAttr);
     
     PagedQueryResult<Record> search(PaginationFilter filter, Integer surveyPk, List<Integer> userId);

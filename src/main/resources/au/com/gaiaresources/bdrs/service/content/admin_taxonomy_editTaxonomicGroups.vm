@@ -1,0 +1,7 @@
+<p>
+This page allows you to modify the attributes for a particular 
+Taxonomic Group.  This allows you to specify Taxonomic Group 
+Attributes (which appear when a species from this Group is selected 
+in a data entry form), as well as define the fields that appear 
+on a Species Page for a species in this Group.
+</p>

@@ -20,6 +20,8 @@ public interface Persistent {
 
     Date getUpdatedAt();
 
+    void setUpdatedAt(Date date);
+
     Integer getCreatedBy();
 
     Integer getUpdatedBy();

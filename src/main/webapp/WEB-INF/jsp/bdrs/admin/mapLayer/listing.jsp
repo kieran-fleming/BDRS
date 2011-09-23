@@ -3,7 +3,7 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Map Layers</h1>
+<h1>Edit Map Layer</h1>
 
 <p>This is where you may create and edit map layers. Once you have created your map layers, assign them to a map using the <a href="${pageContext.request.contextPath}/bdrs/admin/map/listing.htm">map editing interface</a></p>
 

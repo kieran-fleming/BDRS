@@ -95,7 +95,7 @@ public interface AttributeDAO {
      * @param attr
      * @return
      */
-    public List<AttributeValue> getAttributeValueObjects(Attribute attr);
+    public <T extends TypedAttributeValue> List<T> getAttributeValueObjects(Attribute attr);
 
     /**
      * Get all of the attribute values for an attribute
@@ -104,7 +104,7 @@ public interface AttributeDAO {
      * @param attr
      * @return
      */
-    public List<AttributeValue> getAttributeValueObjects(Session sesh, Attribute attr);
+    public <T extends TypedAttributeValue> List<T> getAttributeValueObjects(Session sesh, Attribute attr);
     
     /**
      * Gets the attribute by primary key
@@ -116,7 +116,7 @@ public interface AttributeDAO {
      * @param av
      * @return
      */
-    public AttributeValue save(AttributeValue av);
+    public <T extends TypedAttributeValue> T save(T av);
     
     /**
      * Save an AttributeValue
@@ -124,25 +124,25 @@ public interface AttributeDAO {
      * @param av
      * @return
      */
-    public AttributeValue save(Session sesh, AttributeValue av);
+    public <T extends TypedAttributeValue> T save(Session sesh, T av);
     
     /**
      * Update an AttributeValue
      * @param av
      * @return
      */
-    public AttributeValue update(AttributeValue av);
+    public <T extends TypedAttributeValue> T update(T av);
     
     /**
      * Delete an AttributeValue
      * @param av
      */
-    public void delete(AttributeValue av);
+    public <T extends TypedAttributeValue> void delete(T av);
     
     /**
      * Delete an AttributeValue
      * @param sesh
      * @param av
      */
-    public void delete(Session sesh, AttributeValue av);
+    public <T extends TypedAttributeValue> void delete(Session sesh, T av);
 }

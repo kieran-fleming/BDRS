@@ -11,6 +11,7 @@
     </c:otherwise>
 </c:choose>
 
+<cw:getContent key="admin/map/editMapLayer" />
 
 <form id="mapLayerForm" action="${pageContext.request.contextPath}/bdrs/admin/mapLayer/edit.htm" method="POST">
     <c:if test="${ geoMapLayer.id != null }">
@@ -42,11 +43,11 @@
             <td>Source data for layer</td>
             <td>
                 <!-- survey is the default selection -->
-				<span title="Generate a KML layer from a survey">
-                    <input id="radio_survey_kml" type="radio" class="dataSourceSelector" name="layerSrc" value="SURVEY_KML" <c:if test="${ geoMapLayer.layerSource == \"SURVEY_KML\" }">checked="checked"</c:if> <c:if test="${ geoMapLayer.id == null }">checked="checked"</c:if> /><label for="radio_survey_kml">Survey via KML</label><br />
+				<span title="Generate a KML layer from a project">
+                    <input id="radio_survey_kml" type="radio" class="dataSourceSelector" name="layerSrc" value="SURVEY_KML" <c:if test="${ geoMapLayer.layerSource == \"SURVEY_KML\" }">checked="checked"</c:if> <c:if test="${ geoMapLayer.id == null }">checked="checked"</c:if> /><label for="radio_survey_kml">Project via KML</label><br />
 				</span>
-				<span title="Generate a WMS layer from a survey">
-                    <input id="radio_survey_mapserver" type="radio" class="dataSourceSelector" name="layerSrc" value="SURVEY_MAPSERVER" <c:if test="${ geoMapLayer.layerSource == \"SURVEY_MAPSERVER\" }">checked="checked"</c:if> <c:if test="${ geoMapLayer.id == null }">checked="checked"</c:if> /><label for="radio_survey_mapserver">Survey via MapServer (requires Mapserver installed)</label><br />
+				<span title="Generate a WMS layer from a project">
+                    <input id="radio_survey_mapserver" type="radio" class="dataSourceSelector" name="layerSrc" value="SURVEY_MAPSERVER" <c:if test="${ geoMapLayer.layerSource == \"SURVEY_MAPSERVER\" }">checked="checked"</c:if> <c:if test="${ geoMapLayer.id == null }">checked="checked"</c:if> /><label for="radio_survey_mapserver">Project via MapServer (requires Mapserver installed)</label><br />
 				</span>
 				<span title="Generate a WMS layer from an uploaded shapefile">
                     <input id="radio_shapefile" type="radio" class="dataSourceSelector" name="layerSrc" value="SHAPEFILE" <c:if test="${ geoMapLayer.layerSource == \"SHAPEFILE\" }">checked="checked"</c:if> /><label for="radio_shapefile">Shapefile (requires Mapserver installed)</label><br />
@@ -66,8 +67,8 @@
 		<tr title="If the layer source is a shape file, checking this box will cause a database overwrite of stored map features">
 			<td><label for="writeToDatabase">Write file to Database:</label></td>
 			<td><input id="writeToDatabase" type="checkbox" name="shpToDatabase" /></td>
-        <tr title="Select the survey data to create map layer with" >
-            <td><label for="surveyId">Survey:</label></td>
+        <tr title="Select the project data to create map layer with" >
+            <td><label for="surveyId">Project:</label></td>
             <td>
                 <select id="surveyId" name="surveyPk">
                 <c:forEach items="${surveyList}" var="survey">

@@ -8,7 +8,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
+import au.com.gaiaresources.bdrs.db.Persistent;
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability;
 import au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapabilityDAO;
 
@@ -154,10 +156,4 @@ public class BDRSWurflCapabilityDAOImpl extends AbstractDAOImpl implements BDRSW
 		
 		return capabilitiesMap;
 	}
-	
-	
-
-	
-	
-
 }

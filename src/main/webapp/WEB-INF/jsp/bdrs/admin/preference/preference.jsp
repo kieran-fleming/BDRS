@@ -1,18 +1,10 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Preferences</h1>
+<h1>Edit Preferences</h1>
 
-<p>
-    Nullam consequat lectus a justo luctus eu scelerisque massa varius. 
-    Suspendisse pretium commodo sapien, ut dapibus justo molestie nec. 
-    Praesent placerat tempor tellus, vitae egestas mi interdum vitae. 
-    Integer a hendrerit nisl. Praesent ac enim nunc. Suspendisse potenti. 
-    Aenean dignissim, sem quis bibendum malesuada, orci turpis vulputate 
-    justo, vel feugiat ante massa eget mi. Aenean vitae felis nec massa 
-    placerat facilisis feugiat ac tortor. Sed ullamcorper libero ac magna 
-    euismod vel ultrices mauris sagittis.
-</p>
+<cw:getContent key="admin/editPreferences" />
 
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/preference/preference.htm">
     <input id="index" type="hidden" value="0"/>

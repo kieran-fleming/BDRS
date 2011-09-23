@@ -139,7 +139,7 @@
 		        <c:when test="${ preview }">
 		            <div class="textright">
 		                <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
-		                <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editLocations.htm?surveyId=${survey.id}'"/>
+		                <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
 		            </div>
 		        </c:when>
 		        <c:otherwise>
@@ -212,7 +212,7 @@
 	
 	            // add the location point to the map
 	            var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
-	            layer.removeFeatures(layer.features);
+	            layer.removeAllFeatures();
 	
 	            var lonLat = new OpenLayers.LonLat(point.x, point.y);
 	            lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
@@ -222,10 +222,11 @@
 	
 	            // add the location geometry to the map
 	            var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
-		        loclayer.removeFeatures(loclayer.features);
-	
-	            loclayer.addFeatures(feature);
-	
+		        if (loclayer) {
+			        loclayer.removeAllFeatures();
+	            	loclayer.addFeatures(feature);
+		        }
+		        
 	            // zoom the map to show the currently selected location
 	            var geobounds = feature.geometry.getBounds();
 	            var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
@@ -243,7 +244,7 @@
         }
         else {
             var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
-            layer.removeFeatures(layer.features);
+            layer.removeAllFeatures();
         
             jQuery('input[name=latitude]').val("").blur();
             jQuery('input[name=longitude]').val("").blur();

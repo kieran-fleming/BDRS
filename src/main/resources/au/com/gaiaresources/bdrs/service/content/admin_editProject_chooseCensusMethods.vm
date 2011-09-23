@@ -1,0 +1,9 @@
+<p>
+You can optionally add Census Methods to your form. 
+Census Methods are alternate forms that allow for the 
+capture of project related data that might not necessarily 
+be taxonomic. A Census method may be defined once in the 
+Manage Census Methods interface, and applied across several 
+different projects. You can add more Census Methods to 
+your Portal by going <a href="${bdrsContextPath}/bdrs/admin/censusMethod/listing.htm">here</a>.
+</p>

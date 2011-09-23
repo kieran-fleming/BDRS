@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import au.com.gaiaresources.bdrs.db.Persistent;
 import au.com.gaiaresources.bdrs.db.QueryCriteria;
 
 public abstract class AbstractDAOImpl {
@@ -25,24 +26,24 @@ public abstract class AbstractDAOImpl {
         return sessionFactory;
     }
 
-    protected <T extends PersistentImpl> T save(T instance) {
+    protected <T extends Persistent> T save(T instance) {
         updateTimestamp(instance);
         return save(sessionFactory.getCurrentSession(), instance);
     }
 
-    public <T extends PersistentImpl> T save(Session sesh, T instance) {
+    public <T extends Persistent> T save(Session sesh, T instance) {
         updateTimestamp(instance);
         sesh.save(instance);
         return instance;
     }
     
-    public <T extends PersistentImpl> T saveOrUpdate(Session sesh, T instance) {
+    public <T extends Persistent> T saveOrUpdate(Session sesh, T instance) {
         updateTimestamp(instance);
         sesh.saveOrUpdate(instance);
         return instance;
     }
     
-    protected int deleteByQuery(PersistentImpl instance) {
+    protected int deleteByQuery(Persistent instance) {
         if(instance.getId() == null) {
             return 0;
         }
@@ -66,32 +67,32 @@ public abstract class AbstractDAOImpl {
         return q.executeUpdate();
     }
     
-    public <T extends PersistentImpl> void delete(Session sesh, T instance) {
+    public <T extends Persistent> void delete(Session sesh, T instance) {
         sesh.delete(instance);
     }
     
 
-    public <T extends PersistentImpl> void delete(T instance) {
+    public <T extends Persistent> void delete(T instance) {
         this.delete(sessionFactory.getCurrentSession(),instance);
     }
 
-    protected <T extends PersistentImpl> T update(T instance) {
+    protected <T extends Persistent> T update(T instance) {
         updateTimestamp(instance);
         return update(sessionFactory.getCurrentSession(), instance);
     }
 
-    public <T extends PersistentImpl> T update(Session sesh, T instance) {
+    public <T extends Persistent> T update(Session sesh, T instance) {
         updateTimestamp(instance);
         sesh.update(instance);
         return instance;
     }
     
-    public <T extends PersistentImpl> Long count(Class<T> clazz) { 
+    public <T extends Persistent> Long count(Class<T> clazz) { 
         String queryString = String.format("select count(*) from %s", clazz.getSimpleName());
         return (Long)sessionFactory.getCurrentSession().createQuery(queryString).iterate().next();
     }
     
-    private void updateTimestamp(PersistentImpl persistent) {
+    private void updateTimestamp(Persistent persistent) {
         persistent.setUpdatedAt(new Date());
     }
 
@@ -124,7 +125,7 @@ public abstract class AbstractDAOImpl {
         return new QueryCriteriaImpl<T>(sessionFactory.getCurrentSession().createCriteria(persistentClass));
     }
 
-    protected <T extends PersistentImpl> List<T> find(Session sesh, String hql, Object[] args, int limit)
+    protected <T extends Persistent> List<T> find(Session sesh, String hql, Object[] args, int limit)
     {
         Query query = sesh.createQuery(hql);
         for (int i = 0; i < args.length; i++) {
@@ -134,12 +135,12 @@ public abstract class AbstractDAOImpl {
         return query.list();
     }
 
-    protected <T extends PersistentImpl> List<T> find(String hql, Object[] args, int limit)
+    protected <T extends Persistent> List<T> find(String hql, Object[] args, int limit)
     {
         return find(sessionFactory.getCurrentSession(), hql, args, limit);
     }
 
-    protected <T extends PersistentImpl> List<T> find(Session sesh, String hql, Object[] args)
+    protected <T extends Persistent> List<T> find(Session sesh, String hql, Object[] args)
     {
         Query query = sesh.createQuery(hql);
         for (int i = 0; i < args.length; i++) {
@@ -148,12 +149,12 @@ public abstract class AbstractDAOImpl {
         return query.list();
     }
 
-    protected <T extends PersistentImpl> List<T> find(String hql, Object[] args)
+    protected <T extends Persistent> List<T> find(String hql, Object[] args)
     {
         return find(sessionFactory.getCurrentSession(), hql, args);
     }
 
-    protected <T extends PersistentImpl> List<T> find(Session sesh, String hql, Object args)
+    protected <T extends Persistent> List<T> find(Session sesh, String hql, Object args)
     {
         return find(sesh, hql, new Object[]{args});
     }

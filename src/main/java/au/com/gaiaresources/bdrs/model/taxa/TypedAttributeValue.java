@@ -7,7 +7,9 @@ import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-public interface TypedAttributeValue {
+import au.com.gaiaresources.bdrs.db.Persistent;
+
+public interface TypedAttributeValue extends Persistent {
 
 	@ManyToOne
 	@JoinColumn(name = "ATTRIBUTE_ID", nullable = false, updatable = false)

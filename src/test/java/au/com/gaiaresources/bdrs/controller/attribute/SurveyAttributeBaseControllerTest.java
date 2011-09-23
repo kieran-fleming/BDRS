@@ -416,7 +416,7 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         ModelAndView mv = handle(request, response);
         Assert.assertTrue(mv.getView() instanceof RedirectView);
         RedirectView redirect = (RedirectView) mv.getView();
-        Assert.assertEquals("/bdrs/admin/survey/editLocations.htm", redirect.getUrl());
+        Assert.assertEquals("/bdrs/admin/survey/locationListing.htm", redirect.getUrl());
     }
 
     @Test

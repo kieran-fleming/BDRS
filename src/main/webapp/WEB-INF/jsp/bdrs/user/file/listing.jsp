@@ -3,9 +3,16 @@
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Managed Files</h1>
+<h1>Manage Files</h1>
+
 <cw:getContent key="user/managedFileListing" />
 
+<div class="buttonpanel textright">
+    <a href="javascript: bdrs.util.confirmSubmit('Are you sure you want to delete the selected media?', '#managedFileListing');" class="delete"/>Delete</a>
+    &nbsp;|&nbsp;
+    <input class="form_action" type="button" value="Add Media" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/user/managedfile/edit.htm'"/>
+</div>
+	
 <form id="managedFileListing" method="POST" action="${pageContext.request.contextPath}/bdrs/user/managedfile/delete.htm">
 	<display:table name="managedFilePaginator.list" id="managedFileListingTable" 
 	    decorator="au.com.gaiaresources.bdrs.controller.file.ManagedFileTableDecorator"
@@ -19,10 +26,4 @@
 	    <display:column escapeXml="true" property="description" title="Description" sortable="true" sortName="description" />
 	    <display:column property="actionLinks" title="Actions" class="textcenter"/>
 	</display:table>
-
-	<div class="textright">
-	    <a href="javascript: bdrs.util.confirmSubmit('Are you sure you want to delete the selected media?', '#managedFileListing');" class="delete"/>Delete</a>
-	    &nbsp;|&nbsp;
-	    <input class="form_action" type="button" value="Add Media" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/user/managedfile/edit.htm'"/>
-	</div>
 </form>

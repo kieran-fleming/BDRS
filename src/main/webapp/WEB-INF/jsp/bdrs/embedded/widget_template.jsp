@@ -63,14 +63,12 @@
         </c:if>
         
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs.js"></script>
-        
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/bdrs/public/embedded/bdrs-embed.css??a=b
-          <c:forEach var="entry" items="${ paramMap }">
-                 <jsp:useBean id="entry" type="java.util.Map.Entry"/>
-               &
-               <c:out value="${ entry.key }"/>=
-               <%= URLEncoder.encode(entry.getValue().toString()) %>
-          </c:forEach>" type="text/css"/>
+		
+		<%-- putting the JSP in one line so the query string doesn't get filled with spaces.
+		     I assume the query parameter names were being padded with spaces so when it came time
+			 for JSP to do its replace work nothing happened and we had no styling in the embedded widgets
+		 --%>
+		<link rel="stylesheet" href="${pageContext.request.contextPath}/bdrs/public/embedded/bdrs-embed.css?a=b<c:forEach var="entry" items="${ paramMap }"><jsp:useBean id="entry" type="java.util.Map.Entry"/>&<c:out value="${ entry.key }"/>=<%= URLEncoder.encode(entry.getValue().toString()) %></c:forEach>" type="text/css"/>
     </head>
     <body>
         <tiles:insertAttribute name="content"/>

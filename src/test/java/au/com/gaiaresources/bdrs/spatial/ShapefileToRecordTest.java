@@ -34,7 +34,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;

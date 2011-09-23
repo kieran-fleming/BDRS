@@ -1,16 +1,17 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <%@page import="au.com.gaiaresources.bdrs.controller.survey.SpeciesListType"%>
 <jsp:useBean id="listType" type="au.com.gaiaresources.bdrs.controller.survey.SpeciesListType" scope="request"/>
 
-<h1>Choose Taxonomy</h1>
+<h1>Edit Project: Choose Taxonomy</h1>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editTaxonomy.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
 
     <div>
-        <p>Users will be able to record</p>
+        <cw:getContent key="admin/editProject/editTaxonomy" />
 
         <fieldset id="speciesListTypeFieldSet">
             <c:forEach items="<%=SpeciesListType.values()%>" var="type">

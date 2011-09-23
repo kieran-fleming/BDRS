@@ -7,7 +7,7 @@
         <h1>Add Group</h1>
     </c:when>
     <c:otherwise>
-        <h1>Edit Group</h1>
+        <h1>Edit Details of Group <c:out value="${group.name}"/></h1>
     </c:otherwise>
 </c:choose>
 
@@ -31,7 +31,8 @@
 </form>
 
 
-<h3>Users</h3>
+<h3>Members of Group <c:out value="${group.name}"/></h3>
+<cw:getContent key="admin/groupEdit/members" />
 
 <tiles:insertDefinition name="userGrid">
        <tiles:putAttribute name="widgetId" value="users"/>
@@ -48,7 +49,8 @@
      -->
     <input id="addUsers" class="form_action" type="button" value="Add Users" /></div>
 
-<h3>Groups</h3>
+<h3>Groups in Group <c:out value="${group.name}"/></h3>
+<cw:getContent key="admin/groupEdit/groups" />
 
 <tiles:insertDefinition name="groupGrid">
        <tiles:putAttribute name="widgetId" value="groups"/>

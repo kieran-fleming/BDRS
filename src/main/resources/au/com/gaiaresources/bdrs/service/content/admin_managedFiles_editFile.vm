@@ -1,0 +1,5 @@
+<p>
+    You can add a file to the system through this page.  
+    Once added, it will appear in the 
+    <a href="${bdrsContextPath}/bdrs/user/managedfile/listing.htm">Manage Files interface</a>.
+</p>

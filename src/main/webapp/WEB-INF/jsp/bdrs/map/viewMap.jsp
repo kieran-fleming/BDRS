@@ -56,7 +56,7 @@
 			    var layerOptions = {
 					bdrsLayerId: ${assignedLayer.layer.id},
 					visible: ${assignedLayer.visible},
-					opacity: 0.25,
+					opacity: bdrs.map.DEFAULT_OPACITY,
 					fillColor: "${assignedLayer.layer.fillColor}",
                     strokeColor: "${assignedLayer.layer.strokeColor}",
                     strokeWidth: ${assignedLayer.layer.strokeWidth},

@@ -103,7 +103,7 @@
     <c:when test="<%= formField.isAttributeFormField() %>">
         <tr>
             <th>
-                <label for="attribute_${formField.attribute.id}">
+                <label for="${ formPrefix }attribute_${formField.attribute.id}">
                     <c:out value="${formField.attribute.description}"/>
                 </label>
             </th>

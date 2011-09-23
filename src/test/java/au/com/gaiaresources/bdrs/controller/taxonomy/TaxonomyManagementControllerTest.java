@@ -84,8 +84,8 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 attr.setTag(true);
 
                 if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
-                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
-                		AttributeType.MULTI_SELECT.equals(attrType)) {
+                        AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                        AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -102,14 +102,14 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
 
                     attr.setOptions(optionList);
                 }else if(AttributeType.INTEGER_WITH_RANGE.equals(attrType)){
-                	List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
-                	AttributeOption upper = new AttributeOption();
-                	AttributeOption lower = new AttributeOption();
-                	lower.setValue("100");
-                	upper.setValue("200");
-                	rangeList.add(taxaDAO.save(lower));
-                	rangeList.add(taxaDAO.save(upper));
-                	attr.setOptions(rangeList);
+                    List<AttributeOption> rangeList = new ArrayList<AttributeOption>();
+                    AttributeOption upper = new AttributeOption();
+                    AttributeOption lower = new AttributeOption();
+                    lower.setValue("100");
+                    upper.setValue("200");
+                    rangeList.add(taxaDAO.save(lower));
+                    rangeList.add(taxaDAO.save(upper));
+                    attr.setOptions(rangeList);
                 }
 
                 attr = taxaDAO.save(attr);
@@ -225,12 +225,12 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         
     @Test
     public void testAddTaxonSubmitWithParentLowerLimitOutside() throws Exception{
-    	testAddTaxon(true, "99");
+        testAddTaxon(true, "99");
     }
     
     @Test
     public void testAddTaxonSubmitWithParentLowerLimitEdge() throws Exception {
-    	testAddTaxon(true, "100");
+        testAddTaxon(true, "100");
     }
 
     @Test
@@ -240,22 +240,22 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     
     @Test
     public void testAddTaxonSubmitWithParentUpperLimitEdge() throws Exception {
-    	testAddTaxon(true, "200");
+        testAddTaxon(true, "200");
     }
     
     @Test
     public void testAddTaxonSubmitWithParentUpperLimitOutside() throws Exception  {
-    	testAddTaxon(true, "201");
+        testAddTaxon(true, "201");
     }
     
     @Test
     public void testAddTaxonSubmitWithoutParentLowerLimitOutside() throws Exception{
-    	testAddTaxon(false, "99");
+        testAddTaxon(false, "99");
     }
     
     @Test
     public void testAddTaxonSubmitWithoutParentLowerLimitEdge() throws Exception {
-    	testAddTaxon(false, "100");
+        testAddTaxon(false, "100");
     }
 
     @Test
@@ -265,12 +265,12 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     
     @Test
     public void testAddTaxonSubmitWithoutParentUpperLimitEdge() throws Exception {
-    	testAddTaxon(false, "200");
+        testAddTaxon(false, "200");
     }
     
     @Test
     public void testAddTaxonSubmitWithoutParentUpperLimitOutside() throws Exception  {
-    	testAddTaxon(false, "201");
+        testAddTaxon(false, "201");
     }
 
     
@@ -293,22 +293,22 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
 
     @Test
     public void testEditTaxonSubmitWithParentLowerLimitOutside() throws Exception{
-    	testEditTaxon(true, "99");
+        testEditTaxon(true, "99");
     }
     
     @Test
     public void testEditTaxonSubmitWithoutParentLowerLimitOutside() throws Exception{
-    	testEditTaxon(false, "99");
+        testEditTaxon(false, "99");
     }
     
     @Test
     public void testEditTaxonSubmitWithParentLowerLimitEdge() throws Exception {
-    	testEditTaxon(true, "100");
+        testEditTaxon(true, "100");
     }
     
     @Test
     public void testEditTaxonSubmitWithoutParentLowerLimitEdge() throws Exception {
-    	testEditTaxon(false, "100");
+        testEditTaxon(false, "100");
     }
 
     @Test
@@ -323,22 +323,22 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     
     @Test
     public void testEditTaxonSubmitWithParentUpperLimitEdge() throws Exception {
-    	testEditTaxon(true, "200");
+        testEditTaxon(true, "200");
     }
     
     @Test
     public void testEditTaxonSubmitWithoutParentUpperLimitEdge() throws Exception {
-    	testEditTaxon(false, "200");
+        testEditTaxon(false, "200");
     }
     
     @Test
     public void testEditTaxonSubmitWithParentLimitOutside() throws Exception  {
-    	testEditTaxon(true, "201");
+        testEditTaxon(true, "201");
     }
     
     @Test
     public void testEditTaxonSubmitWithoutParentLimitOutside() throws Exception  {
-    	testEditTaxon(false, "201");
+        testEditTaxon(false, "201");
     }
     
     private void testEditTaxon(boolean withParent, String intWithRangeValue) throws Exception {
@@ -390,8 +390,8 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     value = "123";
                     break;
                 case INTEGER_WITH_RANGE:
-	               	 value = intWithRangeValue;                    
-	               	 break;
+                        value = intWithRangeValue;
+                        break;
                 case DECIMAL:
                     value = "456.7";
                     break;
@@ -421,14 +421,14 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     break;
                 case MULTI_CHECKBOX:
                 case MULTI_SELECT:
-                	List<AttributeOption> opts = attr.getOptions(); 
-                	request.addParameter(key, opts.get(0).getValue());
-                	request.addParameter(key, opts.get(1).getValue());
-                	value = null;
-                	break;
+                    List<AttributeOption> opts = attr.getOptions(); 
+                    request.addParameter(key, opts.get(0).getValue());
+                    request.addParameter(key, opts.get(1).getValue());
+                    value = null;
+                    break;
                 case SINGLE_CHECKBOX:
-                	value = Boolean.TRUE.toString();
-                	break;
+                    value = Boolean.TRUE.toString();
+                    break;
                 case FILE:
                     String file_filename = String.format("attribute_%d", attr.getId());
                     MockMultipartFile mockFileFile = new MockMultipartFile(key, file_filename, "audio/mpeg", file_filename.getBytes());
@@ -446,7 +446,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     break;
             }
             if(value != null) {
-            	request.addParameter(key, value);
+                request.addParameter(key, value);
             }
         }
         
@@ -522,38 +522,38 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
                 case MULTI_CHECKBOX:
-	                {
-	                	// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	for(String val : taxonAttr.getMultiCheckboxValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-	                	
-	            	}
-	            	break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        for(String val : taxonAttr.getMultiCheckboxValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                        
+                    }
+                    break;
                 case MULTI_SELECT:
-                	{
-	                	// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	log.debug("taxonAttr " + taxonAttr);
-	                	log.debug("multi select val " + taxonAttr.getMultiSelectValue());
-	                	for(String val : taxonAttr.getMultiSelectValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-	                	
-                	}
-                	break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        log.debug("taxonAttr " + taxonAttr);
+                        log.debug("multi select val " + taxonAttr.getMultiSelectValue());
+                        for(String val : taxonAttr.getMultiSelectValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                        
+                    }
+                    break;
                 case SINGLE_CHECKBOX:
-                	Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
-                	break; 
+                    Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
+                    break; 
                 case FILE:
                 case IMAGE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
@@ -635,14 +635,14 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     break;
                 case MULTI_CHECKBOX:
                 case MULTI_SELECT:
-                	List<AttributeOption> opts = attr.getOptions(); 
-                	request.addParameter(key, opts.get(0).getValue());
-                	request.addParameter(key, opts.get(1).getValue());
-                	value = null;
-                	break;
+                    List<AttributeOption> opts = attr.getOptions(); 
+                    request.addParameter(key, opts.get(0).getValue());
+                    request.addParameter(key, opts.get(1).getValue());
+                    value = null;
+                    break;
                 case SINGLE_CHECKBOX:
-                	value = Boolean.FALSE.toString();
-                	break;
+                    value = Boolean.FALSE.toString();
+                    break;
                 case FILE:
                     String file_filename = String.format("attribute_%d", attr.getId());
                     MockMultipartFile mockFileFile = new MockMultipartFile(key, file_filename, "audio/mpeg", file_filename.getBytes());
@@ -672,7 +672,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     break;
             }
             if(value != null) {
-            	request.addParameter(key, value);
+                request.addParameter(key, value);
             }
         }
         
@@ -734,34 +734,34 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
                 case MULTI_CHECKBOX:
-                	{
-	                	// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	for(String val : taxonAttr.getMultiCheckboxValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-                	}
-                	break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        for(String val : taxonAttr.getMultiCheckboxValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                    }
+                    break;
                 case MULTI_SELECT:
-                	{
-                		// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	for(String val : taxonAttr.getMultiSelectValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-                	}
-                	break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : taxonAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        for(String val : taxonAttr.getMultiSelectValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                    }
+                    break;
                 case SINGLE_CHECKBOX:
-                	Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
-                	break; 
+                    Assert.assertEquals(Boolean.parseBoolean(request.getParameter(key)), Boolean.parseBoolean(taxonAttr.getStringValue()));
+                    break; 
                 case FILE:
                 case IMAGE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());

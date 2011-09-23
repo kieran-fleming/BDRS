@@ -143,9 +143,9 @@
     height: 300px;
 }
 
-/******************************************************************************/
-/* Location List Styling for the list of locations shown on editLocations.jsp */
-/******************************************************************************/
+/***********************************************************************************/
+/* Location List Styling for the list of locations shown on user editLocations.jsp */
+/***********************************************************************************/
 table.locationList {
     border-collapse: collapse;
 }
@@ -159,14 +159,120 @@ div.userlocationList {
 }
 
 .locations_map {
-    width: 65%;
     float: left;
+    width: 65%;
+    height: 465px;
 }
 
 .restrict_locations {
     margin: 1px 3px 0px 10px;
 }
 
+/*********************************************/
+/* Styles for Location Attributes Entry Page */
+/*********************************************/
+input.locationMetadata,
+textarea.locationMetadata {
+    width: 415px;
+}
+
+.locationsContainer table label {
+    float: right;
+    text-align: right;
+}
+
+.locationAttributes .locations_map {
+    width: 70%;
+}
+
+/***********************************************/
+/* Styles for the vertical form field renderer */
+/***********************************************/
+
+.verticalFormField {
+    padding: 5px;
+    overflow: hidden;
+}
+
+.verticalFormField label {
+    font-weight: bold;
+    float: left;
+}
+.verticalFormField label,
+.verticalFormField input[type=text],
+.verticalFormField input[type=checkbox],
+.verticalFormField input[type=file],
+.verticalFormField select,
+.verticalFormField textarea {
+    margin: 0 0 0 20px;
+    vertical-align: top;
+}
+
+.verticalFormField label,
+.verticalFormField select,
+.verticalFormField textarea {
+    width: 200px;
+}
+
+.verticalFormField input[type=file] {
+    width: 175px;
+}
+
+.verticalFormField input[type=text] {
+    width: 194px;
+}
+
+.form_table .verticalFormField textarea {
+    width: 200px;
+}
+
+/* reset the width for time selector so they will appear next to each other */
+#timeSelector select {
+    width: auto;
+}
+
+select.minuteSelector {
+    margin: 0;
+}
+
+.clearLink {
+    vertical-align: bottom;
+}
+
+label.multiCheckboxLabel {
+    font-weight: normal;
+    margin: 0;
+    vertical-align: top;
+    float: none;
+}
+
+.multiCheckboxOpts {
+    float: left;
+}
+
+/*********************************************************/
+/* Styling for location attributes on record entry forms */
+/*********************************************************/
+
+.attributeDescription {
+    width: 34%;
+    font-weight: bold;
+}
+
+.attributeDescription, 
+.attributeValue {
+    float: left;
+    padding: 1px;
+    vertical-align: middle;
+}
+
+.attributeValue {
+    width: 64%;
+}
+
+.attributeElement {
+    overflow: hidden;
+}
 /********************************************************************/
 /* Search navigation bar styling (for pagination on advancedReview) */
 /********************************************************************/
@@ -213,7 +319,10 @@ table.datatable {
 }
 
 .datatable td {
-    border: 1px dotted #484848;
+    border-top: 1px dotted #484848;
+    border-right: 1px dotted #484848;
+    border-bottom: 1px dotted #484848;
+    border-left: 1px dotted #484848;
 }
 
 .datatable input.fillwidth {
@@ -434,7 +543,7 @@ legend {
 }
 
 .buttonpanel {
-    padding: 1em 0em 1em 0em;
+    padding: 0.5em 0em 0.5em 0em;
 }
 
 .max_size_img {
@@ -479,6 +588,7 @@ h1 {
     font-weight: bold;
     line-height: 100%;
     padding: 10px 0;
+	margin: 0.25em; 
 }
 
 h2 {
@@ -487,6 +597,7 @@ h2 {
     font-weight: bold;
     line-height: 100%;
     padding: 10px 0;
+	margin: 0.25em;
 }
 
 h3 {
@@ -494,6 +605,12 @@ h3 {
     font-size: 135%;
     font-weight: bold;
     padding: 10px 0;
+	margin: 0.25em;
+}
+
+/* overriding the YUI defaults */
+table {
+	margin-bottom: 0;
 }
 
 .sep {
@@ -1003,11 +1120,11 @@ h3.field_guide_header {
 }
 
 .facetCol {
-    width: 248px;
+    width: 27.1%;
 }
 
 .resultCol {
-    width: 580px;
+    width: 73%;
 }
 
 .tabPane {
@@ -1018,8 +1135,8 @@ h3.field_guide_header {
 }
 
 #atlasSightingsMap {
-    width: 572px;
-    height: 362px;
+    /*width: 572px;
+    height: 362px;*/
 }
 
 .alaSightingsContent #searchButton {
@@ -1113,6 +1230,12 @@ h3.field_guide_header {
     margin-top: 0.3em;
 }
 
+#recordTable .taxonNameCell .commonName {
+    border-bottom: 1px dotted #484848;
+    font-weight: bold;
+}
+
+
 /***********************/
 /* open layers toolbar */
 /***********************/
@@ -1149,4 +1272,22 @@ h3.field_guide_header {
 /**************************************/
 table.bulkDataTableForm tbody tr th {
 	width: 30%
+}
+
+/****************************************/
+/* Edit Txonomic Groups 2 column layout */
+/****************************************/
+.editTaxonGroupLeftColumn {
+	padding: 10px;
+}
+
+.editTaxonGroupRightColumn {
+	padding: 10px 0 0 50px;
+} 
+
+/*******************/
+/* Search taxonomy */
+/*******************/
+.searchTaxonomyHeader {
+	width: 80px;
 }

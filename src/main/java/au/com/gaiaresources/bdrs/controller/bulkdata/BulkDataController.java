@@ -24,8 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;
@@ -137,7 +137,7 @@ public class BulkDataController extends AbstractController {
 
                     InputStream inp = uploadedFile.getInputStream();
                     boolean createMissing = req.getParameter("createMissing") != null;
-                    BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, inp);
+                    BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inp);
 
                     view.addObject("bulkUpload", bulkUpload);
 

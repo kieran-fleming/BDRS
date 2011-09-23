@@ -57,7 +57,7 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
         obs[1] = "%" + searchString.toLowerCase() + "%";
         List<AttributeValue> attrs = find("from AttributeValue r where r.attribute = ? and lower(r.stringValue) like ?", obs);
         HashSet<String> values = new HashSet<String>();
-        for (TypedAttributeValue ra : attrs) {
+        for (AttributeValue ra : attrs) {
             values.add(ra.getStringValue());
         }
         List<String> sorted = new ArrayList<String>(values);
@@ -81,7 +81,7 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
     public List<String> getAttributeValues(Attribute attr) {
         List<AttributeValue> attrs = find("from AttributeValue r where r.attribute = ?", attr);
         HashSet<String> values = new HashSet<String>();
-        for (TypedAttributeValue ra : attrs) {
+        for (AttributeValue ra : attrs) {
             values.add(ra.getStringValue());
         }
         List<String> sorted = new ArrayList<String>(values);
@@ -134,22 +134,22 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
     }
     
     @Override
-    public AttributeValue save(AttributeValue av) {
+    public <T extends TypedAttributeValue> T save(T av) {
         return super.save(av);
     }
     
     @Override
-    public AttributeValue update(AttributeValue av) {
+    public <T extends TypedAttributeValue> T update(T av) {
         return super.update(av);
     }
     
     @Override
-    public void delete(AttributeValue av) {
+    public <T extends TypedAttributeValue> void delete(T av) {
         super.delete(av);
     }
     
     @Override
-    public List<AttributeValue> getAttributeValueObjects(Attribute attr) {
+    public <T extends TypedAttributeValue> List<T> getAttributeValueObjects(Attribute attr) {
         return getAttributeValueObjects(getSession(), attr);
     }
 
@@ -160,13 +160,13 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
     }
 
     @Override
-    public void delete(Session sesh, AttributeValue av) {
+    public <T extends TypedAttributeValue> void delete(Session sesh, T av) {
         super.delete(sesh, av);
         
     }
 
     @Override
-    public List<AttributeValue> getAttributeValueObjects(Session sesh,
+    public <T extends TypedAttributeValue> List<T> getAttributeValueObjects(Session sesh,
             Attribute attr) {
         return find(sesh, "from AttributeValue r where r.attribute = ?", attr);
     }
@@ -177,7 +177,7 @@ public class AttributeDAOImpl extends AbstractDAOImpl implements AttributeDAO {
     }
 
     @Override
-    public AttributeValue save(Session sesh, AttributeValue av) {
+    public <T extends TypedAttributeValue> T save(Session sesh, T av) {
         return super.save(sesh, av);
     }
 }

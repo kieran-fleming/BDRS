@@ -32,7 +32,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -43,9 +42,10 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
@@ -61,6 +61,8 @@ public class YearlySightingsController extends AbstractController {
     private LocationDAO locationDAO;
     @Autowired
     private RecordDAO recordDAO;
+    @Autowired
+    private AttributeDAO attributeDAO;
     @Autowired
     private FileService fileService;
     
@@ -223,24 +225,26 @@ public class YearlySightingsController extends AbstractController {
                     }
                     
                     // Record Attributes
-                    AttributeValue recAttr;
+                    TypedAttributeValue recAttr;
                     WebFormAttributeParser attributeParser = new WebFormAttributeParser();
+                    Set recAtts = rec.getAttributes();
                     for(Attribute attribute : survey.getAttributes()) {
                         if(AttributeScope.SURVEY.equals(attribute.getScope())) {
                             recAttr = attributeParser.parse(attribute, rec, request.getParameterMap(), request.getFileMap());
                             if(attributeParser.isAddOrUpdateAttribute()) {
-                                recAttr = recordDAO.saveAttributeValue(recAttr);
+                                recAttr = attributeDAO.save(recAttr);
                                 if(attributeParser.getAttrFile() != null) {
                                     fileService.createFile(recAttr, attributeParser.getAttrFile());
                                 }
-                                rec.getAttributes().add(recAttr);
+                                recAtts.add(recAttr);
                             }
                             else {
-                                rec.getAttributes().remove(recAttr);
-                                recordDAO.delete(recAttr);
+                                recAtts.remove(recAttr);
+                                attributeDAO.delete(recAttr);
                             }
                         }
                     }
+                    rec.setAttributes(recAtts);
 
                     rec.setNumber(Integer.parseInt(value));
                     recordDAO.saveRecord(rec);

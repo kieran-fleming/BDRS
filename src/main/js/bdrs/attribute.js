@@ -2,8 +2,6 @@
 // Attributes
 //--------------------------------------
 
-bdrs.attribute = {};
-
 bdrs.attribute.addAttributeCount = 1;
 
 /**
@@ -56,9 +54,36 @@ bdrs.attribute.showHtmlEditor = function(popup, textEditor, input) {
     textEditor.value = input.value;
     bdrs.attribute.htmlInput = input;
     popup.dialog('open');
-}
+};
 
 bdrs.attribute.closeHtmlEditor = function(popup) {
     popup.dialog('close');
 };
 
+bdrs.attribute.createAttributeDisplayDiv = function(attributes, attributeSelector) {
+    if (!attributeSelector) {
+        return;
+    }
+    var attDiv = jQuery(attributeSelector);
+    if (!attDiv) {
+        return;
+    }
+    // remove any existing attributes
+    $(".attributeElement").remove();
+    
+    if (!attributes) {
+        return;
+    }
+    
+    for (var i = 0; i < attributes.length; i++) {
+        var att = attributes[i];
+        var attElem = jQuery('<div class="attributeElement" ></div>');
+        var attDescElem = jQuery('<div class="attributeDescription" >' + 
+                att.attribute.description + '</div>');
+        var attValueElem = jQuery('<div class="attributeValue" >' + 
+                att.stringValue + '</div>');
+        attElem.append(attDescElem);
+        attElem.append(attValueElem);
+        attDiv.append(attElem);
+    }
+};

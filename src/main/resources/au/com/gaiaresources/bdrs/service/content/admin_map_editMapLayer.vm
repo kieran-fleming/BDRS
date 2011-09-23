@@ -1,0 +1,6 @@
+<p>
+    You can indicate the Project, or the dataset that you wish 
+    to load to the system.  Note that you need to load the 
+    datasets through the 
+    <a href="${pageContext.request.contextPath}/bdrs/user/managedfile/listing.htm">Manage File interface</a> first.
+</p>

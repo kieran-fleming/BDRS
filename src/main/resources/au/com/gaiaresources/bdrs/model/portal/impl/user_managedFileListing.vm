@@ -1,3 +1,5 @@
 <p>
-This functionality allows you to upload files that can then be linked from other parts of the BDRS software.  More will be documented on these preferences in coming releases of the software, and in the Google Code repository located <a href="http://code.google.com/p/ala-citizenscience/">here</a>.
+    You can add files to the Portal through this interface.  This is where you 
+    add datasets to be included in Maps, and where you include graphics and 
+    themes for your Portal.
 </p>

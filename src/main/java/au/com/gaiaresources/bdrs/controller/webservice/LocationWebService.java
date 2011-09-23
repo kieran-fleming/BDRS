@@ -57,7 +57,7 @@ public class LocationWebService extends AbstractController {
 
         Location location = locationDAO.getLocation(pk);
         response.setContentType("application/json");
-        response.getWriter().write(JSONObject.fromObject(location.flatten()).toString());
+        response.getWriter().write(JSONObject.fromObject(location.flatten(3)).toString());
     }
     
     @RequestMapping(value="/webservice/location/getLocationsById.htm", method=RequestMethod.GET)
@@ -87,7 +87,6 @@ public class LocationWebService extends AbstractController {
         response.setContentType("application/json");
         response.getWriter().write(ob.toString());
     }
-    
 
     @RequestMapping(value="/webservice/location/bookmarkUserLocation.htm", method=RequestMethod.GET)
     public void bookmarkUserLocation(HttpServletRequest request,

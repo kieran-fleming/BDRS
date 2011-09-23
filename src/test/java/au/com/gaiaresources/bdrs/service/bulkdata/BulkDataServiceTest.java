@@ -21,17 +21,16 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.hibernate.SQLQuery;
-import org.hibernate.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.model.location.Location;
+import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
@@ -46,6 +45,7 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
@@ -77,6 +77,8 @@ public class BulkDataServiceTest extends AbstractControllerTest {
     private LSIDService lsidService;
     @Autowired
     private MetadataDAO metadataDAO;
+    @Autowired
+    private LocationDAO locationDAO;
     
     Logger log = Logger.getLogger(getClass());
     
@@ -90,12 +92,17 @@ public class BulkDataServiceTest extends AbstractControllerTest {
     
     Attribute surveyAttr1;
     Attribute surveyAttr2;
+    Attribute surveyAttr4;
+    Attribute surveyAttr3;
     
     User user;
     List<User> userList;
     
     TaxonGroup taxongroup;
     IndicatorSpecies species;
+    private Location loc;
+    private AttributeValue locAttrVal;
+    
     
     @Before
     public void setup() {
@@ -128,11 +135,26 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         cmDAO.update(cm2);
         
         
-        surveyAttr1 = createAttribute("surv1", "sdesc1", true, AttributeScope.RECORD, false, "IN");
-        surveyAttr2 = createAttribute("surv2", "sdesc2", true, AttributeScope.RECORD, false, "ST");
+        surveyAttr1 = createAttribute("surv1", "sdesc1", true, AttributeScope.RECORD, false, AttributeType.INTEGER.getCode());
+        surveyAttr2 = createAttribute("surv2", "sdesc2", true, AttributeScope.RECORD, false, AttributeType.STRING.getCode());
+        surveyAttr3 = createAttribute("surv3", "sdesc3", false, AttributeScope.RECORD, false, AttributeType.HTML.getCode());
+        surveyAttr4 = createAttribute("surv4", "sdesc4", true, AttributeScope.LOCATION, false, AttributeType.STRING.getCode());
         
         survey.getAttributes().add(surveyAttr1);
         survey.getAttributes().add(surveyAttr2);
+        survey.getAttributes().add(surveyAttr3);
+        survey.getAttributes().add(surveyAttr4);
+        
+        loc = new Location();
+        loc.setName("Test Location");
+        loc.setLocation(locationService.createPoint(10.0, 10.0));
+        locAttrVal = new AttributeValue();
+        locAttrVal.setAttribute(surveyAttr4);
+        locAttrVal.setStringValue("location attribute value");
+        locAttrVal = attrDAO.save(locAttrVal);
+        loc.getAttributes().add(locAttrVal);
+        loc = locationDAO.save(loc);
+        survey.getLocations().add(loc);
         
         taxongroup = taxaDAO.createTaxonGroup("a taxon group", false, false, false, false, false, false);
         species = taxaDAO.createIndicatorSpecies("hectus workus", "argh pirate", taxongroup, new ArrayList<Region>(), new ArrayList<SpeciesProfile>());
@@ -145,12 +167,12 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         
     }
 
-	@Test
+    @Test
     public void testImportSurvey() throws Exception, ParseException {
         InputStream stream = getClass().getResourceAsStream("basic_upload.xls");
         Survey survey = new Survey();
 
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, stream);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, stream);
         
         Assert.assertEquals(1, bulkUpload.getRecordUploadList().size());
         RecordUpload recUpload = bulkUpload.getRecordUploadList().get(0);
@@ -189,9 +211,11 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         int colIdx = 0;
         Assert.assertEquals("ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Parent ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
+        Assert.assertEquals("Census Method ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Census Method", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Scientific Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Common Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
+        Assert.assertEquals("Location ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Location Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Latitude", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Longitude", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
@@ -214,6 +238,98 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         Assert.assertEquals("desc3", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         
         Assert.assertEquals("desc4", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
+        
+        // Location Sheet
+        Sheet locSheet = wb.getSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
+        Assert.assertNotNull(locSheet);
+        
+        // Header
+        int locColIndex = 0;
+        Assert.assertEquals("Location ID", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals("Type", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals("Location Name", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals("Latitude", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals("Longitude", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals("sdesc4", locSheet.getRow(0).getCell(locColIndex++).getStringCellValue());
+        
+        // Content - Should have one one row there.
+        locColIndex = 0;
+        Assert.assertEquals(loc.getId().intValue(), new Double(XlsCellUtil.cellToDouble(locSheet.getRow(1).getCell(locColIndex++))).intValue());
+        Assert.assertEquals(AbstractBulkDataService.LOCATION_SHEET_SURVEY_LOCATION, 
+                            locSheet.getRow(1).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals(loc.getName(), locSheet.getRow(1).getCell(locColIndex++).getStringCellValue());
+        Assert.assertEquals(loc.getLocation().getCentroid().getY(), XlsCellUtil.cellToDouble(locSheet.getRow(1).getCell(locColIndex++)));
+        Assert.assertEquals(loc.getLocation().getCentroid().getX(), XlsCellUtil.cellToDouble(locSheet.getRow(1).getCell(locColIndex++)));
+        Assert.assertEquals(locAttrVal.getStringValue(), XlsCellUtil.cellToString(locSheet.getRow(1).getCell(locColIndex++)));
+    }
+
+    @Test
+    public void testImportLocations() throws IOException,
+            ParseException, MissingDataException,
+            InvalidSurveySpeciesException, DataReferenceException {
+        
+        surveyDAO.updateSurvey(survey);
+
+        File spreadSheetTmp = File.createTempFile("BulkDataServiceTest.testImportLocations", ".xls");
+        FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
+        registerStream(outStream);
+
+        bulkDataService.exportSurveyTemplate(survey, outStream);
+
+        InputStream inStream = new FileInputStream(spreadSheetTmp);
+        registerStream(inStream);
+
+        Workbook wb = new HSSFWorkbook(inStream);
+        
+        // Location Sheet
+        Sheet locSheet = wb.getSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
+        Assert.assertNotNull(locSheet);
+        
+        Row row = locSheet.createRow(locSheet.getLastRowNum()+1);
+        int colIndex = 0;
+        row.createCell(colIndex++);    // Location ID
+        // Intentionally setting everything as strings to stress the format coercion
+        row.createCell(colIndex++).setCellValue(AbstractBulkDataService.LOCATION_SHEET_SURVEY_LOCATION);    // Type 
+        row.createCell(colIndex++).setCellValue("I am a new location");    // Location Name
+        row.createCell(colIndex++).setCellValue("-20");    // Latitude
+        row.createCell(colIndex++).setCellValue("-20");    // Longitude
+        row.createCell(colIndex++).setCellValue("I am a little teapot");    // Attribute Values
+        
+        FileOutputStream outStream2 = new FileOutputStream(spreadSheetTmp);
+        registerStream(outStream2);
+        wb.write(outStream2);
+
+        FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
+        registerStream(inStream2);
+
+        int initialLocCount = survey.getLocations().size();
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
+
+        Assert.assertEquals(2, bulkUpload.getLocationUploads().size());
+        
+        sessionFactory.getCurrentSession().getTransaction().commit();
+        sessionFactory.getCurrentSession().beginTransaction();
+        bulkDataService.saveRecords(user, bulkUpload, true);
+
+        Survey other = surveyDAO.getSurvey(survey.getId());
+        int actualLocCount = other.getLocations().size();
+        Assert.assertEquals(initialLocCount+1, actualLocCount); 
+        
+        boolean otherLocationFound = false;
+        for(Location otherLoc : other.getLocations()) {
+            if(!otherLoc.getId().equals(loc.getId())) {
+                otherLocationFound = true;
+                Assert.assertNull(otherLoc.getUser());
+                Assert.assertEquals(-20.0, otherLoc.getLocation().getCentroid().getY());
+                Assert.assertEquals(-20.0, otherLoc.getLocation().getCentroid().getX());
+                Assert.assertEquals("I am a new location", otherLoc.getName());
+                
+                Assert.assertEquals(1, loc.getAttributes().size());
+                Assert.assertEquals("I am a little teapot", otherLoc.getAttributes().iterator().next().getStringValue());
+            }
+        }
+        
+        Assert.assertTrue(otherLocationFound);
     }
     
     @Test
@@ -245,9 +361,11 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         int colIdx = 0;
         Assert.assertEquals("ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Parent ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
+        Assert.assertEquals("Census Method ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Census Method", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Scientific Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Common Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
+        Assert.assertEquals("Location ID", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Location Name", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Latitude", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
         Assert.assertEquals("Longitude", obSheet.getRow(2).getCell(colIdx++).getStringCellValue());
@@ -290,7 +408,8 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         parentRow.setIdAsNumber(true);
         // test with leading / trailing white space
         parentRow.setId(ssParentId);
-        parentRow.setCmId(bdrws.formatCensusMethodNameId(cm));
+        parentRow.setCmId(cm.getId().toString());
+        parentRow.setCmName(cm.getName());
         parentRow.setScientificName("hectus workus");
         parentRow.setSurveyAttr1(1);
         parentRow.setSurveyAttr2("4");
@@ -304,7 +423,8 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         childRow.setIdAsNumber(true);
         childRow.setId("");
         childRow.setParentId(ssParentId);
-        childRow.setCmId(bdrws.formatCensusMethodNameId(cm2));
+        childRow.setCmId(cm2.getId().toString());
+        childRow.setCmName(cm2.getName());
         childRow.setScientificName("hectus workus");
         childRow.setSurveyAttr1(11);
         childRow.setNumberSeen(1);
@@ -323,7 +443,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
         registerStream(inStream2);
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, inStream2);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
         
         Assert.assertEquals(2, bulkUpload.getRecordUploadList().size());
  
@@ -417,7 +537,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         MyTestRow parentRow = new MyTestRow();
         // test with leading / trailing white space
         parentRow.setId(" " + ssParentId + " ");
-        parentRow.setCmId("");
+        //parentRow.setCmId("");
         parentRow.setScientificName("hectus workus");
         parentRow.setSurveyAttr1(1);
         parentRow.setSurveyAttr2("string1");
@@ -430,7 +550,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         MyTestRow childRow = new MyTestRow();
         childRow.setId("");
         childRow.setParentId(ssParentId);
-        childRow.setCmId("");
+        //childRow.setCmId("");
         childRow.setScientificName("hectus workus");
         childRow.setSurveyAttr1(11);
         childRow.setNumberSeen(1);
@@ -449,7 +569,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
         registerStream(inStream2);
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, inStream2);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
         
         Assert.assertEquals(2, bulkUpload.getRecordUploadList().size());
  
@@ -530,34 +650,75 @@ public class BulkDataServiceTest extends AbstractControllerTest {
             int colIdx = 0;
             Assert.assertEquals(lsidService.toLSID(rec).toString(), parentXlsRow.getCell(colIdx++).getStringCellValue());  // ID
             Assert.assertFalse(StringUtils.hasLength(parentXlsRow.getCell(colIdx++).getStringCellValue())); // parentId
-            Assert.assertEquals(bdrws.formatCensusMethodNameId(rec.getCensusMethod()), parentXlsRow.getCell(colIdx++).getStringCellValue());
             
-            Assert.assertEquals(-40, ((Double)parentXlsRow.getCell(6).getNumericCellValue()).intValue());
-            Assert.assertEquals(120, ((Double)parentXlsRow.getCell(7).getNumericCellValue()).intValue());
+            Assert.assertEquals(rec.getCensusMethod().getId().intValue(), new Double(parentXlsRow.getCell(colIdx++).getNumericCellValue()).intValue()); // Census method id
+            Assert.assertEquals(rec.getCensusMethod().getName(), XlsCellUtil.cellToString(parentXlsRow.getCell(colIdx++))); // Census method name
+            
+            colIdx++;   // Scientific Name
+            colIdx++;   // Common Name
+            
+            colIdx++;   // Location ID
+            colIdx++;   // Location Name
+            
+            Assert.assertEquals(-40, new Double(XlsCellUtil.cellToDouble(parentXlsRow.getCell(colIdx++))).intValue());
+            Assert.assertEquals(120, new Double(XlsCellUtil.cellToDouble(parentXlsRow.getCell(colIdx++))).intValue());
+            
+            colIdx++;   // Date
+            colIdx++;   // Time
+            
+            colIdx++;   // Number
+            colIdx++;   // Notes
+            
+            colIdx++;   // sdesc1
+            colIdx++;   // sdesc2
             
             // Yes I know this makes for a fragile and hard to read test, at least you get to have fun looking
             // at the code now that you've broken it
             // p.s. pls don't remove these asserts, move them to whatever cell index is correct for your
             // new column arrangement!
-            Assert.assertEquals(1000, ((Double)parentXlsRow.getCell(14).getNumericCellValue()).intValue());
-            Assert.assertEquals("cm attr", parentXlsRow.getCell(15).getStringCellValue());
+            Assert.assertEquals(1000, ((Double)parentXlsRow.getCell(colIdx++).getNumericCellValue()).intValue());
+            Assert.assertEquals("cm attr", parentXlsRow.getCell(colIdx++).getStringCellValue());
             
-            Assert.assertFalse(StringUtils.hasLength(parentXlsRow.getCell(16).getStringCellValue()));
-            Assert.assertFalse(StringUtils.hasLength(parentXlsRow.getCell(17).getStringCellValue()));
+            Assert.assertFalse(StringUtils.hasLength(parentXlsRow.getCell(colIdx++).getStringCellValue()));
+            Assert.assertFalse(StringUtils.hasLength(parentXlsRow.getCell(colIdx++).getStringCellValue()));
         }
         
         {
             Row childXlsRow = obSheet.getRow(4);
             int colIdx = 0;
+            // Child
             Assert.assertEquals(lsidService.toLSID(recChild).toString(), childXlsRow.getCell(colIdx++).getStringCellValue());
+            // Parent
             Assert.assertEquals(lsidService.toLSID(rec).toString(), childXlsRow.getCell(colIdx++).getStringCellValue());
-            Assert.assertEquals(bdrws.formatCensusMethodNameId(recChild.getCensusMethod()), childXlsRow.getCell(colIdx++).getStringCellValue());
             
-            Assert.assertFalse(StringUtils.hasLength(childXlsRow.getCell(14).getStringCellValue()));
-            Assert.assertFalse(StringUtils.hasLength(childXlsRow.getCell(15).getStringCellValue()));
+            // Census Method ID
+            Assert.assertEquals(recChild.getCensusMethod().getId().intValue(), new Double(XlsCellUtil.cellToDouble(childXlsRow.getCell(colIdx++))).intValue());
+            // Census Method Name
+            Assert.assertEquals(recChild.getCensusMethod().getName(), XlsCellUtil.cellToString(childXlsRow.getCell(colIdx++)));
             
-            Assert.assertEquals(1000, ((Double)childXlsRow.getCell(16).getNumericCellValue()).intValue());
-            Assert.assertEquals("cm attr", childXlsRow.getCell(17).getStringCellValue());
+            colIdx++;   // Scientific Name
+            colIdx++;   // Common Name
+            
+            colIdx++;   // Location ID
+            colIdx++;   // Location Name
+            
+            colIdx++;   // Latitude
+            colIdx++;   // Longitude
+            
+            colIdx++;   // Date
+            colIdx++;   // Time
+            
+            colIdx++;   // Number
+            colIdx++;   // Notes
+            
+            colIdx++;   // sdesc1
+            colIdx++;   // sdesc2
+            
+            Assert.assertFalse(StringUtils.hasLength(childXlsRow.getCell(colIdx++).getStringCellValue()));
+            Assert.assertFalse(StringUtils.hasLength(childXlsRow.getCell(colIdx++).getStringCellValue()));
+            
+            Assert.assertEquals(1000, ((Double)childXlsRow.getCell(colIdx++).getNumericCellValue()).intValue());
+            Assert.assertEquals("cm attr", childXlsRow.getCell(colIdx++).getStringCellValue());
         }
         
         // now that it came out right, lets edit it!
@@ -574,7 +735,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
             MyTestRow childRow = new MyTestRow();
             childRow.setId("weeeee");
             childRow.setParentId(lsidService.toLSID(rec).toString());
-            childRow.setCmId(bdrws.formatCensusMethodNameId(cm2));
+            childRow.setCmId(cm2.getId().toString());
             childRow.setSurveyAttr1(11);
             childRow.setNumberSeen(1);
             childRow.setNotes("child entry notes");
@@ -593,7 +754,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
         registerStream(inStream2);
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, inStream2);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
         
         Assert.assertEquals(3, bulkUpload.getRecordUploadList().size());
  
@@ -636,7 +797,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         MyTestRow parentRow = new MyTestRow();
         // test with leading / trailing white space
         parentRow.setId(" " + ssParentId + " ");
-        parentRow.setCmId(bdrws.formatCensusMethodNameId(cm));
+        parentRow.setCmId(cm.getId().toString());
         parentRow.setSurveyAttr1(1);
         parentRow.setSurveyAttr2("string1");
         parentRow.setCm1Attr1(2);
@@ -648,7 +809,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         MyTestRow childRow = new MyTestRow();
         childRow.setId("");
         childRow.setParentId(ssParentId);
-        childRow.setCmId(bdrws.formatCensusMethodNameId(cm2));
+        childRow.setCmId(cm2.getId().toString());
         childRow.setSurveyAttr1(11);
         childRow.setNumberSeen(1);
         childRow.setNotes("child entry notes");
@@ -666,7 +827,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
         registerStream(inStream2);
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, inStream2);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
         
         Assert.assertEquals(2, bulkUpload.getRecordUploadList().size());
  
@@ -747,7 +908,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         cal.add(Calendar.DAY_OF_MONTH, 1);
         survey.setEndDate(cal.getTime());
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, stream);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, stream);
         
         // should be one correct and one incorrect
         Assert.assertEquals(1, bulkUpload.getRecordUploadList().size());
@@ -768,7 +929,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         cal.add(Calendar.DAY_OF_MONTH, 7);
         survey.setEndDate(cal.getTime());
         
-        BulkUpload bulkUpload = bulkDataService.importSurveyRecords(survey, stream);
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, stream);
         List<RecordUpload> errors = bulkUpload.getErrorRecordUploadList();
         
         Assert.assertEquals(0, errors.size());
@@ -813,10 +974,12 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         boolean idAsNumber = false;
         String id = "";
         String parentId = "";
-        String cmId = "";
+        String cmId = null;
+        String cmName = null;
         String scientificName = "";
         String commonName = "";
-        String locationName = "";
+        String locationId = null;
+        String locationName = null;
         double latitude = -31;
         double longitude = 115;
         Date date = new Date();
@@ -838,8 +1001,10 @@ public class BulkDataServiceTest extends AbstractControllerTest {
                 result.createCell(colIdx++).setCellValue(id); // id
                 result.createCell(colIdx++).setCellValue(parentId); // parent id
                 result.createCell(colIdx++).setCellValue(cmId); // census method
+                result.createCell(colIdx++).setCellValue(cmName); // census method
                 result.createCell(colIdx++).setCellValue(scientificName); // scientific name
                 result.createCell(colIdx++).setCellValue(commonName); // common name
+                result.createCell(colIdx++).setCellValue(locationId); // location name
                 result.createCell(colIdx++).setCellValue(locationName); // location name
                 result.createCell(colIdx++).setCellValue(latitude); // latitude
                 result.createCell(colIdx++).setCellValue(longitude); // longitude
@@ -867,8 +1032,10 @@ public class BulkDataServiceTest extends AbstractControllerTest {
                 //result.createCell(colIdx++).setCellValue(StringUtils.hasLength(id) ? Double.parseDouble(id) : ""); // id
                 //result.createCell(colIdx++).setCellValue(StringUtils.hasLength(parentId) ? Double.parseDouble(parentId) : ""); // parent id
                 result.createCell(colIdx++).setCellValue(cmId); // census method
+                result.createCell(colIdx++).setCellValue(cmName); // census method
                 result.createCell(colIdx++).setCellValue(scientificName); // scientific name
                 result.createCell(colIdx++).setCellValue(commonName); // common name
+                result.createCell(colIdx++).setCellValue(locationId); // location name
                 result.createCell(colIdx++).setCellValue(locationName); // location name
                 result.createCell(colIdx++).setCellValue(latitude); // latitude
                 result.createCell(colIdx++).setCellValue(longitude); // longitude
@@ -904,6 +1071,30 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         public void setCmId(String cmId) {
             this.cmId = cmId;
         }
+        public String getCmName() {
+            return cmName;
+        }
+
+        public void setCmName(String cmName) {
+            this.cmName = cmName;
+        }
+
+        public String getLocationId() {
+            return locationId;
+        }
+
+        public void setLocationId(String locationId) {
+            this.locationId = locationId;
+        }
+
+        public String getLocationName() {
+            return locationName;
+        }
+
+        public void setLocationName(String locationName) {
+            this.locationName = locationName;
+        }
+
         public String getScientificName() {
             return scientificName;
         }

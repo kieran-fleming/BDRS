@@ -36,7 +36,7 @@ import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -144,7 +144,7 @@ public class SetupController extends AbstractController {
         	            u = registrationService.signUp(username,
         	                                           username+"@example.com",
         	                                           "User", lastname, "password", 
-        	                                           ContentInitialiserService.getRequestURL(request));
+        	                                           ContentService.getRequestURL(request));
         	            registrationService.completeRegistration(u.getRegistrationKey());
         	            u.setRoles(new String[]{  Role.USER });
         	            u.setActive(Boolean.TRUE);

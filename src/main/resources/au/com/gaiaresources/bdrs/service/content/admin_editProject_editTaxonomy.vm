@@ -1,0 +1,6 @@
+<p>
+Here you can alter the taxonomy that is able to be chosen for your project.  
+If you need to edit the taxonomy itself, then go to the 
+<a href="${bdrsContextPath}/bdrs/admin/taxonomy/listing.htm">Edit Taxonomy</a> page.  
+In this Project, Users will be able to record:
+</p>

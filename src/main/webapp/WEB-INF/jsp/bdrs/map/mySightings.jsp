@@ -132,7 +132,10 @@
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Species</th>
+                <th>
+                    <div>Common Name</div>
+                    <div class="scientificName">Scientific Name</div>
+                </th>
                 <th>Location</th>
                 <th>Number</th>
                 <th>Notes</th>
@@ -177,10 +180,11 @@
 
             var rec;
             var row;
+            var row2;
             var when;
             var dateCell;
             var dateLink;
-            var speciesCell;
+            var taxonNameCell
             var locationCell;
             var numberCell;
             var notesCell;
@@ -193,25 +197,33 @@
                 dateLink = jQuery("<a></a>").attr("href", "${pageContext.request.contextPath}/bdrs/user/surveyRenderRedirect.htm?surveyId="+rec.survey+"&recordId="+rec.id);
                 dateLink.text(bdrs.util.formatDate(when));
                 dateCell = jQuery("<td></td>").addClass("nowrap").append(dateLink);
-                speciesCell = jQuery("<td></td>").addClass("nowrap").attr("id", "record_"+rec.id).addClass("taxon_"+rec.species);
+                taxonNameCell = jQuery("<td></td>").addClass("nowrap").addClass("taxonNameCell").attr("id", "record_"+rec.id);
+                if(rec.species !== null && rec.species !== undefined) {
+                    taxonNameCell.addClass("taxon_"+rec.species).addClass("scientificName_"+rec.species);
+                }
                 locationCell = jQuery("<td></td>").addClass("nowrap").text(rec.latitude+", "+rec.longitude);
                 numberCell = jQuery("<td></td>").addClass("nowrap").text(rec.number == null ? "N/A" : rec.number);
                 notesCell = jQuery("<td></td>").text(rec.notes);
 
-                row.append(dateCell).append(speciesCell).append(locationCell).append(numberCell).append(notesCell);
+                row.append(dateCell).append(taxonNameCell).append(locationCell).append(numberCell).append(notesCell);
                 tbody.append(row);
 
                 if (rec.species) {
 	                if(taxaLookup[rec.species] === undefined) {
 	                    jQuery.getJSON("${pageContext.request.contextPath}/webservice/taxon/getTaxonById.htm",
 	                        {"id": rec.species}, function(taxon) {
-	                        jQuery(".taxon_"+taxon.id).addClass("scientificName").append(taxon.scientificName);
+	                        
+	                        var scientific = jQuery("<div></div>").addClass("scientificName").text(taxon.scientificName);
+	                        var common = jQuery("<div></div>").addClass("commonName").text(taxon.commonName);
+	                        
+	                        jQuery(".scientificName_"+taxon.id).append(common).append(scientific);
+	                        
 	                    });
 	                    // Add an entry to the map. This taxon has been requested.
 	                    taxaLookup[rec.species] = rec.species;
 	                }
                 } else {
-                    speciesCell.text("N/A");
+                    taxonNameCell.text("N/A");
                 }
             }
             var mapRecordCount = jQuery('.recordCount');

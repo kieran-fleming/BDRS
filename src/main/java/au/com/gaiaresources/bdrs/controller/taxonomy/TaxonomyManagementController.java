@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -37,13 +38,13 @@ import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
 import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
@@ -51,6 +52,7 @@ import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
 
 /**
@@ -67,6 +69,8 @@ public class TaxonomyManagementController extends AbstractController {
     
     @Autowired
     private TaxaDAO taxaDAO;
+    @Autowired
+    private AttributeDAO attributeDAO;
     @Autowired
     private SpeciesProfileDAO profileDAO;
     @Autowired
@@ -341,32 +345,33 @@ public class TaxonomyManagementController extends AbstractController {
         Map<String, String[]> parameterMap = this.getModifiableParameterMap(request);
         
         // Taxon Attributes
-        List<IndicatorSpeciesAttribute> taxonAttrsToDelete = new ArrayList<IndicatorSpeciesAttribute>();
+        List<TypedAttributeValue> taxonAttrsToDelete = new ArrayList<TypedAttributeValue>();
         WebFormAttributeParser attributeParser = new WebFormAttributeParser();
-        IndicatorSpeciesAttribute taxonAttribute;
+        TypedAttributeValue taxonAttribute;
+        Set taxonAttrs = taxon.getAttributes();
         for (Attribute attribute : taxon.getTaxonGroup().getAttributes()) {
             if (attribute.isTag()) {
                 taxonAttribute = attributeParser.parse(attribute, taxon, parameterMap, request.getFileMap());
 
                 if (attributeParser.isAddOrUpdateAttribute()) {
-                    taxonAttribute = taxaDAO.save(taxonAttribute);
+                    taxonAttribute = attributeDAO.save(taxonAttribute);
                     if (attributeParser.getAttrFile() != null) {
                         fileService.createFile(taxonAttribute, attributeParser.getAttrFile());
                     }
-                    taxon.getAttributes().add(taxonAttribute);
+                    taxonAttrs.add(taxonAttribute);
                 } else {
-                    taxon.getAttributes().remove(taxonAttribute);
+                    taxonAttrs.remove(taxonAttribute);
                     taxonAttrsToDelete.add(taxonAttribute);
                 }
             }
         }
         
         taxaDAO.save(taxon);
-        for(IndicatorSpeciesAttribute ta : taxonAttrsToDelete) {
-            // Must do a save here to server the link in the join table.
-            taxaDAO.save(ta);
+        for(TypedAttributeValue ta : taxonAttrsToDelete) {
+            // Must do a save here to sever the link in the join table.
+            attributeDAO.save(ta);
             // And then delete.
-            taxaDAO.delete(ta);
+            attributeDAO.delete(ta);
         }
         
         // Any profiles left in the map at this stage have been deleted.

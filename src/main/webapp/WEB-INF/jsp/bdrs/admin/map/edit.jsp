@@ -5,13 +5,23 @@
 <c:choose>
     <c:when test="${ geoMap.id == null }">
         <h1>Add Map</h1>
+		<p>
+			You can create a Map, and then assign Map Layers that you have already 
+			<a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">created</a> or 
+			<a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">edited</a> using this interface.  
+			If you need to Edit an existing Map, use the 
+			<a href="${pageContext.request.contextPath}/bdrs/admin/map/listing.htm">Edit Map interface</a> instead.
+		</p>
     </c:when>
     <c:otherwise>
         <h1>Edit Map</h1>
+		<p>
+			Here you can edit an existing Map.  You will firstly have needed to use the 
+			<a href="${pageContext.request.contextPath}/bdrs/admin/map/edit.htm">Add Map</a> 
+			interface, and added Map Layers to it as well.
+		</p>
     </c:otherwise>
 </c:choose>
-
-
 
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/map/edit.htm">
     <input type="hidden" name="geoMapPk" value="${geoMap.id}" />
@@ -42,15 +52,6 @@
             <td><input id="listPosition" title="What order your maps will appear in under the 'Review' menu item" class="validate(required, number)" type="" name="weight" value="${geoMap.weight}" /></td>
         </tr>
     </table>
-    
-    
-    <h3>Map Layers</h3>
-	
-	<ul>
-		<li>Assign map layers to this map that you have created earlier 
-    using the <a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">map layer interface.</a></li>
-	    <li>Zoom limiting will only show the layer when the zoom level is between the numbers indicated. Higher numbers indicate greater zoom.</li>
-	</ul>
 
     <div id="mapLayerContainer">
         <div class="textright buttonpanel">

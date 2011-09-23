@@ -87,8 +87,8 @@ public abstract class PersistentImpl implements Persistent,
         return updatedAt;
     }
 
-    protected void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt != null ? (Date) updatedAt.clone() : null;
     }
 
     /**
@@ -129,12 +129,14 @@ public abstract class PersistentImpl implements Persistent,
      * @return <code>boolean</code>.
      */
     public boolean equals(Object other) {
-        if (other != null && other.getClass().equals(getClass())) {
+        if(other != null && (this.getClass().isAssignableFrom(other.getClass()) ||
+                other.getClass().isAssignableFrom(this.getClass()))) {
             Persistent that = (Persistent) other;
-            if ((this.getId() != null) && (that.getId() != null))
+            if ((this.getId() != null) && (that.getId() != null)) {
                 return this.getId().equals(that.getId());
-            else
+            } else {
                 return super.equals(other);
+            }
         }
         return false;
     }

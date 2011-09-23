@@ -34,12 +34,7 @@ public class KMLUtils {
     public static final String HIGHLIGHT_PLACEMARK_COLOR = "2500FF";
 
     public static final String KML_CONTENT_TYPE = "application/vnd.google-earth.kml+xml";
-    
-    
-    public static void writeRecordsToKML(User currentUser, String contextPath, String placemarkColorHex, List<Record> recordList, OutputStream outputStream) throws JAXBException {
-        writeRecordsToKML(currentUser, contextPath, placemarkColorHex, recordList, outputStream, null);
-    }
-    
+        
     private static void writePlacemark(KMLWriter writer, String label, String description, String id, Geometry geom) {
         if (geom instanceof Point) {
             writer.createPlacemark(KML_RECORD_FOLDER, label, description, id, geom, KML_POINT_ICON_ID);
@@ -51,10 +46,8 @@ public class KMLUtils {
             log.error("Geometry type not supported : " + geom.getClass().getName());    
         }
     }
-
-    public static void writeRecordsToKML(User currentUser, String contextPath, String placemarkColorHex, List<Record> recordList, OutputStream outputStream, String recordId) throws JAXBException {
-        JsonService jsonService = AppContext.getBean(JsonService.class);
-        
+    
+    public static KMLWriter createKMLWriter(String contextPath, String placemarkColorHex) throws JAXBException {
         KMLWriter writer = new KMLWriter();
         String placemark = contextPath + GET_RECORD_PLACEMARK_PNG_URL + "?color=";
         
@@ -73,9 +66,15 @@ public class KMLUtils {
         writer.createStylePoly(KML_POLYGON_STYLE_HIGHLIGHT, HIGHLIGHT_PLACEMARK_COLOR.toCharArray());
         
         writer.createFolder(KML_RECORD_FOLDER);
+        return writer;
+    }
+    
+    public static void writeRecords(KMLWriter writer, User currentUser, String contextPath, List<Record> recordList) {
+        JsonService jsonService = AppContext.getBean(JsonService.class);
+        
         String label;
         String description;
-
+        
         for(Record record : recordList) {
             label = String.format("Record #%d", record.getId());
             AccessControlledRecordAdapter recAdapter = new AccessControlledRecordAdapter(record, currentUser);
@@ -90,6 +89,11 @@ public class KMLUtils {
                 log.info("Cannot find coordinate for record");
             }
         }
+    }
+
+    public static void writeRecordsToKML(User currentUser, String contextPath, String placemarkColorHex, List<Record> recordList, OutputStream outputStream) throws JAXBException {
+        KMLWriter writer = createKMLWriter(contextPath, placemarkColorHex);
+        writeRecords(writer, currentUser, contextPath, recordList);
         writer.write(false, outputStream);
     }
 }

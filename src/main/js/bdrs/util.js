@@ -182,3 +182,9 @@ bdrs.util.createColorPicker = function(selector) {
         onSubmit: getOnSubmitFunc()
     });
 };
+
+bdrs.util.printElement = function(selector) {
+	$(selector).jqprint({
+		importCSS: true
+	});
+};

@@ -16,10 +16,12 @@ import org.hibernate.annotations.Type;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.user.User;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 
 /**
  * A User defined location for where they are collecting information.
@@ -31,13 +33,14 @@ import com.vividsolutions.jts.geom.Geometry;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "LOCATION")
 @AttributeOverride(name = "id", column = @Column(name = "LOCATION_ID"))
-public class Location extends PortalPersistentImpl {
+public class Location extends PortalPersistentImpl implements Attributable<AttributeValue> {
     private Geometry location;
     private User user;
     private String name;
     private Set<Region> regions = new HashSet<Region>();
     private Set<AttributeValue> attributes = new HashSet<AttributeValue>();
-
+    private String description;
+    
     /**
      * Get the coordinate of the <code>Location</code>.
      * @return Java Topology Suite <code>Point</code>.
@@ -81,6 +84,19 @@ public class Location extends PortalPersistentImpl {
     }
 
     /**
+     * Get the description of this <code>Location</code>.
+     * @return <code>String</code>.
+     */
+    @CompactAttribute
+    @Column(name = "DESCRIPTION", nullable = true)
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    /**
      * Get the regions that this location is within. Most of the time
      * there will only be one. But in the case of border locations
      * there might be more than one.
@@ -101,17 +117,57 @@ public class Location extends PortalPersistentImpl {
         this.regions = regions;
     }
 
-    @CompactAttribute
-    @OneToMany
     /**
      * Get the set of attributes that were recorded for the species.
      * @return {@link Set} of {@link RecordAttribute}
      */
+    @CompactAttribute
+    @OneToMany
+    @Override
     public Set<AttributeValue> getAttributes() {
         return attributes;
     }
 
+    @Override
     public void setAttributes(Set<AttributeValue> attributes) {
         this.attributes = attributes;
+    }
+    
+    @Transient
+    public Point getPoint() {
+        if (getLocation() == null) {
+            return null;
+        }
+        return getLocation().getCentroid();
+    }
+
+    @Transient
+    public Double getX() {
+        if (getPoint() == null) {
+            return null;
+        }
+        return getPoint().getX();
+    }
+
+    @Transient
+    public Double getY() {
+        if (getPoint() == null) {
+            return null;
+        }
+        return getPoint().getY();
+    }
+
+    @Transient
+    public Double getArea() {
+        if (getLocation() == null) {
+            return null;
+        }
+        return getLocation().getArea();
+    }
+    
+    @Override
+    @Transient
+    public AttributeValue createAttribute() {
+        return new AttributeValue();
     }
 }

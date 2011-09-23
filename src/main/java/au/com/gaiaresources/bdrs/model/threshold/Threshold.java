@@ -41,6 +41,8 @@ public class Threshold extends PortalPersistentImpl {
     private boolean enabled = true;
     private List<Condition> conditions = new ArrayList<Condition>();
     private List<Action> actions = new ArrayList<Action>();
+    private String name = "";
+    private String description = "";
 
     public Threshold() {
         super();
@@ -81,6 +83,23 @@ public class Threshold extends PortalPersistentImpl {
 
     public void setActions(List<Action> actions) {
         this.actions = actions;
+    }
+    
+    @Column(name = "description", length=1023)
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String value) {
+        this.description = value;
+    }
+    
+    @Column(name = "name", nullable = false)
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
     
     @Transient

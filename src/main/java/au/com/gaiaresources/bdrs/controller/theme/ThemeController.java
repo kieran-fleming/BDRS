@@ -80,6 +80,8 @@ public class ThemeController extends AbstractController {
     public static final String ADMIN_EDIT_URL = "/bdrs/admin/theme/edit.htm";
     public static final String ADMIN_EDIT_FILE_URL = "/bdrs/admin/theme/editThemeFile.htm";
     
+    private static final String JSON_KEY_THEME_PAGES = "theme_pages";
+    
     /**
      * The set of content types that should be passed through the search and 
      * replace process but do not start with the word 'text'.
@@ -89,6 +91,7 @@ public class ThemeController extends AbstractController {
         Set<String> tempSet = new HashSet<String>();
         tempSet.add("application/json");
         tempSet.add("application/javascript");
+        tempSet.add("application/xml");
         
         PATTERN_REPLACE_CONTENT_TYPES = Collections.unmodifiableSet(tempSet);
     }
@@ -693,16 +696,19 @@ public class ThemeController extends AbstractController {
                 themeDAO.delete(delPage);
             }
             
-            JSONArray themePageArray = config.getJSONArray("theme_pages");
-
-            for (int i=0; i<themePageArray.size(); ++i) {
-                JSONObject jsonPage = themePageArray.getJSONObject(i);
-                ThemePage page = new ThemePage();
-                page.setKey(jsonPage.getString("key"));
-                page.setTitle(getJsonString(jsonPage, "title"));
-                page.setDescription(getJsonString(jsonPage, "description"));
-                page.setTheme(theme);
-                themeDAO.save(page);
+            // check for the existance of the key first or we break old theme config files
+            if (config.containsKey(JSON_KEY_THEME_PAGES)) {
+                JSONArray themePageArray = config.getJSONArray(JSON_KEY_THEME_PAGES);
+    
+                for (int i=0; i<themePageArray.size(); ++i) {
+                    JSONObject jsonPage = themePageArray.getJSONObject(i);
+                    ThemePage page = new ThemePage();
+                    page.setKey(jsonPage.getString("key"));
+                    page.setTitle(getJsonString(jsonPage, "title"));
+                    page.setDescription(getJsonString(jsonPage, "description"));
+                    page.setTheme(theme);
+                    themeDAO.save(page);
+                }
             }
             
             theme.setThemeElements(themeElementList);

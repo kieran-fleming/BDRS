@@ -61,7 +61,6 @@ exports._get_modified_records = function() {
 };
 
 exports.synchronize  = function() {
-    bdrs.mobile.Debug("Synchronize");
     var modifiedRecords = exports._get_modified_records();
     bdrs.mobile.Debug("Modified Record Count: " + modifiedRecords.length);
 
@@ -103,20 +102,23 @@ exports.synchronize  = function() {
             recJSON.taxon_id = species.server_id();
             recJSON.scientificName = species.scientificName();
         }
-        
+		
         // Record Attributes
         var attributeValues;
         waitfor(attributeValues) {
             rec.attributeValues().prefetch('attribute').list(resume);
         }
+		
         var attributeValueArray = [];
         for(var j=0; j<attributeValues.length; j++) {
+		
             var recAttr = attributeValues[j];
             recAttrLookup[recAttr.id] = recAttr;
             
             var attr = recAttr.attribute();
 
             var recAttrJSON = {};
+			
             recAttrJSON.id = recAttr.id;
             recAttrJSON.server_id =  recAttr.server_id();
             recAttrJSON.attribute_id = attr.server_id();
@@ -143,79 +145,109 @@ exports.synchronize  = function() {
     }
     
     bdrs.mobile.Debug("Uploading to the Server:");
-    bdrs.mobile.Debug(JSON.stringify(uploadData));
-    
-    // Insert an iframe into the body    
-    var containerId = new Date().getTime().toString();
-    var syncContainer;
-    waitfor(syncContainer) {
-        bdrs.template.renderOnlyCallback('clientSyncContainer', {
-            containerId: containerId
-        }, resume);
-    }
-    jQuery("body").append(syncContainer);
-    
-    // Insert the form into the iframe
-    var clientSyncContent;
-    waitfor(clientSyncContent) {
-        bdrs.template.renderOnlyCallback('clientSyncContent', {
-            url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
-            ident: bdrs.mobile.User.ident(),
-            syncData: JSON.stringify(uploadData)
-        }, resume);
-    }
-    var iframeSelector = "#"+containerId+" > iframe";
-    jQuery(iframeSelector).contents().find("body").append(clientSyncContent);
+    bdrs.mobile.Debug("uploadData : " + JSON.stringify(uploadData));
+	
+	if (bdrs.phonegap.isPhoneGap()) {
+		
+		jQuery.ajax({
+			url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
+			type: "POST",
+			data: {
+				ident: bdrs.mobile.User.ident(),
+				syncData: JSON.stringify(uploadData),
+				inFrame: false
+			},
+			success: function(json) {
+				bdrs.mobile.syncService._processSyncResponse(json, idLookup);
+			},
+			error: function(response) {
+				bdrs.mobile.Debug("sync error");
+				bdrs.mobile.syncService._processSyncResponse(response, idLookup);
+			}
+		});
+	
+	} else {
+	
+		// Insert an iframe into the body    
+		var containerId = new Date().getTime().toString();
+		var syncContainer;
+		waitfor(syncContainer) {
+			bdrs.template.renderOnlyCallback('clientSyncContainer', {
+				containerId: containerId
+			}, resume);
+		}
+		jQuery("body").append(syncContainer);
+		
+		// Insert the form into the iframe
+		var clientSyncContent;
+		waitfor(clientSyncContent) {
+			bdrs.template.renderOnlyCallback('clientSyncContent', {
+				url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
+				ident: bdrs.mobile.User.ident(),
+				syncData: JSON.stringify(uploadData)
+			}, resume);
+		}
 
-    // Submit the form and wait for the response    
-    var receiveMessage;
-    var tempEventListener;
-    waitfor(receiveMessage) {
-        tempEventListener = resume;
-        window.addEventListener('message', resume, false);
-        clientSyncContent.submit();
-    }
-    finally {
-        // Clean up the event listener
-        window.removeEventListener('message', tempEventListener, false);
-        delete tempEventListener;
-        
-        // Clean up the iframe
-        syncContainer.remove();
-    }
-    
-    bdrs.mobile.Debug("Received Server Response:");
-    bdrs.mobile.Debug(receiveMessage.data);
-    
-    var response = jQuery.parseJSON(receiveMessage.data);
-    var status = response.status;
-    
-    if(status === 200) {
-        var uploadTime = new Date();
-        var syncResult = response[status].sync_result;
-        for(var i=0; i<syncResult.length; i++) {
-            var result = syncResult[i];
-            var instance = idLookup[result.klass][result.id];
-            instance.server_id(result.server_id);
-            if(instance.uploadedAt !== undefined) {
-                instance.uploadedAt(uploadTime);
-            }
-        }
-        persistence.flush();
+		var iframeSelector = "#"+containerId+" > iframe";
+		jQuery(iframeSelector).contents().find("body").append(clientSyncContent);
+		
+		// Submit the form and wait for the response    
+		var receiveMessage;
+		var tempEventListener;
+		waitfor(receiveMessage) {
+			tempEventListener = resume;
+			window.addEventListener('message', resume, false);
+			clientSyncContent.submit();
+		}
+		finally {
+			// Clean up the event listener
+			window.removeEventListener('message', tempEventListener, false);
+			delete tempEventListener;
+			// Clean up the iframe
+			syncContainer.remove();
+		}
+		
+		bdrs.mobile.Debug("Received Server Response:");
+		bdrs.mobile.Debug(receiveMessage.data);
+		
+		var response = jQuery.parseJSON(receiveMessage.data);
+				
+		bdrs.mobile.syncService._processSyncResponse(response, idLookup);
+	}
+};
 
-        bdrs.mobile.syncService._lastSync = uploadTime;
-        bdrs.mobile.syncService._fireSyncEvent({_type: 'sync'});
-    } else {
-        // Something bad this way comes
-        var type = response[status].type;
-        var message = response[status].message;
-        bdrs.mobile.Error("Synchronization Error: Status Code - "+status);
-        if(type === undefined) {
-            bdrs.mobile.Error(message);
-        } else {
-            bdrs.mobile.Error([type, message].join(" - "));
-        }
-    }
+exports._processSyncResponse = function(response, idLookup) {
+	var status = response.status;
+	if(status === 200) {
+	
+		var uploadTime = new Date();
+		var syncResult = response[status].sync_result;
+		for(var i=0; i<syncResult.length; i++) {
+			var result = syncResult[i];
+			var instance = idLookup[result.klass][result.id];
+			instance.server_id(result.server_id);
+			if(instance.uploadedAt !== undefined) {
+				instance.uploadedAt(uploadTime);
+			}
+		}
+		
+		persistence.flush();
+
+		bdrs.mobile.syncService._lastSync = uploadTime;
+		bdrs.mobile.syncService._fireSyncEvent({_type: 'sync'});
+		
+		bdrs.mobile.Debug("sync complete");
+	} else {
+		// Something bad this way comes
+		var type = response[status].type;
+		var message = response[status].message;
+		bdrs.mobile.Error("Synchronization Error: Status Code - "+status);
+		if(type === undefined) {
+			bdrs.mobile.Error(message);
+		} else {
+			bdrs.mobile.Error([type, message].join(" - "));
+		}
+	}
 };
 
 exports._dateToJSON = function(date, timeStr) {

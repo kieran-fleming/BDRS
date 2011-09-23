@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -87,55 +88,48 @@ public class WebFormAttributeParser extends AttributeParser {
     }
     
     /**
-     * Constructs and populates a <code>RecordAttribute</code> for the specified
-     * <code>Record</code> and <code>Attribute</code> using the parameters 
+     * Constructs and populates a <code>TypedAttributeValue</code> for the specified
+     * <code>Attributable</code> and <code>Attribute</code> using the parameters 
      * provided. 
      * 
      * @param attribute The <code>Attribute</code> instance that pertains
-     * to the <code>RecordAttribute</code> to be returned.
-     * @param record The record that owns (or will own) the returned 
-     * <code>RecordAttribute</code>
+     * to the <code>TypedAttributeValue</code> to be returned.
+     * @param attributable The Attributable that owns (or will own) the returned 
+     * <code>TypedAttributeValue</code>
      * @param parameterMap a <code>Map</code> of all POST parameters.
      * @param fileMap a <code>Map</code> of all files posted by the browser.
      * @return the record attribute to be saved or deleted.
      * @throws ParseException thrown if the provided date value cannot be 
      * parsed.
      */
-    
-    public AttributeValue parse(Attribute attribute, Record record,
-            Map<String, String[]> parameterMap,
-            Map<String, MultipartFile> fileMap) throws ParseException {
-        return this.parse(DEFAULT_PREFIX, attribute, record, parameterMap, fileMap);
-    }
-    
-    public IndicatorSpeciesAttribute parse(String prefix, Attribute attribute, IndicatorSpecies taxon,
+    public TypedAttributeValue parse(String prefix, Attribute attribute, Attributable<? extends TypedAttributeValue> attributable,
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap) throws ParseException {
         
-        Map<Attribute, IndicatorSpeciesAttribute> taxonAttrMap = new HashMap<Attribute, IndicatorSpeciesAttribute>();
-        for (IndicatorSpeciesAttribute taxonAttr : taxon.getAttributes()) {
-            taxonAttrMap.put(taxonAttr.getAttribute(), taxonAttr);
+        Map<Attribute, TypedAttributeValue> typedAttrMap = new HashMap<Attribute, TypedAttributeValue>();
+        for (TypedAttributeValue attr : attributable.getAttributes()) {
+            typedAttrMap.put(attr.getAttribute(), attr);
         }
 
-        IndicatorSpeciesAttribute taxonAttr;
+        TypedAttributeValue typedAttr;
         addOrUpdateAttribute = true;
 
         // Retrieve or instantiate the attribute
-        if (taxonAttrMap.containsKey(attribute)) {
-            taxonAttr = taxonAttrMap.get(attribute);
+        if (typedAttrMap.containsKey(attribute)) {
+            typedAttr = typedAttrMap.get(attribute);
         } else {
-            taxonAttr = new IndicatorSpeciesAttribute();
-            taxonAttr.setAttribute(attribute);
+            typedAttr = attributable.createAttribute();
+            typedAttr.setAttribute(attribute);
         }
 
         // the record attribute is updated by reference.
-        parseAttributeValue(prefix, attribute, parameterMap, fileMap, taxonAttr);
+        parseAttributeValue(prefix, attribute, parameterMap, fileMap, typedAttr);
         
         if(!addOrUpdateAttribute) {
-            taxonAttrMap.remove(taxonAttr.getAttribute());
+            typedAttrMap.remove(typedAttr.getAttribute());
         }
         
-        return taxonAttr;
+        return typedAttr;
     }  
     
     private void parseAttributeValue(String prefix, Attribute attribute,
@@ -199,7 +193,7 @@ public class WebFormAttributeParser extends AttributeParser {
         return recAttr;
     }
     
-    public IndicatorSpeciesAttribute parse(Attribute attribute, IndicatorSpecies taxon,
+    public TypedAttributeValue parse(Attribute attribute, Attributable<? extends TypedAttributeValue> taxon,
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap) throws ParseException {
         return this.parse(DEFAULT_PREFIX, attribute, taxon, parameterMap, fileMap);

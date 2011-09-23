@@ -7,7 +7,7 @@
 <jsp:useBean id="survey" type="au.com.gaiaresources.bdrs.model.survey.Survey" scope="request"/>
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
-<h1>Choose Groups &amp; Users</h1>
+<h1>Edit Project: Access</h1>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editUsers.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
 

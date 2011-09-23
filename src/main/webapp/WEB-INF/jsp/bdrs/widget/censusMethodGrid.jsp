@@ -8,7 +8,7 @@
 <tiles:useAttribute name="editUrl" ignore="true" />
 <tiles:useAttribute name="showActions" ignore="true" />
 
-<h4>Search Census Methods</h4>
+<h4>Filter Census Methods</h4>
     <form id="${widgetId}SearchForm">
         <table>
             <tr>
@@ -46,13 +46,13 @@
             url: ${widgetId}_GridHelper.createUrl(),
             datatype: "json",
             mtype: "GET",
-            colNames:['Census Method Name','Taxonomic'
+            colNames:['Census Method Name','Type'
             <c:if test="${showActions}">,'Action'</c:if>
             ],
             colModel:[
                 {name:'name',index:'name'},
-                {name:'taxonomic', index:'taxonomic', width:'20'}
-                <c:if test="${showActions}">,{name:'action', width:'20%', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
+                {name:'taxonomic', index:'taxonomic', width:'50px'}
+                <c:if test="${showActions}">,{name:'action', width:'20px', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
             ],
             autowidth: true,
             jsonReader : { repeatitems: false },

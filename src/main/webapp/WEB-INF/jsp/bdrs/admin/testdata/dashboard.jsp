@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 
-<h1>Test Data Creation</h1>
+<h1>Create Test Data</h1>
 
 <p>
     Some notes on test data creation:

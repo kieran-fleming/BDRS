@@ -6,6 +6,15 @@ if (!bdrs.mobile) {
     bdrs.mobile = {};
 }
 
+///////////////////////////
+// Events
+///////////////////////////
+bdrs.mobile.fireEvent = function(type) {
+    var e = document.createEvent('Events');
+    e.initEvent(type);
+    document.dispatchEvent(e);
+};
+
 bdrs.mobile.TIME_DELIMITER = ':';
 
 bdrs.mobile.cameraExists = function() {

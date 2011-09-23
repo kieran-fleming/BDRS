@@ -858,6 +858,11 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
 
     @Override
     public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom, Boolean isPrivate, Integer userId) {
+        // To avoid having an empty array which will cause an exception during the query.
+        if (mapLayerId.length == 0) {
+            mapLayerId = new Integer[] { 0 };
+        }
+        
         StringBuilder hb = new StringBuilder();
         hb.append("select distinct rec from Record rec inner join rec.survey survey where survey.id in ");
         hb.append(" (select s.id from GeoMapLayer layer inner join layer.survey s where layer.id in (:layerIds)) ");

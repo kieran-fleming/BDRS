@@ -27,7 +27,7 @@ import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 
 /**
  * @author stephanie
@@ -39,7 +39,7 @@ public abstract class AbstractPortalService implements PortalService {
     
     public static final String DEFAULT_PREFERENCES = "preferences.json";
 
-    protected ContentInitialiserService contentService = new ContentInitialiserService();
+    protected ContentService contentService = new ContentService();
     
     public void initPortal(Portal p) throws IOException {
         RegistrationService registrationService = AppContext.getBean(RegistrationService.class);

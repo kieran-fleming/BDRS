@@ -2,7 +2,7 @@
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 <%@page import="au.com.gaiaresources.bdrs.controller.embedded.EmbeddedFeature"%>
 
-<h1>Embedded Widget</h1>
+<h1>Manage Widgets</h1>
 <cw:getContent key="user/widgetBuilder" />
 
 <h2>Setup</h2>

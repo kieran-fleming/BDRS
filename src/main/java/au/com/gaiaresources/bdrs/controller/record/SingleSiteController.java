@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -24,9 +23,6 @@ import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -41,6 +37,8 @@ import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
@@ -82,6 +80,8 @@ public class SingleSiteController extends AbstractController {
     private TaxaDAO taxaDAO;
     @Autowired
     private LocationDAO locationDAO;
+    @Autowired
+    private CensusMethodDAO cmDAO;
 
     @Autowired
     private LocationService locationService;
@@ -267,14 +267,17 @@ public class SingleSiteController extends AbstractController {
     }
 
     protected ModelAndView addRecord(HttpServletRequest request,
-            HttpServletResponse response, int surveyId, String redirectUrl) {
+            HttpServletResponse response, int surveyId, String redirectUrl, Integer censusMethodId) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         Record record = null;
+        CensusMethod censusMethod = null;
         if(request.getParameter("recordId") != null && !request.getParameter("recordId").isEmpty()) {
             record = recordDAO.getRecord(Integer.parseInt(request.getParameter("recordId")));
+            censusMethod = record.getCensusMethod();
         }
         else {
             record = new Record();
+            censusMethod = cmDAO.get(censusMethodId);
         }
         
         // Set record visibility to survey default. Setting via web form not supported.
@@ -321,6 +324,7 @@ public class SingleSiteController extends AbstractController {
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("formFieldList", formFieldList);
         mv.addObject("sightingRowFormFieldList", sightingRowFormFieldList);
+        mv.addObject("censusMethod", censusMethod);
         return mv;
     }
 }

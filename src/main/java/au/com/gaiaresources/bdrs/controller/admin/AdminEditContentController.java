@@ -19,7 +19,7 @@ import edu.emory.mathcs.backport.java.util.TreeSet;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 
 @Controller
 public class AdminEditContentController extends AbstractController {
@@ -27,7 +27,7 @@ public class AdminEditContentController extends AbstractController {
     @Autowired
     private ContentDAO contentDAO;
 
-    private ContentInitialiserService contentService = new ContentInitialiserService();
+    private ContentService contentService = new ContentService();
     
     @RequestMapping(value = "/admin/editContent.htm", method = RequestMethod.GET)
     public ModelAndView renderPage(HttpServletRequest request,
@@ -36,7 +36,7 @@ public class AdminEditContentController extends AbstractController {
         List<String> keys = contentDAO.getAllKeys();
         // add the default portal initializer keys as well if not present
         Set<String> uniqueKeys = new TreeSet(keys);
-        uniqueKeys.addAll(ContentInitialiserService.CONTENT.keySet());
+        uniqueKeys.addAll(ContentService.CONTENT.keySet());
         mav.addObject("keys", uniqueKeys);
         return mav;
     }
@@ -52,9 +52,9 @@ public class AdminEditContentController extends AbstractController {
             throw new Exception("The portal cannot be null");
         }
         if (key == null) {
-            contentService.initContent(contentDAO, currentPortal, ContentInitialiserService.getRequestURL(request));
+            contentService.initContent(contentDAO, currentPortal, ContentService.getRequestURL(request));
         } else {
-            contentService.initContent(contentDAO, currentPortal, key, ContentInitialiserService.getRequestURL(request));
+            contentService.initContent(contentDAO, currentPortal, key, ContentService.getRequestURL(request));
         }
         return "redirect:/admin/editContent.htm";
     }

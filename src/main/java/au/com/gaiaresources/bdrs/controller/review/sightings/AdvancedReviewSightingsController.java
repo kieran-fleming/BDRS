@@ -18,6 +18,7 @@ import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -39,9 +40,11 @@ import au.com.gaiaresources.bdrs.controller.review.sightings.facet.YearFacet;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
+import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
@@ -69,6 +72,8 @@ public class AdvancedReviewSightingsController extends AbstractController{
     
     public static final String DEFAULT_RESULTS_PER_PAGE = "20";
     public static final String DEFAULT_PAGE_NUMBER = "1";
+    
+    private static final int RECORD_BATCH_SIZE = 500;
     
     static {
         Set<String> temp = new HashSet<String>();
@@ -166,21 +171,33 @@ public class AdvancedReviewSightingsController extends AbstractController{
             surveyId = Integer.parseInt(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME));
         }
         List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
-        List<Record> recordList = getMatchingRecords(facetList, 
-                                                     surveyId,
-                                                     request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
-                                                     request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
-                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME),
-                                                     null, null);
+        
+        KMLWriter writer = KMLUtils.createKMLWriter(request.getContextPath(), null);
+        User currentUser = getRequestContext().getUser();
+        String contextPath = request.getContextPath();
+        Session sesh = getRequestContext().getHibernate();
+        int recordCount = 0;
+        
+        ScrollableResults sr = getMatchingRecordsScrollable(facetList, surveyId, 
+                                                            request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
+                                                            request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
+                                                            request.getParameter(SEARCH_QUERY_PARAM_NAME));
+        
+        while (sr.next()) {
+            Record r = (Record)sr.get(0);
+            List<Record> rList = new ArrayList<Record>();
+            rList.add(r);
+            KMLUtils.writeRecords(writer, currentUser, contextPath, rList);
+            // evict to ensure garbage collection
+            if (++recordCount % RECORD_BATCH_SIZE == 0) {
+                sesh.clear();
+            }
+        }
+        
         response.setContentType(KMLUtils.KML_CONTENT_TYPE);
-
-        KMLUtils.writeRecordsToKML(getRequestContext().getUser(),
-                                   request.getContextPath(), 
-                                   null, 
-                                   recordList, 
-                                   response.getOutputStream());
+        writer.write(false, response.getOutputStream());
     }
-
+    
     /**
      * Returns a JSON array of records matching the {@link Facet} criteria.
      */
@@ -345,7 +362,37 @@ public class AdvancedReviewSightingsController extends AbstractController{
                                             String searchText,
                                             Integer resultsPerPage,
                                             Integer pageNumber) {
+        
+        Query query = createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
+        
+        if(resultsPerPage != null && pageNumber != null && resultsPerPage > 0 && pageNumber > 0) {
+            query.setFirstResult((pageNumber-1) * resultsPerPage);
+            query.setMaxResults(resultsPerPage);
+        }
+
+        List<Object[]> rowList = query.list();
+        List<Record> recordList = new ArrayList<Record>(rowList.size());
+        for(Object[] rowObj : rowList) {
+            recordList.add((Record)rowObj[0]);
+        }
+        
+        return recordList;
+    }
+    
+    private ScrollableResults getMatchingRecordsScrollable(List<Facet> facetList,
+            Integer surveyId,
+            String sortProperty, 
+            String sortOrder, 
+            String searchText) {
+        
+        Query query = createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
+        return query.scroll();
+    }
+    
+    private Query createFacetQuery(List<Facet> facetList, Integer surveyId, String sortProperty, String sortOrder, String searchText) {
+        // extra columns in select are used for ordering
         HqlQuery hqlQuery = new HqlQuery("select distinct record, species.scientificName, species.commonName, location.name, censusMethod.type from Record record");
+        
         applyFacetsToQuery(hqlQuery, facetList, surveyId, searchText);
         
         if(sortProperty != null && sortOrder != null) {
@@ -356,30 +403,13 @@ public class AdvancedReviewSightingsController extends AbstractController{
                                null);
             }
         }
-        
-        Query query = toHibernateQuery(hqlQuery);
-        
-        if(resultsPerPage != null && pageNumber != null && resultsPerPage > 0 && pageNumber > 0) {
-            log.debug("First result: " + ((pageNumber-1) * resultsPerPage));
-            log.debug("Max results: " + resultsPerPage);
-            query.setFirstResult((pageNumber-1) * resultsPerPage);
-            query.setMaxResults(resultsPerPage);
-        }
-        
-        List<Object[]> rowList = query.list();
-        List<Record> recordList = new ArrayList<Record>(rowList.size());
-        for(Object[] rowObj : rowList) {
-            recordList.add((Record)rowObj[0]);
-        }
-        
-        return recordList;
+        return toHibernateQuery(hqlQuery);  
     }
 
     /**
      * Converts the {@link HQLQuery} to a {@ Query} representation.
      */
     private Query toHibernateQuery(HqlQuery hqlQuery) {
-        log.debug(hqlQuery.getQueryString());
         Session sesh = getRequestContext().getHibernate();
         Query query = sesh.createQuery(hqlQuery.getQueryString());
         Object[] parameterValues = hqlQuery.getParametersValue();

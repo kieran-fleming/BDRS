@@ -1,0 +1,7 @@
+<p>
+This page allows you to edit the entry for this particular taxon.  
+You can add a Taxon Profile to the species, so that it becomes 
+visible in the Field Guide for your Portal.  You can also view 
+the Taxonomic Group attributes, which can be changed 
+<a href="${bdrsContextPath}/bdrs/admin/taxongroup/listing.htm">here</a>.
+</p>

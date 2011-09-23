@@ -3,14 +3,13 @@
 <head>
 <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1">
 <title>ALA Citizen Science Mobile</title>
-
 	<!-- css -->
     <link type="text/css" rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.11.custom.css"/>
     <link type="text/css" rel="stylesheet" href="css/jquery-ui-timepicker.css"/>
     <link type="text/css" rel="stylesheet" href="css/jquery.mobile-1.0b2.min.css"/>
     <link type="text/css" rel="stylesheet" href="css/bdrs-mobile.css"/>
     <link type="text/css" rel="stylesheet" href="css/bdrs-mobile-small.css"/>
-	
+    
 	<!-- jquery + oni apollo (async to sync) -->
     <script type="text/javascript" charset="utf-8" src="js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
@@ -24,21 +23,21 @@
     
 	<!-- phonegap -->
 	<script type="application/javascript" src="js/bdrs/bdrs-mobile-phonegap.js"></script>
-    <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.6.js"></script>
 	<script type="text/javascript">
-		document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
-	</script>
+        document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
+    </script>
+    <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.6.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/phonegap-testplugin.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/barcodescanner.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/nativedb.js"></script>
     
 	<!-- persistence -->
     <script type="application/javascript" src="js/persistence.js"></script>
-    <script type="application/javascript" src="js/persistence.search.js"></script>
         
     <script type="application/javascript" src="js/persistence.store.sql.js"></script>
     <script type="application/javascript" src="js/persistence.store.websql.js"></script>
+    <script type="application/javascript" src="js/persistence.store.nativesql.js"></script>
     <script type="application/javascript" src="js/persistence.jquery.js"></script>
-    <!-- script type="application/javascript" src="js/persistence.jquery.mobile.js"></script-->
 
     <!-- BDRS Mobile Lib -->
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-globals.js"></script>
@@ -59,44 +58,52 @@
     <script type="application/javascript" src="js/bdrs/pages/bdrs-page-choose-survey.js"></script>
             
     <script type="text/sjs">
-        require.path = "./js/bdrs/";
-        bdrs.mobile.init = require("bdrs-mobile-init");
-        bdrs.mobile.init.start();
-        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
-        bdrs.mobile.widget = require("bdrs-mobile-widget");
-        bdrs.mobile.camera = require("bdrs-mobile-camera");
-        bdrs.mobile.survey = require("bdrs-mobile-survey");
-        bdrs.mobile.fileMgr = require("bdrs-mobile-file-mgr");
-        bdrs.mobile.connectivity = require("bdrs-mobile-connectivity-service");
-		bdrs.mobile.connectivity.init();
-        bdrs.mobile.syncService = require("bdrs-mobile-sync-service");
-        bdrs.mobile.syncService.init();
-
-
-        require.path = "./js/bdrs/pages/";
-        bdrs.mobile.pages.dashboard = require("bdrs-page-dashboard");
-        bdrs.mobile.pages.guide = require("bdrs-page-guide");
-        bdrs.mobile.pages.species_list = require("bdrs-page-species-list");
-        bdrs.mobile.pages.species = require("bdrs-page-species");
-        bdrs.mobile.pages.settings = require("bdrs-page-settings");
-        bdrs.mobile.pages.record = require("bdrs-page-record");
-        bdrs.mobile.pages.point_intersect = require("bdrs-page-point-intersect");
-        bdrs.mobile.pages.review = require("bdrs-page-review");
-        bdrs.mobile.pages.download_surveys = require("bdrs-page-download-surveys");
-        bdrs.mobile.pages.sites = require("bdrs-page-sites");
-        bdrs.mobile.pages.site = require("bdrs-page-site");
-        bdrs.mobile.pages.add_site = require("bdrs-page-add-site");
-        bdrs.mobile.pages.statistics = require("bdrs-page-statistics");
-        bdrs.mobile.pages.dump_data = require("bdrs-page-dump-data");
-        bdrs.mobile.pages.logging = require("bdrs-page-logging");
-        bdrs.mobile.pages.censusmethods = require("bdrs-page-censusmethods");
-        bdrs.mobile.pages.sync_settings = require("bdrs-page-sync-settings");
-        bdrs.mobile.pages.species_count_list = require("bdrs-page-species-count-list");
-        bdrs.mobile.pages.species_count_edit = require("bdrs-page-species-count-edit");
-        bdrs.mobile.pages.configure_dashboard = require("bdrs-page-configure-dashboard");
-        bdrs.mobile.pages.trash = require("bdrs-page-trash");
-        bdrs.mobile.pages.trash_restore_error = require("bdrs-page-trash-restore-error");
-        bdrs.mobile.pages.trash_delete_confirm = require("bdrs-page-trash-delete-confirm");
+        
+        var sjsInit = function() {
+	        require.path = "./js/bdrs/";
+	        bdrs.mobile.init = require("bdrs-mobile-init");
+	        bdrs.mobile.init.start();
+	        
+	        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
+	        bdrs.mobile.widget = require("bdrs-mobile-widget");
+	        bdrs.mobile.camera = require("bdrs-mobile-camera");
+	        bdrs.mobile.survey = require("bdrs-mobile-survey");
+	        bdrs.mobile.fileMgr = require("bdrs-mobile-file-mgr");
+	        bdrs.mobile.connectivity = require("bdrs-mobile-connectivity-service");
+			bdrs.mobile.connectivity.init();
+	        bdrs.mobile.syncService = require("bdrs-mobile-sync-service");
+	        bdrs.mobile.syncService.init();
+	
+	        require.path = "./js/bdrs/pages/";
+	        bdrs.mobile.pages.dashboard = require("bdrs-page-dashboard");
+	        bdrs.mobile.pages.guide = require("bdrs-page-guide");
+	        bdrs.mobile.pages.species_list = require("bdrs-page-species-list");
+	        bdrs.mobile.pages.species = require("bdrs-page-species");
+	        bdrs.mobile.pages.settings = require("bdrs-page-settings");
+	        bdrs.mobile.pages.record = require("bdrs-page-record");
+	        bdrs.mobile.pages.point_intersect = require("bdrs-page-point-intersect");
+	        bdrs.mobile.pages.review = require("bdrs-page-review");
+	        bdrs.mobile.pages.download_surveys = require("bdrs-page-download-surveys");
+	        bdrs.mobile.pages.sites = require("bdrs-page-sites");
+	        bdrs.mobile.pages.site = require("bdrs-page-site");
+	        bdrs.mobile.pages.add_site = require("bdrs-page-add-site");
+	        bdrs.mobile.pages.statistics = require("bdrs-page-statistics");
+	        bdrs.mobile.pages.dump_data = require("bdrs-page-dump-data");
+	        bdrs.mobile.pages.logging = require("bdrs-page-logging");
+	        bdrs.mobile.pages.censusmethods = require("bdrs-page-censusmethods");
+	        bdrs.mobile.pages.sync_settings = require("bdrs-page-sync-settings");
+	        bdrs.mobile.pages.species_count_list = require("bdrs-page-species-count-list");
+	        bdrs.mobile.pages.species_count_edit = require("bdrs-page-species-count-edit");
+	        bdrs.mobile.pages.configure_dashboard = require("bdrs-page-configure-dashboard");
+	        bdrs.mobile.pages.trash = require("bdrs-page-trash");
+	        bdrs.mobile.pages.trash_restore_error = require("bdrs-page-trash-restore-error");
+	        bdrs.mobile.pages.trash_delete_confirm = require("bdrs-page-trash-delete-confirm");
+        };
+        if(bdrs.database.ready === true) {
+            sjsInit();
+        } else {
+            bdrs.database.addDatabaseReadyListener(sjsInit);
+        }
 
     </script>
     
@@ -136,8 +143,8 @@
                 <p id="loginWelcome" class="center">Welcome the the ALA Citizen Science Mobile Tool<br/>    
                 Please enter your Biological Data Recording Service URL and your login credentials</p>
                 <label for="portalName">Portal Name</label><input type="text" name="portalName" id="portalName" value="Biological Data Recording System"/>
-                <label for="url">BDRS URL</label><input type="text" name="url" id="url" value="http://localhost:8080/BDRS"/>
-                <label for="username">Username</label><input type="text" name="username" id="username" value="root"/>
+                <label for="url">BDRS URL</label><input type="text" name="url" id="url" value="http://localhost:8080/BDRS/"/>
+                <label for="username">Username</label><input type="text" name="username" id="username" value="admin"/>
                 <label for="password">Password</label><input type="password" name="password" id="password" value="password"/>
             </form>
             <button id="login_button">Login</button>
@@ -373,7 +380,7 @@
                 <div data-role="fieldcontain"><label for="pi-notes">Notes</label><input type="text" name="pi-notes" id="pi-notes"/></div>
             </div>
             <div data-role="fieldcontain"><label for="pi-accuracy">Accuracy</label><input type="text" name="pi-accuracy" id="pi-accuracy" class="validate decimal accuracy"/></div>
-            <div data-inline="true">
+            <div data-inline="true" class="center">
                 <button data-inline="true" id="pi-gps">GPS Location</button>
             </div>
         

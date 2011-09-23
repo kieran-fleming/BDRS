@@ -4,6 +4,11 @@
 
 <h1>Advanced Review</h1>
 
+<!-- for handling the page description in theme -->
+<c:if test="${not empty pageDescription}">
+    ${pageDescription}
+</c:if>
+
 <form id="facetForm" method="GET" action="">
     <input type="hidden" name="recordId" value = "${ recordId }"/>
 	<div class="alaSightingsContent">
@@ -101,7 +106,10 @@
    });
 
    jQuery(window).load(function() {
+      <c:if test="${ mapViewSelected }">
+	  // only init the map view if the map view is selected
       bdrs.advancedReview.initMapView('#facetForm',  
               'atlasSightingsMap', { geocode: { selector: '#geocode' }}, '#recordId');
+	  </c:if>
    });
 </script>

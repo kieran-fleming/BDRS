@@ -3,7 +3,7 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Census Methods</h1>
+<h1>Manage Census Methods</h1>
 
 <cw:getContent key="admin/censusMethodListing" />
 

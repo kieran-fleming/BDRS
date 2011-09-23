@@ -24,9 +24,9 @@ bdrs.map.MapServerQueryManager = function(options) {
 		sld += bdrs.map.generatePolygonSLD({
 			layerName: "geoMapFeature_polygon_highlight",
             userStyleName: "geoMapFeature_polygon_highlight",
-            fillColor: "#FF0000",
+            fillColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             fillOpacity: "0.2",
-            strokeColor: "#FF0000",
+            strokeColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeOpacity: "0.2",
             strokeWidth: "2"
 		});
@@ -34,7 +34,7 @@ bdrs.map.MapServerQueryManager = function(options) {
 		sld += bdrs.map.generatePointSLD({
 			layerName: "record_point_highlight",
             userStyleName: "record_point_highlight",
-            fillColor: "#FF0000",
+            fillColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeColor: "#000000",
             strokeWidth: "2",
             size: "10"
@@ -43,16 +43,16 @@ bdrs.map.MapServerQueryManager = function(options) {
 		sld += bdrs.map.generateLineSLD({
 			layerName: "record_line_highlight",
 			userStyleName: "record_line_highlight",
-            strokeColor: "#FF0000",
+            strokeColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeWidth: "2"
 		});
 		
 		sld += bdrs.map.generatePolygonSLD({
 			layerName: "record_polygon_highlight",
             userStyleName: "record_polygon_highlight",
-            fillColor: "#FF0000",
+            fillColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             fillOpacity: "0.2",
-            strokeColor: "#FF0000",
+            strokeColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeOpacity: "0.2",
             strokeWidth: "2"
 		});
@@ -60,7 +60,7 @@ bdrs.map.MapServerQueryManager = function(options) {
 		sld += bdrs.map.generatePointSLD({
             layerName: "geoMapFeature_point_highlight",
             userStyleName: "geoMapFeature_point_highlight",
-            fillColor: "#FF0000",
+            fillColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeColor: "#000000",
             strokeWidth: "2",
             size: "10"
@@ -69,7 +69,7 @@ bdrs.map.MapServerQueryManager = function(options) {
 		sld += bdrs.map.generateLineSLD({
             layeName: "geoMapFeature_line_highlight",
             userStyleName: "geoMapFeature_line_highlight",
-            strokeColor: "#FF0000",
+            strokeColor: bdrs.map.DEFAULT_HIGHLIGHT_COLOR,
             strokeWidth: "2"
         });
 		

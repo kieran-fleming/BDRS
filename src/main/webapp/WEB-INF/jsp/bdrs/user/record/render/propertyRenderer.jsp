@@ -27,58 +27,58 @@
 <c:choose>
     <c:when test="<%= Record.RECORD_PROPERTY_SPECIES.equals(formField.getPropertyName()) %>">
         <c:choose>
-		    <c:when test="${ formField.species != null }">
-		        <input type="hidden" name="${ formPrefix }species" value="${ formField.species.id }"/>
-		        <span class="scientificName"><c:out value="${ formField.species.scientificName }"/></span>
-		    </c:when>
-		    <c:when test="<%= (formField.getSurvey().getSpecies().size() > 1) || (formField.getSurvey().getSpecies().size() == 0) %>">
-				<c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
-				    <p class="error">
-    				    <c:out value="<%= errorMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>
-				    </p>
-				</c:if>
-		        <input id="survey_species_search" type="text" name="${ formPrefix }survey_species_search"
-		            <c:choose>
-			            <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
-			                value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>"
-			            </c:when>
-			            <c:when test="${ formField.record != null }">
-			                value="<c:out value="${ formField.record.species.scientificName }"/>"
-			            </c:when>
-			        </c:choose>
-	            />
-		        <!-- The styling below is to ensure the ketchup validation box popups up aligned to the input above -->
-		        <input type="text"
-		            <c:choose>
-		                <c:when test="<%= Taxonomic.TAXONOMIC.equals(formField.getTaxonomic()) %>"> 
+            <c:when test="${ formField.species != null }">
+                <input type="hidden" name="${ formPrefix }species" value="${ formField.species.id }"/>
+                <span class="scientificName"><c:out value="${ formField.species.scientificName }"/></span>
+            </c:when>
+            <c:when test="<%= (formField.getSurvey().getSpecies().size() > 1) || (formField.getSurvey().getSpecies().size() == 0) %>">
+                <c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
+                    <p class="error">
+                        <c:out value="<%= errorMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>
+                    </p>
+                </c:if>
+                <input id="survey_species_search" type="text" name="${ formPrefix }survey_species_search"
+                    <c:choose>
+                        <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"survey_species_search\") %>">
+                            value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"survey_species_search\") %>"/>"
+                        </c:when>
+                        <c:when test="${ formField.record != null }">
+                            value="<c:out value="${ formField.record.species.scientificName }"/>"
+                        </c:when>
+                    </c:choose>
+                />
+                <!-- The styling below is to ensure the ketchup validation box popups up aligned to the input above -->
+                <input type="text"
+                    <c:choose>
+                        <c:when test="<%= Taxonomic.TAXONOMIC.equals(formField.getTaxonomic()) %>"> 
                             class="validate(required)"
                         </c:when>
                         <c:when test="<%= Taxonomic.OPTIONALLYTAXONOMIC.equals(formField.getTaxonomic()) %>">
                             class="validate(optionallyTaxonomicSpeciesAndNumber(#number))"
                         </c:when>
-		            </c:choose>
-		        	name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:1px;padding:2px 0 0 0;margin:0 0 0 -4px;border-width:0;"/>
-		    </c:when>
-		    <c:when test="<%= formField.getSurvey().getSpecies().size() == 1 %>">
-		        <input type="hidden" name="${ formPrefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>
-		        <span class="scientificName"><c:out value="<%= formField.getSurvey().getSpecies().iterator().next().getScientificName() %>"/></span>
-		    </c:when>
-		    <c:otherwise>
-		        Misconfigured Project. No species available.</br>
-		        <sec:authorize ifAnyGranted="ROLE_ADMIN">
-		            <a href="${pageContext.request.contextPath}/bdrs/admin/survey/editTaxonomy.htm?surveyId=${ formField.survey.id }">
-		                Assign a species now.
-		            </a>
-		        </sec:authorize>
-		        <sec:authorize ifNotGranted="ROLE_ADMIN">
-		            Please contact the project administrator.                          
-		        </sec:authorize>
-		    </c:otherwise>
-		</c:choose>                                        
+                    </c:choose>
+                    name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:1px;padding:2px 0 0 0;margin:0 0 0 -4px;border-width:0;"/>
+            </c:when>
+            <c:when test="<%= formField.getSurvey().getSpecies().size() == 1 %>">
+                <input type="hidden" name="${ formPrefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>
+                <span class="scientificName"><c:out value="<%= formField.getSurvey().getSpecies().iterator().next().getScientificName() %>"/></span>
+            </c:when>
+            <c:otherwise>
+                Misconfigured Project. No species available.</br>
+                <sec:authorize ifAnyGranted="ROLE_ADMIN">
+                    <a href="${pageContext.request.contextPath}/bdrs/admin/survey/editTaxonomy.htm?surveyId=${ formField.survey.id }">
+                        Assign a species now.
+                    </a>
+                </sec:authorize>
+                <sec:authorize ifNotGranted="ROLE_ADMIN">
+                    Please contact the project administrator.
+                </sec:authorize>
+            </c:otherwise>
+        </c:choose>
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_LOCATION.equals(formField.getPropertyName()) %>">
-         <select id="location" onchange="bdrs.survey.location.updateLocation(jQuery(this).val());" name="${ formPrefix }location" >
+         <select id="location" onchange="bdrs.survey.location.updateLocation(jQuery(this).val(), { attributeSelector: '#attributesContainer' });" name="${ formPrefix }location" >
             <option value="-1"></option>
             <c:forEach items="${ locations }" var="location">
                 <jsp:useBean id="location" type="au.com.gaiaresources.bdrs.model.location.Location"/>
@@ -95,26 +95,27 @@
                     <c:out value="${ location.name }"/>
                 </option>
             </c:forEach>
-        </select>                                       
+        </select>
+        <div id="attributesContainer"></div>
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_POINT.equals(formField.getPropertyName()) %>">
         <c:choose>
             <c:when test="${ isLatitude }">
                 <c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"latitude\") %>">
-			        <p class="error">
-			            <c:out value="<%= errorMap.get(formField.getPrefix()+\"latitude\") %>"/>
-			        </p>
-			    </c:if>
+                    <p class="error">
+                        <c:out value="<%= errorMap.get(formField.getPrefix()+\"latitude\") %>"/>
+                    </p>
+                </c:if>
                 <input id="latitude" type="text" name="${ formPrefix }latitude" class="validate(range(-90,90), number)"
                     <c:choose>
-			            <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"latitude\") %>">
-			                value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"latitude\") %>"/>"
-			            </c:when>
-			            <c:when test="${ formField.record != null }">
-			                value="<%= formField.getRecord().getLatitude() == null ? "" : formField.getRecord().getLatitude() %>"
-			            </c:when>
-			        </c:choose>
+                        <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"latitude\") %>">
+                            value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"latitude\") %>"/>"
+                        </c:when>
+                        <c:when test="${ formField.record != null }">
+                            value="<%= formField.getRecord().getLatitude() == null ? "" : formField.getRecord().getLatitude() %>"
+                        </c:when>
+                    </c:choose>
                     <c:if test="<%= formField.getSurvey().isPredefinedLocationsOnly() %>">
                         readonly="readonly"
                     </c:if>
@@ -214,7 +215,7 @@
                 <c:out value="<%= errorMap.get(formField.getPrefix()+\"notes\") %>"/>
             </p>
         </c:if>
-		<textarea id="notes" name="${ formPrefix }notes"><c:choose><c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"notes\") %>"><c:out value="<%= valueMap.get(formField.getPrefix()+\"notes\") %>"/></c:when><c:when test="${ formField.record != null }"><c:out value="${ formField.record.notes }"/></c:when></c:choose></textarea>
+        <textarea id="notes" name="${ formPrefix }notes"><c:choose><c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"notes\") %>"><c:out value="<%= valueMap.get(formField.getPrefix()+\"notes\") %>"/></c:when><c:when test="${ formField.record != null }"><c:out value="${ formField.record.notes }"/></c:when></c:choose></textarea>
     </c:when>
     
     <c:when test="<%= Record.RECORD_PROPERTY_NUMBER.equals(formField.getPropertyName()) %>">
@@ -225,13 +226,13 @@
         </c:if>
         <input id="number" type="text" name="${ formPrefix }number" 
             <c:choose>
-	            <c:when test="<%= Taxonomic.TAXONOMIC.equals(formField.getTaxonomic()) %>"> 
-	                class="validate(positiveIntegerLessThanOneMillion)"
-	            </c:when>
-	            <c:when test="<%= Taxonomic.OPTIONALLYTAXONOMIC.equals(formField.getTaxonomic()) %>">
-	                class="validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name=${ formPrefix }species]))"
-	            </c:when>
-	        </c:choose>
+                <c:when test="<%= Taxonomic.TAXONOMIC.equals(formField.getTaxonomic()) %>"> 
+                    class="validate(positiveIntegerLessThanOneMillion)"
+                </c:when>
+                <c:when test="<%= Taxonomic.OPTIONALLYTAXONOMIC.equals(formField.getTaxonomic()) %>">
+                    class="validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name=${ formPrefix }species]))"
+                </c:when>
+            </c:choose>
         
             <c:if test="${ formField.record != null}">
                 <c:choose>

@@ -1,0 +1,7 @@
+<p>
+Thresholds are actions that occur when a certain set of 
+data parameters are set - such as when a nesting record 
+for a particular bird species is recorded.  Thresholds 
+are set by combining a certain set of Conditions and Actions, 
+and can be added by clicking on the "Add Threshold" button.
+</p>

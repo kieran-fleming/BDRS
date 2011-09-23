@@ -81,4 +81,20 @@
         <put-attribute name="taxon" value="object"/>
     </definition>
 
+    <!-- Maps -->
+    <definition name="recordEntryMap" template="/WEB-INF/jsp/bdrs/map/recordEntryMap.jsp">
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customCss">
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="locationEntryMap" template="/WEB-INF/jsp/bdrs/map/locationEntryMap.jsp">
+        <put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customCss">
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
 </tiles-definitions>

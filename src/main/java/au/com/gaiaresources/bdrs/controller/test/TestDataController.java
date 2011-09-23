@@ -44,7 +44,7 @@ public class TestDataController extends AbstractController {
     @Autowired
     private UserDAO userDAO;
     
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/admin/testdata/dashboard.htm", method = RequestMethod.GET)
     public ModelAndView setup(HttpServletRequest request,
                             HttpServletResponse response) {
@@ -53,7 +53,7 @@ public class TestDataController extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/admin/testdata/dashboard.htm", method = RequestMethod.POST)
     public String createTestData(HttpServletRequest request,
                             HttpServletResponse response,
@@ -76,11 +76,12 @@ public class TestDataController extends AbstractController {
         }
         testDataCreator.createSurvey(surveyCount, surveyRandom);
         testDataCreator.createBasicSurvey();
+        //testDataCreator.createTestGroups();
         
         return getRedirectHome();
     }
     
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/admin/testdata/clearData.htm", method = RequestMethod.POST)
     public String clearTestData(HttpServletRequest request,
                             HttpServletResponse response) {

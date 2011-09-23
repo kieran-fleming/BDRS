@@ -7,13 +7,7 @@
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/sets/html/style.css" />
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/skins/markitup/style.css" />
 
-<h1>Edit Website Content</h1>
-
-<sec:authorize ifAnyGranted="ROLE_ADMIN">
-<div class="buttonpanel">
-    <input type="button" class="form_action" onclick="bdrs.admin.adminEditContent.resetContent()" value="Reset all content to default" />
-</div>
-</sec:authorize>
+<h1>Edit Content</h1>
 
 <div class="input_container">
 <div>
@@ -26,10 +20,20 @@
 	</select>
 </div>
 <textarea id="markItUp"></textarea>
+
+<sec:authorize ifAnyGranted="ROLE_ADMIN">
+<div class="buttonpanel left">
+    <input type="button" class="form_action" onclick="bdrs.admin.adminEditContent.resetContent()" value="Reset all content to default" />
+</div>
+</sec:authorize>
+
 <div class="markItUpSubmitButton buttonpanel textright">
     <input id="resetContent" type="button" class="form_action"  value="Reset Current Content Default" onclick="bdrs.admin.adminEditContent.resetCurrentContent()"/>
     <input id="submitEditContent" type="button" class="form_action"  value="Save" />
 </div>
+
+<div class="clear"></div>
+
 </div>
 <script type="text/javascript">
     jQuery(document).ready(function() {

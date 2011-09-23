@@ -115,6 +115,9 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         params.put("add_action_value_1", "");
 
         params.put("enabled", "true");
+        
+        params.put(ThresholdController.PARAM_NAME, "test thresh name");
+        params.put(ThresholdController.PARAM_DESCRIPTION, "test threshold description");
 
         request.setParameters(params);
         request.addParameter("new_condition", new String[] { "0", "1", "2" });
@@ -129,6 +132,10 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         Assert.assertEquals(1, thresholdList.size());
 
         Threshold threshold = thresholdList.get(0);
+        
+        Assert.assertEquals(params.get(ThresholdController.PARAM_NAME), threshold.getName());
+        Assert.assertEquals(params.get(ThresholdController.PARAM_DESCRIPTION), threshold.getDescription());
+        
         Assert.assertEquals(threshold.getClassName(), params.get("class_name"));
         Assert.assertEquals(threshold.isEnabled(), Boolean.parseBoolean(params.get("enabled")));
         Assert.assertEquals(ThresholdService.CLASS_TO_ACTION_MAP.get(Record.class), threshold.getPossibleActionTypes());
@@ -264,6 +271,9 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         params.put(String.format("action_value_%d", actionB.getId()), "");
 
         params.put("enabled", "false");
+        
+        params.put(ThresholdController.PARAM_NAME, "aef 9asef aiof jladfj ad");
+        params.put(ThresholdController.PARAM_DESCRIPTION, "description weeee 90sad9 sda9sdf asdf 99sdf a u9090");
 
         request.setMethod("POST");
         request.setRequestURI("/bdrs/admin/threshold/edit.htm");
@@ -280,6 +290,10 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         Assert.assertEquals("/bdrs/admin/threshold/listing.htm", redirect.getUrl());
 
         threshold = thresholdDAO.getThreshold(threshold.getId());
+        
+        Assert.assertEquals(params.get(ThresholdController.PARAM_NAME), threshold.getName());
+        Assert.assertEquals(params.get(ThresholdController.PARAM_DESCRIPTION), threshold.getDescription());
+        
         Assert.assertEquals(params.get("class_name"), threshold.getClassName());
         Assert.assertEquals(Boolean.parseBoolean(params.get("enabled")), threshold.isEnabled());
 

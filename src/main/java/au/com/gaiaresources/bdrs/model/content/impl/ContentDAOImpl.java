@@ -10,7 +10,7 @@ import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 
 /**
  * @author aj
@@ -19,7 +19,7 @@ import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
 public class ContentDAOImpl extends AbstractDAOImpl implements ContentDAO {
     Logger log = Logger.getLogger(ContentDAOImpl.class);
 
-    private ContentInitialiserService contentService = new ContentInitialiserService();
+    private ContentService contentService = new ContentService();
     
     public String getContentValue(String key) {
         return getContentValue(key, null);

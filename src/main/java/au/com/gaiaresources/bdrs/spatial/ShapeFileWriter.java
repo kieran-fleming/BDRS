@@ -30,8 +30,8 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.config.AppContext;
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordKeyLookup;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;

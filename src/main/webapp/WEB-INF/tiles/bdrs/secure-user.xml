@@ -106,6 +106,13 @@
         <put-attribute name="valueMap" type="object"/>
     </definition>
     
+    <definition name="formFieldVerticalRenderer" template="/WEB-INF/jsp/bdrs/user/record/render/formFieldVerticalRenderer.jsp">
+        <put-attribute name="formField" type="object"/>
+        <put-attribute name="locations" type="object"/>
+        <put-attribute name="errorMap" type="object"/>
+        <put-attribute name="valueMap" type="object"/>
+    </definition>
+    
     <definition name="formFieldListRenderer" template="/WEB-INF/jsp/bdrs/user/record/render/formFieldListRenderer.jsp">
         <put-attribute name="formField" type="object"/>
         <put-attribute name="errorMap" type="object"/>
@@ -256,14 +263,14 @@
     
     <!-- Managed Files -->
     <definition name="managedFileList" extends="user-template">
-        <put-attribute name="title" value="Managed Files Listing"/>
+        <put-attribute name="title" value="Manage Files"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/file/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
         <put-list-attribute name="customJavaScript"></put-list-attribute>
     </definition>
     <definition name="managedFileEdit" extends="user-template">
-        <put-attribute name="title" value="Managed File"/>
+        <put-attribute name="title" value="Edit File"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/file/edit.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>

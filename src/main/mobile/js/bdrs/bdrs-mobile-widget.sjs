@@ -9,9 +9,12 @@ exports.ANALOGOUS_COLOURS = ['7098BF', '70B2BF','707DBF','B6CADE','979797','FFFF
 exports.RecentTaxaWidget = function(limit) {
 
     this.getRecentTaxonomy = function() {
+    	
+        var survey = bdrs.mobile.survey.getDefault();
+        
     	var countList;
     	waitfor(countList) {
-            SpeciesCount.all().order('userCount', false).limit(limit).prefetch('species').list(resume);    
+            SpeciesCount.all().filter('survey','=',survey.id).order('userCount', false).limit(limit).prefetch('species').list(resume);
         }
         var taxonList = [];
         for (var i = 0; i < countList.length; i++) {
@@ -34,8 +37,17 @@ exports.RecentTaxaWidget = function(limit) {
         var recentTaxonomy = this.getRecentTaxonomy();
         // If we have no recent taxonomy, just pick some number from the database.
         if(recentTaxonomy.length === 0) {
+        	 var survey = bdrs.mobile.survey.getDefault();
+             var surveySpeciesCount;
+             waitfor(surveySpeciesCount) {
+            	 survey.species().count(resume);
+             }
+             if(limit > surveySpeciesCount){
+            	 limit = surveySpeciesCount;
+             }
+             
             waitfor(recentTaxonomy) {
-                Species.all().limit(limit).list(resume);
+            	survey.species().limit(limit).list(resume);
             }
         }
 

@@ -65,6 +65,7 @@ exports.Create =  function() {
  * Invoked when the page is displayed.
  */
 exports.Show = function() {
+	
 	var setting;
 	waitfor(setting) {
 		Settings.findBy('key', 'current-survey-id' , resume);
@@ -208,8 +209,9 @@ exports.Show = function() {
     
     // For the moment just grab a random sample of taxa
     var quickListTaxa;
+    var survey = bdrs.mobile.survey.getDefault();
     waitfor(quickListTaxa) {
-        SpeciesCount.all().order('userCount', false).limit(15).prefetch('species').list(resume);
+    	SpeciesCount.all().filter('survey','=',survey.id).order('userCount', false).limit(15).prefetch('species').list(resume);
     }
     for(var j=0; j<quickListTaxa.length; j++) {
         var taxon = quickListTaxa[j].species();
@@ -398,15 +400,16 @@ exports._insertObservationRow = function(obsRecord, species) {
     }
     jQuery('#pi-taxonomy-species-'+speciesTmplParams.id).autocomplete({
 	    source: function(request, response) {
-		    var species;
-		    waitfor(species) {
-			    Species.search('*' + request.term + '*').limit(5).list(resume); // @todo add some survey awareness.
-		    }
-		    var names = [];
-		    for (var i = 0; i < species.length; i++) {
-			    names.push({ label : species[i].commonName() + ' - <i>' + species[i].scientificName()+ '</i>', value : species[i].scientificName()});
-		    }
-		    response(names);
+	    	var currentSurvey = bdrs.mobile.survey.getDefault();
+			//get species for current survey
+    		currentSurvey.species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(null,function(speciesList){
+    			var names = [];
+    			speciesList.forEach(function(aSpecies){
+    				//add the names of the found species to the response
+                    names.push({ label : aSpecies.commonName() + ' - <i>' + aSpecies.scientificName()+ '</i>', value : aSpecies.scientificName()});
+    			});
+    			response(names);
+    		});
 	    },
 	    change: function(event, ui) {
         },
@@ -450,14 +453,7 @@ exports._savePoint = function() {
 	bdrs.mobile.Debug ('Save Point Called');
 	
 	// Get the survey
-	var setting;
-    waitfor(setting) {
-        Settings.findBy('key', 'current-survey-id', resume);
-    }
-    var survey;
-    waitfor(survey) {
-        Survey.findBy('server_id', setting.value(), resume);
-    }
+	var survey = bdrs.mobile.survey.getDefault();
     
     var lat = jQuery('#pi-latitude').val();
     var lon = jQuery('#pi-longitude').val();
@@ -497,20 +493,112 @@ exports._savePoint = function() {
     waitfor(substrateRecChildren) {
         substrateRec.children().filter('deleted','=',false).list(resume);
     }
+
+    //---------------------------------
+    //-- Updating species and Heights--
+    //---------------------------------
+	bdrs.mobile.Debug("About to update " + substrateRecChildren.length + " substrateRecChildren.");
     for(var y=0; y<substrateRecChildren.length; y++) {
         var obsRec = substrateRecChildren[y];
+        var currentSpecies = obsRec.species();
         var speciesElem = jQuery("#pi-taxonomy-species-"+obsRec.id);
         var heightElem = jQuery("#pi-taxonomy-height-"+obsRec.id);
+        bdrs.mobile.Debug("About to UPDATE " + currentSpecies.scientificName() + " WITH " + speciesElem.val());
         
         if(speciesElem.length > 0 && heightElem.length > 0) {
+        	
+        	bdrs.mobile.Debug("Trying to RETRIEVE " + speciesElem.val() + " FROM the database");
+        	var updatedSpecies = exports._getSpeciesByScientificName(speciesElem.val());
+        	
             obsRec.modifiedAt(now);
 	        obsRec.when(now);
 	        obsRec.time([now.getHours(), now.getMinutes(), now.getSeconds()].join(':'));
 	        obsRec.latitude(lat);
 	        obsRec.longitude(lon);
 	        obsRec.accuracy(accuracy);
-	        obsRec.species(exports._getSpeciesByScientificName(speciesElem.val()));
 	        
+	        if (updatedSpecies === null) {
+	        	bdrs.mobile.Debug("SPECIES "  + speciesElem.val() + " does not exist in the database");
+	        	bdrs.mobile.Debug("Creating a new field species for it");
+        		var sp = new Species({
+        			scientificNameAndAuthor: "Field Species",
+        	    	scientificName: speciesElem.val(),
+        	    	commonName: speciesElem.val(),
+        	    	rank: "Field Species",
+        	    	author: "Field Species",
+        	    	year: ""
+        		});
+        		persistence.add(sp);
+        		
+        		//TODO: refactor counter
+        		bdrs.mobile.Debug("Creating a COUNTER for new fieldspecies with scientific name " +  sp.scientificName());
+                var fieldSpeciesCounter = new SpeciesCount({scientificName: sp.scientificName(), count: 0 , userCount: 0});
+                persistence.add(fieldSpeciesCounter);
+                fieldSpeciesCounter.species(sp);
+                fieldSpeciesCounter.survey(survey);
+                
+                bdrs.mobile.Debug("Trying to RETRIEVE taxongroup FOR " + sp.scientificName() + " FROM the database");
+        		var tg;
+        		waitfor(tg) {
+        			TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
+        		}
+        		if (tg == null) {
+        			bdrs.mobile.Debug("taxongroup for SPECIES "  + sp.scientificName() + " does not exist in the database");
+    	        	bdrs.mobile.Debug("Creating a new field taxongroup for it");
+        			tg = new TaxonGroup({
+        				name: "Field Species"
+        			});
+        			persistence.add(tg);
+        		}
+        		
+        		survey.species().add(sp);
+        		tg.species().add(sp);
+        		updatedSpecies = sp;
+        		waitfor() {
+        			persistence.flush(resume);
+        		}
+	        }
+	        
+	        bdrs.mobile.Debug("REPLACING old species " + currentSpecies.scientificName() + " WITH " + updatedSpecies.scientificName());
+	        obsRec.species(updatedSpecies);
+	        
+	        //TODO: refactor counter
+	        bdrs.mobile.Debug("Trying to RETRIEVE counter FOR " + currentSpecies.scientificName() + " FROM the database");
+	        var currentSpeciescounter;
+	        waitfor(currentSpeciescounter) {
+                SpeciesCount.all().filter('scientificName','=', currentSpecies.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
+            }
+	        
+        	if(currentSpeciescounter !== null){
+        		bdrs.mobile.Debug(currentSpecies.scientificName() + ": " + currentSpeciescounter.count() + " -1 ");
+        		currentSpeciescounter.count(currentSpeciescounter.count() - 1);
+        		currentSpeciescounter.userCount(currentSpeciescounter.userCount()- 1);
+        	}
+        	
+        	bdrs.mobile.Debug("Trying to RETRIEVE counter FOR " + updatedSpecies.scientificName() + " FROM the database");
+        	var updatedSpeciescounter;
+	        waitfor(updatedSpeciescounter) {
+                SpeciesCount.all().filter('scientificName','=', updatedSpecies.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
+            }
+	        
+	        if(updatedSpeciescounter !== null){
+	        	bdrs.mobile.Debug(updatedSpecies.scientificName() + ": " + updatedSpeciescounter.count() + " +1 ");
+	        	updatedSpeciescounter.count(updatedSpeciescounter.count() + 1);
+	        	updatedSpeciescounter.userCount(updatedSpeciescounter.userCount() + 1);
+        	} else {
+	        	bdrs.mobile.Debug("Counter FOR "  + updatedSpecies.scientificName() + " does not exist in the database");
+	        	bdrs.mobile.Debug("Creating a new species counter for it and setting it to +1");
+        		updatedSpeciescounter = new SpeciesCount({
+                    scientificName: updatedSpecies.scientificName(), 
+					count: 1,
+                    userCount: 1
+                });
+				persistence.add(updatedSpeciescounter);
+				updatedSpeciescounter.species(updatedSpecies);
+				updatedSpeciescounter.survey(survey);
+        	}
+        	
+	        bdrs.mobile.Debug("Trying to RETRIEVE height from existing record FROM the database");
 	        var heightRecAttr;
             waitfor(heightRecAttr) {
                 AttributeValue.all().
@@ -519,21 +607,31 @@ exports._savePoint = function() {
                     order('weight', true).
                     one(resume);
             };
+            
             if(heightRecAttr === undefined || heightRecAttr === null) {
+	        	bdrs.mobile.Debug("Height for existing record does not exist in the database");
+	        	bdrs.mobile.Debug("Creating a new height attribute for this record");
                 heightRecAttr = new AttributeValue();
 	            obsRec.attributeValues().add(heightRecAttr);
                 heightRecAttr.attribute(exports._point_data.obsHeightAttr);
             }
+            
+            bdrs.mobile.Debug("REPLACING old height WITH new height");
             heightRecAttr.value(heightElem.val());
             exports._last_height[obsRec.species.id] = heightRecAttr.value();
         }
     }
 	
-	// Save the new observed species
+    //-----------------------------------
+    //-- Adding new species and Heights--
+    //-----------------------------------
+    bdrs.mobile.Debug("About to create new species and heights");
     var index = parseInt(jQuery("#pi-obs-index").val(),10);
     for(var i=0; i<index; i++) {
+    	
         var speciesElem = jQuery("#pi-taxonomy-species-"+i);
         var heightElem = jQuery("#pi-taxonomy-height-"+i);
+        bdrs.mobile.Debug("About to CREATE species " + speciesElem.val());
         
         if(speciesElem.length > 0 && heightElem.length > 0) {
             // Observation Record
@@ -549,13 +647,14 @@ exports._savePoint = function() {
 	        obsRec.longitude(lon);
 	        obsRec.accuracy(accuracy);
 
-			// Field Species check.
-			var species = exports._getSpeciesByScientificName(speciesElem.val())         
-			if (species != undefined) {
+	        bdrs.mobile.Debug("Trying to RETRIEVE " + speciesElem.val() + " FROM the database");
+			var species = exports._getSpeciesByScientificName(speciesElem.val())
+			if (species !== null) {
 				bdrs.mobile.Debug(species.commonName());
 				bdrs.mobile.Debug(species.scientificName());
-			} else if (speciesElem.val() != '') {
-				// Create a field species.
+			} else if (speciesElem.val() !== '') {
+				bdrs.mobile.Debug("SPECIES "  + speciesElem.val() + " does not exist in the database");
+	        	bdrs.mobile.Debug("Creating a new field species for it");
 				var sp = new Species({
 					scientificNameAndAuthor: "Field Species",
 			    	scientificName: speciesElem.val(),
@@ -565,43 +664,46 @@ exports._savePoint = function() {
 			    	year: ""
 				});
 				
-				// Check for field taxon group
+                bdrs.mobile.Debug("Trying to RETRIEVE taxongroup FOR " + sp.scientificName() + " FROM the database");
 				var tg;
 				waitfor(tg) {
 					TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
 				}
-				if (tg == null) {
+				if (tg === null) {
+					bdrs.mobile.Debug("taxongroup for SPECIES "  + sp.scientificName() + " does not exist in the database");
+    	        	bdrs.mobile.Debug("Creating a new field taxongroup for it");
 					tg = new TaxonGroup({
 						name: "Field Species"
 					});
 					persistence.add(tg);
-				}
+        		}
 				persistence.add(sp);
 				tg.species().add(sp);
 				species = sp;
 				waitfor() {
 					persistence.flush(resume);
 				}
-				bdrs.mobile.Debug('Created a new species: ' + species.scientificName());
-				bdrs.mobile.Debug(species.scientificName());
 			}
+			bdrs.mobile.Debug("ADDING species " + species.scientificName() + " to observation record");
 	        obsRec.species(species);
 	        
-	        // Height Record Attribute
+	        bdrs.mobile.Debug("Creating a new height attribute with value " + heightElem.val());
 	        var heightRecAttr = new AttributeValue();
 	        obsRec.attributeValues().add(heightRecAttr);
             heightRecAttr.attribute(exports._point_data.obsHeightAttr);
 	        heightRecAttr.value(heightElem.val());
             exports._last_height[obsRec.species().id] = heightRecAttr.value();
 	        
+            //TODO: refactor species count
 	        // Update Species Count index.
-			bdrs.mobile.Debug('Updating species count');
+            bdrs.mobile.Debug("Trying to RETRIEVE counter FOR " + obsRec.species().scientificName() + " FROM the database");
         	var counter;
         	waitfor(counter) {
 				SpeciesCount.all().filter('scientificName', '=', obsRec.species().scientificName()).one(resume);
         	}
-        	if (counter == null) {
-				bdrs.mobile.Debug('Count not found, creating new one.');
+        	if (counter === null) {
+        		bdrs.mobile.Debug("Counter FOR "  + obsRec.species().scientificName() + " does not exist in the database");
+	        	bdrs.mobile.Debug("Creating a new species counter for it and setting it to +1");
 				counter = new SpeciesCount({
                     scientificName: obsRec.species().scientificName(), 
 					count: 1,
@@ -610,10 +712,11 @@ exports._savePoint = function() {
 				persistence.add(counter);
 				counter.species(obsRec.species());
         	} else {
-        		bdrs.mobile.Debug('Count found, incrementing');
+        		bdrs.mobile.Debug(obsRec.species().scientificName() + ": " + counter.count() + " +1 ");
         		counter.count(counter.count() + 1);
                 counter.userCount(counter.userCount() + 1);
         	}
+        	counter.survey(survey);
         }
     }
 

@@ -30,6 +30,7 @@ import org.hibernate.annotations.Type;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.expert.ReviewRequest;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -38,6 +39,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -48,7 +50,7 @@ import com.vividsolutions.jts.geom.Point;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "RECORD")
 @AttributeOverride(name = "id", column = @Column(name = "RECORD_ID"))
-public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
+public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attributable<AttributeValue> {
     
     public static final String RECORD_PROPERTY_SPECIES = "species";
     public static final String RECORD_PROPERTY_LOCATION = "location";
@@ -202,17 +204,15 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
         this.user = user;
     }
 
+
     /**
-     * {@inheritDoc}
+     * Get the location that the user saw the species.
+     * @return {@link Location}
      */
     @CompactAttribute
     @ManyToOne
     @JoinColumn(name = "LOCATION_ID")
     @ForeignKey(name = "RECORD_LOCATION_FK")
-    /**
-     * Get the location that the user saw the species.
-     * @return {@link Location}
-     */
     public Location getLocation() {
         return location;
     }
@@ -224,7 +224,7 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
     
     @Transient
     public Point getPoint() {
-    	return geometry == null ? null : geometry.getCentroid();
+        return geometry == null ? null : geometry.getCentroid();
     }
 
     public void setPoint(Point location) {
@@ -388,13 +388,13 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
         return null;
     }
 
-
-    @CompactAttribute
-    @OneToMany
     /**
      * Get the set of attributes that were recorded for the species.
      * @return {@link Set} of {@link RecordAttribute}
      */
+    @CompactAttribute
+    @OneToMany
+    @Override
     public Set<AttributeValue> getAttributes() {
         return attributes;
     }
@@ -403,13 +403,13 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
         this.attributes = attributes;
     }
 
-    @CompactAttribute
-    @Column(name = "NOTES")
-    @Type(type = "text")
     /**
      * Any notes that the user might have about the sighting.
      * @return {@link String}
      */
+    @CompactAttribute
+    @Column(name = "NOTES")
+    @Type(type = "text")
     public String getNotes() {
         return notes;
     }
@@ -640,5 +640,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord {
         }
         boolean isOwner = writer.getId().intValue() == this.getUser().getId().intValue();
         return isOwner || writer.isAdmin();
+    }
+
+    @Override
+    @Transient
+    public AttributeValue createAttribute() {
+        return new AttributeValue();
     }
 }

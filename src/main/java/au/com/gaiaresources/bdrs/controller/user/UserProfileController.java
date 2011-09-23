@@ -29,6 +29,7 @@ import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData;
 import au.com.gaiaresources.bdrs.service.user.UserMetaDataService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData.UserMetaDataType;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 @Controller
 public class UserProfileController extends AbstractController {
@@ -246,8 +247,9 @@ public class UserProfileController extends AbstractController {
     	   		targetUser.setActive(true);
     	   		// Email the user that their account is activated
     	   		Map<String, Object> params = new HashMap<String, Object>();
-            	params.put("newUser", targetUser);
-    	   		emailService.sendMessage(targetUser.getEmailAddress(), "Registration approved", "UserSignUpApproved.vm", params);
+    	   		params.put("newUser", targetUser);
+    	   		params.put("portal", RequestContextHolder.getContext().getPortal());
+    	   		emailService.sendMessage(targetUser.getEmailAddress(), "Registration approved", "UserSignupApproved.vm", params);
     	   		
     	   	}
         	   

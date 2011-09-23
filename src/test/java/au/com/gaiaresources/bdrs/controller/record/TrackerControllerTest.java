@@ -114,8 +114,8 @@ public class TrackerControllerTest extends RecordFormTest {
                     groupAttr.setTag(isTag);
     
                     if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
-                    		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
-                    		AttributeType.MULTI_SELECT.equals(attrType)) {
+                            AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                            AttributeType.MULTI_SELECT.equals(attrType)) {
 
                         List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                         for (int i = 0; i < 4; i++) {
@@ -176,9 +176,9 @@ public class TrackerControllerTest extends RecordFormTest {
                 attr.setTag(false);
 
                 if(AttributeType.STRING_WITH_VALID_VALUES.equals(attrType) ||
-                		AttributeType.MULTI_CHECKBOX.equals(attrType) ||
-                		AttributeType.MULTI_SELECT.equals(attrType)) {
-                	
+                        AttributeType.MULTI_CHECKBOX.equals(attrType) ||
+                        AttributeType.MULTI_SELECT.equals(attrType)) {
+                    
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -521,25 +521,25 @@ public class TrackerControllerTest extends RecordFormTest {
                     break;
                 case MULTI_CHECKBOX:
                     {
-                    	List<AttributeOption> opts = attr.getOptions(); 
-                    	recAttr.setMultiCheckboxValue(new String[]{
-                    			opts.get(0).getValue(),
-                    			opts.get(1).getValue()
-                    	});
-                	}
+                        List<AttributeOption> opts = attr.getOptions(); 
+                        recAttr.setMultiCheckboxValue(new String[]{
+                                opts.get(0).getValue(),
+                                opts.get(1).getValue()
+                        });
+                    }
                     break;
                 case MULTI_SELECT:
-                	{
-                    	List<AttributeOption> opts = attr.getOptions(); 
-                    	recAttr.setMultiSelectValue(new String[]{
-                    			opts.get(0).getValue(),
-                    			opts.get(1).getValue()
-                    	});
-                	}
-                	break;
+                    {
+                        List<AttributeOption> opts = attr.getOptions(); 
+                        recAttr.setMultiSelectValue(new String[]{
+                                opts.get(0).getValue(),
+                                opts.get(1).getValue()
+                        });
+                    }
+                    break;
                 case SINGLE_CHECKBOX:
-                	recAttr.setStringValue(Boolean.FALSE.toString());
-                	break;
+                    recAttr.setStringValue(Boolean.FALSE.toString());
+                    break;
                 case FILE:
                     recAttr.setStringValue("testGroupDataFile.dat");
                     break;
@@ -583,7 +583,7 @@ public class TrackerControllerTest extends RecordFormTest {
 
                 Assert.assertEquals(record, attributeField.getRecord());
                 Assert.assertEquals(survey, attributeField.getSurvey());
-                Assert.assertEquals(expectedRecordAttrMap.get(attributeField.getAttribute()), attributeField.getRecordAttribute());
+                Assert.assertEquals(expectedRecordAttrMap.get(attributeField.getAttribute()), attributeField.getAttributeValue());
             } else if (formField.isPropertyFormField()) {
                 RecordPropertyFormField propertyField = (RecordPropertyFormField) formField;
                 Assert.assertEquals(record, propertyField.getRecord());
@@ -712,34 +712,36 @@ public class TrackerControllerTest extends RecordFormTest {
                     Assert.assertEquals(params.get(key), recAttr.getStringValue());
                     break;
                 case MULTI_CHECKBOX:
-	                {
-	                	// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	for(String val : recAttr.getMultiCheckboxValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-                	}
-	                break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        for(String val : recAttr.getMultiCheckboxValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                    }
+                    break;
                 case MULTI_SELECT:
-                	{
-	                	// make sure the correct data got posted to the server correctly
-	                	Assert.assertEquals(2, request.getParameterValues(key).length);
-	                	Set<String> optionSet = new HashSet<String>();
-	                	for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
-	                		optionSet.add(opt.getValue());
-	                	}
-	                	for(String val : recAttr.getMultiSelectValue()){
-	                		Assert.assertTrue(optionSet.contains(val));
-	                	}
-                	}
-                	break;
+                    {
+                        // make sure the correct data got posted to the server correctly
+                        Assert.assertEquals(2, request.getParameterValues(key).length);
+                        Set<String> optionSet = new HashSet<String>();
+                        for(AttributeOption opt : recAttr.getAttribute().getOptions()) {
+                            optionSet.add(opt.getValue());
+                        }
+                        for(String val : recAttr.getMultiSelectValue()){
+                            Assert.assertTrue(optionSet.contains(val));
+                        }
+                    }
+                    break;
                 case SINGLE_CHECKBOX:
-                	Assert.assertEquals(Boolean.parseBoolean(params.get(key)), Boolean.parseBoolean(recAttr.getStringValue()));
-                	break;  
+                    Assert.assertEquals(recAttr.getStringValue() + " should be 'true'!", 
+                                        Boolean.parseBoolean(params.get(key)), 
+                                        Boolean.parseBoolean(recAttr.getStringValue()));
+                    break;  
                 case FILE:
                 case IMAGE:
                     Assert.assertEquals(params.get(key), recAttr.getStringValue());

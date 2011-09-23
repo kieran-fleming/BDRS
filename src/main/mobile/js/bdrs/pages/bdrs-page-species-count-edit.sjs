@@ -55,7 +55,7 @@ exports.Show = function() {
         source: function(request, response) {
             var species;
             waitfor(species) {
-                Species.search('*' + request.term + '*').limit(5).list(resume); // @todo add some survey awareness.
+                Species.all().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(resume); // @todo add some survey awareness.
             }
             var names = [];
             for (var i = 0; i < species.length; i++) {

@@ -20,7 +20,7 @@ import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 /**
@@ -97,7 +97,7 @@ public class UserMessageController extends AbstractController {
         emailParams.put("viewRecordUrl", redirService.getViewRecordUrl(rec));
         emailParams.put("contactText", text);
         emailParams.put("portal", getRequestContext().getPortal());
-        emailParams.put("contextPath", ContentInitialiserService.getRequestURL(request));
+        emailParams.put("contextPath", ContentService.getRequestURL(request));
         
         emailService.sendTemplateMessage(rec.getUser().getEmailAddress(), 
                                           replyEmail,

@@ -21,6 +21,10 @@ if (window.console.log === undefined) {
     };
 }
 
+bdrs.underDev = function() {
+	alert('This is still under development');
+};
+
 /**
  * Gets query parameter from the url
  * @param parameter name
@@ -58,6 +62,14 @@ bdrs.isIE7 = function() {
 // case we don't want to override it.
 if (bdrs.MODAL_DIALOG_Z_INDEX === undefined) {
 	bdrs.MODAL_DIALOG_Z_INDEX = 4001;
+}
+
+if (bdrs.map.DEFAULT_OPACITY === undefined) {
+	bdrs.map.DEFAULT_OPACITY = 0.5;
+}
+
+if (bdrs.map.DEFAULT_HIGHLIGHT_COLOR === undefined) {
+	bdrs.map.DEFAULT_HIGHLIGHT_COLOR = "#FF0000";
 }
 
 // Dynamic post helper
@@ -165,7 +177,6 @@ bdrs.map.control = {
 // resulting in a maxResolution of 156543.0339. 
 //
 // --------------------------------------
-
 
 // initBaseMap:
 // initialises bdrs.map.baseMap. Will use the createCustomMap function if it
@@ -981,6 +992,7 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
 
     var latSelector = options.latSelector;
     var longSelector = options.longSelector;
+    var areaSelector = options.areaSelector;
     var wktSelector = options.wktSelector;
     var wktWriter = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
     
@@ -997,8 +1009,7 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
     };
     
     // Will remove all but the most recently added feature
-    var featureAddedHandler = function(feature){
-    
+    var featureAddedHandler = function(feature) {
         // protect from any shenanigans
         if (!feature) {
             return;
@@ -1019,6 +1030,15 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
         centroid.transform(bdrs.map.GOOGLE_PROJECTION, bdrs.map.WGS84_PROJECTION);
         jQuery(longSelector).val(bdrs.map.roundLatOrLon(centroid.x));
         jQuery(latSelector).val(bdrs.map.roundLatOrLon(centroid.y));
+        if (areaSelector && jQuery(areaSelector)) {
+            var shape = feature.geometry;
+            if (shape instanceof OpenLayers.Geometry.MultiPolygon || 
+                    shape instanceof OpenLayers.Geometry.Polygon) {
+                jQuery(areaSelector).val(bdrs.map.roundLatOrLon(shape.getArea()/10000));
+            } else {
+                jQuery(areaSelector).val('');
+            }
+        }
         jQuery(wktSelector).val(wktWriter.write(feature));
         
         triggerWktValidation();
@@ -1041,6 +1061,20 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
         triggerWktValidation();
     };
     
+    var featureModifiedHandler = function(feature, pixel) {
+        if (areaSelector && jQuery(areaSelector)) {
+            var shape = feature.geometry;
+            if (shape instanceof OpenLayers.Geometry.MultiPolygon || 
+                    shape instanceof OpenLayers.Geometry.Polygon) {
+                jQuery(areaSelector).val(bdrs.map.roundLatOrLon(shape.getArea()/10000));
+            } else {
+                jQuery(areaSelector).val('');
+            }
+        }
+        
+        featureMoveCompleteHandler(feature, pixel);
+    }
+    
     var drawOptions = {
         drawPoint: options.drawPoint,
         drawPolygon: options.drawPolygon,
@@ -1051,7 +1085,8 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
         
         featureAddedHandler: featureAddedHandler,
         featureMovedHandler: featureMovedHandler,
-        featureMoveCompleteHandler: featureMoveCompleteHandler
+        featureMoveCompleteHandler: featureMoveCompleteHandler,
+        featureModifiedHandler: featureModifiedHandler
     };
     
     return bdrs.map.addPolygonDrawLayer(map, layerName, drawOptions);
@@ -1209,17 +1244,19 @@ bdrs.map.addEditingToolbar = function(map, layer, dragFeature, featureMovedHandl
         toolbar.addControls([drawPolygonControl]);
     }
     
+    var featureModifiedHandler = options.featureModifiedHandler ? options.featureModifiedHandler : featureMovedHandler;
+    
     if (options.modifyFeature) {
         var modifyFeatureControl = new OpenLayers.Control.ModifyFeature(layer, {
             vertexRenderIntent: 'temporary',
             displayClass: 'olControlModifyFeature',
-            featureModified: featureMovedHandler,
+            featureModified: featureModifiedHandler,
             title: "Select and modify feature"
         });
         modifyFeatureControl.events.register("activate", modifyFeatureControl, getToolActivatedFunc(bdrs.map.control.MODIFY_FEATURE));
         // trigger after each vertice move completes
         layer.events.register("featuremodified", null, function(event){
-            featureMovedHandler(event.feature);
+            featureModifiedHandler(event.feature, event.pixel);
         });
         toolbar.addControls([modifyFeatureControl]);
     }
@@ -1931,17 +1968,73 @@ bdrs.map.createFeaturePopup = function(map, googleProjectionLonLatPos, featureAr
     return popup;
 };
 
+//--------------------------------------
+// Attributes
+//--------------------------------------
+
+// define here so it can be called from updateLocation below
+if (bdrs.attribute === undefined) {
+    bdrs.attribute = {};
+}
+
 
 //--------------------------------------
-// Survey
+//Survey
 //--------------------------------------
 
 bdrs.survey = {};
 bdrs.survey.location = {};
 
+bdrs.survey.location.LAYER_NAME = 'Position Layer';
+bdrs.survey.location.LOCATION_LAYER_NAME = 'Location Layer';
 
+bdrs.survey.location.updateLocation = function(pk, options) {
+    if(pk > 0) {
+        jQuery.get(bdrs.contextPath+"/webservice/location/getLocationById.htm", {id: pk}, function(data) {
+            var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
+            var feature = wkt.read(data.location);
+            var point = feature.geometry.getCentroid().transform(
+                    bdrs.map.GOOGLE_PROJECTION,
+                    bdrs.map.WGS84_PROJECTION);
+            var lat = jQuery('input[name=latitude]').val(point.y).blur();
+            var lon = jQuery('input[name=longitude]').val(point.x).blur();
 
+            // add the location point to the map
+            var layer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LAYER_NAME)[0];
+            layer.removeFeatures(layer.features);
 
+            var lonLat = new OpenLayers.LonLat(point.x, point.y);
+            lonLat = lonLat.transform(bdrs.map.WGS84_PROJECTION,
+                                      bdrs.map.GOOGLE_PROJECTION);
+            layer.addFeatures(new OpenLayers.Feature.Vector(
+                new OpenLayers.Geometry.Point(lonLat.lon, lonLat.lat)));
+
+            // add the location geometry to the map
+            var loclayer = bdrs.map.baseMap.getLayersByName(bdrs.survey.location.LOCATION_LAYER_NAME)[0];
+            loclayer.removeFeatures(loclayer.features);
+
+            loclayer.addFeatures(feature);
+
+            // zoom the map to show the currently selected location
+            var geobounds = feature.geometry.getBounds();
+            var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
+            bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
+            
+            // show the location attributes in the locationAttributesContainer
+            if (options) {
+                bdrs.attribute.createAttributeDisplayDiv(data.attributes, options.attributeSelector);
+            }
+        });
+    }
+    else {
+        jQuery('input[name=latitude]').val("").blur();
+        jQuery('input[name=longitude]').val("").blur();
+        // clear the location attributes in the locationAttributesContainer
+        if (options) {
+            bdrs.attribute.createAttributeDisplayDiv(null, options.attributeSelector);
+        }
+    }
+};
 
 bdrs.initDatePicker = function(){
     // This blur prevents the ketchup validator from indicating the

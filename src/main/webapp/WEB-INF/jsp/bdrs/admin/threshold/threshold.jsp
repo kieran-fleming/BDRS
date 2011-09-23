@@ -4,10 +4,24 @@
 
 <jsp:useBean id="threshold" type="au.com.gaiaresources.bdrs.model.threshold.Threshold" scope="request"/>
 
-<h1>Threshold</h1>
+<h1>Add Threshold</h1>
 <cw:getContent key="admin/thresholdEdit" />
 
 <form method="post" action="${pageContext.request.contextPath}/bdrs/admin/threshold/edit.htm">
+	
+	<table class="form_table">
+        <tr>
+            <th>Name:</th>
+            <td><input class="validate(required, maxlength(200))" type="text" style="width:40em" name="name" value="<c:out value="${threshold.name}" />" size="40"  autocomplete="off"></td>
+        </tr>
+        <tr>
+            <th>Description:</th>
+            <td>
+                <textarea maxlength="1023" rows="4" name="description"><c:out value="${threshold.description}"/></textarea>
+            </td>
+        </tr>
+    </table>
+	
 	<p class="storyline">
 	    For all
 	    <c:choose>

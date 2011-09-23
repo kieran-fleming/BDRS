@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<h1>Taxonomy Listing</h1>
+<h1>Search Taxonomy</h1>
 <p>
     Enter the name of a taxon below to view the properties of the taxon, or 
     click on &#8220;Add Taxon&#8221; to create a new taxonomic entry.
@@ -10,7 +10,7 @@
 <table class="form_table">
     <tbody>
         <tr>
-            <th>
+            <th class="searchTaxonomyHeader">
                 <label class="strong" for="">Taxon Name:</label>
             </th>
             <td>
@@ -24,7 +24,7 @@
 <div id="taxonProperties"></div>
 
 
-<div class="textright">
+<div class="buttonpanel textright">
     <input id="editTaxon" disabled="disabled" class="form_action" type="button" value="Edit Taxon" 
         onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/edit.htm?pk='+jQuery('#selectedTaxonPk').val();"/>
     <input class="form_action" type="button" value="Add Taxon" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/edit.htm';"/>

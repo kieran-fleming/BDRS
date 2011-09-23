@@ -20,6 +20,8 @@ import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 
+/* UNUSED 2011-09-22 */
+
 @Controller
 public class UserController extends AbstractController {
     private Logger log = Logger.getLogger(getClass());

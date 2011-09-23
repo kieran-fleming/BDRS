@@ -1,8 +1,10 @@
 package au.com.gaiaresources.bdrs.spatial;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -12,6 +14,7 @@ import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 
 public class ShapefileAttributeDictionaryFactoryTest {
@@ -60,7 +63,7 @@ public class ShapefileAttributeDictionaryFactoryTest {
         survey.setDescription("my survey description woooo");
         List<Attribute> surveyAttrList = new ArrayList<Attribute>();
         
-        Attribute a1 = createAttribute(surveyAttrList, "a");      
+        Attribute a1 = createAttribute(surveyAttrList, "a");
         Attribute a2 = createAttribute(surveyAttrList, "a");
         Attribute a3 = createAttribute(surveyAttrList, "a");
         Attribute a4 = createAttribute(surveyAttrList, "a");

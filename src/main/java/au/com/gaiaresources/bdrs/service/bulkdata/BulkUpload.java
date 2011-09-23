@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.service.bulkdata;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import au.com.gaiaresources.bdrs.model.group.Group;
-import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -29,8 +29,7 @@ public class BulkUpload {
     private Set<String> usernameSet;
 
     // Location Name : Location
-    private Map<LocationUpload, Location> locationMap;
-    private Set<LocationUpload> locationUploadSet;
+    private Map<String, LocationUpload> locationMap;
 
     // Survey Name : Survey
     private Map<String, Survey> surveyMap;
@@ -49,7 +48,6 @@ public class BulkUpload {
     private List<String> missingGroups = Collections.emptyList();
     private List<String> missingUsers = Collections.emptyList();
     private List<String> missingSurveys = Collections.emptyList();
-    private List<LocationUpload> missingLocations = Collections.emptyList();
     private List<String> missingIndicatorSpecies = Collections.emptyList();
     
     private Map<IndicatorSpecies, Survey> invalidSurveySpecies = new HashMap<IndicatorSpecies, Survey>(); 
@@ -64,8 +62,7 @@ public class BulkUpload {
         usernameSet = new HashSet<String>();
 
         // Location Name
-        locationMap = new HashMap<LocationUpload, Location>();
-        locationUploadSet = new HashSet<LocationUpload>();
+        locationMap = new HashMap<String, LocationUpload>();
 
         // Survey Name
         surveyMap = new HashMap<String, Survey>();
@@ -121,21 +118,16 @@ public class BulkUpload {
     // ----- Location
 
     public void addLocationUpload(LocationUpload loc) {
-        locationUploadSet.add(loc);
+        locationMap.put(loc.getLocationName(), loc);
     }
 
-    public Location getLocationByLocationUpload(LocationUpload locationUpload) {
-        return locationMap.get(locationUpload);
+    public LocationUpload getLocationUploadByName(String locationName) {
+        return locationMap.get(locationName);
     }
-
-    public void addLocation(LocationUpload key, Location loc) {
-        locationMap.put(key, loc);
+    
+    public Collection<LocationUpload> getLocationUploads() {
+        return Collections.unmodifiableCollection(locationMap.values());
     }
-
-    public Set<LocationUpload> getLocationUploads() {
-        return Collections.unmodifiableSet(locationUploadSet);
-    }
-
     // ----- Survey
 
     public void addSurveyName(String surveyName) {
@@ -213,9 +205,6 @@ public class BulkUpload {
             if (recordUpload.getRecordedByUsername() != null) {
                 usernameSet.add(recordUpload.getRecordedByUsername());
             }
-            if (recordUpload.getLocationUpload() != null) {
-                locationUploadSet.add(recordUpload.getLocationUpload());
-            }
             if (recordUpload.getSurveyName() != null) {
                 surveyNameSet.add(recordUpload.getSurveyName());
             }
@@ -272,14 +261,6 @@ public class BulkUpload {
         this.missingSurveys = missingSurveys;
     }
 
-    public List<LocationUpload> getMissingLocations() {
-        return missingLocations;
-    }
-
-    public void setMissingLocations(List<LocationUpload> missingLocations) {
-        this.missingLocations = missingLocations;
-    }
-
     public List<String> getMissingIndicatorSpecies() {
         return missingIndicatorSpecies;
     }
@@ -303,7 +284,8 @@ public class BulkUpload {
 
     public boolean isMissingData() {
         return !missingGroups.isEmpty() || !missingUsers.isEmpty()
-                || !missingSurveys.isEmpty() || !missingLocations.isEmpty()
+                || !missingSurveys.isEmpty()
                 || !missingIndicatorSpecies.isEmpty();
-    }  
+    }
+
 }

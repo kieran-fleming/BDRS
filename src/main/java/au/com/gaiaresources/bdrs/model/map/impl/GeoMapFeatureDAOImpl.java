@@ -115,6 +115,7 @@ public class GeoMapFeatureDAOImpl extends AbstractDAOImpl implements GeoMapFeatu
             Integer[] mapLayerId, Geometry pointIntersect,
             PaginationFilter filter) {
         
+        // To avoid having an empty array which will cause an exception during the query.
         if (mapLayerId == null || mapLayerId.length == 0) {
             mapLayerId = new Integer[] { 0 };
         }

@@ -53,18 +53,16 @@ public class RecordUpload {
     private String commonName;
     
     private String parentId;
-    private String censusMethodId;
+    private Integer censusMethodId = null;
+    private Integer locationId = null;
     
     private Integer rowNumber;
     private Integer colNumber;
     
-    private LocationUpload locationUpload = null;
-
-    private Map<String, String> record_attribute_map = new HashMap<String, String>();
-    
     private Map<String, Map<String, String>> named_attribute_map = new HashMap<String, Map<String, String>>(); 
     
     private Logger log = Logger.getLogger(getClass());
+    
 
     public RecordUpload() {
 
@@ -321,19 +319,8 @@ public class RecordUpload {
     public void setNotes(String notes) {
         this.notes = notes;
     }
-
-    /*
-    public void setRecordAttribute(String name, String value) {
-        record_attribute_map.put(name, value);
-    }
-
-    public String getRecordAttribute(String name) {
-        return record_attribute_map.get(name);
-    }
-    */
     
     public void setNamedAttribute(String namespace, String name, String value) {
-        //named_attribute_map.get(name)
         if (named_attribute_map.get(namespace) == null) {
             named_attribute_map.put(namespace, new HashMap<String, String>());
         }
@@ -361,14 +348,6 @@ public class RecordUpload {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
-    }
-
-    public LocationUpload getLocationUpload() {
-        if (locationUpload == null) {
-            locationUpload = new LocationUpload(surveyName, locationName,
-                    latitude, longitude);
-        }
-        return locationUpload;
     }
 
     public boolean isGPSLocationName() {
@@ -404,15 +383,20 @@ public class RecordUpload {
         colNumber = val;
     }
 
-    /*
-     * Is actually the string in the census method column
-     */
-    public String getCensusMethodId() {
+    public Integer getCensusMethodId() {
         return censusMethodId;
     }
 
-    public void setCensusMethodId(String censusMethodId) {
+    public void setCensusMethodId(Integer censusMethodId) {
         this.censusMethodId = censusMethodId;
+    }
+    
+    public void setLocationId(Integer locationId) {
+        this.locationId = locationId;
+    }
+    
+    public Integer getLocationId() {
+        return this.locationId;
     }
 
     @Override
@@ -426,14 +410,12 @@ public class RecordUpload {
                 + ", lastAppearance=" + lastAppearance + ", lastDate="
                 + getWhen() + ", lastTime=" + getWhen() + ", latitude="
                 + latitude + ", locationName=" + locationName
-                + ", locationUpload=" + locationUpload + ", longitude="
+                + ", longitude="
                 + longitude + ", notes=" + notes + ", numberSeen=" + numberSeen
-                + ", record_attribute_map=" + record_attribute_map
                 + ", recordedBy=" + recordedBy + ", recordedByUsername="
                 + recordedByUsername + ", scientificName=" + scientificName
                 + ", surveyName=" + surveyName + ", time=" + getWhen()
                 + ", updatedAt=" + updatedAt + ", updatedBy=" + updatedBy
                 + ", when=" + getWhen() + "]";
     }
-
 }

@@ -3,11 +3,12 @@
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
-<h1>Search Users</h1>
+<h1>Edit Users</h1>
 
+<cw:getContent key="admin/manageUsers" />
 
 <div class="input_container">
-<h2>Enter fields</h2>
+<h2>Filter Users</h2>
 	<form id="userSearchForm">
 		<input type="hidden" id ="ident" name="ident" value="<%= context.getUser().getRegistrationKey() %>"/>
 		<table id="userSearchForm">
@@ -32,7 +33,7 @@
 	        </tr>
 	    </table>
 		<div class="buttonpanel textright">
-			<input name="search" type="button" onclick="gridReload()" value="Search" class="form_action" />
+			<input name="search" type="button" onclick="gridReload()" value="Filter" class="form_action" />
 			<input id="downloadXLS" name="downloadXLS" type="button" onclick="bdrs.downloadXls(this)" value="Download XLS" class="form_action" />
 		</div>
 	</form>

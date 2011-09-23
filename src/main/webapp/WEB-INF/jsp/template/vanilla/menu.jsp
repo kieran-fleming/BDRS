@@ -39,25 +39,52 @@
             <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_ROOT">
                 <li><a href="#">Admin</a>
                     <ul>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/survey/listing.htm">Project</a></li>
-                        <sec:authorize ifAnyGranted="ROLE_ROOT">
-                            <li><a href="${pageContext.request.contextPath}/bdrs/root/portal/listing.htm">Portal</a></li>
-                            <li><a href="${pageContext.request.contextPath}/bdrs/admin/testdata/dashboard.htm">Create Test Data</a></li>
+						<li><a href="javascript:bdrs.underDev();">Administration Guide</a></li>
+						<li><a href="${pageContext.request.contextPath}/bdrs/admin/managePeople.htm">Manage People</a>
+							<ul>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/userManagement/approveUsers.htm">Approve Users</a></li>
+								<li><a href="${pageContext.request.contextPath}/admin/userSearch.htm">Edit Users</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/group/listing.htm">Edit Groups</a></li>
+								<li><a href="${pageContext.request.contextPath}/admin/emailUsers.htm">Email Users</a></li>
+							</ul>
+						</li>
+						<li><a href="${pageContext.request.contextPath}/bdrs/admin/manageProjects.htm">Manage Projects</a>
+                            <ul>
+                            	<li><a href="${pageContext.request.contextPath}/bdrs/admin/survey/listing.htm">Edit Projects</a></li>
+                                <li><a href="${pageContext.request.contextPath}/bdrs/admin/censusMethod/listing.htm">Manage Census Methods</a></li>
+                            </ul>
+                        </li>
+						<li>
+							<a href="${pageContext.request.contextPath}/bdrs/admin/manageData.htm">Manage Data</a>
+							<ul>
+								<li><a href="javascript:bdrs.underDev();">Data Preferences</a></li>
+                                <li><a href="${pageContext.request.contextPath}/bdrs/admin/threshold/listing.htm">Manage Thresholds</a></li>
+                                <li><a href="javascript:bdrs.underDev();">Share Data</a></li>
+                                <li><a href="javascript:bdrs.underDev();">Download Data</a></li>
+                                <li><a href="javascript:bdrs.underDev();">Download Species Pages</a></li>
+							</ul>
+						</li>
+						<li>
+							<a href="${pageContext.request.contextPath}/bdrs/admin/managePortal.htm">Manage Portal</a>
+							<ul>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/preference/preference.htm">Edit Preferences</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/theme/edit.htm">Edit Theme</a></li>
+								<li><a href="${pageContext.request.contextPath}/admin/editContent.htm">Edit Content</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/manageTaxonomy.htm">Manage Taxonomy</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/admin/manageMaps.htm">Manage Maps</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/user/managedfile/listing.htm">Manage Files</a></li>
+								<li><a href="${pageContext.request.contextPath}/bdrs/public/embedded/widgetBuilder.htm">Manage Widgets</a></li>
+							</ul>
+						</li>
+						<sec:authorize ifAnyGranted="ROLE_ROOT">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/bdrs/admin/manageSite.htm">Manage Site</a>
+                            <ul>
+                                <li><a href="${pageContext.request.contextPath}/bdrs/root/portal/listing.htm">Manage Portals</a></li>
+                                <li><a href="${pageContext.request.contextPath}/bdrs/admin/testdata/dashboard.htm">Create Test Data</a></li>
+                            </ul>
+                        </li>
                         </sec:authorize>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/preference/preference.htm">Preferences</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/threshold/listing.htm">Threshold</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/taxonomy/listing.htm">Taxonomy</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/taxongroup/listing.htm">Taxon Groups</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/censusMethod/listing.htm">Census Methods</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/map/listing.htm">Maps</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">Map Layers</a></li>
-                        <li><a href="${pageContext.request.contextPath}/admin/userSearch.htm">Manage Users</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/admin/group/listing.htm">Manage User Groups</a></li>
-                        <li><a href="${pageContext.request.contextPath}/admin/editContent.htm">Edit Content</a></li>
-                        <li><a href="${pageContext.request.contextPath}/bdrs/user/managedfile/listing.htm">Media Upload</a></li>
-						<li><a href="${pageContext.request.contextPath}/bdrs/admin/gallery/listing.htm">Galleries</a></li>
-                    	<li><a href="${pageContext.request.contextPath}/bdrs/public/embedded/widgetBuilder.htm">Embedded Widgets</a></li>
-                        <li><a href="${pageContext.request.contextPath}/admin/emailUsers.htm">Email Users and Groups</a></li>
                     </ul>
                 </li>
             </sec:authorize>

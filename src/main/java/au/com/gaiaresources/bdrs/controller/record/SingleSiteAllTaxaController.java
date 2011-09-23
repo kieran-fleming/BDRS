@@ -60,8 +60,9 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
     @RequestMapping(value = "/bdrs/user/singleSiteAllTaxa.htm", method = RequestMethod.GET)
     public ModelAndView addAllSpeciesRecord(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId) {
-        return addRecord(request, response, surveyId, "singleSiteAllTaxa");
+                                    @RequestParam(value="surveyId", required=true) int surveyId,
+                                    @RequestParam(value = "censusMethodId", required = false, defaultValue = "0") Integer censusMethodId) {
+        return addRecord(request, response, surveyId, "singleSiteAllTaxa", censusMethodId);
     }
     
     /**

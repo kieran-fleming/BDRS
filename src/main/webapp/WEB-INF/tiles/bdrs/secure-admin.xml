@@ -6,7 +6,7 @@
 <tiles-definitions>
     <!-- Portal -->
     <definition name="portalSetup" extends="admin-template">
-        <put-attribute name="title" value="Portal Setup"/>
+        <put-attribute name="title" value="Manage Portals"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/portal/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -30,7 +30,7 @@
     
     <!-- Theme -->
     <definition name="themeListing" extends="admin-template">
-        <put-attribute name="title" value="Theme Listing"/>
+        <put-attribute name="title" value="Edit Themes"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/root/theme/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -60,7 +60,7 @@
     
     <!-- Threshold -->
     <definition name="thresholdList" extends="admin-template">
-        <put-attribute name="title" value="Threshold List"/>
+        <put-attribute name="title" value="Manage Thresholds"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/threshold/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -114,7 +114,7 @@
 
     <!-- Survey Listing -->
     <definition name="surveyListing" extends="admin-template">
-        <put-attribute name="title" value="Survey Listing"/>
+        <put-attribute name="title" value="Edit Projects"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -123,7 +123,7 @@
 
     <!-- Survey Add Edit -->
     <definition name="surveyEdit" extends="admin-template">
-        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="title" value="Edit Project"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editSurvey.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -152,9 +152,19 @@
         </put-list-attribute>
     </definition>
 
-    <definition name="surveyEditLocations" extends="admin-template">
+    <definition name="locationListing" extends="admin-template">
         <put-attribute name="title" value="Survey"/>
-        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editLocations.jsp"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/locationListing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss">
+        </put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+    
+    <definition name="surveyEditLocation" extends="admin-template">
+        <put-attribute name="title" value="Survey"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editLocation.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customCss">
         </put-list-attribute>
@@ -194,7 +204,7 @@
     
     <!-- Preference -->
     <definition name="preference" extends="admin-template">
-        <put-attribute name="title" value="Preferences"/>
+        <put-attribute name="title" value="Edit Preferences"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/preference/preference.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -209,7 +219,7 @@
     
     <!-- Taxonomy -->
     <definition name="taxonomyList" extends="admin-template">
-        <put-attribute name="title" value="Taxonomy Listing"/>
+        <put-attribute name="title" value="Manage Taxonomy"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxonomy/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -264,17 +274,17 @@
     </definition>
     
     <definition name="adminUserSearch" extends="admin-template">
-    	<put-attribute name="title" value="Search For Users"/>
+    	<put-attribute name="title" value="Edit Users"/>
     	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/adminUserSearch.jsp"/>
     </definition>
 
 	<definition name="adminEditContent" extends="admin-template">
-		<put-attribute name="title" value="Edit Website Content"/>
+		<put-attribute name="title" value="Edit Content"/>
     	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/contentManagement/adminEditContent.jsp"/>
 	</definition>
 	
 	<definition name="adminEmailUsers" extends="admin-template">
-        <put-attribute name="title" value="Email Users and Groups"/>
+        <put-attribute name="title" value="Email Users"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/email/adminEmailUsers.jsp"/>
     </definition>
 	
@@ -290,14 +300,14 @@
     
         <!-- Group management -->
     <definition name="groupList" extends="admin-template">
-        <put-attribute name="title" value="User Group Listing"/>
+        <put-attribute name="title" value="Edit Groups"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/group/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
         <put-list-attribute name="customJavaScript"></put-list-attribute>
     </definition>
     <definition name="groupEdit" extends="admin-template">
-        <put-attribute name="title" value="User Group"/>
+        <put-attribute name="title" value="Edit Group"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/group/edit.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -306,14 +316,14 @@
     
     <!-- Census Method management -->
     <definition name="censusMethodList" extends="admin-template">
-        <put-attribute name="title" value="User Group Listing"/>
+        <put-attribute name="title" value="Manage Census Methods"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/censusMethod/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
         <put-list-attribute name="customJavaScript"></put-list-attribute>
     </definition>
     <definition name="censusMethodEdit" extends="admin-template">
-        <put-attribute name="title" value="User Group"/>
+        <put-attribute name="title" value="Edit Census Method"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/censusMethod/edit.jsp"/>
         <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customCss"></put-list-attribute>
@@ -326,23 +336,23 @@
     
     <!-- geo map management -->
     <definition name="geoMapListing" extends="admin-template">
-        <put-attribute name="title" value="Map Listing"/>
+        <put-attribute name="title" value="Manage Maps"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/map/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
     </definition>
     <definition name="geoMapEdit" extends="admin-template">
-        <put-attribute name="title" value="Map Editing"/>
+        <put-attribute name="title" value="Edit Map"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/map/edit.jsp"/>
         <put-attribute name="maps" value="false"/>
     </definition>
     <!--  geo map layer management -->
     <definition name="geoMapLayerListing" extends="admin-template">
-        <put-attribute name="title" value="Map Layer Listing"/>
+        <put-attribute name="title" value="Manage Map Layers"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/mapLayer/listing.jsp"/>
         <put-attribute name="maps" value="false"/>
     </definition>
     <definition name="geoMapLayerEdit" extends="admin-template">
-        <put-attribute name="title" value="Map Editing"/>
+        <put-attribute name="title" value="Edit Map Layer"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/mapLayer/edit.jsp"/>
         <put-attribute name="maps" value="false"/>
     </definition>
@@ -359,4 +369,59 @@
         <put-attribute name="maps" value="false"/>      
     </definition>
 
+     <!-- Manage People landing page -->
+    <definition name="managePeople" extends="admin-template">
+        <put-attribute name="title" value="Manage People" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/managePeople.jsp" />
+		<put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Manage Data landing page -->
+	<definition name="manageData" extends="admin-template">
+        <put-attribute name="title" value="Manage Data" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/manageData.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Manage Portal landing page -->
+	<definition name="managePortal" extends="admin-template">
+        <put-attribute name="title" value="Manage Portal" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/managePortal.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Manage Taxonomy landing page -->
+	<definition name="manageTaxonomy" extends="admin-template">
+        <put-attribute name="title" value="Manage Portal" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/manageTaxonomy.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Manage Maps landing page -->
+	<definition name="manageMaps" extends="admin-template">
+		<put-attribute name="title" value="Manage Maps" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/manageMaps.jsp" />
+        <put-attribute name="maps" value="false"/>
+	</definition>
+	
+	<!-- Manage site landing page -->
+	<definition name="manageSite" extends="admin-template">
+        <put-attribute name="title" value="Manage Site" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/manageSite.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Manage projects landing page -->
+	<definition name="manageProjects" extends="admin-template">
+        <put-attribute name="title" value="Manage Projects" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/manageProjects.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Approve Users -->
+	<definition name="approveUsers" extends="admin-template">
+        <put-attribute name="title" value="Approve Users" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/approveUsers.jsp" />
+        <put-attribute name="maps" value="false"/>
+    </definition>
 </tiles-definitions>

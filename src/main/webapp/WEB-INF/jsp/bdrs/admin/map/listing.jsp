@@ -3,7 +3,7 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<h1>Maps</h1>
+<h1>Manage Maps</h1>
 
 <p>
 	Create, edit and delete maps from this interface. You will have previously needed 

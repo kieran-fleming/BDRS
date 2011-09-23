@@ -1,6 +1,5 @@
 package au.com.gaiaresources.bdrs.model.location.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -53,9 +52,17 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
 
     @Override
     public Location getLocation(int pk) {
-        return getByID(Location.class, pk);
+        return getLocation(super.getSession(), pk);
     }
     
+    @Override
+    public Location getLocation(org.hibernate.Session sesh, int pk) {
+        if(sesh == null) {
+            sesh = super.getSession();
+        }
+        return (Location)sesh.get(Location.class, pk);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public List<Location> getLocations(List<Integer> ids) {

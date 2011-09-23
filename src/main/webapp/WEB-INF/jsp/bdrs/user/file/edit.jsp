@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <jsp:useBean id="managedFile" scope="request" type="au.com.gaiaresources.bdrs.model.file.ManagedFile" />
 
@@ -14,13 +15,7 @@
 	    </c:otherwise>
 	</c:choose>
 	
-	<p>
-	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut metus 
-	    lacinia tellus posuere elementum. Proin at leo nibh, a hendrerit odio. 
-	    Integer consectetur metus eget mauris sagittis in eleifend metus dictum. 
-	    Sed sed lacus dui. Nullam sit amet iaculis leo. Fusce vulputate porta eros 
-	    in hendrerit. 
-	</p>
+	<cw:getContent key="admin/manageFiles/editFile" />
 	
 	<table class="form_table">
 	   <tbody>

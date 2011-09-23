@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
 import au.com.gaiaresources.bdrs.controller.record.ValidationType;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -127,16 +128,16 @@ public abstract class AttributeParser {
         }
     }
     
-    public AttributeValue parse(String paramKey, String fileKey, Attribute attribute, Record record,
+    public TypedAttributeValue parse(String paramKey, String fileKey, Attribute attribute, Attributable<? extends TypedAttributeValue> attributable,
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap) throws ParseException {
         
-        Map<Attribute, AttributeValue> recAttrMap = new HashMap<Attribute, AttributeValue>();
-        for (AttributeValue recAttr : record.getAttributes()) {
+        Map<Attribute, TypedAttributeValue> recAttrMap = new HashMap<Attribute, TypedAttributeValue>();
+        for (TypedAttributeValue recAttr : attributable.getAttributes()) {
             recAttrMap.put(recAttr.getAttribute(), recAttr);
         }
 
-        AttributeValue recAttr;
+        TypedAttributeValue recAttr;
         addOrUpdateAttribute = true;
 
         // Retrieve or instantiate the attribute

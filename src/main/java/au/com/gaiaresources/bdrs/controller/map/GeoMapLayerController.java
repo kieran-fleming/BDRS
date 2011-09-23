@@ -55,6 +55,7 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.web.JsonService;
 import au.com.gaiaresources.bdrs.spatial.ShapeFileReader;
@@ -236,7 +237,7 @@ public class GeoMapLayerController extends AbstractController {
                     // sometimes because of errors during writes of large shapefiles to the
                     // database we can get AttributeValues that aren't assigned to geo map features.
                     // so....
-                    for (AttributeValue av : attrDAO.getAttributeValueObjects(sesh, a)) {
+                    for (TypedAttributeValue av : attrDAO.getAttributeValueObjects(sesh, a)) {
                         attrDAO.delete(sesh, av);
                     }
                     attrDAO.delete(sesh, a);

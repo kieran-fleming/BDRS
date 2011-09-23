@@ -17,7 +17,6 @@ import java.util.Set;
 
 import javax.security.sasl.AuthenticationException;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -41,18 +40,23 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyService;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
 import au.com.gaiaresources.bdrs.service.lsid.Lsid;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
-
 
 public abstract class AbstractBulkDataService {
 
@@ -66,9 +70,31 @@ public abstract class AbstractBulkDataService {
     public static final String HELP_SHEET_NAME = "Help";
     public static final String TAXONOMY_SHEET_NAME = "Taxonomy";
     public static final String LOCATION_SHEET_NAME = "Locations";
+    /**
+     * Header of the column containing Location primary keys.
+     */ 
+    public static final String LOCATION_SHEET_LOCATION_ID = "Location ID";
+    /**
+     * Header of the column containing the type (survey or user) of the location.
+     */
+    public static final String LOCATION_SHEET_LOCATION_TYPE = "Type";
+    /**
+     * Inserted in the "Type" column of the location row if the location is a survey location.
+     */
+    public static final String LOCATION_SHEET_SURVEY_LOCATION = "Survey Location";
+    /**
+     * Inserted in the "Type" column of the location row if the location is a user location.
+     */    public static final String LOCATION_SHEET_USER_LOCATION = "User Location";
     public static final String USERS_SHEET_NAME = "Users";
-    
-    public static final String CENSUS_METHOD_SHEET_NAME = "Census Methods";
+
+    /**
+     * Name of the sheet that lists the Census Methods.
+     */
+    public static final String CENSUS_METHOD_SHEET_NAME = "CensusMethods";
+    /**
+     * Name of the header on the census method sheet containing the name of the census method.
+     */
+    public static final String CENSUS_METHOD_SHEET_CENSUS_METHOD_COL_NAME = "Census Method Name";
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -97,14 +123,17 @@ public abstract class AbstractBulkDataService {
     private RecordDAO recordDAO;
 
     @Autowired
+    private CensusMethodDAO censusMethodDAO;
+
+    @Autowired
     private LSIDService lsidService;
-    
+
     @Autowired
     protected PropertyService propertyService;
-    
+
     @Autowired
     protected SurveyService surveyService;
-    
+
     @Autowired
     protected BulkDataReadWriteService bulkDataReadWriteService;
 
@@ -117,12 +146,22 @@ public abstract class AbstractBulkDataService {
 
     public void exportSurveyRecords(Survey survey, List<Record> recordList,
             OutputStream outputStream) throws IOException {
-        
+
         RecordRow rowPrinter = getRecordRow();
         Workbook wb = new HSSFWorkbook();
-        if(survey != null) {
+        if (survey != null) {
             rowPrinter.createCellStyles(wb);
+
+            // Be careful not to reorder the sheets. This will break the formulas.
+            // First create a placeholder sheet for the observations.
+            // Then create the census method sheet and location sheet.
+            // These sheets will be referenced by the observation sheet.
             Sheet observationSheet = wb.createSheet(RECORD_SHEET_NAME);
+            writeCensusMethodSheet(survey, wb, rowPrinter);
+
+            XlsLocationRow locationRow = new XlsLocationRow(
+                    bulkDataReadWriteService, survey);
+            locationRow.writeLocationSheet(recordList, wb);
 
             int rowIndex = 0;
             // Survey Description
@@ -130,14 +169,14 @@ public abstract class AbstractBulkDataService {
             Cell surveyDescriptionCell = surveyDescriptionRow.createCell(0);
             surveyDescriptionCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
             surveyDescriptionCell.setCellValue(String.format("%s: %s", survey.getName(), survey.getDescription()));
-    
+
             // placeholder for census method names etc
             Row censusMethodTitleRow = observationSheet.createRow(rowIndex++);
 
             // Record Header
             Row headerRow = observationSheet.createRow(rowIndex++);
             rowPrinter.writeHeader(censusMethodTitleRow, headerRow, survey);
-    
+
             // Merge the survey description cell to occupy the width of the
             // spreadsheet
             observationSheet.addMergedRegion(new CellRangeAddress(
@@ -146,71 +185,68 @@ public abstract class AbstractBulkDataService {
                     surveyDescriptionCell.getColumnIndex(), // first column (0-based)
                     headerRow.getLastCellNum() - 1 // last column (0-based)
             ));
-    
+
             for (Record r : recordList) {
                 rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
             }
-    
-            writeHelpSheet(survey, wb, rowPrinter);
-            writeLocationSheet(survey, wb, rowPrinter);
+
             writeTaxonomySheet(survey, wb, rowPrinter);
-            writeCensusMethodSheet(survey, wb, rowPrinter);
+            writeHelpSheet(survey, wb, rowPrinter);
         }
         wb.write(outputStream);
     }
-    
-    public void exportUsers(List<User> userList,
-            OutputStream outputStream) throws IOException {
-        
+
+    public void exportUsers(List<User> userList, OutputStream outputStream)
+            throws IOException {
+
         RecordRow rowPrinter = getRecordRow();
         Workbook wb = new HSSFWorkbook();
 
         rowPrinter.createCellStyles(wb);
         Sheet usersSheet = wb.createSheet(USERS_SHEET_NAME);
-        
+
         Row headerRow = usersSheet.createRow(0);
-        
+
         Cell headerCell = headerRow.createCell(0);
         headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
         headerCell.setCellValue("Login");
-        
+
         headerCell = headerRow.createCell(1);
         headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
         headerCell.setCellValue("Given Name");
-        
+
         headerCell = headerRow.createCell(2);
         headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
         headerCell.setCellValue("Surname");
-        
+
         headerCell = headerRow.createCell(3);
         headerCell.setCellStyle(rowPrinter.getCellStyleByKey(XlsRecordRow.STYLE_RECORD_HEADER));
         headerCell.setCellValue("Email Address");
-        
-        
-        for (int rowIndex=0; rowIndex<userList.size(); rowIndex++){
-        	
-        	User u = userList.get(rowIndex);
-        	Row userDescriptionRow = usersSheet.createRow(rowIndex+1);
-        	
-        	Cell userLoginCell =userDescriptionRow.createCell(0);
-        	userLoginCell.setCellValue(String.format("%s", u.getName()));
-        	
-        	Cell userGivenNameCell =userDescriptionRow.createCell(1);
-        	userGivenNameCell.setCellValue(String.format("%s", u.getFirstName()));
-        	
-        	Cell userSurnameCell =userDescriptionRow.createCell(2);
-        	userSurnameCell.setCellValue(String.format("%s", u.getLastName()));
-        	
-        	Cell userEmailCell =userDescriptionRow.createCell(3);
-        	userEmailCell.setCellValue(String.format("%s", u.getEmailAddress()));
-        	
+
+        for (int rowIndex = 0; rowIndex < userList.size(); rowIndex++) {
+
+            User u = userList.get(rowIndex);
+            Row userDescriptionRow = usersSheet.createRow(rowIndex + 1);
+
+            Cell userLoginCell = userDescriptionRow.createCell(0);
+            userLoginCell.setCellValue(String.format("%s", u.getName()));
+
+            Cell userGivenNameCell = userDescriptionRow.createCell(1);
+            userGivenNameCell.setCellValue(String.format("%s", u.getFirstName()));
+
+            Cell userSurnameCell = userDescriptionRow.createCell(2);
+            userSurnameCell.setCellValue(String.format("%s", u.getLastName()));
+
+            Cell userEmailCell = userDescriptionRow.createCell(3);
+            userEmailCell.setCellValue(String.format("%s", u.getEmailAddress()));
+
         }
-        
+
         usersSheet.autoSizeColumn(1);
         usersSheet.autoSizeColumn(2);
         usersSheet.autoSizeColumn(3);
         usersSheet.autoSizeColumn(4);
-        
+
         wb.write(outputStream);
     }
 
@@ -280,38 +316,6 @@ public abstract class AbstractBulkDataService {
         }
     }
 
-    private void writeLocationSheet(Survey survey, Workbook wb,
-            RecordRow recordRow) {
-        Sheet locSheet = wb.createSheet(LOCATION_SHEET_NAME);
-        CellStyle headerStyle = recordRow.getCellStyleByKey(XlsRecordRow.STYLE_LOCATION_HEADER);
-
-        int rowIndex = 0;
-        int colIndex = 0;
-        Cell cell;
-        Row row = locSheet.createRow(rowIndex++);
-
-        cell = row.createCell(colIndex++);
-        cell.setCellValue("Location Name");
-        cell.setCellStyle(headerStyle);
-
-        cell = row.createCell(colIndex++);
-        cell.setCellValue("Latitude");
-        cell.setCellStyle(headerStyle);
-
-        cell = row.createCell(colIndex++);
-        cell.setCellValue("Longitude");
-        cell.setCellStyle(headerStyle);
-
-        for (Location loc : survey.getLocations()) {
-            row = locSheet.createRow(rowIndex++);
-            colIndex = 0;
-
-            row.createCell(colIndex++).setCellValue(loc.getName());
-            row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getX());
-            row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getY());
-        }
-    }
-
     private void writeHelpSheet(Survey survey, Workbook wb, RecordRow recordRow) {
 
         Sheet helpSheet = wb.createSheet(HELP_SHEET_NAME);
@@ -348,154 +352,109 @@ public abstract class AbstractBulkDataService {
             colIndex = 0;
             row.createCell(colIndex++).setCellValue(attr.getName());
 
-            String scopeName = attr.getScope() == null ? "" : attr.getScope().getName();
+            String scopeName = attr.getScope() == null ? ""
+                    : attr.getScope().getName();
             row.createCell(colIndex++).setCellValue(scopeName);
 
             row.createCell(colIndex++).setCellValue(attr.getDescription());
         }
     }
-    
-    private void writeCensusMethodSheet(Survey survey, Workbook wb, RecordRow recordRow) {
+
+    private Sheet writeCensusMethodSheet(Survey survey, Workbook wb,
+            RecordRow recordRow) {
         Sheet censusMethodSheet = wb.createSheet(CENSUS_METHOD_SHEET_NAME);
-        
+
         Set<CensusMethod> censusMethods = surveyService.catalogCensusMethods(survey);
-        
+
         int rowIndex = 0;
         int colIndex = 0;
 
         // Help Header
         CellStyle helpHeaderStyle = recordRow.getCellStyleByKey(XlsRecordRow.STYLE_HELP_HEADER);
-        
+
         Row headerRow = censusMethodSheet.createRow(rowIndex++);
         colIndex = 0;
-        
-        createStyledCell(headerRow, "Census Method Name", helpHeaderStyle, colIndex++);
+
+        createStyledCell(headerRow, "Census Method ID", helpHeaderStyle, colIndex++);
+        createStyledCell(headerRow, CENSUS_METHOD_SHEET_CENSUS_METHOD_COL_NAME, helpHeaderStyle, colIndex++);
         createStyledCell(headerRow, "Taxonomic", helpHeaderStyle, colIndex++);
         createStyledCell(headerRow, "Type", helpHeaderStyle, colIndex++);
         createStyledCell(headerRow, "Description", helpHeaderStyle, colIndex++);
         createStyledCell(headerRow, "Valid Child Census Methods", helpHeaderStyle, colIndex++);
-        
+
         for (CensusMethod cm : censusMethods) {
             Row cmDescRow = censusMethodSheet.createRow(rowIndex++);
             colIndex = 0;
-            
-            createCell(cmDescRow, bulkDataReadWriteService.formatCensusMethodNameId(cm), colIndex++);
+
+            cmDescRow.createCell(colIndex++).setCellValue(cm.getId().doubleValue());
+            createCell(cmDescRow, cm.getName(), colIndex++);
             createCell(cmDescRow, cm.getTaxonomic().getName(), colIndex++);
             createCell(cmDescRow, cm.getType(), colIndex++);
             createCell(cmDescRow, cm.getDescription(), colIndex++);
-            
+
             StringBuilder sb = new StringBuilder();
             for (CensusMethod childCm : cm.getCensusMethods()) {
-                sb.append(bulkDataReadWriteService.formatCensusMethodNameId(childCm));
+                sb.append(childCm.getId());
                 sb.append(", ");
             }
             if (sb.length() >= 2) {
                 sb.delete(sb.length() - 2, sb.length() - 1);
             }
-            
+
             createCell(cmDescRow, sb.toString(), colIndex++);
         }
+
+        return censusMethodSheet;
     }
-    
+
     private void createCell(Row row, String text, int colIndex) {
         createStyledCell(row, text, null, colIndex);
     }
-    
-    private void createStyledCell(Row row, String text, CellStyle style, int colIndex) {
+
+    private void createStyledCell(Row row, String text, CellStyle style,
+            int colIndex) {
         Cell cell = row.createCell(colIndex);
         cell.setCellValue(text);
         setCellStyle(cell, style);
     }
-    
+
     private void setCellStyle(Cell cell, CellStyle style) {
         if (style != null) {
             cell.setCellStyle(style);
         }
     }
 
-    public BulkUpload importSurveyRecords(Survey survey, InputStream inp)
+    public BulkUpload importBulkData(Survey survey, InputStream inp)
             throws IOException, ParseException {
         try {
             BulkUpload bulkUpload = new BulkUpload();
             Workbook wb = WorkbookFactory.create(inp);
-            
-            boolean headerParsed = false;
-            RecordRow recordRow = getRecordRow();
-            Sheet sheet;
-            String sheetName;
-            for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
-                sheet = wb.getSheetAt(sheetIndex);
-                sheetName = sheet.getSheetName();
-                //if (!TAXONOMY_SHEET_NAME.equals(sheetName)
-                //        && !LOCATION_SHEET_NAME.equals(sheetName)
-                //       && !HELP_SHEET_NAME.equals(sheetName)
-                //        && !CENSUS_METHOD_SHEET_NAME.equals(sheetName)) {
-                if (RECORD_SHEET_NAME.equals(sheetName)) {
 
-                    RecordUpload recordUpload;
-                    Row row = null;
-                    Row superRow = null;
-                    Iterator<Row> rowIterator = sheet.rowIterator();
-                    int errorCount = 0;
-                    boolean headerReached = false;
-                    while (rowIterator.hasNext()
-                            && errorCount < PARSE_ERROR_LIMIT) {
-                        
-                        superRow = row;
-                        row = rowIterator.next(); 
-                        
-                        if (superRow == null) {
-                            continue;
-                        }
-                        
-                        // headerParsed means that the header has been loaded
-                        // by the record row.
-                        // headerReached means that the header section of the 
-                        // sheet has been reached and the following rows 
-                        // are all record.
-                        if (!headerParsed || !headerReached) {
-                            // Skip all rows until the header is reached.
-                            if (recordRow.isHeader(row)) {
-                                recordRow.readHeader(survey, superRow, row);
-                                headerParsed = true;
-                                headerReached = true;
-                            }
-                        } else {
-                            // Skip blank rows. It is not immediately apparent to users
-                            // that there is a difference between blank rows and
-                            // the lack of rows in a spreadsheet.
-                            if (!isBlankRow(row)) {
-                                recordUpload = recordRow.readRow(survey, row);
-                                recordUpload.setSurveyName(survey.getName());
-                                // if the record date is outside the survey date range,
-                                // add an error message for that record
-                                if ((survey.getStartDate() != null && recordUpload.getWhen().before(survey.getStartDate())) || 
-                                        (survey.getEndDate() != null && recordUpload.getWhen().after(survey.getEndDate()))) 
-                                {
-                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyy HH:mm");
-                                    recordUpload.setErrorMessage(
-                                        "Observation date "+
-                                        sdf.format(recordUpload.getWhen())+" outside survey " +
-                                        (survey.getStartDate() != null && survey.getEndDate() != null ? 
-                                                "range ("+sdf.format(survey.getStartDate())+" - "+sdf.format(survey.getEndDate())+")" : 
-                                        "start date ("+sdf.format(survey.getStartDate())+")") + 
-                                        ".");
-                                    recordUpload.setError(true);
-                                }
-                                
-                                bulkUpload.addRecordUpload(recordUpload);
-                                if (recordUpload.isError()) {
-                                    errorCount += 1;
-                                }
-                            }
-                        }
-                    }
+            Sheet recordSheet = null;
+            Sheet locationSheet = null;
+            for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
+                Sheet sheet = wb.getSheetAt(sheetIndex);
+                String sheetName = sheet.getSheetName();
+
+                if (RECORD_SHEET_NAME.equals(sheetName)) {
+                    recordSheet = sheet;
+                } else if (LOCATION_SHEET_NAME.equals(sheetName)) {
+                    locationSheet = sheet;
                 }
             }
 
-            if (!headerParsed) {
-                // We still haven't found the header
-                throw new ParseException("Unable to find header row.", -1);
+            if (recordSheet == null) {
+                throw new IllegalArgumentException(
+                        "Cannot find record sheet. The sheet must be named: "
+                                + RECORD_SHEET_NAME);
+            } else if (locationSheet == null) {
+                throw new IllegalArgumentException(
+                        "Cannot find record sheet. The sheet must be named: "
+                                + LOCATION_SHEET_NAME);
+            } else {
+                // Order is important because the record will attempt to resolve locations.
+                importBulkLocations(survey, bulkUpload, locationSheet);
+                importBulkRecords(survey, bulkUpload, recordSheet);
             }
 
             bulkUpload.addSurvey(survey);
@@ -505,20 +464,108 @@ public abstract class AbstractBulkDataService {
             throw new IllegalArgumentException(ife);
         }
     }
-    
+
+    private void importBulkLocations(Survey survey, BulkUpload bulkUpload,
+            Sheet locationSheet) {
+        Row row;
+        XlsLocationRow locationRow = new XlsLocationRow(
+                bulkDataReadWriteService, survey);
+        for (Iterator<Row> rowIter = locationSheet.rowIterator(); rowIter.hasNext();) {
+            row = rowIter.next();
+
+            // Skip the header row
+            if (!locationRow.isHeader(row) && !isBlankRow(row)) {
+                LocationUpload locUpload = locationRow.readRow(row);
+                bulkUpload.addLocationUpload(locUpload);
+            }
+        }
+    }
+
+    private void importBulkRecords(Survey survey, BulkUpload bulkUpload,
+            Sheet recordSheet) throws ParseException {
+        boolean headerParsed = false;
+        RecordRow recordRow = getRecordRow();
+        RecordUpload recordUpload;
+        Row row = null;
+        Row superRow = null;
+        Iterator<Row> rowIterator = recordSheet.rowIterator();
+        int errorCount = 0;
+        boolean headerReached = false;
+        while (rowIterator.hasNext() && errorCount < PARSE_ERROR_LIMIT) {
+
+            superRow = row;
+            row = rowIterator.next();
+
+            if (superRow == null) {
+                continue;
+            }
+
+            // headerParsed means that the header has been loaded
+            // by the record row.
+            // headerReached means that the header section of the 
+            // sheet has been reached and the following rows 
+            // are all record.
+            if (!headerParsed || !headerReached) {
+                // Skip all rows until the header is reached.
+                if (recordRow.isHeader(row)) {
+                    recordRow.readHeader(survey, superRow, row);
+                    headerParsed = true;
+                    headerReached = true;
+                }
+            } else {
+                // Skip blank rows. It is not immediately apparent to users
+                // that there is a difference between blank rows and
+                // the lack of rows in a spreadsheet.
+                if (!isBlankRow(row)) {
+                    recordUpload = recordRow.readRow(survey, row);
+                    recordUpload.setSurveyName(survey.getName());
+                    // if the record date is outside the survey date range,
+                    // add an error message for that record
+                    if ((survey.getStartDate() != null && recordUpload.getWhen().before(survey.getStartDate()))
+                            || (survey.getEndDate() != null && recordUpload.getWhen().after(survey.getEndDate()))) {
+                        SimpleDateFormat sdf = new SimpleDateFormat(
+                                "dd MMM yyy HH:mm");
+                        recordUpload.setErrorMessage("Observation date "
+                                + sdf.format(recordUpload.getWhen())
+                                + " outside survey "
+                                + (survey.getStartDate() != null
+                                        && survey.getEndDate() != null ? "range ("
+                                        + sdf.format(survey.getStartDate())
+                                        + " - "
+                                        + sdf.format(survey.getEndDate()) + ")"
+                                        : "start date ("
+                                                + sdf.format(survey.getStartDate())
+                                                + ")") + ".");
+                        recordUpload.setError(true);
+                    }
+
+                    bulkUpload.addRecordUpload(recordUpload);
+                    if (recordUpload.isError()) {
+                        errorCount += 1;
+                    }
+                }
+            }
+        }
+
+        if (!headerParsed) {
+            // We still haven't found the header
+            throw new ParseException("Unable to find header row.", -1);
+        }
+    }
+
     private boolean isBlankRow(Row row) {
         Iterator<Cell> cellIterator = row.cellIterator();
         Cell cell;
-        while(cellIterator.hasNext()) {
+        while (cellIterator.hasNext()) {
             cell = cellIterator.next();
-            if(Cell.CELL_TYPE_BLANK != cell.getCellType()) {
+            if (Cell.CELL_TYPE_BLANK != cell.getCellType()) {
                 return false;
             }
         }
-        log.debug(String.format("Row %d is blank. Skipping this row.", row.getRowNum()+1));
+        log.debug(String.format("Row %d is blank. Skipping this row.", row.getRowNum() + 1));
         return true;
     }
-    
+
     private String formatErrorString(RecordUpload ru, String msg) {
         StringBuilder sb = new StringBuilder();
         sb.append("[Row ");
@@ -534,7 +581,8 @@ public abstract class AbstractBulkDataService {
 
     public List<Record> saveRecords(User owner, BulkUpload bulkUpload,
             boolean createMissingData) throws MissingDataException,
-            AuthenticationException, InvalidSurveySpeciesException, DataReferenceException {
+            AuthenticationException, InvalidSurveySpeciesException,
+            DataReferenceException {
 
         if (bulkUpload.hasError()) {
             return null;
@@ -550,29 +598,33 @@ public abstract class AbstractBulkDataService {
         Session sesh = sessionFactory.openSession();
         try {
             Transaction tx = sesh.beginTransaction();
-    
+
             User ownerForSesh = (User) sesh.merge(owner);
-    
+
             // Set up all the src data
             bulkUpload.setMissingGroups(populateGroups(sesh, ownerForSesh, bulkUpload, createMissingData));
             bulkUpload.setMissingUsers(populateUsers(sesh, ownerForSesh, bulkUpload, createMissingData));
             bulkUpload.setMissingSurveys(populateSurveys(sesh, ownerForSesh, bulkUpload, createMissingData));
-            bulkUpload.setMissingLocations(populateLocation(sesh, ownerForSesh, bulkUpload, createMissingData));
             bulkUpload.setMissingIndicatorSpecies(populateIndicatorSpecies(sesh, bulkUpload));
-    
+
             if (bulkUpload.isMissingData()) {
                 tx.rollback();
                 if (createMissingData) {
                     // You were allowed to create missing data and yet you still
                     // have missing data. Must be an authentication issue.
                     throw new AuthenticationException();
-    
+
                 } else {
                     // You need to switch on creation of missing data.
                     throw new MissingDataException();
                 }
             }
-    
+
+            // Create the locations
+            Map<Integer, Location> locationPkMap = new HashMap<Integer, Location>();
+            Map<String, Location> locationNameMap = new HashMap<String, Location>();
+            populateLocation(sesh, ownerForSesh, bulkUpload, locationPkMap, locationNameMap);
+
             // Create the records
             Survey survey;
             Group klass;
@@ -581,36 +633,38 @@ public abstract class AbstractBulkDataService {
             Record rec;
             IndicatorSpecies species;
             Map<String, Record> newRecords = new HashMap<String, Record>();
-            
+
+            int count = 0;
+            log.info("Saving Records");
             for (RecordUpload recordUpload : bulkUpload.getRecordUploadList()) {
-                
+
                 // Put the class in the survey
                 survey = bulkUpload.getSurveyByName(recordUpload.getSurveyName());
                 klass = bulkUpload.getGroupByName(recordUpload.getClassName());
                 group = bulkUpload.getGroupByName(recordUpload.getGroupName());
-    
+
                 // If there is no user for this record, then they will be assigned
                 // to the person who uploaded the spreadsheet.
                 recordedBy = bulkUpload.getUserByUsername(recordUpload.getRecordedByUsername());
                 recordedBy = recordedBy == null ? owner : recordedBy;
-    
+
                 if (klass != null) {
                     survey.getGroups().add(klass);
                     survey.getUsers().add(ownerForSesh);
                     surveyDAO.update(sesh, survey);
-    
+
                     // Put the group in the class
                     if (group != null) {
                         klass.getGroups().add(group);
                         klass.getAdmins().add(ownerForSesh);
                         groupDAO.update(sesh, klass);
-    
+
                         // Put the user in the group
                         group.getUsers().add(recordedBy);
                         groupDAO.update(sesh, group);
                     }
                 }
-                
+
                 try {
                     Lsid lsid = lsidService.fromLSID(recordUpload.getId());
                     rec = recordDAO.getRecord(sesh, lsid.getObjectId());
@@ -620,17 +674,19 @@ public abstract class AbstractBulkDataService {
                         newRecords.put(recordUpload.getId().trim(), rec);
                     }
                 }
-                
-                Set<CensusMethod> cmSet = surveyService.catalogCensusMethods(survey);
-                Integer censusMethodId = org.springframework.util.StringUtils.hasLength(recordUpload.getCensusMethodId()) ? 
-                        bulkDataReadWriteService.parseCensusMethodId(recordUpload.getCensusMethodId())
-                        : 0;
-                CensusMethod cm = findCensusMethod(censusMethodId, cmSet);
+
+                Integer censusMethodId = recordUpload.getCensusMethodId();
+                CensusMethod cm = null;
+                if (censusMethodId != null) {
+                    cm = censusMethodDAO.get(sesh, censusMethodId);
+                }
                 rec.setCensusMethod(cm);
                 
-                if (cm == null && org.springframework.util.StringUtils.hasLength(recordUpload.getCensusMethodId())) {
+                if (cm == null && recordUpload.getCensusMethodId() != null) {
                     // a census method has been requested but it is invalid!
-                    String err = formatErrorString(recordUpload, "You have requested a census method id = " + recordUpload.getCensusMethodId() + " but it is invalid. Only use the ID's exactly as they appear on provided Census Method list bundled with your template");
+                    String err = formatErrorString(recordUpload, "You have requested a census method id = "
+                            + recordUpload.getCensusMethodId()
+                            + " but it is invalid. Only use the ID's exactly as they appear on provided Census Method list bundled with your template");
                     throw new DataReferenceException(err);
                 }
                 // Set parent record if requested...
@@ -645,9 +701,13 @@ public abstract class AbstractBulkDataService {
                     }
                     if (parentRecord == null) {
                         // error!
-                        log.error("Parent record id : " + recordUpload.getParentId() + " was requested but was not found in the list of added records. Can't assign parent record!");
-                        throw new DataReferenceException(formatErrorString(recordUpload, "Cannot find the parent id = " + recordUpload.getParentId() 
-                                                         + ". The ID does not exist in the database nor does it reference a newly created ID in the uploaded data"));
+                        log.error("Parent record id : "
+                                + recordUpload.getParentId()
+                                + " was requested but was not found in the list of added records. Can't assign parent record!");
+                        throw new DataReferenceException(
+                                formatErrorString(recordUpload, "Cannot find the parent id = "
+                                        + recordUpload.getParentId()
+                                        + ". The ID does not exist in the database nor does it reference a newly created ID in the uploaded data"));
                     }
                     // check if the parent record is a valid one i.e. does it fulfill the census method rules.
                     if (rec.getCensusMethod() == null) {
@@ -655,41 +715,51 @@ public abstract class AbstractBulkDataService {
                         throw new DataReferenceException(err);
                     }
                     if (parentRecord.getCensusMethod() == null) {
-                        throw new DataReferenceException(formatErrorString(recordUpload, "The census method of the parent record of the row is null, unable to assign a parent record. Review the census method listing for valid combinations."));
+                        throw new DataReferenceException(
+                                formatErrorString(recordUpload, "The census method of the parent record of the row is null, unable to assign a parent record. Review the census method listing for valid combinations."));
                     }
                     if (!parentRecord.getCensusMethod().getCensusMethods().contains(rec.getCensusMethod())) {
-                        throw new DataReferenceException(formatErrorString(recordUpload, "The census method of the child record record is not a valid child census method of the parent record. Review the census method listing for valid combinations."));
+                        throw new DataReferenceException(
+                                formatErrorString(recordUpload, "The census method of the child record record is not a valid child census method of the parent record. Review the census method listing for valid combinations."));
                     }
                     rec.setParentRecord(parentRecord);
                 } else {
                     rec.setParentRecord(null);
                 }
-                
+
                 rec.setSurvey(bulkUpload.getSurveyByName(recordUpload.getSurveyName()));
-    
+
                 if (recordUpload.getScientificName() != null
                         && !recordUpload.getScientificName().isEmpty()) {
                     species = bulkUpload.getIndicatorSpeciesByScientificName(recordUpload.getScientificName());
                 } else {
                     species = bulkUpload.getIndicatorSpeciesByCommonName(recordUpload.getCommonName());
                 }
-                
+
                 // an survey with no species actually includes everything
-                if(survey.getSpecies().isEmpty() || survey.getSpecies().contains(species)) {
-                    rec.setSpecies(species);                
+                if (survey.getSpecies().isEmpty()
+                        || survey.getSpecies().contains(species)) {
+                    rec.setSpecies(species);
                 } else {
                     bulkUpload.getInvalidSurveySpecies().put(species, survey);
                 }
-    
+
                 rec.setUser(recordedBy);
-                
-                if(!recordUpload.isGPSLocationName()) {
-                    rec.setLocation(bulkUpload.getLocationByLocationUpload(recordUpload.getLocationUpload()));
+
+                if (!recordUpload.isGPSLocationName()) {
+                    //log.info("Not a gps location");
+                    Location loc;
+                    if (recordUpload.getLocationId() != null) {
+                        loc = locationPkMap.get(recordUpload.getLocationId());
+                    } else {
+                        loc = locationNameMap.get(recordUpload.getLocationName());
+                    }
+                    rec.setLocation(loc);
                 }
-                if(recordUpload.hasLatitudeLongitude()){
+                if (recordUpload.hasLatitudeLongitude()) {
                     rec.setPoint(locationService.createPoint(recordUpload.getLatitude(), recordUpload.getLongitude()));
                 }
-                
+
                 rec.setHeld(recordUpload.isHeld());
                 rec.setWhen(recordUpload.getWhen());
                 rec.setTime(recordUpload.getTime().getTime());
@@ -697,14 +767,14 @@ public abstract class AbstractBulkDataService {
                         : recordUpload.getWhen());
                 rec.setLastTime(recordUpload.getLastTime() != null ? recordUpload.getLastTime().getTime()
                         : recordUpload.getTime().getTime());
-    
+
                 rec.setNotes(recordUpload.getNotes());
                 rec.setFirstAppearance(recordUpload.getFirstAppearance());
                 rec.setLastAppearance(recordUpload.getLastAppearance());
                 rec.setBehaviour(recordUpload.getBehaviour());
                 rec.setHabitat(recordUpload.getHabitat());
                 rec.setNumber(recordUpload.getNumberSeen());
-                
+
                 // Insert the current attributes into a lookup.
                 // We will remove attributes that we retain out of this lookup.
                 // At the end, any attribute remaining in the lookup will be
@@ -713,58 +783,66 @@ public abstract class AbstractBulkDataService {
                 for (AttributeValue curAttr : rec.getAttributes()) {
                     recordAttributeMap.put(curAttr.getAttribute(), curAttr);
                 }
-    
+
                 Set<AttributeValue> recAttrSet = new HashSet<AttributeValue>();
                 if (species != null) {
                     for (Attribute taxonAttr : species.getTaxonGroup().getAttributes()) {
                         String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, taxonAttr.getName());
-                        if (!taxonAttr.isTag() && org.springframework.util.StringUtils.hasLength(recAttrValue)) {
-                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, taxonAttr, recAttrValue);
+                        if (!taxonAttr.isTag()
+                                && org.springframework.util.StringUtils.hasLength(recAttrValue)) {
+                            AttributeValue recAttr = createAttributeValue(sesh, recordAttributeMap, taxonAttr, recAttrValue);
                             recAttrSet.add(recAttr);
                         }
                     }
                 }
-    
+
                 for (Attribute surveyAttr : survey.getAttributes()) {
-                    if(!AttributeScope.LOCATION.equals(surveyAttr)) {
+                    if (!AttributeScope.LOCATION.equals(surveyAttr)) {
                         String recAttrValue = recordUpload.getNamedAttribute(XlsRecordRow.SURVEY_ATTR_NAMESPACE, surveyAttr.getDescription());
                         if (org.springframework.util.StringUtils.hasLength(recAttrValue)) {
-                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, surveyAttr, recAttrValue);
+                            AttributeValue recAttr = createAttributeValue(sesh, recordAttributeMap, surveyAttr, recAttrValue);
                             recAttrSet.add(recAttr);
                         }
                     }
                 }
-                
+
                 if (cm != null) {
                     for (Attribute censusMethodAttr : cm.getAttributes()) {
-                        String cmAttrValue = recordUpload.getNamedAttribute(recordUpload.getCensusMethodId(), censusMethodAttr.getDescription());
+                        String cmNamespace = bulkDataReadWriteService.formatCensusMethodNameId(cm);
+                        String cmAttrValue = recordUpload.getNamedAttribute(cmNamespace, censusMethodAttr.getDescription());
                         if (org.springframework.util.StringUtils.hasLength(cmAttrValue)) {
-                            AttributeValue recAttr = createRecordAttribute(sesh, recordAttributeMap, censusMethodAttr, cmAttrValue);
+                            AttributeValue recAttr = createAttributeValue(sesh, recordAttributeMap, censusMethodAttr, cmAttrValue);
                             recAttrSet.add(recAttr);
                         }
                     }
                 }
-                
+
                 rec.setAttributes(recAttrSet);
-                
+
                 // Set record visibility to survey default. Setting via web form not supported.
                 // Survey's default record visibility can be set in the 'admin -> projects' interface
                 rec.setRecordVisibility(survey.getDefaultRecordVisibility());
-                
+
                 rec = recordDAO.save(sesh, rec);
                 records.add(rec);
-    
+
                 // Delete any remaining RecordAttributes
                 for (AttributeValue delRecAttr : recordAttributeMap.values()) {
                     recordDAO.delete(sesh, delRecAttr);
                 }
+                
+                count += 1;
+                if(count % 100 == 0) {
+                    log.info(String.format("%d records saved", count));
+                }
             }
-            
+
             if (bulkUpload.hasInvalidSurveySpecies()) {
                 tx.rollback();
-    
+
                 throw new InvalidSurveySpeciesException();
             } else {
+                log.info("Committing records...");
                 tx.commit();
             }
         } finally {
@@ -772,33 +850,36 @@ public abstract class AbstractBulkDataService {
         }
         return records;
     }
-    
-    private AttributeValue createRecordAttribute(Session sesh, Map<Attribute, AttributeValue> existingAttributeMap, Attribute attrToAdd, String attributeValue) {
-        AttributeValue recAttr;
+
+    private AttributeValue createAttributeValue(Session sesh,
+            Map<Attribute, AttributeValue> existingAttributeMap,
+            Attribute attrToAdd, String attributeValueStr) {
+        AttributeValue attrVal;
         if (existingAttributeMap.containsKey(attrToAdd)) {
-            recAttr = existingAttributeMap.remove(attrToAdd);
+            attrVal = existingAttributeMap.remove(attrToAdd);
         } else {
-            recAttr = new AttributeValue();
-            recAttr.setAttribute(attrToAdd);
+            attrVal = new AttributeValue();
+            attrVal.setAttribute(attrToAdd);
         }
-        recAttr.setStringValue(attributeValue);
+        attrVal.setStringValue(attributeValueStr);
         try {
             switch (attrToAdd.getType()) {
             case INTEGER:
             case INTEGER_WITH_RANGE:
             case DECIMAL:
-                recAttr.setNumericValue(new BigDecimal(attributeValue));
+                attrVal.setNumericValue(new BigDecimal(attributeValueStr));
                 break;
             case DATE:
                 SimpleDateFormat dateFormat = new SimpleDateFormat(
                         "dd MMM yyyy");
                 dateFormat.setLenient(false);
-                recAttr.setDateValue(dateFormat.parse(attributeValue));
+                attrVal.setDateValue(dateFormat.parse(attributeValueStr));
                 break;
             case IMAGE:
             case FILE:
                 throw new UnsupportedOperationException(
                         "Spreadsheet upload of file data is not supported.");
+            case TIME:
             case TEXT:
             case STRING_WITH_VALID_VALUES:
             case STRING:
@@ -806,72 +887,86 @@ public abstract class AbstractBulkDataService {
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
             default:
-                recAttr.setStringValue(attributeValue);
+                attrVal.setStringValue(attributeValueStr);
                 break;
             }
         } catch (ParseException pe) {
-            log.warn("Unable to parse date value \"" + attributeValue
-                    + "\" for attribute with name \"" + attrToAdd.getName() + "\"", pe);
+            log.warn("Unable to parse date value \"" + attributeValueStr
+                    + "\" for attribute with name \"" + attrToAdd.getName()
+                    + "\"", pe);
+        } catch (Exception e) {
+            String tmpl = "Unable to store value \"%s\" in attribute \"%s:%s\". The error was %s:%s";
+            String msg = String.format(tmpl, attributeValueStr, attrToAdd.getName(), attrToAdd.getDescription(), e.getClass().getSimpleName(), e.getMessage());
+            throw new IllegalArgumentException(msg, e);
         }
-        AttributeValue result = recordDAO.save(sesh, recAttr);//recordDAO.saveRecordAttribute(recAttr);
+        AttributeValue result = recordDAO.save(sesh, attrVal);
         return result;
     }
 
-    private List<LocationUpload> populateLocation(Session sesh, User owner,
-            BulkUpload bulkUpload, boolean createMissingData) {
-        boolean canCreate = createMissingData
-                && (owner.isTeacher() || owner.isPowerStudent());
+    private void populateLocation(Session sesh, User owner,
+            BulkUpload bulkUpload, Map<Integer, Location> locationPkMap,
+            Map<String, Location> locationNameMap) {
 
-        Location location;
-        Survey survey;
-        List<LocationUpload> missingItems = new ArrayList<LocationUpload>();
         for (LocationUpload locUpload : bulkUpload.getLocationUploads()) {
-
+            Location location = null;
+            Survey survey = null;
             if (locUpload.getLocationName() != null
                     && !RecordRow.GPS_LOCATION.equals(locUpload.getLocationName())
                     && !locUpload.getLocationName().isEmpty()) {
 
-                location = locationDAO.getLocationByName(sesh, locUpload.getSurveyName(), locUpload.getLocationName());
+                location = locationDAO.getLocation(sesh, locUpload.getPk());
                 if (location == null) {
-                    if (canCreate) {
-                        log.debug("Creating location: "
-                                + locUpload.getSurveyName() + " - "
-                                + locUpload.getLocationName());
+                    log.debug("Creating location: " + locUpload.getSurveyName()
+                            + " - " + locUpload.getLocationName());
 
-                        survey = bulkUpload.getSurveyByName(locUpload.getSurveyName());
-                        if (survey != null) {
-                            location = new Location();
-                            location.setUser(owner);
-                            location.setName(locUpload.getLocationName());
-                            location.setLocation(locationService.createPoint(locUpload.getLatitude(), locUpload.getLongitude()));
-                            locationDAO.save(sesh, location);
-                            survey.getLocations().add(location);
-                            surveyDAO.update(sesh, survey);
-                            bulkUpload.addLocation(locUpload, location);
-                        } else {
-                            log.debug("Not creating location. Containing Survey \""
-                                    + locUpload.getSurveyName()
-                                    + "\" not found.");
+                    survey = bulkUpload.getSurveyByName(locUpload.getSurveyName());
+                    if (survey != null) {
+                        location = new Location();
+                        // New uploaded locations are always survey locations.
+                        // location.setUser(owner);
+                        location.setName(locUpload.getLocationName());
+                        location.setLocation(locationService.createPoint(locUpload.getLatitude(), locUpload.getLongitude()));
+                        location = locationDAO.save(sesh, location);
 
-                            missingItems.add(locUpload);
-                        }
+                        survey.getLocations().add(location);
+                        surveyDAO.update(sesh, survey);
+
+                        locationPkMap.put(location.getId(), location);
+                        locationNameMap.put(location.getName(), location);
+
                     } else {
-                        log.debug("Not creating location: "
-                                + locUpload.getSurveyName() + " - "
-                                + locUpload.getLocationName()
-                                + " (createMissingData = false)");
-                        missingItems.add(locUpload);
+                        log.debug("Not creating location. Containing Survey \""
+                                + locUpload.getSurveyName() + "\" not found.");
                     }
                 } else {
                     log.debug("Retrieved Location: "
                             + locUpload.getSurveyName());
-                    bulkUpload.addLocation(locUpload, location);
+                    locationPkMap.put(location.getId(), location);
+                    locationNameMap.put(location.getName(), location);
+                }
+
+                // Location Attributes
+                if (survey != null && location != null) {
+                    Map<Attribute, AttributeValue> attrMap = new HashMap<Attribute, AttributeValue>();
+                    for (AttributeValue attrVal : location.getAttributes()) {
+                        attrMap.put(attrVal.getAttribute(), attrVal);
+                    }
+
+                    for (Attribute attr : survey.getAttributes()) {
+                        if (AttributeScope.LOCATION.equals(attr.getScope())) {
+                            String attrValStr = locUpload.getAttributeValue(attr);
+                            if (attrValStr != null) {
+                                AttributeValue attrVal = createAttributeValue(sesh, attrMap, attr, attrValStr);
+                                location.getAttributes().add(attrVal);
+                            }
+                        }
+                    }
+                    location = locationDAO.save(sesh, location);
                 }
             } else {
                 log.debug("Ignoring GPS Location");
             }
         }
-        return missingItems;
     }
 
     private List<String> populateSurveys(Session sesh, User owner,
@@ -1006,15 +1101,6 @@ public abstract class AbstractBulkDataService {
 
         return missingItems;
     }
-    
-    private CensusMethod findCensusMethod(Integer id, Set<CensusMethod> cmSet) {
-        for (CensusMethod cm : cmSet) {
-            if (cm.getId().equals(id)) {
-                return cm;
-            }
-        }
-        return null;
-    }
-    
+
     protected abstract RecordRow getRecordRow();
 }

@@ -24,7 +24,13 @@ public class HTTPErrorController {
     private Logger log = Logger.getLogger(getClass());
 
     @RequestMapping(value = "/error/redirect404.htm", method = RequestMethod.GET)
-    public ModelAndView handleRedirect404() {
+    public ModelAndView handleRedirect404(HttpServletRequest request) {
+        
+        // it's nice to know what url was accessed...
+        if (request != null) {
+            log.error("Error 404 for URL: " + request.getRequestURI());
+        }
+        
         // When a 404 error occurs, the container will redirect to this url.
         // This function will perform any error logging required, then
         // redirect to the proper 404 page. The redirect is performed in order

@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<h1>Taxon Group Listing</h1>
+<h1>Search Taxonomic Groups</h1>
 
 <p>
     Taxon groups are an arbitrary grouping of taxa such as 

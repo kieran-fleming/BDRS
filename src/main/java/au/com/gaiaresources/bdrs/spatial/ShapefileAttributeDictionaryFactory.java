@@ -12,14 +12,16 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
-import au.com.gaiaresources.bdrs.deserialization.record.AttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.attribute.AbstractAttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 
-public class ShapefileAttributeDictionaryFactory implements
-        AttributeDictionaryFactory {
+public class ShapefileAttributeDictionaryFactory extends AbstractAttributeDictionaryFactory {
 
     private Logger log = Logger.getLogger(getClass()); 
     
@@ -36,13 +38,13 @@ public class ShapefileAttributeDictionaryFactory implements
      */
     @Override
     public Map<Attribute, String> createFileKeyDictionary(Survey survey,
-            TaxonGroup taxonGroup, CensusMethod censusMethod) {
+            TaxonGroup taxonGroup, CensusMethod censusMethod, Set<AttributeScope> scope) {
         return Collections.emptyMap();
     }
 
     @Override
     public Map<Attribute, String> createNameKeyDictionary(Survey survey,
-            TaxonGroup taxonGroup, CensusMethod censusMethod) {
+            TaxonGroup taxonGroup, CensusMethod censusMethod, Set<AttributeScope> scope) {
         
         // surveys are mandatory, census methods are not.
         if (survey == null) {
@@ -60,7 +62,7 @@ public class ShapefileAttributeDictionaryFactory implements
         return createNameKeyDictionary(surveyList, taxonGroup, cmList);
     }
 
-    private void addKey(Map<Attribute, String> map, Set<String> existingKeys, String baseKey, Attribute attribute, String attributeSource) {
+    protected void addKey(Map<Attribute, String> map, Set<String> existingKeys, String baseKey, Attribute attribute, String attributeSource) {
         if (!StringUtils.hasLength(baseKey)) {
             throw new IllegalArgumentException("arg key cannot be null or empty");
         }
@@ -120,7 +122,7 @@ public class ShapefileAttributeDictionaryFactory implements
         for (Survey survey : surveyList) {
             if (survey.getAttributes() != null) {
                 for (Attribute attribute : survey.getAttributes()) {
-                    if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    if(getDictionaryAttributeScope().contains(attribute.getScope())) {
                         String paramKey = attribute.getName();
                         addKey(result, check, paramKey, attribute, "Survey");
                     }
@@ -140,5 +142,18 @@ public class ShapefileAttributeDictionaryFactory implements
         }
         
         return result;
+    }
+
+    public Map<Attribute, String> createNameKeyDictionary(Survey survey,
+            TaxonGroup taxon, CensusMethod cm) {
+        Set<AttributeScope> scope = new HashSet<AttributeScope>();
+        scope.add(AttributeScope.SURVEY);
+        scope.add(AttributeScope.RECORD);
+        return createNameKeyDictionary(survey, taxon, cm, scope);
+    }
+
+    @Override
+    public Set<AttributeScope> getDictionaryAttributeScope() {
+        return SCOPE_RECORD_SURVEY;
     }
 }

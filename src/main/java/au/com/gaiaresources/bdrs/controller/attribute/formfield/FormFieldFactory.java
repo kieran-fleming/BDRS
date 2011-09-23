@@ -130,8 +130,7 @@ public class FormFieldFactory {
      * @param value the current value for this attribute
      * @return a <code>TaxonAttributeFormField</code>
      */
-    public FormField createTaxonFormField(Attribute attribute, 
-    										IndicatorSpeciesAttribute value) {
+    public FormField createTaxonFormField(Attribute attribute, IndicatorSpeciesAttribute value) {
     	return new TaxonAttributeFormField(attribute, value, AttributeParser.DEFAULT_PREFIX);
     }
     
@@ -141,6 +140,25 @@ public class FormFieldFactory {
      * @return the <code>TaxonAttributeFormField</code>
      */
     public FormField createTaxonFormField(Attribute attribute) {
-    	return new TaxonAttributeFormField(attribute, null, AttributeParser.DEFAULT_PREFIX);
+        return new TaxonAttributeFormField(attribute, null, AttributeParser.DEFAULT_PREFIX);
+    }
+    
+    /**
+     * Creates a new form field for the location.
+     * @param attribute the attribute (tag) from the survey attribute.
+     * @param value the current value for this attribute
+     * @return a <code>LocationAttributeFormField</code>
+     */
+    public FormField createLocationFormField(Attribute attribute, TypedAttributeValue value) {
+        return new LocationAttributeFormField(attribute, value, LocationAttributeFormField.LOCATION_PREFIX);
+    }
+    
+    /**
+     * Create a new form field for the location.
+     * @param attribute the attribute (tag) from the survey attribute.
+     * @return the <code>LocationAttributeFormField</code>
+     */
+    public FormField createLocationFormField(Attribute attribute) {
+        return new LocationAttributeFormField(attribute, null, LocationAttributeFormField.LOCATION_PREFIX);
     }
 }

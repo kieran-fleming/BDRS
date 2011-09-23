@@ -125,6 +125,13 @@ public interface LocationDAO extends TransactionDAO {
      * @return the location associated with the specified primary key.
      */
     Location getLocation(int pk);
+    /**
+    * Retrieves a location with the specified primary key using the given session
+    * @param pk primary key of the location
+    * @param sesh the session to use to retrieve the location.
+    * @return the location associated with the specified primary key.
+    */
+    Location getLocation(org.hibernate.Session sesh, int pk);
 
     /**
      * Retrieves a list of locations with the specified primary keys
@@ -140,5 +147,6 @@ public interface LocationDAO extends TransactionDAO {
      * @return the locations associated with the specified user and survey.
      */
     List<Location> getLocation(Survey survey, User user);
+
 
 }

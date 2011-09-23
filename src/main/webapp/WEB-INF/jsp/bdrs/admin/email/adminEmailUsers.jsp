@@ -1,6 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/markitup/jquery.markitup.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.wdTree-1.4/wdTree/src/Plugins/jquery.tree.js"></script>
@@ -12,11 +13,11 @@
 <%@page import="au.com.gaiaresources.bdrs.model.user.User"%>
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 
-<h1>Email Users and Groups</h1>
+<h1>Email Users</h1>
 
 <div class="input_container">
     <div>
-	    <p>From this page you can email other site users or user groups. You can also save email templates or load existing ones.</p>
+	    <cw:getContent key="admin/emailUsers" />
 	</div>
 	<div id="emailHeader">
         <table>

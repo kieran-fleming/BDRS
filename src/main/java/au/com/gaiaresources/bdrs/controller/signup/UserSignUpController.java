@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.signup;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.TransactionStatus;
@@ -20,12 +21,15 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaProtected;
 
 @Controller
 @RecaptchaProtected
 public class UserSignUpController extends AbstractController {
+
+    private static Logger log = Logger.getLogger(UserSignUpConfirmationController.class);
+    
     @Autowired
     private UserDAO userDAO;
     @Autowired
@@ -51,21 +55,20 @@ public class UserSignUpController extends AbstractController {
     public String save(HttpServletRequest request, HttpServletResponse response, 
             @ModelAttribute("user") final UserSignUpForm u, BindingResult result) {
         if (result.hasErrors()) {
-            return "usersignup";
+            return "redirect:usersignup";
 
         } else {
 
             if(userDAO.getUserByEmailAddress(u.getEmailAddress()) != null) {
                 // The email address is already taken.
                 result.rejectValue("emailAddress", "UserSignUpForm.emailAddress[unique]");
-                return "usersignup";
-
+                return "redirect:/reminder.htm";
             } else if (userDAO.getUser(u.getUserName()) != null){
                 // The username is already taken
                 result.rejectValue("userName", "UserSignUpForm.userName[unique]");
-                return "usersignup";
+                return "redirect:usersignup";
             }else{
-                final String contextPath = ContentInitialiserService.getRequestURL(request);
+                final String contextPath = ContentService.getRequestURL(request);
                 User saveResult = doInTransaction(new TransactionCallback<User>() {
                     public User doInTransaction(TransactionStatus status) {
                         return registrationService.signUp(u.getUserName(), u.getEmailAddress(), u.getFirstName(),

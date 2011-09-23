@@ -28,7 +28,7 @@ import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.service.content.ContentInitialiserService;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import edu.emory.mathcs.backport.java.util.TreeSet;
 
 /**
@@ -58,7 +58,7 @@ public class AdminEmailUsersController extends AbstractController {
         List<String> keys = contentDAO.getKeysLike("email");
         // add the default portal initializer email keys as well if not present
         Set<String> uniqueKeys = new TreeSet(keys);
-        uniqueKeys.addAll(getItemsStartingWith(ContentInitialiserService.CONTENT.keySet(),"email"));
+        uniqueKeys.addAll(getItemsStartingWith(ContentService.CONTENT.keySet(),"email"));
         mav.addObject("keys", uniqueKeys);
         return mav;
     }

@@ -32,6 +32,7 @@ import org.hibernate.annotations.ParamDef;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
+import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.util.CollectionUtils;
@@ -41,7 +42,7 @@ import au.com.gaiaresources.bdrs.util.CollectionUtils;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "INDICATOR_SPECIES")
 @AttributeOverride(name = "id", column = @Column(name = "INDICATOR_SPECIES_ID"))
-public class IndicatorSpecies extends PortalPersistentImpl {
+public class IndicatorSpecies extends PortalPersistentImpl implements Attributable<IndicatorSpeciesAttribute> {
     
     public static final String FIELD_SPECIES_NAME = "Field Species";
     
@@ -77,6 +78,7 @@ public class IndicatorSpecies extends PortalPersistentImpl {
     @CompactAttribute
     @OneToMany
 //    @JoinColumn(name = "INDICATOR_SPECIES_ID")
+    @Override
     public Set<IndicatorSpeciesAttribute> getAttributes() {
         return attributes;
     }
@@ -234,5 +236,11 @@ public class IndicatorSpecies extends PortalPersistentImpl {
             }
         }
         return regionNames;
+    }
+
+    @Override
+    @Transient
+    public IndicatorSpeciesAttribute createAttribute() {
+        return new IndicatorSpeciesAttribute();
     }
 }

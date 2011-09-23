@@ -42,6 +42,10 @@
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.8.11.custom.min.js"></script>
         <link type="text/css" href="${pageContext.request.contextPath}/css/redmond/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
 		
+		<!-- Including before theme custom JS files incase we want to override some of the block UI defaults via the theme -->
+		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-blockui/jquery.blockUI.js"></script>
+		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jqPrint/jquery.jqprint.0.3.js"></script>
+		
 		<!-- custom css goes in before theming css, allows theme to override custom css styling if required -->
         <c:forEach var="cssFile" items="${customCSS}">
             <link rel="stylesheet" href="${pageContext.request.contextPath}/css/${cssFile}" type="text/css"/>
@@ -67,7 +71,6 @@
         
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.cj-simple-slideshow.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.tablednd_0_5.js"></script>
-        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-blockui/jquery.blockUI.js"></script>
         
         <!--  JqGrid stuff the grid.local-en.js file needs t come before the jqGrid.min.js file -->
         <link rel="stylesheet" type="text/css" media="screen" href="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/css/ui.jqgrid.css" />

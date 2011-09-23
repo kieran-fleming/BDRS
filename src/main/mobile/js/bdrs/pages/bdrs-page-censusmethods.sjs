@@ -5,7 +5,8 @@ exports.Create =  function() {
 }
 	
 exports.Show = function() {
-    var survey = bdrs.mobile.pages.censusmethods._getCurrentSurvey();
+	
+    var survey = bdrs.mobile.survey.getDefault();
 
 	var methods;
 	waitfor(methods) {
@@ -34,19 +35,6 @@ exports.Show = function() {
 	}
 	jQuery('.bdrs-page-censusmethods .censusMethodList').listview("refresh");
 }
-
-exports._getCurrentSurvey = function() {
-    var setting;
-	waitfor(setting) {
-		Settings.findBy('key', 'current-survey-id' , resume);
-	}
-	
-    var survey;
-	waitfor(survey) {
-		Survey.findBy('server_id', setting.value(), resume);
-	}
-	return survey;
-};
 	
 exports.Hide = function() {
 	jQuery('.bdrs-page-censusmethods .censusMethodList').empty();

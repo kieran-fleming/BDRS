@@ -83,13 +83,6 @@
                            <td>You do not have a survey by this name. Please contact your project administrator.</td>
                         </tr>
                     </c:forEach>
-                    <c:forEach items="${bulkUpload.missingLocations}" var="locUpload">
-                        <tr>
-                           <td>Location</td>
-                           <td><c:out value="${locUpload.locationName}"/></td>
-                           <td>You do not have a location by this name. Please contact your project administrator.</td>
-                        </tr>
-                    </c:forEach>
                     <c:forEach items="${bulkUpload.missingIndicatorSpecies}" var="missingSpeciesName">
                         <tr>
                            <td>Species</td>

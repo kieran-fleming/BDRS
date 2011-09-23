@@ -7,13 +7,13 @@
 <h1>My Profile</h1>
 </c:if>
 <c:if test="${editAs == 'admin'}">
-<h1>Edit profile of <c:out value="${FIRST_NAME} ${LAST_NAME}" /> </h1>
+<h1>Edit Details of <c:out value="${FIRST_NAME} ${LAST_NAME}" /> </h1>
 </c:if>
 
 <form method="POST">
 <input value="${USER_ID}" type="hidden" />
 <div class="input_container">
-<h2>Change Details</h2>
+
 <p>You can change your details through the form below.  If you leave the password field blank it will not be changed.</p>
           
     <c:if test="${editAs == 'admin'}">

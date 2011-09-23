@@ -37,8 +37,9 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
     @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa.htm", method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId) {
-        return addRecord(request, response, surveyId, "singleSiteMultiTaxa");
+                                    @RequestParam(value="surveyId", required=true) int surveyId,
+                                    @RequestParam(value = "censusMethodId", required = false, defaultValue = "0") Integer censusMethodId) {
+        return addRecord(request, response, surveyId, "singleSiteMultiTaxa", censusMethodId);
     }
     
     /**

@@ -212,7 +212,8 @@ public class ApplicationService extends AbstractController {
     }
     
     @RequestMapping(value = "/webservice/application/clientSync.htm", method = RequestMethod.POST)
-    public ModelAndView clientSync(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ModelAndView clientSync(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value="inFrame", defaultValue="true") boolean inFrame) throws IOException {
         /*
          * { 
          *      status : 200,
@@ -282,10 +283,15 @@ public class ApplicationService extends AbstractController {
             jsonObj.put(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, error);
         }
 
-        ModelAndView mv = new ModelAndView("postMessage");
-        mv.addObject("message", jsonObj.toString());
-        log.debug(jsonObj.toString());
-        return mv;
+        if (inFrame) {
+            ModelAndView mv = new ModelAndView("postMessage");
+            mv.addObject("message", jsonObj.toString());
+            log.debug(jsonObj.toString());
+            return mv;
+        } else {
+            this.writeJson(request, response, jsonObj.toString());
+            return null;
+        }
     }
     
     @RequestMapping(value = "/webservice/application/ping.htm", method = RequestMethod.GET)

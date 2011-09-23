@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <%@page import="au.com.gaiaresources.bdrs.controller.attribute.RecordPropertyAttributeFormField"%>
 
@@ -10,7 +11,7 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/attribute.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/admin.js"></script>
 
-<h2>Choose Fields</h2>
+<h2>Edit Project: Choose Fields</h2>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
     
@@ -49,7 +50,7 @@
 	    </table>
     </div>
     
-    <h2>Choose Available Census Methods</h2>
+    <h2>Edit Project: Choose Census Methods</h2>
     
 	<table>
 		<tbody>
@@ -66,9 +67,8 @@
 		</tbody>
 	</table>
 	
-    <p>
-        The table below allows you to define which census methods should be available for your project.
-    </p>
+    <cw:getContent key="admin/editProject/chooseCensusMethods" />
+	
 	<p>
         If you have chosen not to have the default 'Standard Taxonomic' census method provided, the first census method in the list shall become the default census method for this survey.
     </p>
