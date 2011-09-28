@@ -1,16 +1,22 @@
 package au.com.gaiaresources.bdrs.controller.taxonomy;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
 
+import net.sf.json.JSONObject;
+
 import org.apache.log4j.Logger;
+import org.hibernate.type.MetaType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +29,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
+import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -34,6 +41,7 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.web.AtlasService;
 
 public class TaxonomyManagementControllerTest extends AbstractControllerTest {
 
@@ -52,9 +60,17 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     private IndicatorSpecies speciesA;
 
     private IndicatorSpecies speciesB;
-    
+
+    private IndicatorSpecies importSpecies;
     private Logger log = Logger.getLogger(getClass());
 
+    @Autowired
+    AtlasService atlasService;
+
+    private Map<String, JSONObject> jsonObjs = new HashMap<String, JSONObject>();
+
+    private Map<String, JSONObject> shortJSONObjs = new HashMap<String, JSONObject>();
+    
     @Before
     public void setUp() throws Exception {
         taxonGroupBirds = new TaxonGroup();
@@ -155,6 +171,15 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         speciesB.setTaxonGroup(taxonGroupButterflies);
         speciesB.setInfoItems(profileList);
         speciesB = taxaDAO.save(speciesB);
+        
+        importSpecies = new IndicatorSpecies();
+        importSpecies.setCommonName("Indicator Species Import");
+        importSpecies.setScientificName("Indicator Species Import");
+        importSpecies.setTaxonGroup(taxonGroupButterflies);
+        importSpecies.setInfoItems(profileList);
+        importSpecies = atlasService.createTaxonMetadata(importSpecies, Metadata.TAXON_SOURCE_DATA_ID, 
+                                                         "103104216");
+        importSpecies = taxaDAO.save(importSpecies);
     }
 
     @Test
@@ -776,5 +801,130 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
         return new MockMultipartHttpServletRequest();
+    }
+    
+    @Test
+    public void testImportOneShortProfile() throws Exception {
+        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", true);
+    }
+    
+    @Test
+    public void testImportOneFullProfileOverrideShort() throws Exception {
+        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", false);
+    }
+    
+    @Test
+    public void testImportOneFullProfile() throws Exception {
+        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", false);
+    }
+    
+    @Test
+    public void testImportMultipleShortProfile() throws Exception {
+        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
+                        "urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", true);
+    }
+    
+    @Test
+    public void testImportMultipleFullProfile() throws Exception {
+        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
+                        "urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", false);
+    }
+    
+    private void testImportTaxon(String guids, boolean shortProfile) throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        request.setMethod("GET");
+        request.setRequestURI("/bdrs/admin/taxonomy/importNewProfiles.htm");
+        
+        request.setParameter("guids", guids);
+        if (shortProfile) {
+            request.setParameter("shortProfile", "on");
+        }
+        
+        ModelAndView mv = handle(request, response);
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView redirect = (RedirectView) mv.getView();
+        Assert.assertEquals("/bdrs/admin/taxonomy/listing.htm", redirect.getUrl());
+        
+        String[] guidSplit = guids.split(",");
+        for (String guid : guidSplit) {
+            compareTaxon(guid, shortProfile);
+        }
+    }
+
+    @Test
+    public void testImportFromEdit() throws Exception {
+        testImportProfileToTaxon(importSpecies.getId(), null);
+    }
+    
+    @Test
+    public void testImportFromEditWithGuid() throws Exception {
+        testImportProfileToTaxon(importSpecies.getId(), 
+                                 "urn:lsid:catalogueoflife.org:taxon:eeade54e-29c1-102b-9a4a-00304854f820:ac2010");
+    }
+    
+    private void testImportProfileToTaxon(Integer pk, String guid) throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        request.setMethod("GET");
+        request.setRequestURI("/bdrs/admin/taxonomy/import.htm");
+        
+        request.setParameter("pk", String.valueOf(pk));
+        if (guid != null) {
+            request.setParameter("guid", guid);
+        }
+        
+        ModelAndView mv = handle(request, response);
+        ModelAndViewAssert.assertViewName(mv, "editTaxon");
+        
+        if (guid == null) {
+            compareTaxon(importSpecies.getGuid(), pk);
+        } else {
+            compareTaxon(guid, pk);
+        }
+    }
+    
+    private void compareTaxon(String guid, boolean shortProfile) throws IOException {
+        JSONObject ob = getJSONObject(guid, shortProfile);
+        IndicatorSpecies expectedTaxon = new IndicatorSpecies();
+        if (!shortProfile) {
+            expectedTaxon = atlasService.createFullProfile(expectedTaxon, ob, guid);
+        } else {
+            expectedTaxon = atlasService.createShortProfile(expectedTaxon, ob, guid);
+        }
+        IndicatorSpecies actualTaxon = taxaDAO.getIndicatorSpeciesByGuid(guid);
+        Assert.assertEquals(guid, actualTaxon.getGuid());
+        compareTaxon(expectedTaxon, actualTaxon);
+    }
+
+    private JSONObject getJSONObject(String guid, boolean shortProfile) throws IOException {
+        Map<String, JSONObject> jsonObjects = shortProfile ? shortJSONObjs : this.jsonObjs;
+        JSONObject ob = jsonObjects.get(guid);
+        if (ob == null) {
+            ob = atlasService.getJSONObject(guid, shortProfile);
+            jsonObjects.put(guid, ob);
+        }
+        return ob;
+    }
+
+    private void compareTaxon(String guid, Integer pk) throws IOException {
+        IndicatorSpecies expectedTaxon = taxaDAO.getIndicatorSpeciesByGuid(guid);
+        IndicatorSpecies actualTaxon = taxaDAO.getIndicatorSpecies(pk);
+
+        Assert.assertEquals(importSpecies.getId(), pk);
+        Assert.assertEquals(guid, actualTaxon.getGuid());
+        compareTaxon(expectedTaxon, actualTaxon);
+    }
+    
+    private void compareTaxon(IndicatorSpecies expectedTaxon, IndicatorSpecies actualTaxon) {
+        Assert.assertEquals(expectedTaxon.getScientificName(), actualTaxon.getScientificName());
+        Assert.assertEquals(expectedTaxon.getCommonName(), actualTaxon.getCommonName());
+        Assert.assertEquals(expectedTaxon.getTaxonRank(), actualTaxon.getTaxonRank());
+        
+        Assert.assertEquals(expectedTaxon.getTaxonGroup(), actualTaxon.getTaxonGroup());
+        Assert.assertEquals(expectedTaxon.getAuthor(), actualTaxon.getAuthor());
+        Assert.assertEquals(expectedTaxon.getYear(), actualTaxon.getYear());
+        
+        Assert.assertTrue(actualTaxon.getInfoItems().containsAll(expectedTaxon.getInfoItems()));
     }
 }

@@ -65,6 +65,10 @@
                 <th><label for="year">Year</label></th>
                 <td><input class="" type="text" name="year" value="${ taxon.year }"/></td>
             </tr>
+            <tr>
+                <th><label for="guid">Guid</label></th>
+                <td><input class="" type="text" name="guid" id="guid" value="${ taxon.guid }"/></td>
+            </tr>
 	    </tbody>
 	</table>
 	
@@ -74,6 +78,7 @@
 	   distinctive markings, identifying characteristics, habitat and biology. 
 	</p>
 	<div class="textright buttonpanel">
+       <input type="button" class="form_action" value="Retrieve Profile from ALA" onclick="importALAProfile();"/>
        <input type="button" class="form_action" value="Add Profile" onclick="bdrs.taxonomy.addNewProfile('#newProfileIndex', '#taxonProfileTable');"/>
     </div>
     <table id="taxonProfileTable" class="datatable textcenter">
@@ -119,4 +124,12 @@
 	                                "#taxonPk", "#taxonAttributeTable", 
 	                                "#taxonProfileTable", "#newProfileIndex");
     });
+
+    var importALAProfile = function() { 
+        var answer = confirm("Are you sure? Existing entries imported from ALA will be replaced!")
+        if (answer) {
+            window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/import.htm?pk='+jQuery('#taxonPk').val()+
+                (jQuery('#guid').val() ? '&guid='+jQuery('#guid').val() : '');
+        }
+    }
 </script>

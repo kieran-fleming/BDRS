@@ -987,6 +987,20 @@ ul.ui-menu li.ui-menu-item {
     width: 100%;
 }
 
+/************************************/
+/* Atlas Import Species Page        */
+/************************************/
+.atlas_import_container {
+    margin: 10px;
+}
+
+.atlas_import_container textarea {
+    width: 450px;
+}
+
+.checkbox_container input {
+    float: left;
+}
 
 /************************************/
 /* Thresholds                       */
@@ -1033,6 +1047,11 @@ ul.ui-menu li.ui-menu-item {
     border-bottom: 1px dotted white;
 }
 
+.taxonProperties table.datatable td {
+    max-width: 310px;
+    word-wrap: break-word;
+}
+
 /************************************/
 /* Taxon Group                      */
 /************************************/
@@ -1059,6 +1078,10 @@ ul.ui-menu li.ui-menu-item {
 h3.field_guide_header {
     border-bottom-width: 1px;
     border-bottom-style: dotted;
+}
+
+.imageProperties {
+    width: 400px;
 }
 
 /*************************************/

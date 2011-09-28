@@ -51,6 +51,7 @@ import au.com.gaiaresources.bdrs.model.map.GeoMapLayerSource;
 import au.com.gaiaresources.bdrs.model.record.AccessControlledRecordAdapter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsList;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
@@ -418,7 +419,10 @@ public class GeoMapLayerController extends AbstractController {
         User accessingUser = getRequestContext().getUser();
         List<Record> recordList = getRecordsToDisplay(mapLayerIds, accessingUser, null);
         RecordDownloadFormat format = RecordDownloadFormat.valueOf(downloadFormat);
-        RecordDownloadWriter.write(request, response, recordList, format, accessingUser);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recordList), 
+                                   format, accessingUser);
     }
     
     /**

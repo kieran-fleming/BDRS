@@ -41,6 +41,7 @@ import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -462,13 +463,10 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
                 taxonGroupId, startDate, endDate,
                 speciesScientificNameSearch, limit, false);
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<Record> getRecord(int userId, int groupId, int surveyId,
-            int taxonGroupId, Date startDate, Date endDate,
-            String speciesScientificNameSearch, int limit, boolean fetch) {
-
+    
+    private Query getRecordQuery(int userId, int groupId, int surveyId,
+                                        int taxonGroupId, Date startDate, Date endDate,
+                                        String speciesScientificNameSearch, int limit, boolean fetch) {
         Calendar cal = new GregorianCalendar();
 
         if(startDate == null) {
@@ -494,7 +492,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         endDate = cal.getTime();
 
         Map<String, Object> paramMap = new HashMap<String, Object>();
-        StringBuilder builder = new StringBuilder("select r from Record r ");
+        StringBuilder builder = new StringBuilder("select distinct r from Record r ");
         if (fetch) {
             builder.append("left join fetch r.attributes at left join fetch at.attribute left join fetch r.location left join fetch r.user left join fetch r.survey left join fetch r.species ");
         }
@@ -531,8 +529,40 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         for(Map.Entry<String,Object> entry: paramMap.entrySet()) {
             q.setParameter(entry.getKey(), entry.getValue());
         }
-        q.setMaxResults(limit);
+        
+        if(limit > 0) {
+            q.setMaxResults(limit);
+        }
+        
+        return q;
+    }
+    
+    @Override
+    public ScrollableRecords getScrollableRecords(int userPk, int groupPk,
+            int surveyPk, int taxonGroupPk, Date startDate, Date endDate,
+            String species) {
+        // Fetch is always false for scrollabel records because fetch true
+        // causes the memory allocation to keep on increasing as you scroll.
+        Query q = getRecordQuery(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, -1, false);
+        return new ScrollableRecordsImpl(q);
+    }
+    
+    @Override
+    public ScrollableRecords getScrollableRecords(int userPk, int groupPk,
+            int surveyPk, int taxonGroupPk, Date startDate, Date endDate,
+            String species, int pageNumber, int entriesPerPage) {
+        // Fetch is always false for scrollabel records because fetch true
+        // causes the memory allocation to keep on increasing as you scroll.
+        Query q = getRecordQuery(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, -1, false);
+        return new ScrollableRecordsImpl(q, pageNumber, entriesPerPage);
+    }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Record> getRecord(int userId, int groupId, int surveyId,
+            int taxonGroupId, Date startDate, Date endDate,
+            String speciesScientificNameSearch, int limit, boolean fetch) {
+        Query q = getRecordQuery(userId, groupId, surveyId, taxonGroupId, startDate, endDate, speciesScientificNameSearch, limit, fetch);
         return q.list();
     }
 

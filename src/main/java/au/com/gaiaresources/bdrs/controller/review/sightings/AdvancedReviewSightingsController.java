@@ -18,7 +18,6 @@ import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Query;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -43,6 +42,8 @@ import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
 import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
+import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
@@ -72,8 +73,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
     
     public static final String DEFAULT_RESULTS_PER_PAGE = "20";
     public static final String DEFAULT_PAGE_NUMBER = "1";
-    
-    private static final int RECORD_BATCH_SIZE = 500;
     
     static {
         Set<String> temp = new HashSet<String>();
@@ -176,20 +175,20 @@ public class AdvancedReviewSightingsController extends AbstractController{
         User currentUser = getRequestContext().getUser();
         String contextPath = request.getContextPath();
         Session sesh = getRequestContext().getHibernate();
+        
+        ScrollableRecords sr = getMatchingRecordsAsScrollableRecords(facetList, surveyId, 
+                                                                     request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
+                                                                     request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
+                                                                    request.getParameter(SEARCH_QUERY_PARAM_NAME));
         int recordCount = 0;
-        
-        ScrollableResults sr = getMatchingRecordsScrollable(facetList, surveyId, 
-                                                            request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
-                                                            request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
-                                                            request.getParameter(SEARCH_QUERY_PARAM_NAME));
-        
-        while (sr.next()) {
-            Record r = (Record)sr.get(0);
-            List<Record> rList = new ArrayList<Record>();
-            rList.add(r);
-            KMLUtils.writeRecords(writer, currentUser, contextPath, rList);
+        List<Record> rList = new ArrayList<Record>(ScrollableRecords.RECORD_BATCH_SIZE);
+        while (sr.hasMoreElements()) {
+            rList.add(sr.nextElement());
+            
             // evict to ensure garbage collection
-            if (++recordCount % RECORD_BATCH_SIZE == 0) {
+            if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
+                KMLUtils.writeRecords(writer, currentUser, contextPath, rList);
+                rList.clear();
                 sesh.clear();
             }
         }
@@ -216,23 +215,30 @@ public class AdvancedReviewSightingsController extends AbstractController{
         // we are potentially loading a lot of objects into the session cache
         // and continually checking if it is dirty is prohibitively expensive.
         // https://forum.hibernate.org/viewtopic.php?f=1&t=936174&view=next
-        getRequestContext().getHibernate().setFlushMode(FlushMode.MANUAL);
+        Session sesh = getRequestContext().getHibernate(); 
+        sesh.setFlushMode(FlushMode.MANUAL);
         
         Integer surveyId = null;
         if(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME) != null) {
             surveyId = new Integer(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME));
         }
         List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
-        List<Record> recordList = getMatchingRecords(facetList,
-                                                     surveyId,
-                                                     request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
-                                                     request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
-                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME),
-                                                     resultsPerPage, pageNumber);
-
+        ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
+                                                                     surveyId,
+                                                                     request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
+                                                                     request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
+                                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME),
+                                                                     pageNumber, resultsPerPage);
+        
+        int recordCount = 0;
         JSONArray array = new JSONArray();
-        for(Record rec : recordList) {
-            array.add(JSONObject.fromObject(rec.flatten(2)));
+        Record r;
+        while(sc.hasMoreElements()) {
+            r = sc.nextElement();
+            array.add(JSONObject.fromObject(r.flatten(2)));
+            if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
+                sesh.clear();
+            }
         }
         
         response.setContentType("application/json");
@@ -254,21 +260,20 @@ public class AdvancedReviewSightingsController extends AbstractController{
         getRequestContext().getHibernate().setFlushMode(FlushMode.MANUAL);
         
         List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
-        List<Record> recordList = getMatchingRecords(facetList,
+        ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
                                                      surveyId,
                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
                                                      request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
-                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME),
-                                                     null, null);
+                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME));
         
         response.setContentType("application/vnd.ms-excel");
         response.setHeader("Content-Disposition",
                         "attachment;filename=records_"
                                         + String.valueOf(System.currentTimeMillis()) + ".xls");
         bulkDataService.exportSurveyRecords(surveyDAO.getSurvey(surveyId), 
-                                            recordList, response.getOutputStream());
+                                            sc, response.getOutputStream());
     }
-        
+
     /**
      * Generates the {@link List} of {@link Facet}s. Each facet will be configured
      * with the necessary {@link FacetOption}s and selection state.
@@ -355,7 +360,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
      * 
      * @see SortOrder
      */
-    List<Record> getMatchingRecords(List<Facet> facetList,
+    List<Record> getMatchingRecordsAsList(List<Facet> facetList,
                                             Integer surveyId,
                                             String sortProperty, 
                                             String sortOrder, 
@@ -363,13 +368,13 @@ public class AdvancedReviewSightingsController extends AbstractController{
                                             Integer resultsPerPage,
                                             Integer pageNumber) {
         
-        Query query = createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
         
+        Query query = getMatchingRecordsQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
         if(resultsPerPage != null && pageNumber != null && resultsPerPage > 0 && pageNumber > 0) {
             query.setFirstResult((pageNumber-1) * resultsPerPage);
             query.setMaxResults(resultsPerPage);
         }
-
+        
         List<Object[]> rowList = query.list();
         List<Record> recordList = new ArrayList<Record>(rowList.size());
         for(Object[] rowObj : rowList) {
@@ -379,14 +384,64 @@ public class AdvancedReviewSightingsController extends AbstractController{
         return recordList;
     }
     
-    private ScrollableResults getMatchingRecordsScrollable(List<Facet> facetList,
-            Integer surveyId,
-            String sortProperty, 
-            String sortOrder, 
-            String searchText) {
-        
+    /**
+     * Applies the selection criteria represented by the provided {@link Facet}s
+     * and the associated {@link FacetOption}s returning the matching {@link List}
+     * of {@link Record}. 
+     * 
+     * @param facetList the {@link Facet}s providing the selection criteria.
+     * @param surveyId the primary key of the survey containing all eligible records.
+     * The <code>surveyId</code> may be null if all surveys are allowed.
+     * @param sortProperty the HQL property that should be used for sorting. 
+     * The sortProperty may be null if no sorting is necessary.
+     * @param sortOrder the sorting order
+     * @param searchText textual restriction to be applied to matching records.
+     * @return the Query to select the matching records {@link Record}s.
+     * 
+     * @see SortOrder
+     */
+    private Query getMatchingRecordsQuery(List<Facet> facetList,
+                                            Integer surveyId,
+                                            String sortProperty, 
+                                            String sortOrder, 
+                                            String searchText) {
         Query query = createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
-        return query.scroll();
+        return query;
+    }
+    
+    /**
+     * Applies the selection criteria represented by the provided {@link Facet}s
+     * and the associated {@link FacetOption}s returning the matching {@link List}
+     * of {@link Record}. 
+     * 
+     * @param facetList the {@link Facet}s providing the selection criteria.
+     * @param surveyId the primary key of the survey containing all eligible records.
+     * The <code>surveyId</code> may be null if all surveys are allowed.
+     * @param sortProperty the HQL property that should be used for sorting. 
+     * The sortProperty may be null if no sorting is necessary.
+     * @param sortOrder the sorting order
+     * @param searchText textual restriction to be applied to matching records.
+     * @return the Query to select the matching records {@link Record}s.
+     * 
+     * @see SortOrder
+     */
+    private ScrollableRecords getMatchingRecordsAsScrollableRecords(List<Facet> facetList,
+                                                                    Integer surveyId,
+                                                                    String sortProperty, 
+                                                                    String sortOrder, 
+                                                                    String searchText) {
+        Query query = getMatchingRecordsQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
+        return new ScrollableRecordsImpl(query);
+    }
+    
+    private ScrollableRecords getMatchingRecordsAsScrollableRecords(List<Facet> facetList,
+                                                                    Integer surveyId,
+                                                                    String sortProperty, 
+                                                                    String sortOrder, 
+                                                                    String searchText,
+                                                                    int pageNumber, int entriesPerPage) {
+        Query query = getMatchingRecordsQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
+        return new ScrollableRecordsImpl(query, pageNumber, entriesPerPage);
     }
     
     private Query createFacetQuery(List<Facet> facetList, Integer surveyId, String sortProperty, String sortOrder, String searchText) {

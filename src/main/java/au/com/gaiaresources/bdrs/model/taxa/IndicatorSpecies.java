@@ -243,4 +243,13 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
     public IndicatorSpeciesAttribute createAttribute() {
         return new IndicatorSpeciesAttribute();
     }
+    
+    @Transient
+    public String getGuid() {
+        Metadata md = getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
+        if (md == null) {
+            return null;
+        }
+        return md.getValue();
+    }
 }

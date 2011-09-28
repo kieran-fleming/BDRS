@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
@@ -128,7 +129,14 @@ public interface RecordDAO extends TransactionDAO {
 	List<Record> getRecord(int userId, int groupId, int surveyId,
 			int taxonGroupId, Date startDate, Date endDate,
 			String speciesScientificNameSearch, int limit, boolean fetch);
-
+	
+	ScrollableRecords getScrollableRecords(int userPk, int groupPk, int surveyPk,
+	            int taxonGroupPk, Date startDate, Date endDate, String species);
+	
+	ScrollableRecords getScrollableRecords(int userPk, int groupPk, int surveyPk,
+                int taxonGroupPk, Date startDate, Date endDate, String species,
+                int pageNumber, int entriesPerPage);
+	
 	/**
 	 * Returns a list of dates when a record was made for the specified
 	 * scientific name fragment.

@@ -5,13 +5,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -25,10 +21,10 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.JAXBException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
@@ -43,13 +39,12 @@ import org.springframework.web.servlet.ModelAndView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
-import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.spatial.ShapeFileWriter;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 
@@ -192,13 +187,17 @@ public class RecordMapController extends AbstractController {
                 return;
             }
         }
-        
+        Session sesh = getRequestContext().getHibernate(); 
+        sesh.setFlushMode(FlushMode.MANUAL);
         RecordDownloadFormat format = RecordDownloadFormat.valueOf(downloadFormat);
-        List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
-                                                      surveyPk, taxonGroupPk, startDate, endDate,
-                                                      speciesScientificNameSearch, limit);
-                
-        RecordDownloadWriter.write(request, response, recordList, format, currentUser);
+        ScrollableRecords sc = recordDAO.getScrollableRecords(userPk, groupPk, 
+                                                              surveyPk, 
+                                                              taxonGroupPk, 
+                                                              startDate, 
+                                                              endDate, 
+                                                              speciesScientificNameSearch,
+                                                              1, limit);
+        RecordDownloadWriter.write(sesh, request, response, sc, format, currentUser);
     }
 
     @RequestMapping(value = KMLUtils.GET_RECORD_PLACEMARK_PNG_URL, method = RequestMethod.GET)

@@ -39,6 +39,8 @@ import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
+import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsList;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -612,6 +614,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         }
     }
    
+    @SuppressWarnings("deprecation")
     @Test
     public void testExportEditXls() throws IOException, ParseException, MissingDataException, InvalidSurveySpeciesException, DataReferenceException {
         
@@ -633,11 +636,13 @@ public class BulkDataServiceTest extends AbstractControllerTest {
         recListToDownload.add(rec);
         recListToDownload.add(recChild);
         
+        ScrollableRecords sc = new ScrollableRecordsList(recListToDownload);
+
         File spreadSheetTmp = File.createTempFile("BulkDataServiceTest.testExportEditXls", ".xls");
         FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
         registerStream(outStream);
         
-        bulkDataService.exportSurveyRecords(survey, recListToDownload, outStream);
+        bulkDataService.exportSurveyRecords(survey, sc, outStream);
         
         InputStream inStream = new FileInputStream(spreadSheetTmp);
         registerStream(inStream);
@@ -1295,5 +1300,5 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 	     users.add(admin);
 	     return users;
 		
-	}
+    }
 }

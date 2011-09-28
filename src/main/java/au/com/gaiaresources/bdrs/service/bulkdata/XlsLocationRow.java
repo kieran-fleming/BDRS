@@ -17,7 +17,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
 import au.com.gaiaresources.bdrs.model.location.Location;
-import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
@@ -51,19 +50,22 @@ public class XlsLocationRow extends StyledRowImpl {
     // ---------------------------
     // Writing Methods
     // ---------------------------
-    /**
-     * Creates and populates the location sheet in the specified workbook.
-     * @param recordList the list of records containing user locations to be stored.
-     * @param wb the workbook where the location sheet shall be created.
-     */
-    public void writeLocationSheet(List<Record> recordList, Workbook wb) {
-        
-        super.createCellStyles(wb);
-        Sheet locSheet = wb.createSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
-
-        int rowIndex = 0; 
+    public void writeLocationHeader(Workbook wb) {
+        Sheet locSheet = getLocationSheet(wb);
         List<Attribute> locationScopeAttrs = getLocationScopeAttributes(survey);
-        rowIndex = writeLocationHeader(locSheet, rowIndex, locationScopeAttrs);
+        writeLocationHeader(locSheet, 0, locationScopeAttrs);
+    }
+    
+    /**
+     * Creates a row on the location sheet to represent a survey location.
+     * @param wb the workbook containing the location sheet. If a location sheet
+     * cannot be found, one shall be created.
+     */
+    public void writeSurveyLocations(Workbook wb) {
+        Sheet locSheet = getLocationSheet(wb);
+        List<Attribute> locationScopeAttrs = getLocationScopeAttributes(survey);
+        
+        int rowIndex = locSheet.getLastRowNum()+1;
         
         for (Location loc : survey.getLocations()) {
             Row row = locSheet.createRow(rowIndex++);
@@ -88,28 +90,43 @@ public class XlsLocationRow extends StyledRowImpl {
                                                                       attrVal);
             }
         }
+    }
+    
+    /**
+     * Creates a row on the location sheet to represent a user location.
+     * @param wb the workbook containing the location sheet. If a location sheet
+     * cannot be found, one shall be created.
+     * @param location the location to be added to the sheet.
+     */
+    public void writeUserLocation(Workbook wb, Location location) {
+        Sheet locSheet = getLocationSheet(wb);
+        Row row = locSheet.createRow(locSheet.getLastRowNum());
         
-        // Now add user locations
-        for (Record rec : recordList) {
-            // If the record has a location
-            if(rec.getLocation() != null) {
-                Location loc = rec.getLocation();
-                // and the location is not a survey location
-                if(!survey.getLocations().contains(loc)) {
-                    Row row = locSheet.createRow(rowIndex++);
-                    int colIndex = 0;
+        int colIndex = 0;
+        row.createCell(colIndex++).setCellValue(location.getId());
+        row.createCell(colIndex++).setCellValue(AbstractBulkDataService.LOCATION_SHEET_USER_LOCATION);
+        row.createCell(colIndex++).setCellValue(location.getName());
+        row.createCell(colIndex++).setCellValue(location.getLocation().getCentroid().getY());
+        row.createCell(colIndex++).setCellValue(location.getLocation().getCentroid().getX());
         
-                    row.createCell(colIndex++).setCellValue(loc.getId());
-                    row.createCell(colIndex++).setCellValue(AbstractBulkDataService.LOCATION_SHEET_USER_LOCATION);
-                    row.createCell(colIndex++).setCellValue(loc.getName());
-                    row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getY());
-                    row.createCell(colIndex++).setCellValue(loc.getLocation().getCentroid().getX());
-                    
-                    // user locations do not have any location attribute values.
-                    // if that changes. add that stuff here.
-                }
-            }
-        }
+        // user locations do not have any location attribute values.
+        // if that changes. add that stuff here.
+    }
+    
+    /**
+     * Returns an existing location sheet or creates a location sheet if one
+     * does not exist.
+     * @param wb the workbook containing the location sheet or where it shall
+     * be created.
+     */
+    private Sheet getLocationSheet(Workbook wb) {
+        Sheet sheet = wb.getSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
+        if(sheet == null) {
+            super.createCellStyles(wb);
+            sheet = wb.createSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
+        } 
+        
+        return sheet;
     }
     
     private int writeLocationHeader(Sheet locSheet, int rowIndex, List<Attribute> locationScopeAttrs) {

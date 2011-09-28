@@ -69,6 +69,9 @@ input[type=submit].page_action:active,input[type=button].page_action:active {
 
 /* Form Actions */
 input[type=submit].form_action,input[type=button].form_action {
+    /* Fallback */
+    background-color: #5E7698;
+    
     /* Color Gradient */
     background-image: -moz-linear-gradient(top, #5E7698, #224272);
     background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #5E7698),
@@ -82,15 +85,14 @@ input[type=submit].form_action,input[type=button].form_action {
     box-shadow: 0px 0px 2px #445E7C;
     -moz-box-shadow: 0px 0px 2px #445E7C;
     -webkit-box-shadow: 0px 0px 2px #445E7C;
-    -ms-filter: /* IE8+ */
-        "filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=0, OffY=0, Color=#445E7C, Positive=true)"
-        ;
-    filter: /* IE<8 */ filter : progid :
-        DXImageTransform.Microsoft.dropshadow ( OffX = 0, OffY = 0, Color =
-        #445E7C, Positive = true );
+    
+    /* No Shadows for IE. If you put in drop shadows, check that the gradient still works */
 }
 
 input[type=submit].form_action:hover,input[type=button].form_action:hover { 
+    /* Fallback */
+    background-color: #5E7698;
+    
     background-image: -moz-linear-gradient(top, #95A5BC, #224272);
     background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #95A5BC),
         color-stop(1, #224272) );

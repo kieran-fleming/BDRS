@@ -1,12 +1,5 @@
 package au.com.gaiaresources.bdrs.controller.record;
 
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +7,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.annotation.security.RolesAllowed;
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import au.com.gaiaresources.bdrs.model.taxa.*;
-import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,23 +23,23 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
-import au.com.gaiaresources.bdrs.file.FileService;
-import au.com.gaiaresources.bdrs.model.file.ManagedFile;
-import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
-import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
-import au.com.gaiaresources.bdrs.model.preference.Preference;
-import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.image.ImageService;
+import au.com.gaiaresources.bdrs.service.web.AtlasService;
 import edu.emory.mathcs.backport.java.util.Collections;
 
 @Controller
@@ -66,7 +55,7 @@ public class AtlasController extends AbstractController {
             Record.RECORD_PROPERTY_SPECIES, Record.RECORD_PROPERTY_NUMBER,
             Record.RECORD_PROPERTY_WHEN, Record.RECORD_PROPERTY_TIME,
             Record.RECORD_PROPERTY_NOTES, Record.RECORD_PROPERTY_LOCATION,
-            Record.RECORD_PROPERTY_POINT, Record.RECORD_PROPERTY_ACCURACY};
+            Record.RECORD_PROPERTY_POINT, Record.RECORD_PROPERTY_ACCURACY };
 
     @Autowired
     private RecordDAO recordDAO;
@@ -77,18 +66,7 @@ public class AtlasController extends AbstractController {
     @Autowired
     private LocationDAO locationDAO;
     @Autowired
-    private PreferenceDAO preferenceDAO;
-    @Autowired
-    private SpeciesProfileDAO speciesProfileDAO;
-    @Autowired
-    private ManagedFileDAO managedFileDAO;
-    @Autowired
-    private FileService fileService;
-    @Autowired
-    private ImageService imageService;
-    @Autowired 
-    private MetadataDAO metadataDAO;
-    
+    private AtlasService atlasService;
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
@@ -135,185 +113,14 @@ public class AtlasController extends AbstractController {
 
         ModelAndView mv;
         if(species == null) {
-	        InputStreamReader reader = null;
-        	try {
-        		Preference p = preferenceDAO.getPreferenceByKey("ala.species.short.url");
-        		URL url;
-        		if (p != null) {
-        			url = new URL(p.getValue() + "/" + guid + ".json");
-        		} else {
-        			url = new URL("http://bie.ala.org.au/species/shortProfile/" + guid + ".json"); // fallback to the BIE
-        		}
-        		
-        		URLConnection conn = url.openConnection();
-        		reader = new InputStreamReader(conn.getInputStream());
-        		StringBuffer buff = new StringBuffer();
-        		int c;
-        		while ((c = reader.read()) != -1) {
-        			buff.append((char)c);
-        		}
-        		JSONObject ob = JSONObject.fromObject(buff.toString());
-        		IndicatorSpecies taxon = new IndicatorSpecies();
-                
-        		log.debug("Found species information from the atlas : ");
-            	log.debug(buff.toString());
-            	// Scientific Name
-            	taxon.setScientificName(ob.getString("scientificName"));
-            	taxon.setAuthor(ob.getString("author"));
-            	taxon.setScientificNameAndAuthor(ob.getString("scientificName") + " " + ob.getString("scientificNameAuthorship"));
-            	taxon.setYear(ob.getString("year"));
-            	Metadata md = new Metadata();
-            	md.setKey(Metadata.SCIENTIFIC_NAME_SOURCE_DATA_ID);
-            	md.setValue(guid);
-	            metadataDAO.save(md);
-	            taxon.getMetadata().add(md);
-	            
-            	// Rank
-            	TaxonRank rank = TaxonRank.findByIdentifier(ob.getString("rank"));
-            	taxon.setTaxonRank(rank);
-            	
-            	// Common Name
-            	if (ob.containsKey("commonName")) {
-	            	taxon.setCommonName(ob.getString("commonName"));
-	            	md = new Metadata();
-	                md.setKey(Metadata.COMMON_NAME_SOURCE_DATA_ID);
-	                md.setValue(ob.getString("commonNameGUID"));
-	                metadataDAO.save(md);
-	                taxon.getMetadata().add(md);
-            	} else {
-            		taxon.setCommonName(taxon.getScientificName());
-            	}
-                
-            	// Group/Family
-            	if (ob.containsKey("family")) {
-	            	String family = ob.getString("family");
-	            	if (family != null && !family.isEmpty() && !family.equalsIgnoreCase("null")) {
-	            		TaxonGroup g = taxaDAO.getTaxonGroup(family);
-		            	if (g == null) {
-		            		g = taxaDAO.createTaxonGroup(family, false, false, false, false, false, true);
-		            	}
-		            	taxon.setTaxonGroup(g);
-		            	md = new Metadata();
-		                md.setKey(Metadata.TAXON_FAMILY);
-		                md.setValue(family);
-		                metadataDAO.save(md);
-		                taxon.getMetadata().add(md);
-	            	} else {
-	            		TaxonGroup g = taxaDAO.getTaxonGroup("Other");
-	            		if (g == null) {
-	            			g = taxaDAO.createTaxonGroup("Other", false, false, false, false, false, true);
-	            		}
-	            		taxon.setTaxonGroup(g);
-	            	}
-            	}
-            	
-            	// Kingdom
-            	if (ob.containsKey("kingdom")) {
-	            	String kingdom = ob.getString("kingdom");
-	            	if (kingdom != null) {
-	            		md = new Metadata();
-		                md.setKey(Metadata.TAXON_KINGDOM);
-		                md.setValue(kingdom);
-		                metadataDAO.save(md);
-		                taxon.getMetadata().add(md);
-	            	}
-            	}
-            	
-                // Images.
-            	// Thumbnail
-            	if (ob.containsKey("thumbnail")) {
-	            	SpeciesProfile sp = new SpeciesProfile();
-	                sp.setType(SpeciesProfile.SPECIES_PROFILE_THUMBNAIL); // this is a 100x100 image, might resize for the other ones.
-	                sp.setHeader("Thumbnail");
-	                sp.setDescription("Thumbnail for " + taxon.getScientificName());
-	                String filename = ob.getString("thumbnail");
-	                String ext = getExtension(filename);
-	                ManagedFile mf = new ManagedFile();
-	                mf.setContentType("");
-	                mf.setCredit("");
-	                mf.setLicense("");
-	                mf.setDescription(taxon.getScientificName() + " - " + taxon.getCommonName());
-	                mf.setFilename(mf.getUuid()+ext);
-	                mf = managedFileDAO.save(mf);
-	                fileService.createFile(mf.getClass(), mf.getId(), mf.getFilename(), downloadFile(new URL(filename)));
-	                mf.setContentType(fileService.getFile(mf, mf.getFilename()).getContentType());
-	                managedFileDAO.save(mf);
-	                sp.setContent(mf.getUuid());
-	                speciesProfileDAO.save(sp);
-	            	taxon.getInfoItems().add(sp);
-	            	
-	            	// Now thumbnail the thumbnail...
-	            	BufferedImage fortyXforty = 
-	            		imageService.resizeImage(fileService.getFile(mf, mf.getFilename()).getInputStream(), 40, 40);
-	            	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	            	ImageIO.write(fortyXforty, "png", baos);
-	                baos.flush();
-	                byte[] data = baos.toByteArray();
-	                baos.close();
-	                
-	            	sp = new SpeciesProfile();
-	                sp.setType(SpeciesProfile.SPECIES_PROFILE_IMAGE_40x40); // this is a 100x100 image, might resize for the other ones.
-	                sp.setHeader("40x40 Thumbnail");
-	                sp.setDescription("40x40 Thumbnail for " + taxon.getScientificName());
-	                
-	                mf = new ManagedFile();
-	                mf.setContentType("");
-	                mf.setCredit("");
-	                mf.setLicense("");
-	                mf.setDescription(taxon.getScientificName() + " - " + taxon.getCommonName());
-	                mf.setFilename(mf.getUuid()+".png");
-	                mf = managedFileDAO.save(mf);
-	                fileService.createFile(mf.getClass(), mf.getId(), mf.getFilename(), data);
-	                mf.setContentType(fileService.getFile(mf, mf.getFilename()).getContentType());
-	                managedFileDAO.save(mf);
-	                sp.setContent(mf.getUuid());
-	                speciesProfileDAO.save(sp);
-	            	taxon.getInfoItems().add(sp);
-            	}
-            	
-            	// Main Image
-            	if (ob.containsKey("imageURL")) {
-	            	SpeciesProfile sp = new SpeciesProfile();
-	                sp.setType(SpeciesProfile.SPECIES_PROFILE_IMAGE); 
-	                sp.setHeader("Image");
-	                sp.setDescription("Image for " + taxon.getScientificName());
-	                String filename = ob.getString("imageURL");
-	                String ext = getExtension(filename);
-	                ManagedFile mf = new ManagedFile();
-	                mf.setContentType("");
-	                mf.setCredit("");
-	                mf.setLicense("");
-	                mf.setDescription(taxon.getScientificName() + " - " + taxon.getCommonName());
-	                mf.setFilename(mf.getUuid()+ext);
-	                mf = managedFileDAO.save(mf);
-	                fileService.createFile(mf.getClass(), mf.getId(), mf.getFilename(), downloadFile(new URL(filename)));
-	                mf.setContentType(fileService.getFile(mf, mf.getFilename()).getContentType());
-	                managedFileDAO.save(mf);
-	                sp.setContent(mf.getUuid());
-	                speciesProfileDAO.save(sp);
-	            	taxon.getInfoItems().add(sp);
-            	}
-            	
-            	// Save the Taxon
-            	species = taxaDAO.save(taxon); 
-        	} catch (IOException ioe) {
-        		log.error("Could not retrieve species profile from the Atlas", ioe);
-        		species = null;
-        	} finally {
-        		if (reader != null) {
-        			try {
-	        			reader.close();
-	        		} catch (IOException ioe) {
-	        			log.error("Error closing stream from Atlas webservice, possible network error",
-	        				ioe);
-	        		}
-        		}
-        	}
-        	
+            Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
+            if (guid != null && !guid.isEmpty()) {
+                species = atlasService.importSpecies(guid, true, errorMap);
+            } 
         }
         
         if (species == null) {
-        	log.debug("Could not determine species, reverting to tracker form");
+            log.debug("Could not determine species, reverting to tracker form");
             // The atlas form relies upon a preconfigured species.
             // If we do not have one, fall back to the tracker form.
             mv = new ModelAndView(new RedirectView("tracker.htm"));
@@ -323,7 +130,7 @@ public class AtlasController extends AbstractController {
         } else {
             // Add all attribute form fields
             Map<String, FormField> formFieldMap = new HashMap<String, FormField>();
-    
+
             // Add all property form fields
             for (String propertyName : RECORD_PROPERTY_NAMES) {
                 formFieldMap.put(propertyName, 
@@ -352,10 +159,6 @@ public class AtlasController extends AbstractController {
                     }
                 }
             }
-            
-            // Map all the existing file attributes to record attributes.
-            Map<Attribute, AttributeValue> fileAttrToRecAttrMap = 
-                new HashMap<Attribute, AttributeValue>();
             
             
             FormField fileFormField = formFieldFactory.createRecordFormField(survey, record, fileAttr, fileRecAttr);
@@ -399,34 +202,5 @@ public class AtlasController extends AbstractController {
         }
         
         return mv;
-    }
-    
-    private byte[] downloadFile(URL url) throws IOException {
-    	BufferedInputStream bis = null;
-    	try {
-	    	URLConnection conn = url.openConnection();
-			bis = new BufferedInputStream(conn.getInputStream());
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			byte[] b = new byte[512];
-			int count;
-			while ((count = bis.read(b)) != -1) {
-				bos.write(b, 0, count);
-			}
-			return bos.toByteArray();
-		} catch (IOException ioe) {
-			throw ioe; //propagate the exception up.
-		} finally {
-			if (bis != null) {
-				bis.close(); // cleanup streams.
-			}
-		}
-    }
-    
-    private String getExtension(String filename) {
-    	if (filename.indexOf('.') > -1) {
-        	return filename.substring(filename.lastIndexOf('.'));
-        } else {
-        	return filename;
-        }
     }
 }

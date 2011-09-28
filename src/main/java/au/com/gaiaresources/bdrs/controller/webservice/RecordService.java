@@ -18,12 +18,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
@@ -33,15 +33,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 
 @Controller
 public class RecordService extends AbstractController {
@@ -138,12 +145,19 @@ public class RecordService extends AbstractController {
             userPk = user.getId();
         }
 
-        List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
-                surveyPk, taxonGroupPk, startDate, endDate, species, limit);
-
+        Session sesh = getRequestContext().getHibernate();
+        sesh.setFlushMode(FlushMode.MANUAL);
+        /*List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
+                surveyPk, taxonGroupPk, startDate, endDate, species, limit);*/
+        ScrollableRecords sr = recordDAO.getScrollableRecords(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, 1, limit);
+        
+        int recordCount = 0;
         JSONArray array = new JSONArray();
-        for (Record r : recordList) {
-            array.add(r.flatten());
+        while(sr.hasMoreElements()) {
+            array.add(sr.nextElement().flatten());
+            if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
+                sesh.clear();
+            }
         }
 
         response.setContentType("application/json");
@@ -362,7 +376,7 @@ public class RecordService extends AbstractController {
             @RequestParam(value = "taxon_group", defaultValue = "0") int taxonGroupPk,
             @RequestParam(value = "date_start", defaultValue = "01 Jan 1970") Date startDate,
             @RequestParam(value = "date_end", defaultValue = "01 Jan 9999") Date endDate,
-            @RequestParam(value = "limit", defaultValue = "5000") int limit,
+            @RequestParam(value = "limit", defaultValue = "5000") long limit,
             HttpServletResponse response) throws IOException {
 
         // We are changing the flush mode here to prevent checking for dirty
@@ -390,17 +404,16 @@ public class RecordService extends AbstractController {
             userPk = user.getId();
         }
 
-        List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
-                surveyPk, taxonGroupPk, startDate, endDate, species, limit,
-                true);
+        ScrollableRecords sc = recordDAO.getScrollableRecords(userPk, groupPk,
+                surveyPk, taxonGroupPk, startDate, endDate, species);
 
         Survey survey = surveyDAO.getSurvey(surveyPk);
 
         response.setContentType("application/vnd.ms-excel");
         response.setHeader("Content-Disposition",
                 "attachment;filename=records_"
-                        + new Long(System.currentTimeMillis()) + ".xls");
-        bulkDataService.exportSurveyRecords(survey, recordList, response
+                        + System.currentTimeMillis() + ".xls");
+        bulkDataService.exportSurveyRecords(survey, sc, limit, response
                 .getOutputStream());
     }
 

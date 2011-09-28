@@ -41,6 +41,8 @@ import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
@@ -54,6 +56,9 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.service.web.AtlasService;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 /**
  * The <code>TaxonomyManagementControllers</code> handles all view requests 
@@ -64,6 +69,8 @@ import au.com.gaiaresources.bdrs.security.Role;
 public class TaxonomyManagementController extends AbstractController {
     
     public static final String DEFAULT_SPECIES_PROFILE = "taxonProfileTemplate.json";
+
+    private static final String MV_ERROR_MAP = "errorMap";
     
     private Logger log = Logger.getLogger(getClass());
     
@@ -78,10 +85,18 @@ public class TaxonomyManagementController extends AbstractController {
     @Autowired
     private ManagedFileDAO managedFileDAO;
     @Autowired
+    MetadataDAO metadataDAO;
+    @Autowired
     private FileService fileService;
-    
-    private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
+    @Autowired
+    private PropertyService propertyService;
+
+    private FormFieldFactory formFieldFactory = new FormFieldFactory();
+    
+    @Autowired
+    AtlasService atlasService;
+    
     @RolesAllowed( { Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/taxonomy/listing.htm", method = RequestMethod.GET)
     public ModelAndView setup(HttpServletRequest request,
@@ -108,19 +123,19 @@ public class TaxonomyManagementController extends AbstractController {
             // Need to be careful that a taxon may have attribute values
             // that are no longer applicable for the currently assigned taxon group.
             Map<Attribute, IndicatorSpeciesAttribute> attributeValueMapping = 
-            	new HashMap<Attribute, IndicatorSpeciesAttribute>();
+                new HashMap<Attribute, IndicatorSpeciesAttribute>();
             for(IndicatorSpeciesAttribute val : taxon.getAttributes()) {
-            	attributeValueMapping.put(val.getAttribute(), val);
+                attributeValueMapping.put(val.getAttribute(), val);
             }
             
             // We are only interested in the attributes from the currently
             // assigned group.
             formFieldList = new ArrayList<FormField>();
             for(Attribute attr : taxon.getTaxonGroup().getAttributes()) {
-            	if(attr.isTag()) {
-            	    IndicatorSpeciesAttribute val = attributeValueMapping.get(attr);
-            	    formFieldList.add(formFieldFactory.createTaxonFormField(attr, val));
-            	}
+                if(attr.isTag()) {
+                    IndicatorSpeciesAttribute val = attributeValueMapping.get(attr);
+                    formFieldList.add(formFieldFactory.createTaxonFormField(attr, val));
+                }
             }
         }
         
@@ -135,7 +150,7 @@ public class TaxonomyManagementController extends AbstractController {
         mv.addObject("taxon", taxon);
         mv.addObject("formFieldList", formFieldList);
         mv.addObject("taxonProfileList", speciesProfileTemplate);
-        mv.addObject("newProfileIndex", new Integer(0));
+        mv.addObject("newProfileIndex", Integer.valueOf(0));
         return mv;
     }
 
@@ -147,7 +162,7 @@ public class TaxonomyManagementController extends AbstractController {
         if(taxonGroup != null) {
             InputStream profileInputStream = getSpeciesProfileTemplateConfiguration();
             
-            // Cannot find the species profile template configuration file.            
+            // Cannot find the species profile template configuration file.
             if(profileInputStream != null) {
                 // Read in the configuration file.
                 BufferedReader reader = new BufferedReader(new InputStreamReader(profileInputStream));
@@ -276,7 +291,8 @@ public class TaxonomyManagementController extends AbstractController {
                              @RequestParam(required=true, value="author") String author,
                              @RequestParam(required=true, value="year") String year,
                              @RequestParam(required=false, value="new_profile") int[] profileIndexArray,
-                             @RequestParam(required=false, value="profile_pk") int[] profilePkArray) throws ParseException, IOException {
+                             @RequestParam(required=false, value="profile_pk") int[] profilePkArray,
+                             @RequestParam(required=false, value="guid") String guid) throws ParseException, IOException {
         
         IndicatorSpecies taxon;
         if(taxonPk == 0) {
@@ -290,6 +306,20 @@ public class TaxonomyManagementController extends AbstractController {
         taxon.setTaxonRank(TaxonRank.valueOf(taxonRank));
         taxon.setAuthor(author);
         taxon.setYear(year);
+        
+        // save the guid if it exists
+        if (!StringUtils.nullOrEmpty(guid)) {
+            Metadata md = taxon.getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
+            if (md == null) {
+                md = new Metadata();
+                md.setKey(Metadata.TAXON_SOURCE_DATA_ID);
+            } else {
+                taxon.getMetadata().remove(md);
+            }
+            md.setValue(guid);
+            metadataDAO.save(md);
+            taxon.getMetadata().add(md);
+        }
         
         IndicatorSpecies parent = null;
         if(!parentPkStr.isEmpty()) {
@@ -396,19 +426,77 @@ public class TaxonomyManagementController extends AbstractController {
     }
     
     @RolesAllowed( { Role.ADMIN })
-    @RequestMapping(value = "/bdrs/admin/taxonomy/ajaxTaxonAttributeTable.htm", method = RequestMethod.GET)
-    public ModelAndView ajaxTaxonAttributeTable(HttpServletRequest request,
-                                       			HttpServletResponse response,
-                                       			@RequestParam(value="taxonPk", required=false, defaultValue="0") int taxonPk,
-                                       			@RequestParam(value="groupPk", required=true) int groupPk) {
-    	
-    	IndicatorSpecies taxon = taxonPk == 0 ? new IndicatorSpecies() : taxaDAO.getIndicatorSpecies(taxonPk);
-    	TaxonGroup group = taxaDAO.getTaxonGroup(groupPk);
-    	
-    	// Need to be careful that a taxon may have attribute values
+    @RequestMapping(value = "/bdrs/admin/taxonomy/import.htm", method = RequestMethod.GET)
+    public ModelAndView ajaxImportProfile(HttpServletRequest request,
+                                       HttpServletResponse response,
+                                       @RequestParam(required=false, value="pk", defaultValue="0") int taxonPk,
+                                       @RequestParam(required=false, value="guid") String guid) throws IOException {
+
+        IndicatorSpecies taxon;
+        List<FormField> formFieldList;
+        if(taxonPk == 0) {
+            taxon = new IndicatorSpecies();
+        } else {
+            taxon = taxaDAO.getIndicatorSpecies(taxonPk);
+        }
+        
+        // import the profile from the atlas service
+        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
+        IndicatorSpecies importTaxon = atlasService.importSpecies(taxon, guid, false, errorMap);
+        if (importTaxon == null) {
+            // return the error that caused the import to fail
+            String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
+            getRequestContext().addMessage(String.format(tmpl, taxon.getGuid()));
+        } else {
+            taxon = importTaxon;
+        }
+        // Need to be careful that a taxon may have attribute values
         // that are no longer applicable for the currently assigned taxon group.
         Map<Attribute, IndicatorSpeciesAttribute> attributeValueMapping = 
-        	new HashMap<Attribute, IndicatorSpeciesAttribute>();
+            new HashMap<Attribute, IndicatorSpeciesAttribute>();
+        for(IndicatorSpeciesAttribute val : taxon.getAttributes()) {
+            attributeValueMapping.put(val.getAttribute(), val);
+        }
+        
+        // We are only interested in the attributes from the currently
+        // assigned group.
+        formFieldList = new ArrayList<FormField>();
+        for(Attribute attr : taxon.getTaxonGroup().getAttributes()) {
+            if(attr.isTag()) {
+                IndicatorSpeciesAttribute val = attributeValueMapping.get(attr);
+                formFieldList.add(formFieldFactory.createTaxonFormField(attr, val));
+            }
+        }
+        
+        Collections.sort(formFieldList);
+        
+        // Species Profile Template
+        List<SpeciesProfile> speciesProfileTemplate = loadSpeciesProfileTemplate(taxon.getTaxonGroup(), taxon.getInfoItems());
+        speciesProfileTemplate.addAll(taxon.getInfoItems());
+        Collections.sort(speciesProfileTemplate, new ComparePersistentImplByWeight());
+        
+        ModelAndView mv = new ModelAndView("editTaxon");
+        mv.addObject("taxon", taxon);
+        mv.addObject("formFieldList", formFieldList);
+        mv.addObject("taxonProfileList", speciesProfileTemplate);
+        mv.addObject("newProfileIndex", Integer.valueOf(0));
+        return mv;
+    }
+    
+    @RolesAllowed( { Role.ADMIN })
+    @RequestMapping(value = "/bdrs/admin/taxonomy/ajaxTaxonAttributeTable.htm", method = RequestMethod.GET)
+    public ModelAndView ajaxTaxonAttributeTable(HttpServletRequest request,
+                                               HttpServletResponse response,
+                                               @RequestParam(value="taxonPk", required=false, defaultValue="0") int taxonPk,
+                                               @RequestParam(value="groupPk", required=true) int groupPk) {
+        
+        IndicatorSpecies taxon = taxonPk == 0 ? new IndicatorSpecies() : taxaDAO.getIndicatorSpecies(taxonPk);
+        TaxonGroup group = taxaDAO.getTaxonGroup(groupPk);
+        
+        // Need to be careful that a taxon may have attribute values
+        // that are no longer applicable for the currently assigned taxon group.
+        Map<Attribute, IndicatorSpeciesAttribute> attributeValueMapping = 
+            new HashMap<Attribute, IndicatorSpeciesAttribute>();
         for(IndicatorSpeciesAttribute val : taxon.getAttributes()) {
             attributeValueMapping.put(val.getAttribute(), val);
         }
@@ -422,10 +510,10 @@ public class TaxonomyManagementController extends AbstractController {
                 formFieldList.add(formFieldFactory.createTaxonFormField(attr, val)); 
             }
         }
-    	
-    	ModelAndView mv = new ModelAndView("taxonAttributeTable");
-    	mv.addObject("formFieldList", formFieldList);
-    	return mv;
+        
+        ModelAndView mv = new ModelAndView("taxonAttributeTable");
+        mv.addObject("formFieldList", formFieldList);
+        return mv;
     }
     
     @RolesAllowed( { Role.ADMIN })
@@ -448,4 +536,33 @@ public class TaxonomyManagementController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed( { Role.ADMIN })
+    @RequestMapping(value = "/bdrs/admin/taxonomy/importNewProfiles.htm", method = RequestMethod.GET)
+    public ModelAndView edit(HttpServletRequest request,
+                             HttpServletResponse response,
+                             @RequestParam(required=true, value="guids") String guids,
+                             @RequestParam(required=false, value="shortProfile") String importShortProfile) throws IOException {
+        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute(MV_ERROR_MAP);
+        getRequestContext().removeSessionAttribute(MV_ERROR_MAP);
+        String[] ids = guids.split(",");
+        int speciesCount = 0;
+        for (String id : ids) {
+            if (id == null || StringUtils.nullOrEmpty(id.trim())) {
+                // protect against null or empty ids
+                continue;
+            }
+            if (atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap) != null) {
+                speciesCount++;
+            } else {
+                String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
+                getRequestContext().addMessage(String.format(tmpl, id));
+            }
+        }
+        
+        ModelAndView mv= new ModelAndView(new RedirectView("/bdrs/admin/taxonomy/listing.htm", true));
+        mv.addObject(MV_ERROR_MAP, errorMap);
+        String tmpl = propertyService.getMessage("bdrs.taxon.import.success");
+        getRequestContext().addMessage(String.format(tmpl, speciesCount));
+        return mv;
+    }
 }

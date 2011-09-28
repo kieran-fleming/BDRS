@@ -217,4 +217,45 @@ public class SpeciesProfile extends PortalPersistentImpl {
     public boolean isAudioType() {
         return this.type != null && SpeciesProfile.SPECIES_PROFILE_AUDIO.equals(this.type);
     }
+    
+    @Transient
+    public boolean isScientificNameType() {
+        return this.type != null && SpeciesProfile.SPECIES_PROFILE_SCIENTIFICNAME.equals(this.type);
+    }
+
+    @Transient
+    public boolean isTextType() {
+        return this.type != null && SpeciesProfile.SPECIES_PROFILE_TEXT.equals(this.type);
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (!other.getClass().equals(this.getClass())) {
+            return false;
+        }
+        
+        SpeciesProfile that = (SpeciesProfile) other;
+        
+        return ((this.type == null && that.type == null) || (this.type != null && this.type.equals(that.type))) && 
+               ((this.header == null && that.header == null) || (this.header != null && this.header.equals(that.header))) && 
+               ((this.description == null && that.description == null) || (this.description != null && this.description.equals(that.description)));
+    }
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    };
+    
+    @Transient
+    public String getSource() {
+        for(Metadata md : metadata) {
+            if (md.getKey().equals(Metadata.TAXON_SOURCE)) {
+                return md.getValue();
+            }
+        }
+        return null;
+    }
 }

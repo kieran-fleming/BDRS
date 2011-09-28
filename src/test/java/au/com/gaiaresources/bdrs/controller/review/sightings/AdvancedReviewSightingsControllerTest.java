@@ -562,7 +562,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         }
         
         Integer surveyId = new Integer(mv.getModel().get(AdvancedReviewSightingsController.SURVEY_ID_QUERY_PARAM_NAME).toString());
-        List<Record> recordList = controller.getMatchingRecords(facetList, surveyId, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, surveyId, null, null, null, null, null);
         Assert.assertEquals(surveyRecordCount, recordList.size());
     }
     
@@ -666,7 +666,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         for(String sortProperty : AdvancedReviewSightingsController.VALID_SORT_PROPERTIES) {
             for(SortOrder sortOrder: SortOrder.values()) {
-                List<Record> recordList = controller.getMatchingRecords(facetList, null, sortProperty, sortOrder.toString(), null, null, null);
+                List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, sortProperty, sortOrder.toString(), null, null, null);
                 Assert.assertEquals(recordCount, recordList.size());
             }
         }
@@ -693,7 +693,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
         
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, request.getParameter(AdvancedReviewSightingsController.SEARCH_QUERY_PARAM_NAME), null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, request.getParameter(AdvancedReviewSightingsController.SEARCH_QUERY_PARAM_NAME), null, null);
         // Some of the records are non taxonomic
         Assert.assertEquals((methodRecordCount * 3)/3, recordList.size());
     }
@@ -813,7 +813,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedCount, recordList.size());
         
         for(Record rec : recordList) {
@@ -845,7 +845,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedRecordCount, recordList.size());
         
         for(Record rec : recordList) {
@@ -875,7 +875,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedRecordCount, recordList.size());
         
         for(Record rec : recordList) {
@@ -907,7 +907,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedRecordCount, recordList.size());
         
         for(Record rec : recordList) {
@@ -942,7 +942,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
-        List<Record> recordList = controller.getMatchingRecords(facetList, null, null, null, null, null, null);
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
         Assert.assertEquals(expectedRecordCount, recordList.size());
         
         for(Record rec : recordList) {

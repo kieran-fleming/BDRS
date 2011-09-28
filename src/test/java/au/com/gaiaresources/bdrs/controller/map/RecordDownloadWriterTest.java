@@ -30,6 +30,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import au.com.gaiaresources.bdrs.model.record.Record;
+import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsList;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.web.JsonService;
 import au.com.gaiaresources.bdrs.spatial.AbstractShapefileTest;
@@ -42,13 +43,17 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
     private Logger log = Logger.getLogger(getClass());
     
     // the export 'no' record case is the same as exporting a template
+    @SuppressWarnings("deprecation")
     @Test 
     public void testExportSingleRecord() throws Exception {
         User accessor = owner;
         List<Record> recList = new LinkedList<Record>();
         recList.add(r1);
         
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(), 
+                                   request, response, 
+                                   new ScrollableRecordsList(recList), 
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
         File exportedFile = prepareFile(response.getContentAsByteArray());
         
         ShapeFileReader reader = new ShapeFileReader(exportedFile);
@@ -82,6 +87,7 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         return file;
     }
     
+    @SuppressWarnings("deprecation")
     @Test
     public void testExportMultiSurveyNoCensusMethod() throws Exception {
         User accessor = owner;
@@ -90,7 +96,10 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         recList.add(r1);
         recList.add(r3);
         
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recList),
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
         File exportedFile = prepareFile(response.getContentAsByteArray());
         
         ShapeFileReader reader = new ShapeFileReader(exportedFile, true);
@@ -108,6 +117,7 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         assertRecord(r3, reader, accessor);
     }
     
+    @SuppressWarnings("deprecation")
     @Test
     public void testExportMultiSingleSurveyWithNonTaxaCensusMethod() throws Exception {
         User accessor = owner;
@@ -116,7 +126,10 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         recList.add(r3);
         recList.add(r4);
         
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recList), 
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
         File exportedFile = prepareFile(response.getContentAsByteArray());
         
         ShapeFileReader reader = new ShapeFileReader(exportedFile, true);
@@ -136,6 +149,7 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         assertRecord(r4, reader, accessor);
     }
     
+    @SuppressWarnings("deprecation")
     @Test
     public void testExportSingleSurveyMultiCensusMethod() throws Exception {
         User accessor = owner;
@@ -143,7 +157,10 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         recList.add(r1);
         recList.add(r2);
         recList.add(r4);
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recList), 
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
         File exportedFile = prepareFile(response.getContentAsByteArray());
         
         ShapeFileReader reader = new ShapeFileReader(exportedFile, true);
@@ -163,13 +180,17 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         assertRecord(r4, reader, accessor);
     }
     
+    @SuppressWarnings("deprecation")
     private void testExportMultiSurveyMultiCensus(User accessor) throws Exception {      
         List<Record> recList = new LinkedList<Record>();
         recList.add(r1);
         recList.add(r2);
         recList.add(r3);
         recList.add(r4);
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recList), 
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
         File exportedFile = prepareFile(response.getContentAsByteArray());
         
         ShapeFileReader reader = new ShapeFileReader(exportedFile, true);
@@ -207,14 +228,19 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
     }
     
     // just make sure no exceptions are thrown...
+    @SuppressWarnings("deprecation")
     @Test
     public void testNoRecordsToWrite() throws Exception {
         User accessor = owner;
         List<Record> recList = new LinkedList<Record>();
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.SHAPEFILE, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response,
+                                   new ScrollableRecordsList(recList),  
+                                   RecordDownloadFormat.SHAPEFILE, accessor);
     }
     
     // testing the kml code path. Not a very thorough test I know but the KML stuff is tested indirectly
+    @SuppressWarnings("deprecation")
     // through other tests: GeoMapLayerController_GetLayer_Test
     @Test 
     public void testExportSingleRecord_kml() throws Exception {
@@ -222,7 +248,10 @@ public class RecordDownloadWriterTest extends AbstractShapefileTest {
         List<Record> recList = new LinkedList<Record>();
         recList.add(r1);
         
-        RecordDownloadWriter.write(request, response, recList, RecordDownloadFormat.KML, accessor);
+        RecordDownloadWriter.write(getRequestContext().getHibernate(),
+                                   request, response, 
+                                   new ScrollableRecordsList(recList),  
+                                   RecordDownloadFormat.KML, accessor);
         
         JSONObject obj = extractJsonDescription(response);
         Assert.assertNotNull(obj);

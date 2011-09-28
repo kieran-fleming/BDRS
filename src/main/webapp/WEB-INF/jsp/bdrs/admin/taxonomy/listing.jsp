@@ -30,6 +30,21 @@
     <input class="form_action" type="button" value="Add Taxon" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/edit.htm';"/>
 </div>
 
+<div class="atlas_import_container">
+    <p>
+      To import a species or group of species from the ALA, enter a single lsid
+      or list of lsids, separated by commas, in the text area below.
+    </p>
+    <textarea id="guidList" rows="10" cols="300"></textarea>
+    <div class="checkbox_container">
+        <label for="shortProfile">import short profile(s) only</label>
+        <input type="checkbox" id="shortProfile" checked="checked"></input>
+    </div>
+    <div class="textright">
+        <input class="form_action" type="button" value="Import Taxon" onclick="importALAProfile();"/>
+    </div>
+</div>
+
 <script type="text/javascript">
     jQuery(function() {
         bdrs.taxonomy.initListing('#taxonomySearch',
@@ -37,4 +52,14 @@
                                   '#taxonProperties',
                                   '#editTaxon');
     });
+
+    var importALAProfile = function() { 
+        if (jQuery('#guidList').val()) {
+            var answer = confirm("Are you sure? Existing entries imported from ALA will be replaced!")
+            if (answer) {
+                window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/importNewProfiles.htm?guids='+jQuery('#guidList').val()+
+                    (jQuery('#shortProfile').is(':checked') ? '&shortProfile='+jQuery('#shortProfile').val() : '');
+            }
+        }
+    }
 </script>

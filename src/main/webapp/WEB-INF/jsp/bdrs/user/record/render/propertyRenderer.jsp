@@ -94,6 +94,34 @@
                 >
                     <c:out value="${ location.name }"/>
                 </option>
+                <c:if test="<%= valueMap != null && location.getId().toString().equals(valueMap.get(formField.getPrefix()+\"location\")) %>">
+                <script type="text/javascript">
+                    <%-- 
+                      The following snippet sets the initial value for the attributes based
+                      on the location selection. 
+                      
+                      It is ok if the browser does not have javascript enabled because 
+                      the hidden input is only present to support ketchup validation.
+                    --%>
+                    jQuery(window).load(function() {
+                        bdrs.survey.location.updateLocation(${ location.id }, { attributeSelector: '#attributesContainer' });
+                    });
+                </script>
+                </c:if>
+                <c:if test="${ formField.record.location == location }">
+                <script type="text/javascript">
+                    <%-- 
+                      The following snippet sets the initial value for the attributes based
+                      on the location selection. 
+                      
+                      It is ok if the browser does not have javascript enabled because 
+                      the hidden input is only present to support ketchup validation.
+                    --%>
+                    jQuery(window).load(function() {
+                        bdrs.survey.location.updateLocation(${ location.id }, { attributeSelector: '#attributesContainer' });
+                    });
+                </script>
+                </c:if>
             </c:forEach>
         </select>
         <div id="attributesContainer"></div>

@@ -55,13 +55,18 @@
     </tbody>
 </table>
 
+<c:set var="profiledescription" value="" scope="page"></c:set>
+
 <c:forEach items="${ taxon.infoItems }" var="profile">
     <jsp:useBean id="profile" type="au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile"/>
-    <c:if test="${ not empty profile.content }">
+    <c:if test="${ not empty profile.content }"> 
         <div class="fieldguide_profile_item">
-            <h3 class="field_guide_header">
-                <c:out value="${ profile.description }"/>
-            </h3>
+            <c:if test="${ profile.description != profiledescription }">
+                <h3 class="field_guide_header">
+                    <c:out value="${ profile.description }"/>
+                </h3>
+                <c:set var="profiledescription" value="${ profile.description }"></c:set>
+            </c:if>
             <c:choose>
                 <c:when test="<%= profile.isImgType() %>">
                     <a class="left" href="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${ profile.content }">
@@ -69,15 +74,24 @@
                     </a>
                 
                     <cw:getManagedFile uuid="${ profile.content }" var="managedFile"/>
-                    <div class="right textright">
-                        <div>
-                            Credit:&nbsp;
-                            <c:out value="${ managedFile.credit }"/>
-                        </div>
-                        <div>
-                            Permission:&nbsp;
-                            <c:out value="${ managedFile.license }"/>
-                        </div>
+                    <div class="right textright imageProperties">
+                        <c:if test="${ managedFile.credit != null }">
+                            <div>
+                                Credit:&nbsp;
+                                <c:out value="${ managedFile.credit }"/>
+                            </div>
+                        </c:if>
+                        <c:if test="${ managedFile.license != null }">
+                            <div>
+                                Permission:&nbsp;
+                                <c:out value="${ managedFile.license }"/>
+                            </div>
+                        </c:if>
+                        <c:if test="${ managedFile.description != null }">
+                            <div>
+                                Description:&nbsp;${ managedFile.description }
+                            </div>
+                        </c:if>
                     </div>
                     <div class="clear"></div>
                 </c:when>
@@ -100,7 +114,21 @@
                     <div class="clear"></div>
                 </c:when>
                 <c:otherwise>
-                        <p><c:out value="${ profile.content }"/></p>
+                    <p><span class="profileContent 
+                        <c:if test="<%= profile.isScientificNameType() %>">
+                            <c:out value="scientificName"></c:out>
+                        </c:if>
+                        ">
+                    <c:out value="${ profile.content }"/></span>
+                    <c:if test="${ profile.source != null }">
+                        <c:choose>
+                            <c:when test="<%= profile.isTextType() %>">
+                                <br></br>
+                            </c:when>
+                            <c:otherwise><c:out value=", "></c:out></c:otherwise>
+                         </c:choose><span class="profileSource">Source: <c:out value="${ profile.source }"/></span>
+                     </c:if>
+                     </p>
                 </c:otherwise>
             </c:choose>
         </div>

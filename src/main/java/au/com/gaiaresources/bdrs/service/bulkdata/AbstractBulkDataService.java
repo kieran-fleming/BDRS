@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,6 +42,8 @@ import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
+import au.com.gaiaresources.bdrs.model.record.impl.EmptyScrollableRecords;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyService;
@@ -66,6 +67,7 @@ public abstract class AbstractBulkDataService {
     public static final int MAX_OO_ROW_COUNT = 65536;
     public static final int MAX_ROW_COUNT = Math.min(MAX_EXCEL_ROW_COUNT, MAX_OO_ROW_COUNT);
     public static final int PARSE_ERROR_LIMIT = 50;
+    
     public static final String RECORD_SHEET_NAME = "Observations";
     public static final String HELP_SHEET_NAME = "Help";
     public static final String TAXONOMY_SHEET_NAME = "Taxonomy";
@@ -141,17 +143,24 @@ public abstract class AbstractBulkDataService {
 
     public void exportSurveyTemplate(Survey survey, OutputStream outputStream)
             throws IOException {
-        this.exportSurveyRecords(survey, Collections.<Record> emptyList(), outputStream);
+        this.exportSurveyRecords(survey, new EmptyScrollableRecords(), outputStream);
+    }
+    
+    public void exportSurveyRecords(Survey survey, ScrollableRecords scrollableRecords, OutputStream outputStream) throws IOException {
+        this.exportSurveyRecords(survey, scrollableRecords, Long.MAX_VALUE, outputStream);
     }
 
-    public void exportSurveyRecords(Survey survey, List<Record> recordList,
+    public void exportSurveyRecords(Survey survey, ScrollableRecords scrollableRecords, long limit,
             OutputStream outputStream) throws IOException {
-
+        if(limit < 0) {
+            limit = Long.MAX_VALUE;
+        }
+        
         RecordRow rowPrinter = getRecordRow();
         Workbook wb = new HSSFWorkbook();
         if (survey != null) {
             rowPrinter.createCellStyles(wb);
-
+            
             // Be careful not to reorder the sheets. This will break the formulas.
             // First create a placeholder sheet for the observations.
             // Then create the census method sheet and location sheet.
@@ -161,7 +170,8 @@ public abstract class AbstractBulkDataService {
 
             XlsLocationRow locationRow = new XlsLocationRow(
                     bulkDataReadWriteService, survey);
-            locationRow.writeLocationSheet(recordList, wb);
+            locationRow.writeLocationHeader(wb);
+            locationRow.writeSurveyLocations(wb);
 
             int rowIndex = 0;
             // Survey Description
@@ -186,8 +196,20 @@ public abstract class AbstractBulkDataService {
                     headerRow.getLastCellNum() - 1 // last column (0-based)
             ));
 
-            for (Record r : recordList) {
+            Record r;
+            int recordCount = 0;
+            Session sesh = sessionFactory.getCurrentSession();
+            while(scrollableRecords.hasMoreElements() && recordCount < limit) {
+                r = scrollableRecords.nextElement();
+                
+                if(r.getLocation() != null && !survey.getLocations().contains(r.getLocation())) {
+                    locationRow.writeUserLocation(wb, r.getLocation());
+                }
                 rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
+                
+                if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
+                    sesh.clear();
+                }
             }
 
             writeTaxonomySheet(survey, wb, rowPrinter);

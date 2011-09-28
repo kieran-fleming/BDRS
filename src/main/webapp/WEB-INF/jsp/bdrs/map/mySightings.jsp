@@ -123,6 +123,10 @@
     <a id="listToggle" class="left" href="javascript:void(0);">
         Collapse
     </a>
+    <a id="xlsSurveyDownload" class="right" href="javascript:void(0);" onclick="bdrs.downloadXls(this);return false;">
+        Download Survey XLS
+    </a>
+    <span class="right">&nbsp;|&nbsp;</span>
     <a id="xlsDownload" class="right" href="javascript:void(0);" onclick="bdrs.downloadXls(this);return false;">
         Download XLS
     </a>
@@ -173,6 +177,16 @@
         var xlsURL = "${pageContext.request.contextPath}/webservice/record/downloadRecords.htm?";
         xlsURL = xlsURL + form.serialize();
         jQuery("#xlsDownload").data("xlsURL", xlsURL);
+        
+        var limitElem = jQuery("#limit");
+        var origLimit = limitElem.val();
+        limitElem.val("-1");
+        var xlsSurveyURL = "${pageContext.request.contextPath}/webservice/record/downloadRecords.htm?";
+        xlsSurveyURL = xlsSurveyURL + form.serialize();
+        console.log(xlsSurveyURL);
+        jQuery("#xlsSurveyDownload").data("xlsURL", xlsSurveyURL);
+        limitElem.val(origLimit); 
+        
         jQuery.getJSON(url, function(data) {
             var table = jQuery(recordTableSelector);
             var tbody = table.find("tbody");
