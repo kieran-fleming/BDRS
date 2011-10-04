@@ -179,7 +179,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
         ScrollableRecords sr = getMatchingRecordsAsScrollableRecords(facetList, surveyId, 
                                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
                                                                      request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
-                                                                    request.getParameter(SEARCH_QUERY_PARAM_NAME));
+                                                                     request.getParameter(SEARCH_QUERY_PARAM_NAME));
         int recordCount = 0;
         List<Record> rList = new ArrayList<Record>(ScrollableRecords.RECORD_BATCH_SIZE);
         while (sr.hasMoreElements()) {
@@ -192,6 +192,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
                 sesh.clear();
             }
         }
+        KMLUtils.writeRecords(writer, currentUser, contextPath, rList);
         
         response.setContentType(KMLUtils.KML_CONTENT_TYPE);
         writer.write(false, response.getOutputStream());

@@ -9,7 +9,7 @@ exports.Create =  function() {
     jQuery('#record-save').click(function (event) {
         if(bdrs.mobile.validation.isValidForm('#record-form')) {
             bdrs.mobile.pages.record._record();
-            jQuery.mobile.changePage("#review", "slide", false, true);
+            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
         }
     });
     jQuery('#record-save-continue').click(function (event) {
@@ -67,7 +67,7 @@ exports.Create =  function() {
             }
 
             bdrs.mobile.pages.record.markRecordForDelete(record);
-            jQuery.mobile.changePage("#review", "slide", false, true);
+            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
         }
     });
 

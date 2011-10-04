@@ -4,7 +4,7 @@
 exports.Create = function() {
 	jQuery('#add-site-save').click(function (event) {
 		record();
-		jQuery.mobile.changePage("#sites", "slide", false, true);
+		jQuery.mobile.changePage("#sites", jQuery.mobile.defaultPageTransition, false, true);
 	});
 }
 	

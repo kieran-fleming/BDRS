@@ -2,12 +2,14 @@ package au.com.gaiaresources.bdrs.controller.file;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.activation.FileDataSource;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -62,6 +64,25 @@ public class AbstractDownloadFileController extends AbstractController {
         } catch (IllegalArgumentException iae) {
             log.error("Unable to download file : " + fileName, iae);
             throw new HTTPException(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    protected void downloadFile(File file, HttpServletResponse response, String filePrefix, String fileSuffix) throws IOException {
+        downloadFile(file, response, filePrefix, fileSuffix, "application/octet-stream");
+    }
+    
+    protected void downloadFile(File file, HttpServletResponse response, String filePrefix, String fileSuffix, String contentType) throws IOException {
+        response.setContentType(contentType);
+        response.setHeader("Content-Disposition", "attachment;filename="+ filePrefix + "_" + System.currentTimeMillis() + "." + fileSuffix);
+        
+        FileInputStream inStream = null;
+        try {
+            inStream = new FileInputStream(file);
+            IOUtils.copy(inStream, response.getOutputStream());
+        } finally {
+            if (inStream != null) {
+                inStream.close();
+            }
         }
     }
 

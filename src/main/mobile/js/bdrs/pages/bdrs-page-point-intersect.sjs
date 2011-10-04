@@ -22,7 +22,7 @@ exports.Create =  function() {
     jQuery("#point-intersect-save").click(function() {
         if(bdrs.mobile.validation.isValidForm('#point-intersect-form')) {
             bdrs.mobile.pages.point_intersect._savePoint();
-            jQuery.mobile.changePage("#review", "slide", false, true);
+            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
         }
     });
     
@@ -40,7 +40,7 @@ exports.Create =  function() {
     
     jQuery("#pi-delete-substrate").click(function() {
         bdrs.mobile.pages.record.markRecordForDelete(exports._point_data.substrateRecord);
-        jQuery.mobile.changePage("#review", "slide", false, true);
+        jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
     });
     
     jQuery('#pi-gps').click(function (event) {

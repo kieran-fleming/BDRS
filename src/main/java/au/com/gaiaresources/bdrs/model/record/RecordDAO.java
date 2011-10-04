@@ -17,6 +17,7 @@ import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
+import au.com.gaiaresources.bdrs.model.record.impl.RecordFilter;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -136,6 +137,15 @@ public interface RecordDAO extends TransactionDAO {
 	ScrollableRecords getScrollableRecords(int userPk, int groupPk, int surveyPk,
                 int taxonGroupPk, Date startDate, Date endDate, String species,
                 int pageNumber, int entriesPerPage);
+	
+	/**
+	 * Stopping the madness of too many args when filtering for records. Encapsulate all
+	 * future querying in the RecordFilter object
+	 * 
+	 * @param recFilter
+	 * @return
+	 */
+	ScrollableRecords getScrollableRecords(RecordFilter recFilter);
 	
 	/**
 	 * Returns a list of dates when a record was made for the specified
@@ -324,4 +334,12 @@ public interface RecordDAO extends TransactionDAO {
      * @return
      */
     public List<Record> getRecords(int count, int offset);
+
+    /**
+     * Returns the record associated with the specified client id (such as
+     * the mobile record primary key)
+     * @param clientID the client identifier
+     * @return the record associated with the specified client ID.
+     */
+    public Record getRecordByClientID(String clientID);
 }

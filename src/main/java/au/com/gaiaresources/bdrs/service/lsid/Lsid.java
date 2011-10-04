@@ -2,6 +2,8 @@ package au.com.gaiaresources.bdrs.service.lsid;
 
 import java.util.Properties;
 
+import org.hibernate.Hibernate;
+
 import au.com.gaiaresources.bdrs.db.Persistent;
 
 public class Lsid {
@@ -16,7 +18,10 @@ public class Lsid {
 
     public Lsid(Properties lsidProperties, Persistent persistent) {
         this.authority = lsidProperties.getProperty(LSID_AUTH_KEY, "localhost");
-        this.namespace = persistent.getClass().getSimpleName();
+        // it's possible for getClass to return the class of the hibernate proxy
+        // object. By using Hibernate.getClass() we are guaranteed to get the
+        // underlying class returned.
+        this.namespace = Hibernate.getClass(persistent).getSimpleName();
         this.objectId = persistent.getId();
         this.version = null;
     }

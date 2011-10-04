@@ -12,14 +12,20 @@
 <cw:getContent key="user/recordSightingMapDescription" />
 <div id="record_base_map_hover_tip">&nbsp;</div>
 
-<div class="left">
-    <a id="mapToggle" class="left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
-        Collapse
-    </a>
-</div>
-
 <div class="right">
-    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#base_map', bdrs.map.baseMap)">Enlarge Map</a>
+	<span class="hideMapHide">
+		<a id=mapScrollToggle class="text-left" href="javascript:void(0);">
+	        Zoom Scroll [<span id="scrollableChecker">x</span>]
+	    </a>
+	    <span>&nbsp; |&nbsp;</span>
+	    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map (esc)', 'review_map_fullscreen', 'review_map', '#base_map', bdrs.map.baseMap)">
+	    	<span>Enlarge Map</span>
+	    </a>
+	    <span>&nbsp; |&nbsp;</span>
+	 </span>
+     <a id="mapToggle" class="text-left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
+        Hide Map
+    </a>
 </div>
 
 <div class="clear"></div>
@@ -154,6 +160,25 @@
         } else {
             // default center map
             bdrs.map.centerMap(bdrs.map.baseMap, null, 3);
+        }
+        
+		// Map Scroll Zoom Toggling
+        jQuery('#mapScrollToggle').toggle(function(){
+        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text(' ');
+        },
+        function(){
+        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text('x');
+        });
+
+        // Check for Map Scroll Zoom Cookie
+        if (bdrs.util.cookie.read('cookie.map.zoomscroll') === "false") {
+        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text(' ');
+        } else {
+        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text('x');
         }
     });
 </script>

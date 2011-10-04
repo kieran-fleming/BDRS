@@ -32,7 +32,7 @@ public class ManagedFileService {
     }
     
     public ManagedFile saveManagedFile(Integer pk, String description, String credit, String license, MultipartFile file) throws IOException {
-        ManagedFile mf = (pk == 0 || pk == null) ? new ManagedFile() : managedFileDAO.getManagedFile(pk);
+        ManagedFile mf = (pk == null || pk == 0) ? new ManagedFile() : managedFileDAO.getManagedFile(pk);
         return saveManagedFile(mf, description, credit, license, file);
     }
     

@@ -16,7 +16,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -33,12 +32,21 @@ import org.springframework.web.servlet.ModelAndView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
+import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -60,6 +68,9 @@ public class ApplicationService extends AbstractController {
     
     @Autowired
     private RecordDAO recordDAO;
+    
+    @Autowired
+    private MetadataDAO metadataDAO;
     
     @Autowired
     private CensusMethodDAO censusMethodDAO;
@@ -307,8 +318,8 @@ public class ApplicationService extends AbstractController {
     private void syncRecord(List<Map<String, Object>> syncResponseList, Object jsonRecordBean, User user) 
         throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
         
-        String id = getJSONString(jsonRecordBean, "id", null);
-        if(id == null) {
+        String clientID = getJSONString(jsonRecordBean, "id", null);
+        if(clientID == null) {
             throw new NullPointerException();
         }
         
@@ -328,7 +339,16 @@ public class ApplicationService extends AbstractController {
         Integer taxonPk = getJSONInteger(jsonRecordBean, "taxon_id", null);
         String scientificName = getJSONString(jsonRecordBean, "scientificName", "");
         
-        Record rec = recordPk < 1 ? new Record() : recordDAO.getRecord(recordPk);
+        Record rec;
+        if(recordPk < 1) {
+            rec = recordDAO.getRecordByClientID(clientID);
+            if(rec == null) {
+                rec = new Record();
+            }
+        } else {
+            rec = recordDAO.getRecord(recordPk);
+        }
+        
         rec.setUser(user);
         rec.setPoint(locationService.createPoint(latitude, longitude));
         rec.setAccuracyInMeters(accuracy);
@@ -361,7 +381,7 @@ public class ApplicationService extends AbstractController {
         rec = recordDAO.saveRecord(rec);
         
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("id", id);
+        map.put("id", clientID);
         map.put("server_id", rec.getId().intValue());
         map.put("klass", Record.class.getSimpleName());
         
@@ -372,6 +392,12 @@ public class ApplicationService extends AbstractController {
             AttributeValue recAttr = syncRecordAttribute(syncResponseList, jsonRecAttrBean);
             rec.getAttributes().add(recAttr);
         }
+        
+        // Save the client ID.
+        Metadata md = recordDAO.getRecordMetadataForKey(rec, Metadata.RECORD_CLIENT_ID_KEY);
+        md.setValue(clientID);
+        md = metadataDAO.save(md);
+        rec.getMetadata().add(md);
         
         recordDAO.saveRecord(rec);
     }

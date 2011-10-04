@@ -28,7 +28,7 @@ exports.Show = function() {
 		
 		this.handler = function(event) {
 			bdrs.mobile.setParameter('species', id);
-			jQuery.mobile.changePage("#species", "slide", false, true);
+			jQuery.mobile.changePage("#species", jQuery.mobile.defaultPageTransition, false, true);
 		}
 		return this;
 	};

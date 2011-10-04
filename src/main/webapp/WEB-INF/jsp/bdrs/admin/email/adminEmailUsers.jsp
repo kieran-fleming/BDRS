@@ -72,6 +72,10 @@
 
 <script type="text/javascript">
     jQuery(document).ready(function() {
+		// set the popups to only open on command, not page open
+        $('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
+        $('#popupDialog').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
+		
         // add the variable selector to myHtmlSettings before adding them to the markup editor
     	bdrs.admin.myHtmlSettings.markupSet.push(
     			{separator:'---------------' }
@@ -103,12 +107,8 @@
         $("#submitEmail").click(function() {
             sendEmail();
         });
-   });
+    });
 
-    // set the popups to only open on command, not page open
-    $('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
-    $('#popupDialog').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
-    
     changeTemplate = function() {
         // set the subject to the template name less the "email/" prefix
         var selTemplate = bdrs.admin.adminEditContent.getKey();

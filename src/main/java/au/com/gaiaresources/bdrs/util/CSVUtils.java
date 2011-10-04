@@ -33,11 +33,11 @@ public class CSVUtils {
         return split;
     }
     
-    public static String toCSVString(String[] values) {
-        return CSVUtils.toCSVString(values, CSVParser.DEFAULT_SEPARATOR, CSVParser.DEFAULT_QUOTE_CHARACTER);
+    public static String toCSVString(String[] values, boolean sortValues) {
+        return CSVUtils.toCSVString(values, CSVParser.DEFAULT_SEPARATOR, CSVParser.DEFAULT_QUOTE_CHARACTER, sortValues);
     }
     
-    public static String toCSVString(String[] values, char separator, char quotechar) {
+    public static String toCSVString(String[] values, char separator, char quotechar, boolean sortValues) {
         String stringValue;
         if(values == null) {
                 stringValue = "";
@@ -45,7 +45,9 @@ public class CSVUtils {
             try {
                 String[] copy = new String[values.length];
                 System.arraycopy(values, 0, copy, 0, values.length);
-                Arrays.sort(copy);
+                if (sortValues) {
+                    Arrays.sort(copy);
+                }
                 
                 StringWriter writer = new StringWriter();
                 CSVWriter csvWriter = new CSVWriter(writer, separator, quotechar);

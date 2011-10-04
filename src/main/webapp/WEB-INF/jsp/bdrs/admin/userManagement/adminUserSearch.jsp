@@ -46,64 +46,64 @@
 
 <script type="text/javascript">
 
-	var actionLinkFormatter = function(cellvalue, options, rowObject) {
-	    var links = new Array();
-	    links.push('<a style="color:blue" href="${pageContext.request.contextPath}/admin/profile.htm?USER_ID=' + rowObject.id + '">Edit</a>');
-	    return links.join(" | ");
-	};
-    
-    jQuery("#userList").jqGrid({
-            //url: jQuery("#${widgetId}").data("url"),
-            url: '${pageContext.request.contextPath}/webservice/user/searchUsers.htm',
-            datatype: "json",
-            mtype: "GET",
-            colNames:['Login','Given Name','Surname', 'Email Address', 'Action'],
-            colModel:[
-                {name:'userName',index:'name', width:55},
-                {name:'firstName',index:'firstName', width:90},
-                {name:'lastName', index:'lastName'},
-                {name:'emailAddress',index:'emailAddress', width:100},
-                {name:'action', width:25, sortable:false, formatter:actionLinkFormatter}
-            ],
-            autowidth: true,
-            jsonReader : { repeatitems: false },
-            rowNum:10,
-            rowList:[10,20,30],
-            pager: '#pager2',
-            sortname: 'name',
-            viewrecords: true,
-            sortorder: "asc",
-            caption:"User Listing"
-    });
-
-    jQuery("#userList").jqGrid('navGrid','#pager2',{edit:false,add:false,del:false});
-    var userSearchFormParams = jQuery("#userSearchForm").serialize();
-    jQuery("#downloadXLS").data("xlsURL", "${pageContext.request.contextPath}/webservice/user/downloadUsers.htm?"+userSearchFormParams);
-
-    var timeoutHnd;
+    jQuery(function() {
+		var actionLinkFormatter = function(cellvalue, options, rowObject) {
+	        var links = new Array();
+	        links.push('<a style="color:blue" href="${pageContext.request.contextPath}/admin/profile.htm?USER_ID=' + rowObject.id + '">Edit</a>');
+	        return links.join(" | ");
+	    };
+	    
+	    jQuery("#userList").jqGrid({
+	            //url: jQuery("#${widgetId}").data("url"),
+	            url: '${pageContext.request.contextPath}/webservice/user/searchUsers.htm',
+	            datatype: "json",
+	            mtype: "GET",
+	            colNames:['Login','Given Name','Surname', 'Email Address', 'Action'],
+	            colModel:[
+	                {name:'userName',index:'name', width:55},
+	                {name:'firstName',index:'firstName', width:90},
+	                {name:'lastName', index:'lastName'},
+	                {name:'emailAddress',index:'emailAddress', width:100},
+	                {name:'action', width:25, sortable:false, formatter:actionLinkFormatter}
+	            ],
+	            autowidth: true,
+	            jsonReader : { repeatitems: false },
+	            rowNum:10,
+	            rowList:[10,20,30],
+	            pager: '#pager2',
+	            sortname: 'name',
+	            viewrecords: true,
+	            sortorder: "asc",
+	            caption:"User Listing"
+	    });
+	
+	    jQuery("#userList").jqGrid('navGrid','#pager2',{edit:false,add:false,del:false});
+	    var userSearchFormParams = jQuery("#userSearchForm").serialize();
+	    jQuery("#downloadXLS").data("xlsURL", "${pageContext.request.contextPath}/webservice/user/downloadUsers.htm?"+userSearchFormParams);
+	});
+	
+	var timeoutHnd;
     var flAuto = false;
-
     
     function doSearch(ev){
-    	if(!flAuto)
-    		return;
-    	if(timeoutHnd)
-    		clearTimeout(timeoutHnd)
-    	timeoutHnd = setTimeout(gridReload,500)
+        if(!flAuto)
+            return;
+        if(timeoutHnd)
+            clearTimeout(timeoutHnd)
+        timeoutHnd = setTimeout(gridReload,500)
     }
 
     function gridReload(){
-    	var userSearchFormParams = jQuery("#userSearchForm").serialize();
-    	console.log(userSearchFormParams);
-    	jQuery("#downloadXLS").data("xlsURL", "${pageContext.request.contextPath}/webservice/user/downloadUsers.htm?"+userSearchFormParams);
-    	jQuery("#userList").jqGrid('setGridParam',{
-        	url:"${pageContext.request.contextPath}/webservice/user/searchUsers.htm?"+userSearchFormParams,
-        	page:1}).trigger("reloadGrid");
+        var userSearchFormParams = jQuery("#userSearchForm").serialize();
+        jQuery("#downloadXLS").data("xlsURL", "${pageContext.request.contextPath}/webservice/user/downloadUsers.htm?"+userSearchFormParams);
+        jQuery("#userList").jqGrid('setGridParam',{
+            url:"${pageContext.request.contextPath}/webservice/user/searchUsers.htm?"+userSearchFormParams,
+            page:1}).trigger("reloadGrid");
     }
     
     function enableAutosubmit(state){
-    	flAuto = state;
-    	jQuery("#submitButton").attr("disabled",state);
+        flAuto = state;
+        jQuery("#submitButton").attr("disabled",state);
     }
 
     // Download XLS
@@ -115,4 +115,5 @@
             return false;
         }
     };
+    
 </script>

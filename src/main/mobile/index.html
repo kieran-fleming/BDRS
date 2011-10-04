@@ -15,17 +15,29 @@
     <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.ui.timepicker.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.ui.autocomplete.html.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        jQuery(document).bind("mobileinit", function() {
+            jQuery.extend(jQuery.mobile , {
+                defaultPageTransition: 'none',
+                defaultDialogTransition: 'none'
+            });
+        });
+    </script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0b2.min.js"></script>
+
+
     <script type="text/javascript" charset="utf-8" src="js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.jsonp-2.1.4.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/oni-apollo.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.sparkline.min.js"></script>
-    
+
 	<!-- phonegap -->
 	<script type="application/javascript" src="js/bdrs/bdrs-mobile-phonegap.js"></script>
 	<script type="text/javascript">
         document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
     </script>
+
+    <!-- Platform specific -->
     <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.6.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/phonegap-testplugin.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/barcodescanner.js"></script>
@@ -46,7 +58,6 @@
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-queue.js"></script>  
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-persistence.js"></script>
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-pages.js"></script>
-    <script type="application/javascript" src="js/bdrs/bdrs-mobile-template.js"></script>
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-dispatcher.js"></script>
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-geolocation.js"></script>
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-validation.js"></script>
@@ -61,6 +72,9 @@
         
         var sjsInit = function() {
 	        require.path = "./js/bdrs/";
+
+            bdrs.template = require("bdrs-mobile-template");
+
 	        bdrs.mobile.init = require("bdrs-mobile-init");
 	        bdrs.mobile.init.start();
 	        

@@ -464,12 +464,23 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
                 speciesScientificNameSearch, limit, false);
     }
     
-    private Query getRecordQuery(int userId, int groupId, int surveyId,
-                                        int taxonGroupId, Date startDate, Date endDate,
-                                        String speciesScientificNameSearch, int limit, boolean fetch) {
+    private Query getRecordQuery(RecordFilter recFilter) {
+        
+        Date startDate = recFilter.getStartDate();
+        Date endDate = recFilter.getEndDate();
+        boolean fetch = recFilter.isFetch();
+        int userId = recFilter.getUserPk();
+        int surveyId = recFilter.getSurveyPk();
+        int groupId = recFilter.getGroupPk();
+        int taxonGroupId = recFilter.getTaxonGroupPk();
+        String speciesScientificNameSearch = recFilter.getSpeciesSearch();
+        Integer limit = recFilter.getEntriesPerPage();
+        RecordVisibility vis = recFilter.getRecordVisibility();
+        Boolean taxonomic = recFilter.isTaxonomic();
+        
         Calendar cal = new GregorianCalendar();
 
-        if(startDate == null) {
+        if (startDate == null) {
             startDate = new Date(1l);
         }
 
@@ -480,9 +491,10 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         cal.set(Calendar.MILLISECOND, 0);
         startDate = cal.getTime();
 
-        if(endDate == null) {
+        if (endDate == null) {
             endDate = new Date(System.currentTimeMillis());
         }
+        
         cal.clear();
         cal.setTime(endDate);
         cal.set(Calendar.HOUR_OF_DAY, 23);
@@ -492,7 +504,8 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         endDate = cal.getTime();
 
         Map<String, Object> paramMap = new HashMap<String, Object>();
-        StringBuilder builder = new StringBuilder("select distinct r from Record r ");
+        StringBuilder builder = new StringBuilder(
+                "select distinct r from Record r ");
         if (fetch) {
             builder.append("left join fetch r.attributes at left join fetch at.attribute left join fetch r.location left join fetch r.user left join fetch r.survey left join fetch r.species ");
         }
@@ -502,38 +515,49 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         paramMap.put("startTime", startDate.getTime());
         paramMap.put("endTime", endDate.getTime());
 
-        if(userId > 0) {
+        if (userId > 0) {
             builder.append(" and r.user.id = :userId");
             paramMap.put("userId", userId);
         }
-        if(surveyId > 0) {
+        if (surveyId > 0) {
             builder.append(" and r.survey.id = :surveyId");
             paramMap.put("surveyId", surveyId);
         }
-        if(groupId > 0) {
+        if (groupId > 0) {
             // Cascade classes and groups
             builder.append(" and r.user.id in (select u.id from Group c, Group g, User u where g.id in (select id from c.groups) and u.id in (select id from g.users) and (c.id = :groupId or g.id = :groupId))");
             paramMap.put("groupId", groupId);
         }
-        if(taxonGroupId > 0) {
+        if (taxonGroupId > 0) {
             builder.append(" and r.species.id in (select s1.id from IndicatorSpecies s1 where s1.taxonGroup.id = :taxonGroupId)");
             paramMap.put("taxonGroupId", taxonGroupId);
         }
-        if(speciesScientificNameSearch != null && !speciesScientificNameSearch.isEmpty()) {
-            builder.append(" and (UPPER(r.species.commonName) like UPPER('%" + StringEscapeUtils.escapeSql(speciesScientificNameSearch) +
-                    "%') or UPPER(r.species.scientificName) like UPPER ('%" + StringEscapeUtils.escapeSql(speciesScientificNameSearch) + "%'))");
+        if (speciesScientificNameSearch != null
+                && !speciesScientificNameSearch.isEmpty()) {
+            builder.append(" and (UPPER(r.species.commonName) like UPPER('%"
+                    + StringEscapeUtils.escapeSql(speciesScientificNameSearch)
+                    + "%') or UPPER(r.species.scientificName) like UPPER ('%"
+                    + StringEscapeUtils.escapeSql(speciesScientificNameSearch)
+                    + "%'))");
+        }
+        if (vis != null) {
+            builder.append(" and r.recordVisibility = :recordVisibility");
+            paramMap.put("recordVisibility", vis);
+        }
+        if (taxonomic != null) {
+            builder.append(" and r.species is not null");
         }
         builder.append(" order by r.when desc");
 
         Query q = getSession().createQuery(builder.toString());
-        for(Map.Entry<String,Object> entry: paramMap.entrySet()) {
+        for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
             q.setParameter(entry.getKey(), entry.getValue());
         }
-        
-        if(limit > 0) {
+
+        if (limit != null) {
             q.setMaxResults(limit);
         }
-        
+
         return q;
     }
     
@@ -543,7 +567,17 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
             String species) {
         // Fetch is always false for scrollabel records because fetch true
         // causes the memory allocation to keep on increasing as you scroll.
-        Query q = getRecordQuery(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, -1, false);
+        
+        RecordFilter filter = new RecordFilter();
+        filter.setUserPk(userPk);
+        filter.setGroupPk(groupPk);
+        filter.setSurveyPk(surveyPk);
+        filter.setTaxonGroupPk(taxonGroupPk);
+        filter.setStartDate(startDate);
+        filter.setEndDate(endDate);
+        filter.setSpeciesSearch(species);
+        
+        Query q = getRecordQuery(filter);
         return new ScrollableRecordsImpl(q);
     }
     
@@ -553,8 +587,30 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
             String species, int pageNumber, int entriesPerPage) {
         // Fetch is always false for scrollabel records because fetch true
         // causes the memory allocation to keep on increasing as you scroll.
-        Query q = getRecordQuery(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, -1, false);
+        
+        RecordFilter filter = new RecordFilter();
+        filter.setUserPk(userPk);
+        filter.setGroupPk(groupPk);
+        filter.setSurveyPk(surveyPk);
+        filter.setTaxonGroupPk(taxonGroupPk);
+        filter.setStartDate(startDate);
+        filter.setEndDate(endDate);
+        filter.setSpeciesSearch(species);
+        
+        Query q = getRecordQuery(filter);
         return new ScrollableRecordsImpl(q, pageNumber, entriesPerPage);
+    }
+    
+    @Override
+    public ScrollableRecords getScrollableRecords(RecordFilter recFilter) {
+        Query q = getRecordQuery(recFilter);
+        Integer pageNumber = recFilter.getPageNumber();
+        Integer limit = recFilter.getEntriesPerPage();
+        if (pageNumber != null && limit != null) {
+            return new ScrollableRecordsImpl(q, pageNumber, limit);    
+        } else {
+            return new ScrollableRecordsImpl(q);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -562,7 +618,20 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     public List<Record> getRecord(int userId, int groupId, int surveyId,
             int taxonGroupId, Date startDate, Date endDate,
             String speciesScientificNameSearch, int limit, boolean fetch) {
-        Query q = getRecordQuery(userId, groupId, surveyId, taxonGroupId, startDate, endDate, speciesScientificNameSearch, limit, fetch);
+        
+        RecordFilter filter = new RecordFilter();
+        filter.setUserPk(userId);
+        filter.setGroupPk(groupId);
+        filter.setSurveyPk(surveyId);
+        filter.setTaxonGroupPk(taxonGroupId);
+        filter.setStartDate(startDate);
+        filter.setEndDate(endDate);
+        filter.setSpeciesSearch(speciesScientificNameSearch);
+        filter.setFetch(fetch);
+        filter.setEntriesPerPage(limit);
+        
+        Query q = getRecordQuery(filter);
+        
         return q.list();
     }
 
@@ -939,6 +1008,22 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     	q.setFirstResult(offset);
     	return q.list();
     }
+
+    @Override
+    public Record getRecordByClientID(String clientID) {
+        if(clientID == null) {
+            throw new NullPointerException();
+        }
+        
+        Session sesh = super.getSessionFactory().getCurrentSession();
+        Query q = sesh.createQuery("select distinct r from Record r left join r.metadata md where md.key = :key and md.value = :value");
+        q.setParameter("key", Metadata.RECORD_CLIENT_ID_KEY);
+        q.setParameter("value", clientID);
+        q.setMaxResults(1);
+        return (Record)q.uniqueResult();
+    }
+    
+    
 }
 
 

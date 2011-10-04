@@ -51,14 +51,7 @@
             <link rel="stylesheet" href="${pageContext.request.contextPath}/css/${cssFile}" type="text/css"/>
         </c:forEach>
 		
-        <c:if test="${ theme != null }">
-            <c:forEach items="${ theme.cssFiles }" var="cssFile">
-	            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ cssFile }" type="text/css">
-	        </c:forEach>
-	        <c:forEach items="${ theme.jsFiles }" var="jsFile">
-	            <script type="text/javascript" src="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ jsFile }"></script>
-	        </c:forEach>
-        </c:if>
+
         
         <link rel="stylesheet" href="${pageContext.request.contextPath}/js/colorpicker/css/colorpicker.css" type="text/css"/>
         <script src="${pageContext.request.contextPath}/js/colorpicker/js/colorpicker.js" type="text/javascript"></script>
@@ -85,6 +78,16 @@
             <script src="${pageContext.request.contextPath}/js/BdrsCluster.js" type="text/javascript"></script>
         </c:if>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs.js"></script>
+        
+        <c:if test="${ theme != null }">
+            <c:forEach items="${ theme.cssFiles }" var="cssFile">
+	            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ cssFile }" type="text/css">
+	        </c:forEach>
+	        <c:forEach items="${ theme.jsFiles }" var="jsFile">
+	            <script type="text/javascript" src="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ jsFile }"></script>
+	        </c:forEach>
+        </c:if>
+        
         <script type="text/javascript"> 
             jQuery(function () {
                 bdrs.contextPath = '${pageContext.request.contextPath}'; 

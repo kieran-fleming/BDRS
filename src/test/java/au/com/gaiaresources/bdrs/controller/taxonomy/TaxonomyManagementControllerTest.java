@@ -18,6 +18,7 @@ import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.hibernate.type.MetaType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -803,27 +804,32 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         return new MockMultipartHttpServletRequest();
     }
     
+    @Ignore
     @Test
     public void testImportOneShortProfile() throws Exception {
         testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", true);
     }
     
+    @Ignore
     @Test
     public void testImportOneFullProfileOverrideShort() throws Exception {
         testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", false);
     }
     
+    @Ignore
     @Test
     public void testImportOneFullProfile() throws Exception {
         testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", false);
     }
     
+    @Ignore
     @Test
     public void testImportMultipleShortProfile() throws Exception {
         testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
                         "urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", true);
     }
     
+    @Ignore
     @Test
     public void testImportMultipleFullProfile() throws Exception {
         testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
@@ -852,11 +858,13 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         }
     }
 
+    @Ignore
     @Test
     public void testImportFromEdit() throws Exception {
         testImportProfileToTaxon(importSpecies.getId(), null);
     }
     
+    @Ignore
     @Test
     public void testImportFromEditWithGuid() throws Exception {
         testImportProfileToTaxon(importSpecies.getId(), 

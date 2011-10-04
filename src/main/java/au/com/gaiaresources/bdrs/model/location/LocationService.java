@@ -18,4 +18,6 @@ public interface LocationService {
     public Geometry createGeometryFromWKT(String wktString);
     
     public Geometry convertToMultiGeom(Geometry geom);
+    
+    public double truncate(double x);
 }

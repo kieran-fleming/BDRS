@@ -4,6 +4,7 @@
 <form id="record_filter_form" method="get" action="${pageContext.request.contextPath}/map/addRecordBaseMapLayer.htm" onsubmit="bdrs.map.addRecordLayerHandler('#record_filter_form', '#record_map_layers', '#record_base_map_hover_tip');return false;">
     <h2>View Records on a Map</h2>
     <div class="input_container">
+    
         <p>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam pharetra
             eleifend lectus non luctus. Fusce est massa, vestibulum id dignissim

@@ -18,7 +18,7 @@ exports.Show = function() {
         
         this.handler = function(event) {
         	bdrs.mobile.setParameter('censusMethodId', methodId);
-			jQuery.mobile.changePage("#record", "slide", false, true);
+			jQuery.mobile.changePage("#record", jQuery.mobile.defaultPageTransition, false, true);
         }
         return this;
 	};

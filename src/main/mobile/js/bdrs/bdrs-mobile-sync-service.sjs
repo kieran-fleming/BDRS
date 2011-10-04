@@ -1,4 +1,5 @@
-
+// 30 Seconds
+exports.UPLOAD_TIMEOUT = 30000;
 exports._syncListeners = [];
 exports._lastSync = null;
 
@@ -102,23 +103,23 @@ exports.synchronize  = function() {
             recJSON.taxon_id = species.server_id();
             recJSON.scientificName = species.scientificName();
         }
-		
+        
         // Record Attributes
         var attributeValues;
         waitfor(attributeValues) {
             rec.attributeValues().prefetch('attribute').list(resume);
         }
-		
+        
         var attributeValueArray = [];
         for(var j=0; j<attributeValues.length; j++) {
-		
+        
             var recAttr = attributeValues[j];
             recAttrLookup[recAttr.id] = recAttr;
             
             var attr = recAttr.attribute();
 
             var recAttrJSON = {};
-			
+            
             recAttrJSON.id = recAttr.id;
             recAttrJSON.server_id =  recAttr.server_id();
             recAttrJSON.attribute_id = attr.server_id();
@@ -146,108 +147,115 @@ exports.synchronize  = function() {
     
     bdrs.mobile.Debug("Uploading to the Server:");
     bdrs.mobile.Debug("uploadData : " + JSON.stringify(uploadData));
-	
-	if (bdrs.phonegap.isPhoneGap()) {
-		
-		jQuery.ajax({
-			url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
-			type: "POST",
-			data: {
-				ident: bdrs.mobile.User.ident(),
-				syncData: JSON.stringify(uploadData),
-				inFrame: false
-			},
-			success: function(json) {
-				bdrs.mobile.syncService._processSyncResponse(json, idLookup);
-			},
-			error: function(response) {
-				bdrs.mobile.Debug("sync error");
-				bdrs.mobile.syncService._processSyncResponse(response, idLookup);
-			}
-		});
-	
-	} else {
-	
-		// Insert an iframe into the body    
-		var containerId = new Date().getTime().toString();
-		var syncContainer;
-		waitfor(syncContainer) {
-			bdrs.template.renderOnlyCallback('clientSyncContainer', {
-				containerId: containerId
-			}, resume);
-		}
-		jQuery("body").append(syncContainer);
-		
-		// Insert the form into the iframe
-		var clientSyncContent;
-		waitfor(clientSyncContent) {
-			bdrs.template.renderOnlyCallback('clientSyncContent', {
-				url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
-				ident: bdrs.mobile.User.ident(),
-				syncData: JSON.stringify(uploadData)
-			}, resume);
-		}
+    
+    var receiveMessage = null;
+    if (bdrs.phonegap.isPhoneGap()) {
+        waitfor {
+            waitfor(receiveMessage) {
+                jQuery.ajax({
+                    url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
+                    type: "POST",
+                    data: {
+                        ident: bdrs.mobile.User.ident(),
+                        syncData: JSON.stringify(uploadData),
+                        inFrame: false
+                    },
+                    success: resume,
+                    error: resume
+                });
+            }
+        } or {
+            hold(exports.UPLOAD_TIMEOUT);
+            bdrs.mobile.Error("Upload Timed Out. No response after "+exports.UPLOAD_TIMEOUT+" ms");
+        }
+    } else {
+    
+        // Insert an iframe into the body    
+        var containerId = new Date().getTime().toString();
+        var syncContainer;
+        waitfor(syncContainer) {
+            bdrs.template.renderOnlyCallback('clientSyncContainer', {
+                containerId: containerId
+            }, resume);
+        }
+        jQuery("body").append(syncContainer);
+        
+        // Insert the form into the iframe
+        var clientSyncContent;
+        waitfor(clientSyncContent) {
+            bdrs.template.renderOnlyCallback('clientSyncContent', {
+                url: bdrs.mobile.User.server_url() + "/webservice/application/clientSync.htm",
+                ident: bdrs.mobile.User.ident(),
+                syncData: JSON.stringify(uploadData)
+            }, resume);
+        }
 
-		var iframeSelector = "#"+containerId+" > iframe";
-		jQuery(iframeSelector).contents().find("body").append(clientSyncContent);
-		
-		// Submit the form and wait for the response    
-		var receiveMessage;
-		var tempEventListener;
-		waitfor(receiveMessage) {
-			tempEventListener = resume;
-			window.addEventListener('message', resume, false);
-			clientSyncContent.submit();
-		}
-		finally {
-			// Clean up the event listener
-			window.removeEventListener('message', tempEventListener, false);
-			delete tempEventListener;
-			// Clean up the iframe
-			syncContainer.remove();
-		}
-		
-		bdrs.mobile.Debug("Received Server Response:");
-		bdrs.mobile.Debug(receiveMessage.data);
-		
-		var response = jQuery.parseJSON(receiveMessage.data);
-				
-		bdrs.mobile.syncService._processSyncResponse(response, idLookup);
-	}
+        var iframeSelector = "#"+containerId+" > iframe";
+        jQuery(iframeSelector).contents().find("body").append(clientSyncContent);
+        
+        // Submit the form and wait for the response    
+        var tempEventListener;
+        waitfor {
+            var receiveMessage;
+            waitfor(receiveMessage) {
+                tempEventListener = resume;
+                window.addEventListener('message', resume, false);
+                clientSyncContent.submit();
+            }
+            
+            bdrs.mobile.Debug("Received Server Response:");
+
+        } or {
+            hold(exports.UPLOAD_TIMEOUT);
+            bdrs.mobile.Error("Upload Timed Out. No response after "+exports.UPLOAD_TIMEOUT+" ms");
+        } finally {
+            // Clean up the event listener
+            window.removeEventListener('message', tempEventListener, false);
+            delete tempEventListener;
+            // Clean up the iframe
+            syncContainer.remove();
+        }
+    }
+
+    if(receiveMessage !== null && receiveMessage.data !== undefined) {
+        bdrs.mobile.Debug(receiveMessage.data);
+        var response = jQuery.parseJSON(receiveMessage.data);
+        bdrs.mobile.syncService._processSyncResponse(response, idLookup);
+    }
 };
 
 exports._processSyncResponse = function(response, idLookup) {
-	var status = response.status;
-	if(status === 200) {
-	
-		var uploadTime = new Date();
-		var syncResult = response[status].sync_result;
-		for(var i=0; i<syncResult.length; i++) {
-			var result = syncResult[i];
-			var instance = idLookup[result.klass][result.id];
-			instance.server_id(result.server_id);
-			if(instance.uploadedAt !== undefined) {
-				instance.uploadedAt(uploadTime);
-			}
-		}
-		
-		persistence.flush();
+    var status = response.status;
+    if(status === 200) {
+    
+        var uploadTime = new Date();
+        var syncResult = response[status].sync_result;
+        for(var i=0; i<syncResult.length; i++) {
+            var result = syncResult[i];
+            var instance = idLookup[result.klass][result.id];
+            instance.server_id(result.server_id);
+            if(instance.uploadedAt !== undefined) {
+                instance.uploadedAt(uploadTime);
+            }
+        }
+        
+        persistence.flush();
 
-		bdrs.mobile.syncService._lastSync = uploadTime;
-		bdrs.mobile.syncService._fireSyncEvent({_type: 'sync'});
-		
-		bdrs.mobile.Debug("sync complete");
-	} else {
-		// Something bad this way comes
-		var type = response[status].type;
-		var message = response[status].message;
-		bdrs.mobile.Error("Synchronization Error: Status Code - "+status);
-		if(type === undefined) {
-			bdrs.mobile.Error(message);
-		} else {
-			bdrs.mobile.Error([type, message].join(" - "));
-		}
-	}
+        bdrs.mobile.syncService._lastSync = uploadTime;
+        bdrs.mobile.syncService._fireSyncEvent({_type: 'sync'});
+        
+        bdrs.mobile.Debug("sync complete");
+    } else {
+        // Something bad this way comes
+        var type = response[status].type;
+        var message = response[status].message;
+        bdrs.mobile.Error("Synchronization Error: Status Code - "+status);
+        if(type === undefined) {
+            bdrs.mobile.Error(message);
+        } else {
+            bdrs.mobile.Error([type, message].join(" - "));
+        }
+    }
 };
 
 exports._dateToJSON = function(date, timeStr) {

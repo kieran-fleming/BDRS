@@ -77,30 +77,32 @@
 	   The taxon profile provides additional data about this taxon such as
 	   distinctive markings, identifying characteristics, habitat and biology. 
 	</p>
-	<div class="textright buttonpanel">
-       <input type="button" class="form_action" value="Retrieve Profile from ALA" onclick="importALAProfile();"/>
-       <input type="button" class="form_action" value="Add Profile" onclick="bdrs.taxonomy.addNewProfile('#newProfileIndex', '#taxonProfileTable');"/>
+	<div id="editTaxonomyContainer">
+		<div class="textright buttonpanel">
+			<a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#editTaxonomyContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
+	       <input type="button" class="form_action" value="Retrieve Profile from ALA" onclick="importALAProfile();"/>
+	       <input type="button" class="form_action" value="Add Profile" onclick="bdrs.taxonomy.addNewProfile('#newProfileIndex', '#taxonProfileTable');"/>
+	    </div>
+	    <table id="taxonProfileTable" class="datatable textcenter">
+	        <thead>
+	            <tr>
+	                <th>&nbsp;</th>
+	                <th>Type</th>
+	                <th>Database Name</th>
+	                <th>Title</th>
+	                <th>Content</th>
+	                <th>Delete</th>
+	            </tr>
+	        </thead>
+	        <tbody>
+	            <tiles:insertDefinition name="profileTableBody">
+		            <tiles:putAttribute name="taxonProfileList" value="${ taxonProfileList }"/>
+		            <tiles:putAttribute name="newProfileIndex" value="${ newProfileIndex }"/>
+		        </tiles:insertDefinition>
+	        </tbody>
+	    </table>
+	   <input id="newProfileIndex" type="hidden" value="<%= taxonProfileList.size() + 1 %>"/>
     </div>
-    <table id="taxonProfileTable" class="datatable textcenter">
-        <thead>
-            <tr>
-                <th>&nbsp;</th>
-                <th>Type</th>
-                <th>Database Name</th>
-                <th>Title</th>
-                <th>Content</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tiles:insertDefinition name="profileTableBody">
-	            <tiles:putAttribute name="taxonProfileList" value="${ taxonProfileList }"/>
-	            <tiles:putAttribute name="newProfileIndex" value="${ newProfileIndex }"/>
-	        </tiles:insertDefinition>
-        </tbody>
-    </table>
-   <input id="newProfileIndex" type="hidden" value="<%= taxonProfileList.size() + 1 %>"/>
-    
     <h3>Group Attributes</h3>
     <p>
         Group attributes are the custom attributes of this taxon as specified

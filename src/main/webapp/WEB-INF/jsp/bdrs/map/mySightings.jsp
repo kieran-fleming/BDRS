@@ -89,10 +89,6 @@
     </sec:authorize>
 	
 	<div>
-	    <a id="mapToggle" class="left" href="javascript:void(0);">
-	        Collapse
-	    </a>
-	    <span>&nbsp;|&nbsp;<span/>
 	    <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'KML', '<%= context.getUser().getId() %>');">
 	        Download KML for my records
 	    </a>
@@ -104,7 +100,20 @@
 </div>
 
 <div class="right">
-    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map', 'review_map_fullscreen', 'review_map', '#record_base_map', bdrs.map.baseMap)">Enlarge Map</a>
+	<span class="hideMapHide">
+		<a id=mapScrollToggle class="text-left" href="javascript:void(0);">
+	        Zoom Scroll [<span id="scrollableChecker">x</span>]
+	    </a>
+	    <span>&nbsp; |&nbsp;</span>
+	    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map (esc)', 'review_map_fullscreen', 'review_map', '#record_base_map', bdrs.map.baseMap)">
+	    	<span>Enlarge Map</span>
+	    </a>
+	   	<span>&nbsp;|&nbsp;</span>
+   	</span>
+	<a id="mapToggle" class="text-left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
+		Hide Map
+	</a>
+	    
 </div>
 
 <div class="clear"></div>
@@ -120,9 +129,6 @@
 
 <h3>List</h3>
 <div class="clear">
-    <a id="listToggle" class="left" href="javascript:void(0);">
-        Collapse
-    </a>
     <a id="xlsSurveyDownload" class="right" href="javascript:void(0);" onclick="bdrs.downloadXls(this);return false;">
         Download Survey XLS
     </a>
@@ -249,11 +255,11 @@
         });
         return false;
     };
-
+    
     jQuery(window).load(function() {
         bdrs.map.initBaseMap('record_base_map', { geocode: { selector: '#geocode' }});
         bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
-        bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePoupUpHandler);
+        bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePopUpHandler);
 
         <c:if test="${not empty recordDateList}">
             jQuery('[name=date_start]').change(function(event) {
@@ -274,30 +280,61 @@
 			bdrs.map.clearPopups(bdrs.map.baseMap);
             bdrs.map.clearAllVectorLayers(bdrs.map.baseMap);
 
+            if (bdrs.openlayers === undefined) {
+                bdrs.openlayers = {};
+            }
+            if (bdrs.openlayers.mysightings === undefined ) {
+            	bdrs.openlayers.mysightings = {};
+			}
+            if (bdrs.openlayers.mysightings.stylemap === undefined ) {
+            	bdrs.openlayers.mysightings.stylemap = {};
+			}
+
             // User Records
             var params = {
                 placemark_color: '15E015',
                 user: '<%= context.getUser().getId() %>',
-                layer_name: 'My Records' 
+                layer_name: 'My Records',
+                styleMaps: {
+                	"My Records": bdrs.openlayers.mysightings.stylemap 
+                }
             };
             bdrs.map.addRecordLayerHandler('#record_filter_form', null, params);
 
             <sec:authorize ifAnyGranted="ROLE_ADMIN">
+	            if (bdrs.openlayers.allsightings === undefined ) {
+	            	bdrs.openlayers.allsightings = {};
+				}
+	            if (bdrs.openlayers.allsightings.stylemap === undefined ) {
+	            	bdrs.openlayers.allsightings.stylemap = {};
+				}
                 // All records
-                bdrs.map.addRecordLayerHandler('#record_filter_form', null);
+                var allRecordsParams = {styleMaps: {"All Records" : bdrs.openlayers.allsightings.stylemap}};
+                bdrs.map.addRecordLayerHandler('#record_filter_form', null, allRecordsParams);
             </sec:authorize>
             
             bdrs.populateList('#record_filter_form', '#recordTable');
             return false;
-        });        
-
-        // Map Toggling
-        jQuery("#mapToggle").click(function() {
-            jQuery(".map_wrapper").slideToggle(function() {
-                var canSee = jQuery(".map_wrapper").css('display') === 'none';
-                jQuery("#mapToggle").text(canSee ? "Expand" : "Collapse");
-            });
         });
+        
+		// Map Scroll Zoom Toggling
+        jQuery('#mapScrollToggle').toggle(function(){
+        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text(' ');
+        },
+        function(){
+        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text('x');
+        });
+
+        // Check for Map Scroll Zoom Cookie
+        if (bdrs.util.cookie.read('cookie.map.zoomscroll') === "false") {
+        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text(' ');
+        } else {
+        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
+        	jQuery('#scrollableChecker').text('x');
+        }
 
         // List Toggling
         jQuery("#listToggle").click(function() {

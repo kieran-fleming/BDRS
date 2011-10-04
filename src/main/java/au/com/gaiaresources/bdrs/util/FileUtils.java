@@ -1,11 +1,15 @@
 package au.com.gaiaresources.bdrs.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -60,6 +64,110 @@ public class FileUtils {
                 }
             } catch(IOException ioe) {
                 log.error(ioe.getMessage(), ioe);
+            }
+        }
+    }
+    
+    /**
+     * Creates a temp directory with the desired prefix.
+     * 
+     * @param dirPrefix
+     * @return
+     * @throws IOException
+     */
+    public static File createTempDirectory(String dirPrefix) throws IOException {
+        if (dirPrefix == null) {
+            throw new IllegalArgumentException("String, dirPrefix, cannot be null");
+        }
+        final File temp;
+        temp = File.createTempFile(dirPrefix, Long.toString(System.nanoTime()));
+        if(!(temp.delete())) {
+            throw new IOException("Could not delete temp file to create temp directory: " + temp.getAbsolutePath());
+        }
+        if(!(temp.mkdir())) {
+            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+        }
+        return (temp);
+    } 
+    
+    /**
+     * creates a new file in the desired directory.
+     * 
+     * @param directory
+     * @param filename
+     * @return
+     */
+    public static File createFileInDir(File directory, String filename) {
+        if (directory == null) {
+            throw new IllegalArgumentException("File, directory, cannot be null");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("String, filename, cannot be null");
+        }
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException("File, directory, must be a directory");
+        }
+        
+        File f = new File(getFilename(directory, filename));
+        return f;
+    }
+    
+    /**
+     * creates a filename by combining a filename with a path.
+     * 
+     * @param directory
+     * @param filename
+     * @return
+     */
+    public static String getFilename(File directory, String filename) {
+        if (directory == null) {
+            throw new IllegalArgumentException("File, directory, cannot be null");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("String, filename, cannot be null");
+        }
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException("File, directory, must be a directory");
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(directory.getAbsolutePath());
+        sb.append("/");
+        sb.append(filename);
+        return sb.toString();
+    }
+    
+    public static File getFileFromDir(File directory, String filename) throws IOException {
+        if (directory == null) {
+            throw new IllegalArgumentException("File, directory, cannot be null");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("String, filename, cannot be null");
+        }
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException("File, directory, must be a directory");
+        }
+        
+        File f = new File(getFilename(directory, filename));
+        if (!f.exists()) {
+            throw new IOException("File should exist: " + filename);
+        }
+        return f;
+    }
+    
+    public static void writeBytesToFile(byte[] content, File file) throws IOException {
+        InputStream iStream = null; 
+        OutputStream oStream = null; 
+        try {
+            iStream = new ByteArrayInputStream(content);
+            oStream = new FileOutputStream(file);
+            IOUtils.copy(iStream, oStream);
+        } finally {
+            if (iStream != null) {
+                iStream.close();
+            }
+            if (oStream != null) {
+                oStream.close();
             }
         }
     }

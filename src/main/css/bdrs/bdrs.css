@@ -469,7 +469,7 @@ legend {
     font-style: italic;
 }
 
-.error {
+.error{
 	color: red;
 }
 
@@ -731,6 +731,19 @@ input[disabled] {
 
 .mapLogoMin {
 	display:none;
+}
+
+.maximimizedMapLink {
+	margin: 10px;
+	border-radius: 0.5em;
+	 -webkit-border-radius: 0.5em;
+    -khtml-border-radius: 0.5em;
+    -moz-border-radius: 0.5em;
+	background: white;
+	padding-left: 4px;
+	padding-right: 4px;
+	color: #000000;
+	font-weight: bold;
 }
 
 /************************************/

@@ -22,6 +22,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
+import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
@@ -83,6 +84,51 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
         }
     }
 
+    /*
+     * Does this attribute value have a valid value to return to the user?
+     */
+    @Transient 
+    public boolean isPopulated() {
+        if (attribute == null) {
+            throw new IllegalStateException("Cannot tell if this AttributeValue is populated without");
+        }
+
+        // Nothing to be done for String, Text, String with Valid Values,
+        // Image or File
+        AttributeType type = attribute.getType();
+        
+        switch (type) {
+        case INTEGER:
+        case INTEGER_WITH_RANGE:
+        case DECIMAL:
+            return numericValue != null;
+        
+        case DATE:
+            return dateValue != null;
+            
+        case STRING:
+        case STRING_AUTOCOMPLETE:
+        case TEXT:
+        case BARCODE:
+        case TIME:
+        case HTML:
+        case HTML_COMMENT:
+        case HTML_HORIZONTAL_RULE:  
+        case STRING_WITH_VALID_VALUES:
+        case SINGLE_CHECKBOX:
+        case MULTI_CHECKBOX:
+        case MULTI_SELECT:
+            return StringUtils.hasLength(stringValue);
+            
+        case IMAGE:
+        case FILE:
+            // don't want to return an empty file name or a 'not recorded' file name
+            return StringUtils.hasLength(stringValue) && !NOT_RECORDED.equals(stringValue);
+            
+            default:
+                throw new IllegalStateException("Unhandled type : " + type);
+        }
+    }
 
     /**
      * Get the attribute definition that this value is for.
@@ -187,7 +233,7 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
     
     @Transient
     public void setMultiCheckboxValue(String[] values) {
-        setStringValue(CSVUtils.toCSVString(values));
+        setStringValue(CSVUtils.toCSVString(values, true));
     }
     
     @Transient

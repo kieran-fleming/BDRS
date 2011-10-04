@@ -10,7 +10,7 @@ exports.Show = function() {
 		
 		this.handler = function(event) {
 			bdrs.mobile.setParameter('taxonGroup', id);
-			jQuery.mobile.changePage("#species-list", "slide", false, true);
+			jQuery.mobile.changePage("#species-list", jQuery.mobile.defaultPageTransition, false, true);
 		}
 		return this;
 	};

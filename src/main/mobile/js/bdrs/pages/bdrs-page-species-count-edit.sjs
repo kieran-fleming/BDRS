@@ -8,13 +8,13 @@ exports.Create = function() {
     jQuery("#species-count-edit-save-button").click(function() {
         bdrs.mobile.pages.species_count_edit._saveSpeciesCount(
                 bdrs.mobile.form.inputsToMap("#species-count-edit"), false);
-        jQuery.mobile.changePage("#species-count-list", "slide", false, true);
+        jQuery.mobile.changePage("#species-count-list", jQuery.mobile.defaultPageTransition, false, true);
     });
 
     jQuery("#species-count-edit-reset-button").click(function() {
         bdrs.mobile.pages.species_count_edit._saveSpeciesCount(
                 bdrs.mobile.form.inputsToMap("#species-count-edit"), true);
-        jQuery.mobile.changePage("#species-count-list", "slide", false, true);
+        jQuery.mobile.changePage("#species-count-list", jQuery.mobile.defaultPageTransition, false, true);
     });
 };
     

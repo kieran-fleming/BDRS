@@ -16,7 +16,7 @@ exports.Show = function() {
         
         this.handler = function(event) {
         	bdrs.mobile.setParameter('siteId', siteId);
-			jQuery.mobile.changePage("#site", "slide", false, true);
+			jQuery.mobile.changePage("#site", jQuery.mobile.defaultPageTransition, false, true);
         }
         return this;
 	};

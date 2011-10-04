@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -18,6 +19,20 @@ import org.apache.log4j.Logger;
 public class ZipUtils {
     public static final Logger log = Logger.getLogger(ZipUtils.class);
 
+    /**
+     * Convenience method to decompress files. No need to create ZipFile object.
+     * Will throw exceptions if file is not a valid zip file.
+     * 
+     * @param fileToDecompress
+     * @param targetDir
+     * @throws IOException 
+     * @throws ZipException 
+     */
+    public static void decompressToDir(File fileToDecompress, File targetDir) throws ZipException, IOException {
+        ZipFile zipFile = new ZipFile(fileToDecompress);
+        decompressToDir(zipFile, targetDir);
+    }
+    
     /**
      * Unzips the zip file to the specified directory.
      * 

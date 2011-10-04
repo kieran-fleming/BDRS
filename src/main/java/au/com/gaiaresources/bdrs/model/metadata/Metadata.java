@@ -95,6 +95,8 @@ public class Metadata extends PortalPersistentImpl {
      */
     public static final String RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE = "Record.%s";
     
+    public static final String RECORD_CLIENT_ID_KEY = "Record.ClientID";
+    
     /**
      * The primary key of a user's default user location.
      */

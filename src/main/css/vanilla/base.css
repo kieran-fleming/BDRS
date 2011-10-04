@@ -171,6 +171,8 @@ input[type=submit].form_action:active,input[type=button].form_action:active {
     padding-right: 2px;
     float: left;
     list-style: none;
+    position: relative;
+    z-index: 100;
 }
 
 #horiz-menu a:link,
@@ -394,12 +396,20 @@ ul.menu ul ul ul ul li a{
     height: 275px;
 }
 
-#survey_carousel .cj_slideshow_caption_wrapper {
+#survey_carousel .cj_slideshow_caption_wrapper,
+#survey_carousel .cj_slideshow_caption {
 	background-color: transparent;
 	color: #333333;
 	display: block;
+	clear: both;
+	float: left;
 	font-weight: normal;
-	margin-top: 190px;
+	/*margin-top: 190px;*/
+	padding: 1em;
+}
+#survey_carousel img {
+	display: block;
+	clear: both;
 }
 
 #statistics h3 {

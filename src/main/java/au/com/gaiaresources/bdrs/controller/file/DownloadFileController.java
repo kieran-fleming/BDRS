@@ -15,10 +15,13 @@ import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 
 @Controller
 public class DownloadFileController extends AbstractDownloadFileController {
+    
+    public static final String FILE_DOWNLOAD_URL = "/files/download.htm";
+    
     @Autowired
     private ManagedFileDAO managedFileDAO;
     
-    @RequestMapping(value = "/files/download.htm", method = RequestMethod.GET)
+    @RequestMapping(value = FILE_DOWNLOAD_URL, method = RequestMethod.GET)
     public ModelAndView downloadFile(@RequestParam("className") String className,
                                      @RequestParam("id") Integer id,
                                      @RequestParam("fileName") String fileName,

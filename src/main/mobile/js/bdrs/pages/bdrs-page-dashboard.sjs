@@ -11,7 +11,8 @@ exports.Create = function() {
 
 exports.Show = function() {
     if(!bdrs.mobile.pages.clock_warning.isShown()) {
-        jQuery.mobile.changePage("#clock-warning", "slidedown");
+        var transition = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
+        jQuery.mobile.changePage("#clock-warning", transition);
     }
             
     jQuery('.dashboard-status').empty();

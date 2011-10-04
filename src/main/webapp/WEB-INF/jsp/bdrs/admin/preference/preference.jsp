@@ -16,27 +16,29 @@
             <p>
                 <c:out value="${ category.description }"/>
             </p>
-            
-            <div class="textright buttonpanel">
-                <input type="button" class="form_action" value="Add <c:out value="${ category.displayName }"/> Preference" onclick="bdrs.preferences.addPreferenceRow( ${ category.id }, '#index', '#category_${ category.id }' );"/>
+            <div id="preferences${ category.id }Container">
+	            <div class="textright buttonpanel">
+	            	<a id="maximiseLink${ category.id }" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink${ category.id }', '#preferences${ category.id }Container', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
+	                <input type="button" class="form_action" value="Add <c:out value="${ category.displayName }"/> Preference" onclick="bdrs.preferences.addPreferenceRow( ${ category.id }, '#index', '#category_${ category.id }' );"/>
+	            </div>
+	            <table id="category_${ category.id }" class="datatable textcenter">
+	                <thead>
+	                    <tr>
+	                        <th>Description</th>
+	                        <th>Key</th>
+	                        <th>Value</th>
+	                        <th>Delete</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    <c:forEach var="pref" items="${ preferenceList }">
+	                        <tiles:insertDefinition name="preferenceRow">
+	                            <tiles:putAttribute name="pref" value="${ pref }"/>
+	                        </tiles:insertDefinition>
+	                    </c:forEach>
+	                </tbody>
+	            </table>
             </div>
-            <table id="category_${ category.id }" class="datatable textcenter">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Key</th>
-                        <th>Value</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach var="pref" items="${ preferenceList }">
-                        <tiles:insertDefinition name="preferenceRow">
-                            <tiles:putAttribute name="pref" value="${ pref }"/>
-                        </tiles:insertDefinition>
-                    </c:forEach>
-                </tbody>
-            </table>
         </div>
     </c:forEach>
     

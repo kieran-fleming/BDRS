@@ -50,7 +50,7 @@ exports.Show = function() {
 				bdrs.mobile.setParameter('censusMethodId', id);
 				bdrs.mobile.Debug('set current census method to : ' + id);
 				// at this stage, we have set the site, the census method, and we should be able to head off to the recording form.
-				jQuery.mobile.changePage("#record", "slide", false, true);
+				jQuery.mobile.changePage("#record", jQuery.mobile.defaultPageTransition, false, true);
 			}
 			return this;
 		};

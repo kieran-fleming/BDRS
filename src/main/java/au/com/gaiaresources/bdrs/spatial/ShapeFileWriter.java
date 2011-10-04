@@ -42,6 +42,7 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
+import au.com.gaiaresources.bdrs.util.FileUtils;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -200,7 +201,7 @@ public class ShapeFileWriter {
             // is a record export
             baseFilename = "record_export";
         }
-        File tempdir = createTempDirectory();
+        File tempdir = FileUtils.createTempDirectory("createShp");
         
         
         ShapeFileWriterContext contextForDescriptions = null;
@@ -247,7 +248,7 @@ public class ShapeFileWriter {
             SimpleFeatureType myFeatureType = context.getBuilder().buildFeatureType();
         
             String filename = getShpFilename(hasRecords, shpType);
-            File shp = createFileInDir(tempdir, filename + ".shp");    
+            File shp = FileUtils.createFileInDir(tempdir, filename + ".shp");    
             
             ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 
@@ -498,14 +499,14 @@ public class ShapeFileWriter {
         
         for (ShapefileType shpType : shapefileTypeSet) {
             String filename = getShpFilename(hasRecords, shpType);
-            filesToCompress.add(getFileFromDir(tempdir, filename + ".shp"));
-            filesToCompress.add(getFileFromDir(tempdir, filename + ".prj"));
-            filesToCompress.add(getFileFromDir(tempdir, filename + ".shx"));
-            filesToCompress.add(getFileFromDir(tempdir, filename + ".dbf"));            
+            filesToCompress.add(FileUtils.getFileFromDir(tempdir, filename + ".shp"));
+            filesToCompress.add(FileUtils.getFileFromDir(tempdir, filename + ".prj"));
+            filesToCompress.add(FileUtils.getFileFromDir(tempdir, filename + ".shx"));
+            filesToCompress.add(FileUtils.getFileFromDir(tempdir, filename + ".dbf"));            
         }        
-        filesToCompress.add(getFileFromDir(tempdir, FIELD_DESCRIPTION_FILE));
-        filesToCompress.add(getFileFromDir(tempdir, HELPER_FILE));
-        filesToCompress.add(getFileFromDir(tempdir, METADATA_FILE));
+        filesToCompress.add(FileUtils.getFileFromDir(tempdir, FIELD_DESCRIPTION_FILE));
+        filesToCompress.add(FileUtils.getFileFromDir(tempdir, HELPER_FILE));
+        filesToCompress.add(FileUtils.getFileFromDir(tempdir, METADATA_FILE));
         
         ZipUtils.compress(filesToCompress, outfile);
         
@@ -705,27 +706,6 @@ public class ShapeFileWriter {
         }
     }
     
-    private static File createFileInDir(File directory, String filename) {
-        File f = new File(getFilename(directory, filename));
-        return f;
-    }
-    
-    private static String getFilename(File directory, String filename) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(directory.getAbsolutePath());
-        sb.append("/");
-        sb.append(filename);
-        return sb.toString();
-    }
-    
-    private static File getFileFromDir(File directory, String filename) throws IOException {
-        File f = new File(getFilename(directory, filename));
-        if (!f.exists()) {
-            throw new IOException("File should exist: " + filename);
-        }
-        return f;
-    }
-    
     private static String sanitizeString(String str) {
         // Make the survey name a safe filename.
         StringBuilder sb = new StringBuilder();
@@ -735,23 +715,5 @@ public class ShapeFileWriter {
             }
         }
         return sb.toString();
-    }
-    
-    /**
-     * Used to create a temp directory for us to unzip our shape file
-     * 
-     * @return
-     * @throws IOException
-     */
-    private static File createTempDirectory() throws IOException {
-        final File temp;
-        temp = File.createTempFile("createShp", Long.toString(System.nanoTime()));
-        if(!(temp.delete())) {
-            throw new IOException("Could not delete temp file to create temp directory: " + temp.getAbsolutePath());
-        }
-        if(!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return (temp);
     }
 }

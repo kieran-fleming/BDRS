@@ -7,8 +7,7 @@ exports.Create =  function() {
     var handler = function() {
         bdrs.mobile.pages.configure_dashboard._saveFeatureVisibility(
             bdrs.mobile.form.inputsToMap("#configure-dashboard"));
-
-        jQuery.mobile.changePage("#settings", "slide", false, true);
+        jQuery.mobile.changePage("#settings", jQuery.mobile.defaultPageTransition, false, true);
     };
 
     jQuery(bdrs.mobile.pages.configure_dashboard.SAVE_BUTTON_SELECTOR).click(handler);

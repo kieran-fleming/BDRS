@@ -290,7 +290,8 @@ exports._restore = function() {
 
         // Show the error dialog
         bdrs.mobile.setParameter(bdrs.mobile.pages.trash_restore_error.INVALID_RECORD_KEY, invalid_record);
-        jQuery.mobile.changePage("#trash-restore-error", "slidedown");
+        var transition = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
+        jQuery.mobile.changePage("#trash-restore-error", transition);
     }
 };
 

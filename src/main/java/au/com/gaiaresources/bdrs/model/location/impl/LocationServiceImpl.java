@@ -55,7 +55,14 @@ public class LocationServiceImpl implements LocationService {
                 truncate(latitude)));
     }
 
-    private double truncate(double x) {
+    /**
+     * Used for truncating lat / lon decimal places.
+     * 
+     * @param x
+     * @return
+     */
+    @Override
+    public double truncate(double x) {
         return x > 0 ? (Math.floor(x * TRUNCATE_FACTOR)) / TRUNCATE_FACTOR : (Math.ceil(x * TRUNCATE_FACTOR)) / TRUNCATE_FACTOR;
     }
 

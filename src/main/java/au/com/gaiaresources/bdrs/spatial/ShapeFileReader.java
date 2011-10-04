@@ -35,6 +35,7 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.util.FileUtils;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -259,9 +260,8 @@ public class ShapeFileReader {
      * @throws IOException
      */
     private File unzipShapeFileToTempDir(File zippedShapefile) throws IOException {
-        File targetDir = createTempDirectory();
-        ZipFile zipFile = new ZipFile(zippedShapefile);
-        ZipUtils.decompressToDir(zipFile, targetDir);
+        File targetDir = FileUtils.createTempDirectory("unzipShapeFile");
+        ZipUtils.decompressToDir(zippedShapefile, targetDir);
         return targetDir;
     }
     
@@ -512,24 +512,5 @@ public class ShapeFileReader {
         }
         return result;
     }
-    
-    /**
-     * Used to create a temp directory for us to unzip our shape file
-     * 
-     * @return
-     * @throws IOException
-     */
-    private File createTempDirectory() throws IOException {
-        final File temp;
-        temp = File.createTempFile("unzipShapeFile", Long.toString(System.nanoTime()));
-        if(!(temp.delete())) {
-            throw new IOException("Could not delete temp file to create temp directory: " + temp.getAbsolutePath());
-        }
-        if(!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return (temp);
-    }
-
 }
 

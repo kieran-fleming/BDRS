@@ -34,6 +34,7 @@ import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.util.CollectionUtils;
 
@@ -251,5 +252,16 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
             return null;
         }
         return md.getValue();
+    }
+    
+    @Transient 
+    public void setGuid(MetadataDAO metaDAO, String guid) {
+        Metadata md = getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
+        if (md == null) {
+            md = new Metadata();
+            md.setKey(Metadata.TAXON_SOURCE_DATA_ID);
+        }
+        md.setValue(guid);
+        metaDAO.save(md);
     }
 }

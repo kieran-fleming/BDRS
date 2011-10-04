@@ -48,15 +48,16 @@ import au.com.gaiaresources.bdrs.util.StringUtils;
 @Component
 public class AtlasService {
 
-    private static final String SPECIES_PROFILE_SOURCE = "ALA",
-                                SPECIES_PROFILE_IMAGE = "Image",
-                                SPECIES_PROFILE_THUMB = "Thumbnail",
-                                SPECIES_PROFILE_THUMB_40 = "40x40 Thumbnail",
-                                SPECIES_PROFILE_HABITAT = "Habitat",
-                                SPECIES_PROFILE_COMMON_NAME = "Common Name",
-                                SPECIES_PROFILE_SYNONYM = "Synonym",
-                                SPECIES_PROFILE_CONSERVATION_STATUS = "Conservation Status",
-                                SPECIES_PROFILE_IDENTIFIER = "Identifier";
+    public static final String SPECIES_PROFILE_SOURCE = "ALA";
+    public static final String SPECIES_PROFILE_IMAGE = "Image";
+    public static final String SPECIES_PROFILE_THUMB = "Thumbnail";
+    public static final String SPECIES_PROFILE_THUMB_40 = "40x40 Thumbnail";
+    public static final String SPECIES_PROFILE_HABITAT = "Habitat";
+    public static final String SPECIES_PROFILE_COMMON_NAME = "Common Name";
+	public static final String SPECIES_PROFILE_SYNONYM = "Synonym";
+	public static final String SPECIES_PROFILE_CONSERVATION_STATUS = "Conservation Status";
+	public static final String SPECIES_PROFILE_IDENTIFIER = "Identifier";
+	public static final String SPECIES_PROFILE_IMPORT_LIFE = "Life";
     
     Logger log = Logger.getLogger(getClass());
     @Autowired
@@ -598,24 +599,36 @@ public class AtlasService {
      */
     private IndicatorSpecies setClassification(IndicatorSpecies taxon,
             String family, String kingdom) {
+    	
+    	String groupName = SPECIES_PROFILE_IMPORT_LIFE;
+        Preference preference = preferenceDAO.getPreferenceByKey("ala.species.group.by");
+        if (preference != null && preference.getValue() != null) {
+			if (preference.getValue().equalsIgnoreCase("kingdom") && 
+	        	kingdom != null && 
+	        	!kingdom.isEmpty() &&
+	        	!kingdom.equalsIgnoreCase("null")) {
+    	   	    groupName = kingdom;
+        	} else if (preference.getValue().equalsIgnoreCase("family") && 
+	        	family != null && 
+    	    	!family.isEmpty() &&
+        		!family.equalsIgnoreCase("null")) {
+                	groupName = family;
+        	}
+        }
+    	
+        if (kingdom != null && !kingdom.isEmpty() && !kingdom.equalsIgnoreCase("null")) {
+            taxon = createTaxonMetadata(taxon, Metadata.TAXON_KINGDOM, kingdom);
+        }
         if (family != null && !family.isEmpty() && !family.equalsIgnoreCase("null")) {
-            TaxonGroup g = taxaDAO.getTaxonGroup(family);
-            if (g == null) {
-                g = taxaDAO.createTaxonGroup(family, false, false, false, false, false, true);
-            }
-            taxon.setTaxonGroup(g);
-            // TODO: should metadata value be set to familyGuid instead of family?
-            taxon = createTaxonMetadata(taxon, Metadata.TAXON_FAMILY, family);
-        } else {
-            TaxonGroup g = taxaDAO.getTaxonGroup("Other");
-            if (g == null) {
-                g = taxaDAO.createTaxonGroup("Other", false, false, false, false, false, true);
-            }
-            taxon.setTaxonGroup(g);
+        	taxon = createTaxonMetadata(taxon, Metadata.TAXON_FAMILY, family);
         }
         
-        if (kingdom != null) {
-            taxon = createTaxonMetadata(taxon, Metadata.TAXON_KINGDOM, kingdom);
+        if (taxon.getTaxonGroup() == null) {
+        	TaxonGroup g = taxaDAO.getTaxonGroup(groupName);
+            if (g == null) {
+                g = taxaDAO.createTaxonGroup(groupName, false, false, false, false, false, true);
+            }
+            taxon.setTaxonGroup(g);            
         }
         
         return taxon;

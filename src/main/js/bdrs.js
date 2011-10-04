@@ -335,6 +335,43 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
 };
 
 /**
+ * 
+ */
+bdrs.map.scrollZoom = function(scrollZoomEnabled, map, noCookie) {
+		var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
+		if (scrollZoomEnabled) {
+			controls[0].enableZoomWheel();
+		} else {
+			controls[0].disableZoomWheel();
+		}
+		if (!noCookie) {
+			bdrs.util.cookie.create('cookie.map.zoomscroll', scrollZoomEnabled, 1000);
+		}
+		return scrollZoomEnabled;
+};
+
+/**
+ * Toggles map zoom scroll
+ * 
+ * @param	toggleSelector
+ * 				The selector of the element that triggers the toggle.
+ * @param	spanCheckSelector
+ * 				The selector that for visualizing the state of the toggle.
+ * @param	map
+ * 				The map that needs to be zoom scroll toggled.
+ */
+bdrs.map.scrollToggle = function(toggleSelector, spanCheckSelector, map) {
+	jQuery(toggleSelector).toggle(function(){
+    	jQuery(spanCheckSelector).text(' ');
+    	bdrs.map.scrollZoom(false, map);
+    },
+    function(){
+    	jQuery(spanCheckSelector).text('x');
+    	bdrs.map.scrollZoom(true, map);
+    });
+};
+
+/**
  * Handler function that adds a KML layer to the map via an AJAX request.
  *
  * @param formIdSelector
@@ -372,6 +409,12 @@ bdrs.map.addRecordLayerHandler = function(formIdSelector, mapLayersSelectSelecto
             })
         })
     });
+    
+    //set styleMap from themeOverride if one exists
+    if (params.styleMaps) {
+    	recordLayer.styleMap = new OpenLayers.StyleMap(params.styleMaps[recordLayer.name]);
+    }
+    
     recordLayer.events.register('loadend', recordLayer, function(event){
         var layerOptElem = jQuery('option[id="' + recordLayer.id + '"]');
         if (layerOptElem.length > 0) {
@@ -647,7 +690,7 @@ bdrs.map.addSelectHandler = function(map, layers){
 // map - the map javascript object
 bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map){	
     var content = jQuery(contentSelector);
-    var trigger = jQuery(triggerSelector);
+    var trigger = jQuery(triggerSelector + " span");
     if (content.hasClass("maximise")) {
         // maximise the map!
         content.unwrap();
@@ -666,6 +709,15 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
 	            left: null,
 	            right: null
 	        });	
+		}
+		
+		jQuery(document).unbind('keyup');
+		jQuery(trigger).removeClass("maximimizedMapLink");
+		// Set zoom scroll based on cookie
+		if (bdrs.util.cookie.read('cookie.map.zoomscroll') === "false") {
+			bdrs.map.scrollZoom(false, map);
+		} else {
+			bdrs.map.scrollZoom(true, map);
 		}
     }
     else {
@@ -688,6 +740,7 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
         trigger.css("top", "1px");
         trigger.css("right", "3px");
         trigger.css("zIndex", "3100");
+        jQuery(trigger).addClass("maximimizedMapLink");
         jQuery(".mapLogoMin").removeClass("mapLogoMin").addClass("mapLogoMax");
 		
 		if (bdrs.isIE7()) {
@@ -699,6 +752,16 @@ bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel,
 	            right: 0
 	        });
 		}
+		
+		//add escape listener
+		jQuery(document).keyup(function(key){
+			console.log(key.keyCode);
+			if (key.keyCode === 27) {
+				bdrs.map.maximiseMap(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map);
+			}
+		});
+
+		bdrs.map.scrollZoom(true, map, true);
     }
 };
 
@@ -744,7 +807,12 @@ bdrs.map.clearAllVectorLayers = function(map){
 bdrs.map.collapseMap = function(mapWrapper, mapToggle) {
     mapWrapper.slideToggle(function() {
         var canSee = mapWrapper.css('display') === 'none';
-        mapToggle.text(canSee ? "Expand" : "Collapse");
+        mapToggle.text(canSee ? "Show Map" : "Hide Map");
+        if(canSee) {
+            jQuery('.hideMapHide').hide();
+        } else {
+        	jQuery('.hideMapHide').show();
+        }
     });
 };
 
@@ -838,18 +906,27 @@ bdrs.map.downloadRecordsForActiveLayers = function(map, format) {
 	}
 };
 
+if (bdrs.openlayers === undefined){
+bdrs.openlayers = {};
+}
+
+if (bdrs.openlayers.positionlayer === undefined){
+bdrs.openlayers.positionlayer = {};
+}
+
+bdrs.openlayers.positionlayer.stylemap = {
+	'strokeWidth': 2,
+    'strokeOpacity': 1,
+    'strokeColor': '#EE9900',
+    'fillColor': '#EE9900',
+    'fillOpacity': 0.6,
+    'pointRadius': 4
+};
+
+
 bdrs.map.addPositionLayer = function(layerName){
     var layer = new OpenLayers.Layer.Vector(layerName, {
-        styleMap: new OpenLayers.StyleMap({
-            'strokeWidth': 2,
-            'strokeOpacity': 1,
-            'strokeColor': '#EE9900',
-            
-            'fillColor': '#EE9900',
-            'fillOpacity': 0.6,
-            
-            'pointRadius': 4
-        })
+        styleMap: new OpenLayers.StyleMap(bdrs.openlayers.positionlayer.stylemap)
     });
     
     var map = bdrs.map.baseMap;
@@ -857,18 +934,22 @@ bdrs.map.addPositionLayer = function(layerName){
     return layer;
 };
 
+if (bdrs.openlayers.locationlayer === undefined){
+	bdrs.openlayers.locationlayer = {};
+	}
+
+bdrs.openlayers.locationlayer.stylemap = {
+		'strokeWidth': 2,
+        'strokeOpacity': 1,
+        'strokeColor': '#669900',
+        'fillColor': '#669900',
+        'fillOpacity': 0.2,
+        'pointRadius': 4
+	};
+
 bdrs.map.addLocationLayer = function(map, layerName){
     var layer = new OpenLayers.Layer.Vector(layerName, {
-        styleMap: new OpenLayers.StyleMap({
-            'strokeWidth': 2,
-            'strokeOpacity': 1,
-            'strokeColor': '#669900',
-            
-            'fillColor': '#669900',
-            'fillOpacity': 0.2,
-            
-            'pointRadius': 4
-        })
+        styleMap: new OpenLayers.StyleMap(bdrs.openlayers.locationlayer.stylemap)
     });
     
     map.addLayers([layer]);
@@ -921,18 +1002,23 @@ bdrs.map.addSingleClickPositionLayer = function(map, layerName, latitudeInputSel
     return layer;
 };
 
+if (bdrs.openlayers.multiclickpositionlayer === undefined){
+	bdrs.openlayers.multiclickpositionlayer = {};
+	}
+
+bdrs.openlayers.multiclickpositionlayer.stylemap = {
+        'strokeWidth': 2,
+        'strokeOpacity': 1,
+        'strokeColor': '#EE9900',
+        'fillColor': '#EE9900',
+        'fillOpacity': 0.6,
+        'pointRadius': 4
+	};
+
+
 bdrs.map.addMultiClickPositionLayer = function(layerName, featureAddedHandler, featureMovedHandler){
     var layer = new OpenLayers.Layer.Vector(layerName, {
-        styleMap: new OpenLayers.StyleMap({
-            'strokeWidth': 2,
-            'strokeOpacity': 1,
-            'strokeColor': '#EE9900',
-            
-            'fillColor': '#EE9900',
-            'fillOpacity': 0.6,
-            
-            'pointRadius': 4
-        })
+        styleMap: new OpenLayers.StyleMap(bdrs.openlayers.multiclickpositionlayer.stylemap)
     });
     
     var map = bdrs.map.baseMap;

@@ -138,8 +138,8 @@ public class GeoMapController_ShpCheckService_Test extends
         shapefilemf.setCredit("Creative Commons");
         shapefilemf.setLicense("Nobody");
         shapefilemf.setPortal(RequestContextHolder.getContext().getPortal());
-        fileDAO.save(shapefilemf);
         
+        fileDAO.save(shapefilemf);
         fileService.createFile(shapefilemf, file, filename);
         return shapefilemf;
     }

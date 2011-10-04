@@ -587,7 +587,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     String value = CSVUtils.toCSVString(new String[] {
                             attr.getOptions().get(0 + offset).getValue(), 
                             attr.getOptions().get(1 + offset).getValue()
-                        });
+                        }, true);
                     recAttr.put("value", value);
                     break;
                 case SINGLE_CHECKBOX: 
