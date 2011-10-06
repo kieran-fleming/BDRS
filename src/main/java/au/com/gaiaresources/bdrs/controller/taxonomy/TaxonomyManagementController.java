@@ -551,10 +551,20 @@ public class TaxonomyManagementController extends AbstractController {
                 // protect against null or empty ids
                 continue;
             }
-            if (atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap) != null) {
-                speciesCount++;
+            IndicatorSpecies sp = null;
+            boolean successfulImport = false;
+            try {
+            	sp = atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap);
+            	if (sp != null) {
+            		successfulImport = true;
+            	}
+            } catch (JSONException jse) {
+            	successfulImport = false;
+            }
+            if (successfulImport) {
+            	speciesCount++;
             } else {
-                String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
+            	String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
                 getRequestContext().addMessage(String.format(tmpl, id));
             }
         }

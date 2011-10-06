@@ -136,7 +136,11 @@ public class AtlasService {
             species = createTaxonMetadata(species, Metadata.TAXON_SOURCE_DATA_ID, guid);
             
             if (species != null) {
-                species = taxaDAO.save(species);
+            	if ((species.getScientificName() != null) && 
+            		(species.getCommonName() != null) &&
+            		(species.getScientificNameAndAuthor() != null)) {
+            		species = taxaDAO.save(species);
+            	}
             }
             
         } catch (IOException ioe) {
@@ -275,7 +279,10 @@ public class AtlasService {
                     taxon = setCommonName(taxon, commonName, commonGuid);
                 }
             }
+        } else {
+        	taxon = setCommonName(taxon, scientificName, guid);
         }
+        
 
         // Classification
         String family = null, kingdom = null;
