@@ -16,6 +16,16 @@ public abstract class AbstractValidator implements Validator {
     private static final String BLANK_MESSAGE_KEY = "AbstractValidator.blank";
     private static final String BLANK_MESSAGE = "This cannot be blank.";
     
+    
+    /**
+     * Used to limit the size of the string we can enter in the database.
+     * The AttributeValue field is actually 
+     */
+    private static final int MAX_VALUE_LENGTH = 8191;
+    
+    private static final String VALUE_TOO_LONG_MESSAGE_KEY = "AbstractValidator.valueTooLong";
+    private static final String VALUE_TOO_LONG_MESSAGE = "The length of the input is limited to %d characters.";
+    
     protected PropertyService propertyService;
     protected boolean blank;
     protected boolean required;
@@ -38,12 +48,14 @@ public abstract class AbstractValidator implements Validator {
      */
     @Override
     public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap) {
-        
-        String value = getSingleParameter(parameterMap, key);
+
+        String value = getSingleParameter(parameterMap, key);        
         if(required && value == null) {
             errorMap.put(key, propertyService.getMessage(REQUIRED_MESSAGE_KEY, REQUIRED_MESSAGE));
         } else if(!blank && value.isEmpty()) {
             errorMap.put(key, propertyService.getMessage(BLANK_MESSAGE_KEY, BLANK_MESSAGE));
+        } else if (value != null && value.length() > MAX_VALUE_LENGTH) {
+            errorMap.put(key, String.format(propertyService.getMessage(VALUE_TOO_LONG_MESSAGE_KEY, VALUE_TOO_LONG_MESSAGE), MAX_VALUE_LENGTH));
         }
         
         return !errorMap.containsKey(key); 

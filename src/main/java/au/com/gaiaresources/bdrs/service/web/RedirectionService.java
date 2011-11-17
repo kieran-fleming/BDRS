@@ -7,6 +7,8 @@ import org.springframework.util.StringUtils;
 import au.com.gaiaresources.bdrs.controller.HomePageController;
 import au.com.gaiaresources.bdrs.controller.RenderController;
 import au.com.gaiaresources.bdrs.controller.admin.AdminHomePageController;
+import au.com.gaiaresources.bdrs.controller.admin.EditUsersController;
+import au.com.gaiaresources.bdrs.controller.admin.users.UserController;
 import au.com.gaiaresources.bdrs.controller.file.DownloadFileController;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
@@ -49,7 +51,7 @@ public class RedirectionService {
         {
             return mySightingsUrl;
         }
-        return mySightingsUrl + "?defaultSurveyId=" + survey.getId().toString();
+        return mySightingsUrl + "?survey_id=" + survey.getId().toString();
     }
     
     public String getViewRecordUrl(Record record) {
@@ -103,5 +105,9 @@ public class RedirectionService {
             throw new IllegalStateException("String av.stringValue cannot be null");
         }
         return (fullUrl ? this.domainAndContextPath : "") + DownloadFileController.FILE_DOWNLOAD_URL + "?" + av.getFileURL();
+    }
+    
+    public String getUserListUrl() {
+        return EditUsersController.USER_LISTING_URL;
     }
 }

@@ -32,6 +32,7 @@ import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.security.Role;
 
 public class CensusMethodControllerTest extends AbstractControllerTest {
     
@@ -52,7 +53,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     private Logger log = Logger.getLogger(getClass());
     
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         // worst test data generation ever!
         m1 = new CensusMethod();
         m1.setName("apple");
@@ -124,6 +125,8 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
         survey.getCensusMethods().add(m1);
         survey.getCensusMethods().add(m2);
         survey = surveyDAO.save(survey);
+        
+        this.login("admin", "password", new String[]{Role.ADMIN});
     }
     
     @SuppressWarnings("unchecked")

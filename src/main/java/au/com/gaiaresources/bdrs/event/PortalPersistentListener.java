@@ -25,7 +25,7 @@ public class PortalPersistentListener implements PreInsertEventListener {
             if(ppi.getId() == null && ppi.getPortal() == null) {
                 RequestContext context = RequestContextHolder.getContext();
                 if(context.getPortal() == null) {
-                    log.warn("Retrieved null Portal Id when saving or updating: "+ppi);
+                    //log.warn("Retrieved null Portal Id when saving or updating: "+ppi);
                 } else {
                     Session sesh;
                     Transaction tx;

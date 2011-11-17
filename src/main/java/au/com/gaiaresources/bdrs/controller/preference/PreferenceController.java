@@ -87,30 +87,17 @@ public class PreferenceController extends AbstractController {
                     throw new IllegalArgumentException();
                 }
                 
-                key = request.getParameter(String.format("preference_key_%d", prefId));
-                value = request.getParameter(String.format("preference_value_%d", prefId));
-                description = request.getParameter(String.format("preference_description_%d", prefId));
-                
-                boolean isModified = !key.equals(pref.getKey()) || 
-                    !value.equals(pref.getValue()) ||
-                    !description.equals(pref.getDescription());
-                
-                if(isModified) {
-                 // If this is a system preference, then we will 'clone' it
-                    // and create an portal specific pref.
-                    if(pref.getPortal() == null) {
-                        
-                        Preference clone = new Preference();
-                        clone.setPortal(getRequestContext().getPortal());
-                        clone.setPreferenceCategory(pref.getPreferenceCategory());
-                        clone.setLocked(false);
-                        pref = clone;
-                    }
-                    pref.setKey(key);
-                    pref.setValue(value);
-                    pref.setDescription(description);
-                    prefDAO.save(pref);
+                if(pref.getPortal() == null) {
+                    throw new IllegalStateException("preferences should always have a portal");
                 }
+                
+                // if the pref is locked, never overwrite the key and description fields
+                if (!pref.isLocked()) {
+                    pref.setKey(request.getParameter(String.format("preference_key_%d", prefId)));
+                    pref.setDescription(request.getParameter(String.format("preference_description_%d", prefId)));
+                }
+                pref.setValue(request.getParameter(String.format("preference_value_%d", prefId)));
+                prefDAO.save(pref);
             }
         }
 

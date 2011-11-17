@@ -917,6 +917,9 @@
                 <bdrs.recaptcha.private.key>6LfbwwQAAAAAAF5wVuk8nLcOanKCwvA_-rmtvNIL</bdrs.recaptcha.private.key>
                 <!-- File storage location -->
                 <bdrs.file.store.location>/tmp</bdrs.file.store.location>
+                <!-- Logging Properties -->
+                <bdrs.logfile>logs/bdrs-core.log</bdrs.logfile>
+                <bdrs.sqllogfile>logs/bdrs-core-SQL.log</bdrs.sqllogfile>
             </properties>
         </profile>
      </profiles>

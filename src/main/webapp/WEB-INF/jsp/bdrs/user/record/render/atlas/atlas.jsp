@@ -6,6 +6,8 @@
 <%@page import="au.com.gaiaresources.bdrs.model.taxa.TaxonRank"%>
 <%@page import="au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField"%>
 
+
+<%@page import="au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType"%>
 <jsp:useBean id="record" scope="request" type="au.com.gaiaresources.bdrs.model.record.Record" />
 <jsp:useBean id="taxon" scope="request" type="au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies" />
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
@@ -30,7 +32,7 @@
         </c:if>
         
         <span style="display:none">
-            <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_SPECIES) %>"/>
+            <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.SPECIES) %>"/>
             <tiles:insertDefinition name="formFieldRenderer">
                 <tiles:putAttribute name="formField" value="${ formField }"/>
                 <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
@@ -66,21 +68,21 @@
 
         <table class="form_table">
             <tbody>
-				<c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_WHEN) %>"/>
+				<c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.WHEN) %>"/>
 				<tiles:insertDefinition name="formFieldRenderer">
 				    <tiles:putAttribute name="formField" value="${ formField }"/>
 				    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
 				    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
 				</tiles:insertDefinition>
 				
-				<c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_TIME) %>"/>
+				<c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.TIME) %>"/>
 				<tiles:insertDefinition name="formFieldRenderer">
 				    <tiles:putAttribute name="formField" value="${ formField }"/>
 				    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
 				    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
 				</tiles:insertDefinition>
 				
-                <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_NUMBER) %>"/>
+                <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.NUMBER) %>"/>
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
@@ -100,14 +102,14 @@
                     </td>
 	            </tr>
 	            
-                <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_POINT) %>"/>
+                <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.POINT) %>"/>
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
                 </tiles:insertDefinition>
 
-                <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_ACCURACY) %>"/>
+                <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.ACCURACY) %>"/>
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="label" value="Coordinate ncertainty"/>
@@ -115,7 +117,7 @@
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
                 </tiles:insertDefinition>
 
-                <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_NOTES) %>"/>
+                <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.NOTES) %>"/>
 		        <tiles:insertDefinition name="formFieldRenderer">
 		            <tiles:putAttribute name="formField" value="${ formField }"/>
 		            <tiles:putAttribute name="sublabel" value="(weather conditions, observed behaviour, etc.)"/>
@@ -137,13 +139,13 @@
 		<div class="buttonpanel">
 		    <c:choose>
 		        <c:when test="${ preview }">
-		            <div class="textright">
+		            <div class="buttonpanel textright">
 		                <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
 		                <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
 		            </div>
 		        </c:when>
 		        <c:otherwise>
-		                <div class="textright">
+		                <div class="buttonpanel textright">
 		                    <!-- only show the delete button if it is an existing record -->
 		                    <c:if test="${record.id != null} & false">
                                 <input class="form_action" type="button" name="submitDelete" value="Delete Record" onclick="bdrs.survey.deleteRecord()" />
@@ -158,7 +160,7 @@
 	<div class="rightCol right">
 	   <label for="locationName">Bookmarked locations</label>
 	   <div class="atlasSightingRecordLocations">
-            <c:set var="formField" value="<%= formFieldMap.get(Record.RECORD_PROPERTY_LOCATION) %>"/>
+            <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.LOCATION) %>"/>
             <tiles:insertDefinition name="propertyRenderer">
                <tiles:putAttribute name="formField" value="${ formField }"/>
                <tiles:putAttribute name="locations" value="${ locations }"/>

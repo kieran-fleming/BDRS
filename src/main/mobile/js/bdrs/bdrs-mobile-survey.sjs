@@ -1,4 +1,10 @@
 /**
+ * Flag that keeps track of 
+ * if there is any deleting of survey data in progress. 
+ */
+exports.removingInProgress = false;
+
+/**
  * Retrieves the users surveys from the server
  * and stores them on the device.
  */
@@ -70,12 +76,12 @@ exports.getAll = function(){
  */
 exports.getRemote = function(id){
 
+	if (id == null || id == "") {
+		return {'errorMsg': "Parameter id is not valid"};
+	}
     //TODO: maybe move getting the 'complete local surveys' to a separate function in this file?
-    // get all surveys that are completeley downloaded to the device
-    var allSurveys;
-    waitfor(allSurveys){
-        Survey.all().filter('local', '=', 'true').list(resume);
-    }
+    // get all surveys that are completely downloaded to the device
+    var allSurveys = bdrs.mobile.survey.getLocal();
     
     // extract ids from surveys
     var surveysOnDeviceIds = [];
@@ -86,9 +92,6 @@ exports.getRemote = function(id){
     bdrs.mobile.Debug("start survey download " + new Date());
     //retrieve data for requested survey from the server
     var response;
-    
-    
-    
     waitfor(response) {
         var jqxhr = jQuery.ajax(
             {
@@ -110,9 +113,7 @@ exports.getRemote = function(id){
     }
     
     if (response.status != undefined) {
-        // error
-        bdrs.mobile.Error('Error retrieving survey ' + response.status);
-        return false;
+		return {'errorMsg': 'Error retrieving survey ' + response.status};
     } else {
         bdrs.mobile.Debug("finished survey download " + new Date());
         //success
@@ -251,12 +252,15 @@ exports._save_species = function(survey, taxonGroupMap, speciesMap,
 
     bdrs.mobile.Debug("Starting to save " + rawIndicatorSpeciesArray.length + " species.");
     
+    var species;
+    var sp;
+    var sp_server_id = [];
     for (var i = 0; i < rawIndicatorSpeciesArray.length; i++) {
-        var species = rawIndicatorSpeciesArray[i];
+        species = rawIndicatorSpeciesArray[i];
         if(speciesMap[species.server_id] === undefined) {
             
             // create a species
-            var sp = new Species({
+            sp = new Species({
                 server_id : species.server_id,
                 weight: species.weight,
                 scientificNameAndAuthor : species.scientificNameAndAuthor,
@@ -274,19 +278,25 @@ exports._save_species = function(survey, taxonGroupMap, speciesMap,
             persistence.add(sp);
 
             // Populate survey to species join table part 2
-            survey.species().add(sp);
-            speciesMap[sp.server_id()] = sp;
+            // survey.species().add(sp);
+            sp_server_id.push(species.server_id);
+
+            // Do not store a reference to the species in order to save
+            // on heap space.
+            speciesMap[sp.server_id()] = null;
 
             // Save species in taxonGroup
             taxonGroupMap[species.taxonGroup].species().add(sp);
 
             // Incremental flush
-            if (i % 500 == 0) {
+            if (i % 500 === 0) {
                 bdrs.mobile.Debug('Flushing species : ' + i);
                 waitfor() {
-                    persistence.flush(function() {
-                        resume();
-                    });
+                    persistence.flush(resume);
+                }
+                waitfor() {
+                    bdrs.persistence.util.joinSurveyToSpecies(survey.server_id(), sp_server_id, resume, resume);
+                    sp_server_id = [];
                 }
             }
         }
@@ -294,10 +304,13 @@ exports._save_species = function(survey, taxonGroupMap, speciesMap,
 
     bdrs.mobile.Debug("Flush final set of species: " + new Date());
     waitfor() {
-        persistence.flush(function() {
-            resume();
-        });
+        persistence.flush(resume);
     }
+    waitfor() {
+        bdrs.persistence.util.joinSurveyToSpecies(survey.server_id(), sp_server_id, resume, resume);
+        sp_server_id = [];
+    }
+
     bdrs.mobile.Debug("Done flush of species and attributes: " + new Date());
     return speciesMap;
 };
@@ -306,79 +319,69 @@ exports._save_species = function(survey, taxonGroupMap, speciesMap,
  * Stores surveydata in the survey that exists on the device.
  * @param   id      The id of the survey on the device that will get data stored inside of it.
  * @param   data    Survey specific data.
- * @return  survey  The survey that is stored on the device.
+ * @return  survey  The survey that is stored on the device or a map with an errorMsg.
  */
 exports.save = function(id, data) {
+	
+	if (id == null || id == "" || data == null || data == "") {
+		return {"errorMsg" : "Survey save function received invalid parameters"};
+	}
     var start = new Date().getTime();
     //get the survey from the device of which we want to add data to
     var survey;
     waitfor(survey){
         Survey.findBy('server_id', id, resume);
     }
+    if (survey == null) {
+    	return {"errorMsg" : "Failed saving data for survey, no survey found with server_id = " + id};
+    }
+    
     bdrs.mobile.Debug("Saving data for survey: " + survey.name());
-
+    
     var taxonGroupMap = exports._save_taxon_groups(data.taxonGroups);
+
+    // The following section of code will use raw SQL (instead of persistence)
+    // to generate the rows in the species to survey join table. 
+    // If we use persistence, it means that we need to pull data into memory
+    // before we create individual insert statements. Not only is this very
+    // slow, persistence will cache all the objects. The same effect
+    // can be achieved using a single SQL statement.
+    if(data.indicatorSpecies_server_ids.species.length === 0) {
+        // Species use case where the survey is attached to all species.
+        waitfor() {
+            bdrs.persistence.util.joinSurveyToAllSpecies(survey.server_id(), resume, resume);
+        }
+    } else {
+        waitfor() {
+            bdrs.persistence.util.joinSurveyToSpecies(survey.server_id(), data.indicatorSpecies_server_ids.species, resume, resume);
+        }
+    }
+    
+    var surveySpeciesIds;
+    waitfor(surveySpeciesIds) {
+        bdrs.persistence.util.getAllSpeciesServerId(resume, resume);
+    }
 
     // Generate a map {species.server_id : species} of the existing saved species.
     // We will not save these species again however we will need them
     // eventually to join them to the survey.
-    var surveySpeciesIds;
-    if(data.indicatorSpecies_server_ids.species.length === 0) {
-        // Species use case where the survey is attached to all species.
-        surveySpeciesIds = [];
-        for(var g=0; g<data.indicatorSpecies.length; g++) {
-            surveySpeciesIds.push(data.indicatorSpecies[g].server_id);
-        }
-    } else {
-        surveySpeciesIds = data.indicatorSpecies_server_ids.species;
-    }
-
     var speciesMap = {};
-    if (surveySpeciesIds.length !== 0) {
-        // Persistence seems to have this limitation where 'in' clauses cannot
-        // have more than 999 items in the list.
-        bdrs.mobile.Debug("Temporarily disabling persistence debug to prevent spamming the console.");
-        var persistence_debug_state = persistence.debug;
-        persistence.debug = false;
-
-        while (surveySpeciesIds.length > 0) {
-            var idList = surveySpeciesIds.splice(0,Math.min(999,surveySpeciesIds.length));
-
-            var existingSpecies;
-            waitfor(existingSpecies) {
-                Species.all().filter('server_id', 'in', idList).list(resume);
-            }
-
-            for (var q=0;q<existingSpecies.length; q++) {
-                var species = existingSpecies[q];
-                speciesMap[species.server_id()] = species;
-
-                // Populate survey to species join table part 1
-                survey.species().add(species);
-            }
-        }
-        persistence.debug = persistence_debug_state;
+    for(var q=0; q<surveySpeciesIds.length; q++) {
+        speciesMap[surveySpeciesIds[q]] = null;
     }
 
     speciesMap = exports._save_species(survey, taxonGroupMap, speciesMap,
         data.indicatorSpecies, data.indicatorSpecies_server_ids.species);
 
-    // Save survey locations in survey
-    for ( var j = 0; j < data.locations.length; j++) {
-        var location = data.locations[j];
-        var point = new bdrs.mobile.Point(location.location);
-        survey.locations().add(new Location({
-            server_id : location.server_id,
-            weight: location.weight,
-            name : location.name,
-            latitude : point.getLatitude(),
-            longitude : point.getLongitude() }));
-    }
+    bdrs.mobile.survey._saveLocations(survey, data.locations);
+    bdrs.mobile.survey._saveRecordProperties(survey, data.recordProperties);
     
     // save survey attributes and options in survey
+    var a;
+    var attribute;
     for ( var k = 0; k < data.attributesAndOptions.length; k++) {
-        var a = data.attributesAndOptions[k];
-        var attribute = new Attribute({
+        a = data.attributesAndOptions[k];
+        attribute = new Attribute({
             server_id: a.server_id,
             weight: a.weight,
             typeCode: a.typeCode,
@@ -388,9 +391,11 @@ exports.save = function(id, data) {
             tag: a.tag,
             scope: a.scope
         });
+        var ao;
+        var option;
         for ( var l = 0; l < a.options.length; l++) {
-            var ao = a.options[l];
-            var option = new AttributeOption({
+            ao = a.options[l];
+            option = new AttributeOption({
                 server_id: ao.server_id,
                 weight: ao.weight,
                 value: ao.value
@@ -407,9 +412,11 @@ exports.save = function(id, data) {
     bdrs.mobile.Debug("Done linking species to survey: " + new Date());
      
     // Create Census Methods
+    var flatCensusMethod;
+    var censusMethod;
     for(var i=0; i<data.censusMethods.length; i++) {
-        var flatCensusMethod = data.censusMethods[i];
-        var censusMethod =  bdrs.mobile.survey._saveCensusMethod(flatCensusMethod);
+        flatCensusMethod = data.censusMethods[i];
+        censusMethod =  bdrs.mobile.survey._saveCensusMethod(flatCensusMethod);
         survey.censusMethods().add(censusMethod);
     }
     bdrs.mobile.Debug("Done with census methods: " + new Date());
@@ -421,7 +428,6 @@ exports.save = function(id, data) {
         persistence.flush(resume);
     }
     
-    jQuery('.bdrs-page-download-surveys label[for="checkbox-' + id + '"]').addClass('local');
     bdrs.mobile.Debug("finish survey download");
 
     jQuery.mobile.pageLoading(true);
@@ -449,15 +455,19 @@ exports._saveCensusMethod = function(flatCensusMethod) {
     persistence.add(censusMethod);
 
     // Link the attributes
+    var flatAttr;
+    var attr;
     for(var j=0; j<flatCensusMethod.attributes.length; j++) {
-        var flatAttr = flatCensusMethod.attributes[j];
-        var attr = bdrs.mobile.survey._saveAttribute(flatAttr);
+        flatAttr = flatCensusMethod.attributes[j];
+        attr = bdrs.mobile.survey._saveAttribute(flatAttr);
         censusMethod.attributes().add(attr);
     }
     
+    var flatSubCensusMethod;
+    var subCensusMethod;
     for(var i=0; i<flatCensusMethod.censusMethods.length; i++) {
-        var flatSubCensusMethod = flatCensusMethod.censusMethods[i];
-        var subCensusMethod = bdrs.mobile.survey._saveCensusMethod(flatSubCensusMethod);
+        flatSubCensusMethod = flatCensusMethod.censusMethods[i];
+        subCensusMethod = bdrs.mobile.survey._saveCensusMethod(flatSubCensusMethod);
         censusMethod.children().add(subCensusMethod);
     }
     
@@ -478,12 +488,14 @@ exports._saveAttribute = function(flatAttribute) {
         tag: flatAttribute.tag,
         scope: flatAttribute.scope,
         server_id: flatAttribute.server_id,
-        weight: flatAttribute.weight
+        weight: flatAttribute.weight,
+        isDWC: false
     });
     persistence.add(attr);
     
+    var flatOpt;
     for(var i=0; i<flatAttribute.options.length; i++) {
-        var flatOpt = flatAttribute.options[i];
+        flatOpt = flatAttribute.options[i];
         attr.options().add(new AttributeOption({
             value: flatOpt.value, 
             server_id: flatOpt.server_id,
@@ -494,6 +506,101 @@ exports._saveAttribute = function(flatAttribute) {
     return attr;
 };
 
+/**
+ * Persists the the recordProperties as Attributes and stores those in the survey.
+ * @param survey in which we want to store the attributes.
+ * @param recordProperties array of dwc fields.
+ */
+exports._saveRecordProperties = function(survey, recordProperties) {
+	var recordProperty;
+	var attribute;
+    var attributeType;
+    var attributeOptions;
+ 
+    for (var i=0; i<recordProperties.length; i++) {
+    	recordProperty = recordProperties[i];
+    	
+    	switch (recordProperty.name) {
+	    	case "Number":
+	    	case "AccuracyInMeters":
+	    		attributeType = bdrs.mobile.attribute.type.INTEGER_WITH_RANGE;
+	    		attributeOptions = [0,1000];
+	    		break;
+	    	case "Species":
+	    		attributeType = bdrs.mobile.attribute.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE;
+	    		attributeOptions = [];
+	    		break;
+	    	case "Location":
+	    		attributeType = bdrs.mobile.attribute.type.STRING_WITH_VALID_VALUES;
+	    		attributeOptions = [];
+	    		//attributeOptions = [];??????????
+	    		//TODO: remove exports._saveLocations and store them as attributeOptions?
+	    		break;
+	    	case "Point":
+	    		attributeType = bdrs.mobile.attribute.type.LATITUDE_LONGITUDE;
+	    		attributeOptions = [];
+	    		break;
+	    	case "When":
+	    		attributeType = bdrs.mobile.attribute.type.DATE;
+	    		attributeOptions = [];
+	    		break;
+	    	case "Time":
+	    		attributeType = bdrs.mobile.attribute.type.TIME;
+	    		attributeOptions = [];
+	    		break;
+	    	case "Notes":
+	    		attributeType = bdrs.mobile.attribute.type.TEXT;
+	    		attributeOptions = [];
+	    		break;
+	    	default:
+	    		attributeType = bdrs.mobile.attribute.type.STRING;
+	    		attributeOptions = [];
+    	}
+    	
+    	attribute = new Attribute({
+    		 server_id: null,
+             weight: recordProperty.weight,
+             typeCode: attributeType,
+             required: recordProperty.required,
+             name: recordProperty.name,
+             description: recordProperty.description,
+             tag: false,
+             scope: recordProperty.scope,
+             isDWC: true
+    	});
+    	bdrs.mobile.Debug("Number of attributeOptions = " + attributeOptions.length);
+    	var option;
+    	for(var j=0; j<attributeOptions.length; j++) {
+    		bdrs.mobile.Debug("Going to create a new option wit value " + attributeOptions[j] + " for attribute " + attribute.name());
+    		attribute.options().add(new AttributeOption({
+    			server_id: null,
+    			weight: null,
+    			value: attributeOptions[j]
+    		}));
+    	}
+    	survey.attributes().add(attribute);
+    }
+}
+
+/**
+ * Persists the locations them in the survey.
+ * @param survey in which we want to store the attributes.
+ * @param locations array of pointdata.
+ */
+exports._saveLocations = function(survey, locations) {
+	var location;
+    var point;
+    for ( var j = 0; j < locations.length; j++) {
+        location = locations[j];
+        point = new bdrs.mobile.Point(location.location);
+        survey.locations().add(new Location({
+            server_id : location.server_id,
+            weight: location.weight,
+            name : location.name,
+            latitude : point.getLatitude(),
+            longitude : point.getLongitude() }));
+    }
+}
 
 /**
  * Sets a specific survey as the default one.
@@ -501,27 +608,35 @@ exports._saveAttribute = function(flatAttribute) {
  */
 exports.makeDefault = function(survey){
     
-    Settings.findBy('key', 'current-survey' , function(setting) {
-        if (setting === null) {
-            var s = new Settings({ key : 'current-survey', value : survey.name() });
-            persistence.add(s);
-            jQuery('.dashboard-status').empty();
-            bdrs.template.render('dashboard-status', { name : survey.name() }, '.dashboard-status');
+	var setting;
+	
+    waitfor(setting) {
+		 Settings.findBy('key', 'current-survey' , resume);
+    }
+    if (setting === null) {
+        var s = new Settings({ key : 'current-survey', value : survey.name() });
+        persistence.add(s);
+        jQuery('.dashboard-status').empty();
+        bdrs.template.render('dashboard-status', { name : survey.name() }, '.dashboard-status');
 
-        } else {
-            jQuery(setting).data('value', survey.name());
-        }
-    });
+    } else {
+		setting.value(survey.name());
+        jQuery(setting).data('value', survey.name());
+    }
+
+    waitfor(setting) {
+		 Settings.findBy('key', 'current-survey-id' , resume);
+   }
+    if (setting === null) {
+        var s = new Settings({ key : 'current-survey-id', value : String(survey.server_id()) });
+        persistence.add(s);
+    } else {
+		setting.value(String(survey.server_id()));
+        jQuery(setting).data('value', String(survey.server_id()));
+    }
     
-    Settings.findBy('key', 'current-survey-id' , function(setting) {
-        if (setting === null) {
-            var s = new Settings({ key : 'current-survey-id', value : String(survey.server_id()) });
-            persistence.add(s);
-        } else {
-            jQuery(setting).data('value', String(survey.server_id()));
-        }
-    });
-    
+	persistence.flush();   
+	
 }
 
 /**
@@ -540,3 +655,193 @@ exports.getDefault = function(){
     return survey
 }
 
+
+
+/**
+ * Gets the local surveys.
+ * @return an Array of Survey entities that are flagged local.
+ */
+exports.getLocal = function(){
+    var localSurveys;
+    waitfor(localSurveys) {
+    	Survey.all().filter('local', '=', 'true').list(resume);
+    }
+    return localSurveys
+}
+
+/**
+ * Gets the survey by it's serverId.
+ * @param sid the id that the survey that we want has on the server 
+ * @return the survey or null when not found.
+ */
+exports.getByServerId = function(sid) {
+	var clickedSurvey;
+	waitfor(clickedSurvey){
+		Survey.findBy('server_id', sid, resume);
+	}
+	return clickedSurvey;
+}
+
+/**
+ * Removes the records from a survey
+ * @param survey from which the records need to be removed
+ */
+exports.removeRecords = function(survey) {
+	var recordsList;
+	waitfor(recordsList) {
+		survey.records().list(resume);
+	}
+	bdrs.mobile.Debug("Deleting " + recordsList.length + " records from survey with server_id " + survey.server_id());
+	recordsList.forEach(function(recordToDelete){
+		bdrs.mobile.pages.trash._recurse_delete_record(recordToDelete);
+	});
+}
+
+/**
+ * Removes the profile from a particular species.
+ * @param species from which we want to remove the profile.
+ */
+exports.removeSpeciesProfile = function(aSpecies) {
+	var infoItems;
+	waitfor (infoItems) {
+		aSpecies.infoItems().list(resume);
+	}
+	//TODO: Replace with raw sql if this is too slow.
+	for (var g=0; g<infoItems.length; g++) {
+		persistence.remove(infoItems[g]);
+	}
+}
+
+/**
+ * Removes the species and their profile and count from a survey when not used by other surveys that exist on the device.
+ * @param survey from which the species need to be removed.
+ */
+exports.removeSpecies = function(survey) {
+	var species;
+	waitfor (species) {
+		survey.species().list(resume);
+	}
+	var aSpecies;
+	for (var f=0; f<species.length; f++) {
+		aSpecies = species[f];
+		survey.species().remove(aSpecies);
+		var surveyCount;
+		waitfor (surveyCount) {
+			aSpecies.surveys().count(resume);
+		}
+		if (surveyCount === 0) {
+			bdrs.mobile.survey.removeSpeciesProfile(aSpecies);
+			persistence.remove(aSpecies);
+		}
+	}
+	//delete speciescounts
+	var speciesCountToDelete;
+	waitfor (speciesCountToDelete) {
+		SpeciesCount.all().filter('survey','=',survey.id).list(resume);
+	}
+	//TODO: Replace with raw sql if this is too slow.
+	for (var e=0; e<speciesCountToDelete.length; e++) {
+		persistence.remove(speciesCountToDelete[e]);
+	}
+}
+
+/**
+ * Removes all taxonGroups and their related attributes and atribute-options that do not have any species attached to them.
+ */
+exports.removeTaxonGroups = function() {
+	var taxonGroups;
+	waitfor (taxonGroups) {
+		TaxonGroup.all().list(resume);
+	}
+	var taxonGroup;
+	var hasSpecies;
+	for (var d=0; d<taxonGroups.length; d++) {
+		taxonGroup = taxonGroups[d];
+		waitfor (hasSpecies) {
+			taxonGroup.species().count(resume);
+		}
+		if (hasSpecies === 0) {
+			var attributes;
+			waitfor (attributes) {
+				taxonGroup.attributes().list(resume);
+			}
+			bdrs.mobile.attribute.removeAttributes(attributes);
+			persistence.remove(taxonGroup);
+		}
+	}
+}
+
+/**
+ * Removes censusmethods from the survey.
+ * @param survey from which the censusmethods need to be removed.
+ */
+exports.removeCensusMethods = function (survey) {
+	var censusMethods;
+	waitfor (censusMethods) {
+		CensusMethod.all().filter('survey','=',survey.id).and(new  persistence.PropertyFilter('parent','=',null)).list(resume);
+	}
+	for (var b=0; b<censusMethods.length; b++) {
+		var censusMethod = censusMethods[b];
+		bdrs.mobile.censusmethod.recurse_delete_censusmethod(censusMethod);
+	}
+}
+
+/**
+ * Removes a survey and all the related data that is not used by other surveys.
+ * @return true if succesful or errorMsg when failed.
+ */
+exports.remove = function(){
+	var sid = bdrs.mobile.getParameter('deleting-survey-id');
+	if (sid == null || sid == "") {
+		return {"errorMsg" : "Survey remove received an invalid parameter"};
+	}
+	//attach this function to 'finished syncing' event when syncing records to the server.
+	if (bdrs.mobile.syncService._syncing) {
+		bdrs.mobile.syncService.addSyncListener(bdrs.mobile.survey.remove);
+		return {"errorMsg" : "Syncing records to server while trying to remove a survey. Trying to recover ...."};
+	}
+	var syncEventListenerIsRemoved = bdrs.mobile.syncService.removeSyncListener(bdrs.mobile.survey.remove);
+	bdrs.mobile.survey.removingInProgress = true;
+	jQuery.mobile.pageLoading(false);
+	var surveyToDelete;
+	waitfor(surveyToDelete) {
+		Survey.findBy('server_id', sid, resume);
+	}
+	bdrs.mobile.survey.removeRecords(surveyToDelete);
+	bdrs.mobile.survey.removeSpecies(surveyToDelete);
+	bdrs.mobile.survey.removeTaxonGroups();
+	var surveyAttributes;
+	waitfor (surveyAttributes) {
+		Attribute.all().filter('survey','=',surveyToDelete.id).list(resume);
+	}
+	bdrs.mobile.attribute.removeAttributes(surveyAttributes);
+	bdrs.mobile.survey.removeCensusMethods(surveyToDelete);
+	surveyToDelete.local(false);
+	persistence.flush(function() {
+		var defaultSurveyId;
+		waitfor(defaultSurveyId) {
+			Settings.findBy('key','current-survey-id',resume);
+		}
+		var defaultSurv;
+		waitfor(defaultSurv) {
+			Settings.findBy('key','current-survey',resume);
+		}
+		if(surveyToDelete.server_id() == defaultSurveyId.value()) {
+			var localSurvey;
+			waitfor(localSurvey){
+				Survey.all().filter('local','=',true).one(resume);
+			}
+			if (localSurvey != null) {
+				bdrs.mobile.survey.makeDefault(localSurvey);
+				bdrs.mobile.Debug("Changed current survey to " + localSurvey.name());
+			} else {
+				//There are no local surveys, remove the current survey settings
+				persistence.remove(defaultSurveyId);
+				persistence.remove(defaultSurv);
+				persistence.flush();
+			}
+		}
+	});
+	bdrs.mobile.survey.removingInProgress = false;
+	return true;
+}

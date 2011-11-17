@@ -151,139 +151,139 @@
         });
 
         jQuery("[name=speciesListType]").trigger('change');
-    });
+		
+		jQuery("#species_search").autocomplete({
+	        source: function(request, callback) {
+	            var params = {};
+	            params.q = request.term;
+	
+	            jQuery.getJSON('${pageContext.request.contextPath}/webservice/taxon/searchTaxon.htm', params, function(data, textStatus) {
+	                var label;
+	                var result;
+	                var taxon;
+	                var resultsArray = [];
+	                for(var i=0; i<data.length; i++) {
+	                    taxon = data[i];
+	
+	                    label = [];
+	                    if(taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
+	                        label.push("<b><i>"+taxon.scientificName+"</b></i>");
+	                    }
+	                    if(taxon.commonName !== undefined && taxon.commonName.length > 0) {
+	                        label.push(taxon.commonName);
+	                    }
+	
+	                    label = label.join(' ');
+	
+	                    resultsArray.push({
+	                        label: label,
+	                        value: taxon.scientificName,
+	                        data: taxon
+	                    });
+	                }
+	
+	                callback(resultsArray);
+	            });
+	        },
+	        select: function(event, ui) {
+	            var taxon = ui.item.data;
+	            // Taxon already added. No need to add twice.
+	            var hasTaxon = jQuery("[name=species][value="+taxon.id+"]").length > 0;
+	            var listType = jQuery("[name=speciesListType]:checked").val();
+	            var tbody = jQuery("#speciesTable tbody");
+	            var rowCount = tbody.find("tr").length;
+	
+	            var canAdd = ('ONE_SPECIES' === listType && rowCount === 0) || ('ONE_SPECIES' !== listType);
+	
+	            // Debug
+	            // hasTaxon = false;
+	
+	            if(hasTaxon === false && canAdd === true) {
+	                var scientificName = jQuery("<td></td>").text(taxon.scientificName);
+	                var pk = jQuery("<input/>").attr({
+	                                   'type': 'hidden',
+	                                   'value': taxon.id,
+	                                   'name': 'species'
+	                               });
+	                scientificName.append(pk);
+	                var commonName = jQuery("<td></td>").text(taxon.commonName);
+	                var del = jQuery("<td></td>").addClass("textcenter");
+	                var delLink = jQuery('<a><img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/></a>');
+	                delLink.attr("href", "javascript: void(0);").click(function () {
+	                    jQuery(this).parents("tr").remove();
+	                });
+	                del.append(delLink);
+	
+	                var row = jQuery("<tr></tr>").append(scientificName).append(commonName).append(del);
+	                tbody.append(row);
+	            }
+	
+	            jQuery(event.target).select();
+	            return false;
+	        },
+	        minLength: 2,
+	        delay: 300,
+	        html:true
+	    });
 
-    jQuery("#species_search").autocomplete({
-        source: function(request, callback) {
-            var params = {};
-            params.q = request.term;
-
-            jQuery.getJSON('${pageContext.request.contextPath}/webservice/taxon/searchTaxon.htm', params, function(data, textStatus) {
-                var label;
-                var result;
-                var taxon;
-                var resultsArray = [];
-                for(var i=0; i<data.length; i++) {
-                    taxon = data[i];
-
-                    label = [];
-                    if(taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
-                        label.push("<b><i>"+taxon.scientificName+"</b></i>");
-                    }
-                    if(taxon.commonName !== undefined && taxon.commonName.length > 0) {
-                        label.push(taxon.commonName);
-                    }
-
-                    label = label.join(' ');
-
-                    resultsArray.push({
-                        label: label,
-                        value: taxon.scientificName,
-                        data: taxon
-                    });
-                }
-
-                callback(resultsArray);
-            });
-        },
-        select: function(event, ui) {
-            var taxon = ui.item.data;
-            // Taxon already added. No need to add twice.
-            var hasTaxon = jQuery("[name=species][value="+taxon.id+"]").length > 0;
-            var listType = jQuery("[name=speciesListType]:checked").val();
-            var tbody = jQuery("#speciesTable tbody");
-            var rowCount = tbody.find("tr").length;
-
-            var canAdd = ('ONE_SPECIES' === listType && rowCount === 0) || ('ONE_SPECIES' !== listType);
-
-            // Debug
-            // hasTaxon = false;
-
-            if(hasTaxon === false && canAdd === true) {
-                var scientificName = jQuery("<td></td>").text(taxon.scientificName);
-                var pk = jQuery("<input/>").attr({
-                                   'type': 'hidden',
-                                   'value': taxon.id,
-                                   'name': 'species'
-                               });
-                scientificName.append(pk);
-                var commonName = jQuery("<td></td>").text(taxon.commonName);
-                var del = jQuery("<td></td>").addClass("textcenter");
-                var delLink = jQuery('<a><img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/></a>');
-                delLink.attr("href", "javascript: void(0);").click(function () {
-                    jQuery(this).parents("tr").remove();
-                });
-                del.append(delLink);
-
-                var row = jQuery("<tr></tr>").append(scientificName).append(commonName).append(del);
-                tbody.append(row);
-            }
-
-            jQuery(event.target).select();
-            return false;
-        },
-        minLength: 2,
-        delay: 300,
-        html:true
-    });
-
-    jQuery("#speciesGroup_search").autocomplete({
-        source: function(request, callback) {
-            var params = {};
-            params.q = request.term;
-
-            jQuery.getJSON('${pageContext.request.contextPath}/webservice/taxon/searchTaxonGroup.htm', params, function(data, textStatus) {
-                var label;
-                var result;
-                var taxonGroup;
-                var resultsArray = [];
-                for(var i=0; i<data.length; i++) {
-                    taxonGroup = data[i];
-                    resultsArray.push({
-                        label: taxonGroup.name,
-                        value: taxonGroup.name,
-                        data: taxonGroup
-                    });
-                }
-
-                callback(resultsArray);
-            });
-        },
-        select: function(event, ui) {
-            var taxonGroup = ui.item.data;
-            // Taxon Group already added. No need to add twice.
-            var hasTaxonGroup = jQuery("[name=speciesGroup][value="+taxonGroup.id+"]").length > 0;
-            var listType = jQuery("[name=speciesListType]:checked").val();
-            var tbody = jQuery("#speciesGroupTable tbody");
-
-            // Debug
-            // hasTaxonGroup = false;
-
-            if(hasTaxonGroup === false) {
-                var name = jQuery("<td></td>").text(taxonGroup.name);
-                var pk = jQuery("<input/>").attr({
-                   'type': 'hidden',
-                   'value': taxonGroup.id,
-                   'name': 'speciesGroup'
-                });
-                name.append(pk);
-                var del = jQuery("<td></td>").addClass("textcenter");
-                var delLink = jQuery('<a><img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/></a>');
-                delLink.attr("href", "javascript: void(0);").click(function () {
-                    jQuery(this).parents("tr").remove();
-                });
-                del.append(delLink);
-
-                var row = jQuery("<tr></tr>").append(name).append(del);
-                tbody.append(row);
-            }
-
-            jQuery(event.target).select();
-            return false;
-        },
-        minLength: 2,
-        delay: 300,
-        html:true
+	    jQuery("#speciesGroup_search").autocomplete({
+	        source: function(request, callback) {
+	            var params = {};
+	            params.q = request.term;
+	
+	            jQuery.getJSON('${pageContext.request.contextPath}/webservice/taxon/searchTaxonGroup.htm', params, function(data, textStatus) {
+	                var label;
+	                var result;
+	                var taxonGroup;
+	                var resultsArray = [];
+	                for(var i=0; i<data.length; i++) {
+	                    taxonGroup = data[i];
+	                    resultsArray.push({
+	                        label: taxonGroup.name,
+	                        value: taxonGroup.name,
+	                        data: taxonGroup
+	                    });
+	                }
+	
+	                callback(resultsArray);
+	            });
+	        },
+	        select: function(event, ui) {
+	            var taxonGroup = ui.item.data;
+	            // Taxon Group already added. No need to add twice.
+	            var hasTaxonGroup = jQuery("[name=speciesGroup][value="+taxonGroup.id+"]").length > 0;
+	            var listType = jQuery("[name=speciesListType]:checked").val();
+	            var tbody = jQuery("#speciesGroupTable tbody");
+	
+	            // Debug
+	            // hasTaxonGroup = false;
+	
+	            if(hasTaxonGroup === false) {
+	                var name = jQuery("<td></td>").text(taxonGroup.name);
+	                var pk = jQuery("<input/>").attr({
+	                   'type': 'hidden',
+	                   'value': taxonGroup.id,
+	                   'name': 'speciesGroup'
+	                });
+	                name.append(pk);
+	                var del = jQuery("<td></td>").addClass("textcenter");
+	                var delLink = jQuery('<a><img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/></a>');
+	                delLink.attr("href", "javascript: void(0);").click(function () {
+	                    jQuery(this).parents("tr").remove();
+	                });
+	                del.append(delLink);
+	
+	                var row = jQuery("<tr></tr>").append(name).append(del);
+	                tbody.append(row);
+	            }
+	
+	            jQuery(event.target).select();
+	            return false;
+	        },
+	        minLength: 2,
+	        delay: 300,
+	        html:true
+	    });
     });
 
 </script>

@@ -47,26 +47,7 @@
               </c:if>
           </c:when>
           <c:otherwise>
-              <c:choose>
-                  <c:when test="${ 'species' == formField.propertyName }">
-                      Species                                        
-                  </c:when>
-                  <c:when test="${ 'when' == formField.propertyName }">
-                      Date                                       
-                  </c:when>
-                  <c:when test="${ 'time' == formField.propertyName }">
-                      Time                                        
-                  </c:when>
-                  <c:when test="${ 'notes' == formField.propertyName }">
-                      Additional&nbsp;Comments                                        
-                  </c:when>
-                  <c:when test="${ 'number' == formField.propertyName }">
-                      Individual Count                            
-                  </c:when>
-                  <c:when test="${ 'accuracyInMeters' == formField.propertyName }">
-                      Coordinate Uncertainty in Meters                            
-                  </c:when>
-             </c:choose>
+              ${ formField.description }
              <tiles:insertDefinition name="propertyRenderer">
                  <tiles:putAttribute name="formField" value="${formField}"/>
              </tiles:insertDefinition>

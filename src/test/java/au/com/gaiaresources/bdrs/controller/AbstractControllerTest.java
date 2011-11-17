@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -30,6 +29,8 @@ import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
@@ -57,7 +58,6 @@ public abstract class AbstractControllerTest extends
     protected PortalDAO portalDAO;
 
     protected MockHttpServletResponse response;
-    protected MockHttpSession session;
 
     private ModelAndView mv;
     private Object controller;
@@ -67,7 +67,6 @@ public abstract class AbstractControllerTest extends
     @BeforeTransaction
     public final void beforeTx() throws Exception {
         response = new MockHttpServletResponse();
-        session = new MockHttpSession();
 
         // Override the security provider.
         List<TestingAuthenticationProvider> providerList = new ArrayList<TestingAuthenticationProvider>();
@@ -138,29 +137,73 @@ public abstract class AbstractControllerTest extends
 
     @AfterTransaction
     public final void afterTx() throws Exception {
-        HandlerInterceptor interceptor;
-        if (interceptors != null) {
-            for (int i = interceptors.length - 1; i > -1; i--) {
-                interceptor = interceptors[i];
-                if (handleInterceptor(interceptor)) {
-                    interceptor.postHandle(request, response, controller, mv);
+        try {
+            HandlerInterceptor interceptor;
+            if (interceptors != null) {
+                for (int i = interceptors.length - 1; i > -1; i--) {
+                    interceptor = interceptors[i];
+                    if (handleInterceptor(interceptor)) {
+                        interceptor.postHandle(request, response, controller, mv);
+                    }
                 }
-            }
 
-            Exception viewException = null;
-            for (int i = interceptors.length - 1; i > -1; i--) {
-                interceptor = interceptors[i];
-                if (handleInterceptor(interceptor)) {
-                    interceptor.afterCompletion(request, response, controller, viewException);
+                Exception viewException = null;
+                for (int i = interceptors.length - 1; i > -1; i--) {
+                    interceptor = interceptors[i];
+                    if (handleInterceptor(interceptor)) {
+                        interceptor.afterCompletion(request, response, controller, viewException);
+                    }
                 }
             }
+        } finally {
+            // Normally done by the interceptor.
+            RequestContextHolder.clear();
+            // equivalent to logging out
+            SecurityContextHolder.clearContext();
         }
-        // Normally done by the interceptor.
-        RequestContextHolder.clear();
     }
 
     private boolean handleInterceptor(HandlerInterceptor interceptor) {
         return !(interceptor instanceof Interceptor)
                 && !(interceptor instanceof RecaptchaInterceptor);
+    }
+    
+    protected void assertNotRedirect(ModelAndView mav) {
+        Assert.assertFalse("should not be redirect view", mav.getView() instanceof RedirectView);
+    }
+    
+    protected void assertViewName(ModelAndView mav, String viewName) {
+        assertNotRedirect(mav);
+        Assert.assertNotNull("model and view should not be null", mav);
+        Assert.assertEquals("view name does not match", viewName, mav.getViewName());
+    }
+    
+    protected void assertRedirect(ModelAndView mav, String url) {
+        Assert.assertTrue("should be redirect view", mav.getView() instanceof RedirectView);
+        RedirectView view = (RedirectView)mav.getView();
+        Assert.assertEquals("assert redirect url", url, view.getUrl());
+    }
+    
+    protected void assertRedirectAndErrorCode(ModelAndView mav, String url, String errorCode) {
+        assertRedirect(mav, url);
+        assertMessageCode(errorCode);
+    }
+    
+    /**
+     * Checks whether the code exists in the request context
+     * @param code - the string code to check for
+     */
+    protected void assertMessageCode(String code) {
+        List<String> msgCodes = getRequestContext().getMessageCodes();
+        Assert.assertTrue("Expect error key '" + code + "' in context", listContains(msgCodes, code));
+    }
+    
+    private boolean listContains(List<String> list, String str) {
+        for (String ls : list) {
+            if (ls.equals(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

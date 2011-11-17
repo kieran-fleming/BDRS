@@ -35,8 +35,10 @@ public class PortalSelectionFilter implements Filter {
     public static final String PORTAL_ID_KEY = "portalId";
     public static final String DEFAULT_REDIRECT_URL = "/authenticated/redirect.htm";
     
-    public static final String RESTFUL_PORTAL_PATTERN_STR = "^(/portal/){1}(\\d+)(/{1}|$)";
-
+    public static final String BASE_RESTFUL_PORTAL_PATTERN = "(/portal/){1}(\\d+)";
+    
+    public static final String RESTFUL_PORTAL_PATTERN_STR = "^" + BASE_RESTFUL_PORTAL_PATTERN +"(/{1}|$)";
+    
     private Logger log = Logger.getLogger(getClass());
 
     private PortalDAO portalDAO;

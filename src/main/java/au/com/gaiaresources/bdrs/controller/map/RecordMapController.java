@@ -28,7 +28,6 @@ import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,30 +102,6 @@ public class RecordMapController extends AbstractController {
         return mv;
     }
 
-    @RequestMapping(value = "/map/mySightings.htm", method = RequestMethod.GET)
-    public ModelAndView showMySightings(HttpServletRequest request,
-            HttpServletResponse response) throws UnsupportedEncodingException {
-        
-        User user = getRequestContext().getUser();
-
-        ModelAndView mv = new ModelAndView("mySightings");
-        String sDefaultSurveyId = request.getParameter("defaultSurveyId");
-        if (StringUtils.hasLength(sDefaultSurveyId))
-        {
-            try
-            {
-            Integer defaultSurveyId = Integer.parseInt(sDefaultSurveyId);
-            mv.addObject("defaultSurveyId", defaultSurveyId);
-            }
-            catch (NumberFormatException e)
-            {
-                log.error("Could not parse string '" + sDefaultSurveyId + "' to a number. Not setting default survey id");
-            }
-        }
-        mv.addObject("surveyList", surveyDAO.getActiveSurveysForUser(user));
-        return mv;
-    }
-
     @RequestMapping(value = "/map/recordBaseMap.htm", method = RequestMethod.GET)
     public ModelAndView showRecordBaseMap(HttpServletRequest request, HttpServletResponse response) {
 
@@ -190,7 +165,7 @@ public class RecordMapController extends AbstractController {
         Session sesh = getRequestContext().getHibernate(); 
         sesh.setFlushMode(FlushMode.MANUAL);
         RecordDownloadFormat format = RecordDownloadFormat.valueOf(downloadFormat);
-        ScrollableRecords sc = recordDAO.getScrollableRecords(userPk, groupPk, 
+        ScrollableRecords sc = recordDAO.getScrollableRecords(currentUser, groupPk, 
                                                               surveyPk, 
                                                               taxonGroupPk, 
                                                               startDate, 

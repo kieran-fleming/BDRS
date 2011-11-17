@@ -8,8 +8,8 @@
 
         <p>
             Click here to begin entering records.<br/>
-            <a href="${bdrs.application.url}/home.htm?surveyId=${surveyId}">
-                ${bdrs.application.url}/home.htm?surveyId=${surveyId}
+            <a href="${bdrsApplicationUrl}/home.htm?surveyId=${surveyId}">
+                ${bdrsApplicationUrl}/home.htm?surveyId=${surveyId}
             </a>
         </p>
 

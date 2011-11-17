@@ -399,6 +399,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     	Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getString("value")),
                     						recAttr.getBooleanValue());
                     	break;
+                    case REGEX:
                     case BARCODE:
                         Assert.assertEquals(jsonRecAttr.getString("value"),
                                             recAttr.getStringValue());
@@ -570,6 +571,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     // Just get the first option.
                     recAttr.put("value", recordAttribute == null ? attr.getOptions().get(0).getValue() : attr.getOptions().get(1).getValue());
                     break;
+                case REGEX:
                 case BARCODE:
                     recAttr.put("value", "#123456");
                     break;

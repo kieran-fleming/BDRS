@@ -125,6 +125,10 @@ public interface TaxaDAO {
             String scientificName, String commonName, TaxonGroup taxonGroup,
             Collection<Region> regions, List<SpeciesProfile> infoItems, Set<IndicatorSpeciesAttribute> attributes);
 
+    /**
+     * Returns all of the species in the database
+     * @return - List<IndicatorSpecies>
+     */
     List<IndicatorSpecies> getIndicatorSpecies();
 
     List<IndicatorSpecies> getIndicatorSpeciesById(Integer[] pks);

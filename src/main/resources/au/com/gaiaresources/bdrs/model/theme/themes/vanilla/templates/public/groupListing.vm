@@ -1,0 +1,17 @@
+<h1>Select a Taxonomic Group</h1>
+
+#foreach ($taxonGroup in ${taxonGroups})
+    <div class="left field_guide_group">
+        #if(${taxonGroup.thumbNail})
+	        <a href="${pageContext.request.contextPath}/fieldguide/taxa.htm?groupId=${taxonGroup.id}">
+                <img class="max_size_img" src="${pageContext.request.contextPath}/files/download.htm?${taxonGroup.getThumbnailFileURL()}"/>
+	        </a>
+        #end
+        <div class="textcenter" class="clear">
+	        <a href="${pageContext.request.contextPath}/fieldguide/taxa.htm?groupId=${taxonGroup.id}">
+	            ${taxonGroup.name}
+	        </a>   
+        </div>
+    </div>
+#end
+<div class="clear"></div>

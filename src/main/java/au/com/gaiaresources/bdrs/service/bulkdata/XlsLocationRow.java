@@ -144,7 +144,7 @@ public class XlsLocationRow extends StyledRowImpl {
         cell.setCellStyle(headerStyle);
         
         cell = row.createCell(colIndex++);
-        cell.setCellValue("Location Name");
+        cell.setCellValue(AbstractBulkDataService.LOCATION_SHEET_LOCATION_NAME);
         cell.setCellStyle(headerStyle);
 
         cell = row.createCell(colIndex++);
@@ -244,7 +244,7 @@ public class XlsLocationRow extends StyledRowImpl {
                         // It should be referring to the 'canonical' way that we 
                         // convert dates to strings.
                         Date d = XlsCellUtil.cellToDate(currentReadCell);
-                        attrValue = XlsCellUtil.DATE_FORMATTER.format(d);
+                        attrValue = XlsCellUtil.getDateFormatter().format(d);
                         break;
                     case IMAGE:
                     case FILE:

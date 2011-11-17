@@ -1,0 +1,436 @@
+{
+    "css_files" : [
+        "redmond/jquery-ui-1.8.11.custom.css",
+        "css/base.css"
+    ],
+    
+    "css_links" : [
+    ],
+    
+    "js_files" : [
+        "redmond/jquery-ui-1.8.11.custom.min.js"
+    ],
+    
+    "theme_pages" : [
+    ],
+    
+    "theme_elements" : [
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.font",
+            "value" : "Calibri, Arial, Helvetica, sans-serif"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.font.size",
+            "value" : "9pt"   
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.line-height",
+            "value" : "1.5em"   
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.text.color",
+            "value" : "#2F2F2F"   
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.background.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.border.radius",
+            "value" : "8px"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.border.color",
+            "value" : "#DADADA"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.container.text.color",
+            "value" : "#666666"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.container.background.color",
+            "value" : "#F0F0F0"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.container.border.radius",
+            "value" : "8px"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.content.container.border.color",
+            "value" : "#DADADA"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.container.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.container.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.anchor.link.color",
+            "value" : "#1374BD"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.anchor.visited.color",
+            "value" : "purple"   
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.anchor.delete.link.color",
+            "value" : "#FF0000"   
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.anchor.delete.visited.color",
+            "value" : "#FF0000"   
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.anchor.decoration",
+            "value" : "none"   
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.anchor.hover.decoration",
+            "value" : "underline"   
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.header.text.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.header.background.color",
+            "value" : "#324E79"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.header.border.radius",
+            "value" : "20px"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.link.color",
+            "value" : "#F69900"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.messagebanner.background.color",
+            "value" : "#2D4977"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.messagebanner.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.messagebanner.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.messagebanner.border.color",
+            "value" : "#343434"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.messagebanner.text.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.input.disabled.color",
+            "value" : "#DDDDDD"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.input.text.border.radius",
+            "value" : "4px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.input.text.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.input.text.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.input.text.border.color",
+            "value" : "#787C89"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.input.text.signin.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.input.text.signin.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.input.text.signin.border.color",
+            "value" : "#5D5D5D"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.shadow.color",
+            "value" : "#445E7C"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.gradient.color.top",
+            "value" : "#5E7698"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.gradient.color.bottom",
+            "value" : "#224272"
+        },
+    
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.hover.gradient.color.top",
+            "value" : "#95A5BC"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.hover.gradient.color.bottom",
+            "value" : "#224272"
+        },
+    
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.border.color",
+            "value" : "#224272"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.hover.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.background.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.hover.background.color",
+            "value" : "#BC6909"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.disabled.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.disabled.background.color",
+            "value" : "#6C6C6C"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.form.button.disabled.border.color",
+            "value" : "#484848"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.text.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.selected.text.color",
+            "value" : "#FFCE45"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.background.color",
+            "value" : "#6C6C6C"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.hover.text.color",
+            "value" : "#FFFFFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.hover.background.color",
+            "value" : "#2E2E2E"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.menu.height",
+            "value" : "30px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.menu.width",
+            "value" : "220px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.menu.level2.width",
+            "value" : "222px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.menu.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.menu.border.color",
+            "value" : "#484848"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.menu.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.table.header.text.color",
+            "value" : "#FFF"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.table.header.background.color",
+            "value" : "#484848"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.table.header.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.table.header.border.style",
+            "value" : "solid"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.table.header.border.color",
+            "value" : "#484848"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.table.border.width",
+            "value" : "1px"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.table.border.style",
+            "value" : "dotted"
+        },
+        {
+            "type"  : "COLOR",
+            "key"   : "style.table.border.color",
+            "value" : "#484848"
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.dashboard',
+            'value' : 'templates/dashboard.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.header',
+            'value' : 'templates/header.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.menu',
+            'value' : 'templates/menu.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.footer',
+            'value' : 'templates/footer.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.fieldguide.grouplisting',
+            'value' : 'templates/public/groupListing.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.fieldguide.taxonview',
+            'value' : 'templates/public/taxonView.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.public.home',
+            'value' : 'templates/public/home.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.admin.home',
+            'value' : 'templates/admin/home.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.user.home',
+            'value' : 'templates/user/home.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.public.help',
+            'value' : 'templates/public/help.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.public.about',
+            'value' : 'templates/public/about.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.public.signin',
+            'value' : 'templates/public/signin.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.usersignup',
+            'value' : 'templates/public/userSignUp.vm'
+        }
+    ]
+}

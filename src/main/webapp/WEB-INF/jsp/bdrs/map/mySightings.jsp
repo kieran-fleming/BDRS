@@ -1,355 +1,389 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<%@page import="java.awt.Color"%>
-<jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
+<%@ page import="java.util.Date" %>
 
-<tiles:insertDefinition name="title">
-    <tiles:putAttribute name="title" value="My Sightings"/>
-</tiles:insertDefinition>
+<h1>My Sightings</h1>
 
-<p>
-	This form allows you to filter your records very simply, by project, 
-	by a date range and by the number you want to display on the map.  
-	By changing these fields, the map and the list below the map will update 
-	when you click on "Load Records"
-</p>
-
-<form id="record_filter_form" method="get" action="${pageContext.request.contextPath}/map/addRecordBaseMapLayer.htm">
-    <!--<input type="hidden" name="user" value="<%= context.getUser().isAdmin() ? 0 : context.getUser().getId() %>"/>-->
-    <input type="hidden" name="group" value="0"/>
-    <input type="hidden" name="species" value=""/>
-    <input type="hidden" name="taxon_group" value="0"/>
-    <input type="hidden" name="layer_name" value="All Records"/>
-    <input type="hidden" name="ident" value="<%= context.getUser().getRegistrationKey() %>"/>
-	
-	<div id="sightingFilter">
-        <div class="sightingFilterItem">
-        	<div><label for="project">Project:</label></div>
-            <div>
-				<select id="project" name="survey">
-	                <c:forEach items="${surveyList}" var="survey">                            
-	                    <option value=${survey.id}
-	                    <c:if test="${survey.id == defaultSurveyId}">
-	                        selected="selected"</c:if>
-	                    >
-	                        <c:out value="${survey.name}"/>
-	                    </option>
-	                </c:forEach>
-	            </select>
-			</div>
-		</div>	
-		<div class="sightingFilterItem">
-			<div><label for="date_start">From:</label></div>
-			<div><input id="date_start" class="datepicker_historical" type="text" name="date_start"/></div>
-		</div>
-		<div class="sightingFilterItem">    
-            <div><label for="date_end">To:</label></div>
-			<div><input id="date_end" class="datepicker_historical" type="text" name="date_end"/></div>
-		</div>
-		<div class="sightingFilterItem">    	
-            <div><label for="limit">Limit:</label></div>
-			<div><input id="limit" class="validate(integer)" type="text" name="limit" value="300"/></div>
-        </div>
-     
-	    <div class="sightingFilterSubmit"><input type="submit" value="Load Records" class="form_action"/></div>
+<div>
+    <a id="search_criteria_expand_collapse" class="right criteria_link" href="javascript:void(0);" 
+        title="Expand or collapse the search criteria">Collapse</a>
+    <input id="permalink_input" class="right" type="text" style="display:none;"/> 
+    <a id="permalink_link" class="right criteria_link" href="javascript:void(0);" 
+        title="Direct link to this page (including criteria)">Permalink</a>
+    <h3>Search Criteria</h3>
+</div>
+<form id="search_criteria_form">
+    <div id="search_critieria_container" class="input_container clear align_radio align_checkbox">
+        <input id="highlighted_record_id" type="hidden" name="record_id" value="${ record_id }"/>
+        <input id="page_number" type="hidden" name="page_number" value="${ page_number }"/>
+	    <table id="sightings_criteria" class="form_table">
+	        <tbody>
+	            <%-- Section One --%>
+	            <tr>
+	                <th class="interrogative" colspan="2">Which</th>
+	                <th class="interrogative" colspan="2">How Many</th>
+	            </tr>
+	            <tr>
+	                <%-- Which --%>
+	                <th>
+	                    <label for="survey_id">Survey</label>
+	                </th>
+	                <td>
+	                    <select id="survey_id" name="survey_id">
+	                       <option value="0">All Surveys</option>
+			                <c:forEach var="survey" items="${ survey_list }">
+			                    <option value="${ survey.id }"
+			                        <c:if test="${ survey == selected_survey }">
+			                            selected="selected"
+			                        </c:if> 
+			                    >
+			                        <c:out value="${ survey.name }"/>
+			                    </option>
+			                </c:forEach>
+			            </select>
+	                </td>
+	                
+	                <%-- How many --%>
+	                <th>
+	                    <label for="limit">Limit</label>
+	                </th>
+	                <td>
+	                    <input id="limit" class="validate(positiveInteger)" type="text" name="limit" value="${ limit }" placeholder="e.g. 300"/>
+	                    <input id="show_all" type="checkbox" name="limit" value="0"/>
+	                    <label for="show_all">Show all</label> 
+	                    <em id="limit_warning" style="display:none;">Warning: Large datasets may take a long time</em>
+	                </td>
+	            </tr>
+	            
+	            <%-- Section Two --%>
+	            <tr>
+	                <th class="interrogative" colspan="2">What</th>
+	                <th class="interrogative" colspan="2">When</th>
+	            </tr>
+	            <tr>
+	                <%-- What Row 1 --%>
+	                <th>
+	                    <label for="taxon_group_id">Species Group</label>
+	                </th>
+	                <td>
+	                    <select id="taxon_group_id" name="taxon_group_id">
+                            <option value="0">All Groups</option>
+	                        <c:forEach var="group" items="${ group_list }">
+	                            <option value="${ group.id }"
+	                               <c:if test="${ group.id == taxon_group_id }">
+	                                   selected="selected"
+	                               </c:if>
+	                            >
+	                                <c:out value="${ group.name }"/>
+	                            </option>
+	                        </c:forEach>
+	                    </select>
+	                </td>
+	                <%-- When Row 1 --%>
+	                <th>
+	                    <label for="start_date">Start</label>
+	                </th>
+	                <td>   
+	                    <input id="start_date" type="text" name="start_date" class="validate(date) datepicker_historical"
+	                        placeholder="e.g. <fmt:formatDate pattern="dd MMM yyyy" value="${ selected_survey.startDate }"/>"
+	                        <%-- start_date may be null but the formatter defaults to blank --%>
+	                        value="<fmt:formatDate pattern="dd MMM yyyy" value="${ start_date }"/>"
+	                    />
+	                </td>
+	            </tr>
+	            <tr>
+	                <%-- What Row 2 --%>
+	                <th>
+	                    <label for="taxon_id">Species Search</label>
+	                </th>
+	                <td>
+	                    <input id="taxon_id" type="text" placeholder="e.g. Kangaroo" name="taxon_search"
+	                        title="Enter the common or scientific name to search only for that species, otherwise leave blank for all species"
+	                        value="<c:out value="${ taxon_search }"/>"/>
+	                </td>
+	                
+	                <%-- When Row 2 --%>
+	                <th>
+	                    <label for="end_date">End</label>
+	                </th>
+	                <td>
+	                    <input id="end_date" type="text" class="validate(date) datepicker_historical" name="end_date" 
+	                        placeholder="e.g. <fmt:formatDate pattern="dd MMM yyyy" value="<%= new Date() %>"/>"
+	                        <%-- end_date may be null but the formatter defaults to blank --%>
+	                        value="<fmt:formatDate pattern="dd MMM yyyy" value="${ end_date }"/>"
+	                    />
+	                </td>
+	            </tr>
+	            
+	            <tr>
+	                <th class="interrogative" colspan="2">Who</th>
+	                <th class="interrogative" colspan="2">Order</th>
+	            </tr>
+	            <tr>
+	                <th>
+	                    <label for="my_records">Owner</label>
+	                </th>
+	                <td>
+	                    <fieldset>
+	                        <div>
+	                            <input id="my_records" type="radio" name="user_records_only" checked="checked" value="true"/>
+	                            <label for="my_records">Only for me</label>
+	                        </div>
+	                        
+	                        <sec:authorize ifAnyGranted="ROLE_ADMIN, ROLE_ROOT">
+	                            <div>
+	                                <input type="radio" id="all_records" name="user_records_only" value="false"
+	                                    <c:if test="${ not user_records_only }">
+	                                       checked="checked"
+	                                    </c:if>
+	                                />
+	                                <label for="all_records">All public records</label>
+	                            </div>
+	                        </sec:authorize>
+	                    </fieldset>
+	                </td>
+	                <th>
+                        <label for="my_records">Attribute</label>
+                    </th>
+                    <td>
+                        <div>
+	                        <select id="sort_by" name="sort_by">
+				                <option value="record.when"
+				                    <c:if test="${ 'record.when' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    date
+				                </option>
+				                <option value="species.scientificName"
+				                    <c:if test="${ 'species.scientificName' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    scientific name
+				                </option>
+				                <option value="species.commonName"
+				                    <c:if test="${ 'species.commonName' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    common name
+				                </option>
+				                <option value="location.name"
+				                    <c:if test="${ 'location.name' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    location
+				                </option>
+				                <option value="censusMethod.type"
+				                    <c:if test="${ 'censusMethod.type' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    type
+				                </option>
+				                <option value="record.user"
+				                    <c:if test="${ 'record.user' == sort_by }">
+				                        selected="selected"
+				                    </c:if>
+				                >
+				                    user
+				                </option>
+				            </select>
+                        </div>
+                        <div class="order_type">
+                            <fieldset>
+                                <input id="ascending" type="radio" name="sort_order" value="ASCENDING"
+                                    <c:if test="${ 'ASCENDING' == sort_order }">
+                                        checked="checked"
+                                    </c:if>
+                                />
+                                <label for="ascending">Ascending</label>
+                                <input id="descending" type="radio" name="sort_order" value="DESCENDING"
+                                    <c:if test="${ 'DESCENDING' == sort_order }">
+                                        checked="checked"
+                                    </c:if>
+                                />
+                                <label for="descending">Descending</label>  
+                            </fieldset>
+                        </div>
+                    </td>
+	            </tr>
+	        </tbody>
+	    </table>
+	    <input id="selected_tab" type="hidden" name="selected_tab" value="${ selected_tab }"/>
+	    <div class="buttonpanel textright">
+	       <input id="search_criteria" class="form_action" type="button" value="Search"/>
+	    </div>
     </div>
-	<div class="clear"></div>
 
-    <c:if test="${not empty recordDateList}">
-        <div class="textright">
-            <label for="date_start">Select a Date:</label>
-            <select id="date_start" name="date_start">
-                <c:forEach var='date' items='${recordDateList}'>
-                    <option value="<fmt:formatDate pattern="dd MMM yyyy" value="${date}"/>">
-                        <fmt:formatDate pattern="dd MMM yyyy" value="${date}"/>
-                    </option>
-                </c:forEach>
-            </select>
-            <input type="hidden" value="<fmt:formatDate pattern="dd MMM yyyy" value="${recordDateList[0]}"/>" name="date_end"/>
-        </div>
-    </c:if>
-
+	<div id="sightings_tabs" class="controlPanel">
+	    <a id="map_tab_handle" class="tab_handle" href="javascript:void(0);">
+	        <div 
+	            <c:choose>
+		            <c:when test="${ \"map\" == selected_tab }">
+		                class="displayTab left displayTabSelected"
+		            </c:when>
+		            <c:otherwise>
+		                class="displayTab left"
+		            </c:otherwise>
+		        </c:choose>
+	        >
+	            Map
+	        </div>
+	    </a>
+	    <a id="table_tab_handle" class="tab_handle" href="javascript:void(0);">
+	        <div 
+	            <c:choose>
+	                <c:when test="${ \"table\" == selected_tab }">
+	                    class="displayTab left displayTabSelected"
+	                </c:when>
+	                <c:otherwise>
+	                    class="displayTab left"
+	                </c:otherwise>
+	            </c:choose>
+	        >
+	            Table
+	        </div>
+	    </a>
+	    <a id="download_tab_handle" class="tab_handle" href="javascript:void(0);">
+	        <div
+	            <c:choose>
+	                <c:when test="${ \"download\" == selected_tab }">
+	                    class="displayTab left displayTabSelected"
+	                </c:when>
+	                <c:otherwise>
+	                    class="displayTab left"
+	                </c:otherwise>
+	            </c:choose>
+	        >
+	            Download
+	        </div>
+	    </a>
+	    <span id="loading" class="right" style="display:none">
+	        <img class="vertmiddle" src="${pageContext.request.contextPath}/images/icons/ajax-loader.gif" alt="This is a loading spinner" title="Data Loading"/>
+	        <span>Loading</span>
+	    </span>
+	    <div class="clear"></div>
+	</div>
+	<div id="sightings_tab_content">
+	    <%--
+	        This is the Map Tab 
+	    --%>
+	    <div id="map_tab"
+	        <c:choose>
+		        <c:when test="${ \"map\" == selected_tab }">
+		            style="display:block"
+		        </c:when>
+		        <c:otherwise>
+		            style="display:none"
+		        </c:otherwise>
+	        </c:choose>
+	    >
+	        <div class="map_wrapper" id="map_wrapper">
+			    <div id="record_map" class="defaultmap review_map"></div>
+			    <div id="geocode" class="geocode"></div>
+			    <div class="recordCount textright"></div>
+			</div>
+			
+			<div class="textright recordCountPanel"></div>
+	    </div>
+	    
+	    <%--
+	        This is the Table Tab 
+	    --%>
+	    <div id="table_tab"
+	        <c:choose>
+	            <c:when test="${ \"table\" == selected_tab }">
+	                style="display:block"
+	            </c:when>
+	            <c:otherwise>
+	                style="display:none"
+	            </c:otherwise>
+	        </c:choose>
+	    >
+	        <table id="record_table" class="datatable">
+	            <thead>
+	                <tr>
+	                    <th>Date</th>
+	                    <th>Common&nbsp;Name</th>
+	                    <th>Scientific&nbsp;Name</th>
+	                    <th>Latitude</th>
+	                    <th>Longitude</th>
+	                    <th>Number</th>
+	                    <th>Notes</th>
+	                    <th colspan="2">Action</th>
+	                </tr>
+	            </thead>
+	        </table>
+	        
+	        <div class="textright recordCountPanel"></div>
+	        <div id="page_count" class="textcenter"></div>
+	    </div>
+	    
+	    <%--
+	        This is the Download Tab 
+	    --%>
+	    <div id="download_tab"
+	        <c:choose>
+	            <c:when test="${ \"download\" == selected_tab }">
+	                style="display:block"
+	            </c:when>
+	            <c:otherwise>
+	                style="display:none"
+	            </c:otherwise>
+	        </c:choose>
+	    >
+	        <p>
+	            <h3>Click to Download</h3>
+	            Please choose the desired formats and click the button below to download the current search results as a zip file.
+	        </p>
+	        <div class="align_radio">
+		        <fieldset>
+			        <div>
+			            <input id="kml" type="checkbox" name="download_format" value="KML"
+			                <c:if test="${ download_kml_selected }">
+			                    checked="checked"
+		                    </c:if>
+			            />
+			            <label for="kml">
+			                Keyhole Markup Language (KML) &mdash; Can be used for <a href="http://earth.google.com" target="_target">Google Earth</a>
+			            </label> 
+			        </div>
+			        <div>
+			            <input id="shp" type="checkbox" name="download_format" value="SHAPEFILE" 
+			                <c:if test="${ download_shp_selected }">
+                                checked="checked"
+                            </c:if>
+                        />
+			            <label for="shp">
+			                Shapefile (SHP) &mdash; Can be used in <a href="http://en.wikipedia.org/wiki/Comparison_of_geographic_information_systems_software" target="_target">GIS applications</a>.
+			            </label> 
+			        </div>
+			        <div>
+			            <input id="xls" type="checkbox" name="download_format" value="XLS"
+			                <c:if test="${ download_xls_selected }">
+                                checked="checked"
+                            </c:if>
+			            />
+			            <label for="xls">
+			                Spreadsheet (XLS) &mdash; Can be used for <a href="http://www.libreoffice.org/features/calc/">Spreadsheet Applications</a>
+			            </label> 
+			        </div>
+		        </fieldset>
+	        </div>
+	        <div class="buttonpanel textright">
+	            <input id="download_button" type="button" class="form_action" value="Download"/>
+	        </div>
+	    </div>
+	</div>
 </form>
 
-<h3>Map</h3>
-<div class="left">
-	<sec:authorize ifAnyGranted="ROLE_ADMIN">
-    <div>
-        <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'KML');">
-            Download KML for all records
-        </a>
-        <span>&nbsp;|&nbsp;<span/>
-        <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'SHAPEFILE', null);">
-            Download SHP for all records
-        </a>
-    </div>
-    </sec:authorize>
-	
-	<div>
-	    <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'KML', '<%= context.getUser().getId() %>');">
-	        Download KML for my records
-	    </a>
-		<span>&nbsp;|&nbsp;<span/>
-	    <a href="javascript: bdrs.map.downloadMapData('#record_filter_form', 'SHAPEFILE', '<%= context.getUser().getId() %>');">
-	        Download SHP for my records
-	    </a>
-	</div>
-</div>
-
-<div class="right">
-	<span class="hideMapHide">
-		<a id=mapScrollToggle class="text-left" href="javascript:void(0);">
-	        Zoom Scroll [<span id="scrollableChecker">x</span>]
-	    </a>
-	    <span>&nbsp; |&nbsp;</span>
-	    <a id="maximiseMapLink" class="text-left" href="javascript:bdrs.map.maximiseMap('#maximiseMapLink', '#map_wrapper', 'Enlarge Map', 'Shrink Map (esc)', 'review_map_fullscreen', 'review_map', '#record_base_map', bdrs.map.baseMap)">
-	    	<span>Enlarge Map</span>
-	    </a>
-	   	<span>&nbsp;|&nbsp;</span>
-   	</span>
-	<a id="mapToggle" class="text-left" href="javascript:bdrs.map.collapseMap($('.map_wrapper'),$('#mapToggle'))">
-		Hide Map
-	</a>
-	    
-</div>
-
-<div class="clear"></div>
-
-<div class="map_wrapper" id="map_wrapper">
-    <div id="record_base_map" class="defaultmap review_map"></div>
-    <div id="geocode" class="geocode"></div>
-    <div class="recordCount textright"></div>
-</div>
-
-
-<div class="clear"></div>
-
-<h3>List</h3>
-<div class="clear">
-    <a id="xlsSurveyDownload" class="right" href="javascript:void(0);" onclick="bdrs.downloadXls(this);return false;">
-        Download Survey XLS
-    </a>
-    <span class="right">&nbsp;|&nbsp;</span>
-    <a id="xlsDownload" class="right" href="javascript:void(0);" onclick="bdrs.downloadXls(this);return false;">
-        Download XLS
-    </a>
-</div>
-<div class="list_wrapper clear">
-    <table id="recordTable" class="datatable">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>
-                    <div>Common Name</div>
-                    <div class="scientificName">Scientific Name</div>
-                </th>
-                <th>Location</th>
-                <th>Number</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-    <div class="recordCount textright"></div>
-</div>
-
-
-<div class="clear"></div>
-
 <script type="text/javascript">
-
-    // Download XLS
-    bdrs.downloadXls = function(elem) {
-        var xlsURL = jQuery(elem).data("xlsURL");
-        if(xlsURL !== null && xlsURL !== undefined && xlsURL.length > 0) {
-            window.document.location = xlsURL;
-        } else {
-            return false;
-        }
-    };
-
-    // List Populating
-    bdrs.populateList = function(formIdSelector, recordTableSelector) {
-        // Get data from the webservice and populate the table
-        var form = jQuery(formIdSelector);
-        var url = "${pageContext.request.contextPath}/webservice/record/searchRecords.htm?"
-        url = url + form.serialize();
-
-        // Cache the URL for XLS download
-        var xlsURL = "${pageContext.request.contextPath}/webservice/record/downloadRecords.htm?";
-        xlsURL = xlsURL + form.serialize();
-        jQuery("#xlsDownload").data("xlsURL", xlsURL);
-        
-        var limitElem = jQuery("#limit");
-        var origLimit = limitElem.val();
-        limitElem.val("-1");
-        var xlsSurveyURL = "${pageContext.request.contextPath}/webservice/record/downloadRecords.htm?";
-        xlsSurveyURL = xlsSurveyURL + form.serialize();
-        console.log(xlsSurveyURL);
-        jQuery("#xlsSurveyDownload").data("xlsURL", xlsSurveyURL);
-        limitElem.val(origLimit); 
-        
-        jQuery.getJSON(url, function(data) {
-            var table = jQuery(recordTableSelector);
-            var tbody = table.find("tbody");
-            tbody.children().remove();
-
-            var rec;
-            var row;
-            var row2;
-            var when;
-            var dateCell;
-            var dateLink;
-            var taxonNameCell
-            var locationCell;
-            var numberCell;
-            var notesCell;
-            var taxaLookup = {};
-            for(var i=0; i<data.length; i++) {
-                rec = data[i];
-                row = jQuery("<tr></tr>");
-
-                when = new Date(rec.when);
-                dateLink = jQuery("<a></a>").attr("href", "${pageContext.request.contextPath}/bdrs/user/surveyRenderRedirect.htm?surveyId="+rec.survey+"&recordId="+rec.id);
-                dateLink.text(bdrs.util.formatDate(when));
-                dateCell = jQuery("<td></td>").addClass("nowrap").append(dateLink);
-                taxonNameCell = jQuery("<td></td>").addClass("nowrap").addClass("taxonNameCell").attr("id", "record_"+rec.id);
-                if(rec.species !== null && rec.species !== undefined) {
-                    taxonNameCell.addClass("taxon_"+rec.species).addClass("scientificName_"+rec.species);
-                }
-                locationCell = jQuery("<td></td>").addClass("nowrap").text(rec.latitude+", "+rec.longitude);
-                numberCell = jQuery("<td></td>").addClass("nowrap").text(rec.number == null ? "N/A" : rec.number);
-                notesCell = jQuery("<td></td>").text(rec.notes);
-
-                row.append(dateCell).append(taxonNameCell).append(locationCell).append(numberCell).append(notesCell);
-                tbody.append(row);
-
-                if (rec.species) {
-	                if(taxaLookup[rec.species] === undefined) {
-	                    jQuery.getJSON("${pageContext.request.contextPath}/webservice/taxon/getTaxonById.htm",
-	                        {"id": rec.species}, function(taxon) {
-	                        
-	                        var scientific = jQuery("<div></div>").addClass("scientificName").text(taxon.scientificName);
-	                        var common = jQuery("<div></div>").addClass("commonName").text(taxon.commonName);
-	                        
-	                        jQuery(".scientificName_"+taxon.id).append(common).append(scientific);
-	                        
-	                    });
-	                    // Add an entry to the map. This taxon has been requested.
-	                    taxaLookup[rec.species] = rec.species;
-	                }
-                } else {
-                    taxonNameCell.text("N/A");
-                }
-            }
-            var mapRecordCount = jQuery('.recordCount');
-            var txt = [data.length];
-            txt.push(' ');
-            txt.push(data.length == 1 ? "Record" : "Records");
-            mapRecordCount.text(txt.join(' '));
-
-        });
-        return false;
-    };
-    
     jQuery(window).load(function() {
-        bdrs.map.initBaseMap('record_base_map', { geocode: { selector: '#geocode' }});
-        bdrs.map.baseMap.events.register('addlayer', null, bdrs.map.addFeaturePopUpHandler);
-        bdrs.map.baseMap.events.register('removeLayer', null, bdrs.map.removeFeaturePopUpHandler);
-
-        <c:if test="${not empty recordDateList}">
-            jQuery('[name=date_start]').change(function(event) {
-                jQuery("[name=date_end]").val(jQuery("[name=date_start]").val());
-
-                var map = bdrs.map.baseMap;
-                var layerArray = map.getLayersByName(jQuery('[name=layer_name]').val());
-                
-                for(var i=0; i<layerArray.length; i++) {
-                    bdrs.map.removeLayerById(layerArray[i].id);
-                }
-
-                jQuery('#record_filter_form :submit').click();
-            });
-        </c:if>
-        
-        jQuery("#record_filter_form").submit(function() {
-			bdrs.map.clearPopups(bdrs.map.baseMap);
-            bdrs.map.clearAllVectorLayers(bdrs.map.baseMap);
-
-            if (bdrs.openlayers === undefined) {
-                bdrs.openlayers = {};
-            }
-            if (bdrs.openlayers.mysightings === undefined ) {
-            	bdrs.openlayers.mysightings = {};
-			}
-            if (bdrs.openlayers.mysightings.stylemap === undefined ) {
-            	bdrs.openlayers.mysightings.stylemap = {};
-			}
-
-            // User Records
-            var params = {
-                placemark_color: '15E015',
-                user: '<%= context.getUser().getId() %>',
-                layer_name: 'My Records',
-                styleMaps: {
-                	"My Records": bdrs.openlayers.mysightings.stylemap 
-                }
-            };
-            bdrs.map.addRecordLayerHandler('#record_filter_form', null, params);
-
-            <sec:authorize ifAnyGranted="ROLE_ADMIN">
-	            if (bdrs.openlayers.allsightings === undefined ) {
-	            	bdrs.openlayers.allsightings = {};
-				}
-	            if (bdrs.openlayers.allsightings.stylemap === undefined ) {
-	            	bdrs.openlayers.allsightings.stylemap = {};
-				}
-                // All records
-                var allRecordsParams = {styleMaps: {"All Records" : bdrs.openlayers.allsightings.stylemap}};
-                bdrs.map.addRecordLayerHandler('#record_filter_form', null, allRecordsParams);
-            </sec:authorize>
-            
-            bdrs.populateList('#record_filter_form', '#recordTable');
-            return false;
-        });
-        
-		// Map Scroll Zoom Toggling
-        jQuery('#mapScrollToggle').toggle(function(){
-        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
-        	jQuery('#scrollableChecker').text(' ');
-        },
-        function(){
-        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
-        	jQuery('#scrollableChecker').text('x');
-        });
-
-        // Check for Map Scroll Zoom Cookie
-        if (bdrs.util.cookie.read('cookie.map.zoomscroll') === "false") {
-        	bdrs.map.scrollZoom(false, bdrs.map.baseMap);
-        	jQuery('#scrollableChecker').text(' ');
-        } else {
-        	bdrs.map.scrollZoom(true, bdrs.map.baseMap);
-        	jQuery('#scrollableChecker').text('x');
-        }
-
-        // List Toggling
-        jQuery("#listToggle").click(function() {
-            jQuery(".list_wrapper").slideToggle(function() {
-                var canSee = jQuery(".list_wrapper").css('display') === 'none';
-                jQuery("#listToggle").text(canSee ? "Expand" : "Collapse");
-            });
-        });
-
-        jQuery("#record_filter_form").submit();
-		
-		// In order to force correct map centering in IE7 when there are no records to center over
-        jQuery("#record_base_map").removeClass("defaultmap");
-        bdrs.map.centerMap(bdrs.map.baseMap);
-        jQuery("#record_base_map").addClass("defaultmap");
+        bdrs.review.mysightings.init(${ user.portal.id });
     });
-
 </script>

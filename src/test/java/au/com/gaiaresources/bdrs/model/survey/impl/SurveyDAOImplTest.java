@@ -322,6 +322,14 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
         testGetActiveSurveysForUserWithGroupId(user3, group2, 2, survey3);
         testGetActiveSurveysForUserWithGroupId(user3, group1, 1, survey1);
     }
+    
+    @Test
+    public void testSearchSpeciesForSurveyInjectionAttack() {
+        // will cause an error if hql injection is possible
+        surveyDAO.getSpeciesForSurveySearch(survey1.getId(), "%Carnaby's%Black%");
+        surveyDAO.getSpeciesForSurveySearch(survey1.getId(), ";drop table portal;");
+    }
+    
     private void testGetActiveSurveysForUserWithGroupId(User u, Group group, int expectedLength, Survey expectedSurvey){
         List<Survey> surveys = surveyDAO.getActiveSurveysForUser(u, group);
         Assert.assertNotNull(surveys);

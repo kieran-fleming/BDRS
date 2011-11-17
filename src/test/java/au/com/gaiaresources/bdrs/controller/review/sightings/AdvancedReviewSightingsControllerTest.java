@@ -27,13 +27,6 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.CensusMethodTypeFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.CensusMethodTypeFacetOption;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.Facet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.MonthFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.SurveyFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.TaxonGroupFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.UserFacet;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -58,6 +51,14 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.facet.CensusMethodTypeFacet;
+import au.com.gaiaresources.bdrs.service.facet.CensusMethodTypeFacetOption;
+import au.com.gaiaresources.bdrs.service.facet.Facet;
+import au.com.gaiaresources.bdrs.service.facet.FacetService;
+import au.com.gaiaresources.bdrs.service.facet.MonthFacet;
+import au.com.gaiaresources.bdrs.service.facet.SurveyFacet;
+import au.com.gaiaresources.bdrs.service.facet.TaxonGroupFacet;
+import au.com.gaiaresources.bdrs.service.facet.UserFacet;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 /**
@@ -65,9 +66,6 @@ import au.com.gaiaresources.bdrs.util.KMLUtils;
  */
 public class AdvancedReviewSightingsControllerTest extends AbstractControllerTest {
     private DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-    
-    private static final String[] months = { "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December" };
     
     @Autowired
     private SurveyDAO surveyDAO;
@@ -83,6 +81,8 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
     private CensusMethodDAO methodDAO;  
     @Autowired
     private LocationService locationService;
+    @Autowired
+    private FacetService facetService;
     @Autowired
     private AdvancedReviewSightingsController controller;
 
@@ -388,6 +388,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                     case TEXT:
                         recAttr.setStringValue("This is a test text record attribute");
                         break;
+                    case REGEX:
                     case BARCODE:
                         recAttr.setStringValue("#454545");
                         break;
@@ -457,6 +458,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                         case STRING:
                             recAttr.setStringValue("This is a test string record attribute for groups");
                             break;
+                        case REGEX:
                         case BARCODE:
                             recAttr.setStringValue("#454545");
                             break;
@@ -542,7 +544,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
-        request.addParameter(AdvancedReviewSightingsController.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
+        request.addParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -558,10 +560,12 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
         for(Facet facet : facetList) {
-            Assert.assertFalse(facet instanceof SurveyFacet);
+            if(facet instanceof SurveyFacet) {
+                Assert.assertFalse(facet.isActive());
+            }
         }
         
-        Integer surveyId = new Integer(mv.getModel().get(AdvancedReviewSightingsController.SURVEY_ID_QUERY_PARAM_NAME).toString());
+        Integer surveyId = new Integer(mv.getModel().get(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME).toString());
         List<Record> recordList = controller.getMatchingRecordsAsList(facetList, surveyId, null, null, null, null, null);
         Assert.assertEquals(surveyRecordCount, recordList.size());
     }
@@ -637,7 +641,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         Survey survey = surveyDAO.getSurveys(admin).get(0);
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReviewDownload.htm");
-        request.addParameter(AdvancedReviewSightingsController.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
+        request.addParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
         
         handle(request, response);
         Assert.assertEquals("application/vnd.ms-excel", response.getContentType());
@@ -750,7 +754,6 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
     @Test 
     public void testOneMonthFacet() throws Exception {
         List<Long> dateList = new ArrayList<Long>();
-        Calendar tmpl = new GregorianCalendar();
         Calendar cal = new GregorianCalendar();
         for(Date d : new Date[]{dateA}) {
             cal.setTime(d);
@@ -796,8 +799,10 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
+        
+        Facet facet = getFacetInstanceByType(CensusMethodTypeFacet.class);
         for(String type: methodTypes) {
-            request.addParameter(CensusMethodTypeFacet.QUERY_PARAM_NAME, type);
+            request.addParameter(facet.getInputName(), type);
         }
         
         ModelAndView mv = handle(request, response);
@@ -828,8 +833,10 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
+        
+        Facet facet = getFacetInstanceByType(SurveyFacet.class);
         for(Survey survey : surveyList) {
-            request.addParameter(SurveyFacet.QUERY_PARAM_NAME, survey.getId().toString());
+            request.addParameter(facet.getInputName(), survey.getId().toString());
         }
         
         ModelAndView mv = handle(request, response);
@@ -858,8 +865,10 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
+        
+        Facet facet = getFacetInstanceByType(TaxonGroupFacet.class);
         for(TaxonGroup group: groupList) {
-            request.addParameter(TaxonGroupFacet.QUERY_PARAM_NAME, group.getId().toString());
+            request.addParameter(facet.getInputName(), group.getId().toString());
         }
         
         ModelAndView mv = handle(request, response);
@@ -890,8 +899,10 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
+        
+        Facet facet = getFacetInstanceByType(UserFacet.class);
         for(User user: userList) {
-            request.addParameter(UserFacet.QUERY_PARAM_NAME, user.getId().toString());
+            request.addParameter(facet.getInputName(), user.getId().toString());
         }
         
         ModelAndView mv = handle(request, response);
@@ -924,8 +935,9 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         Calendar cal = new GregorianCalendar();
         
         Set<Integer> monthSet = new HashSet<Integer>(monthlist.size());
+        Facet facet = getFacetInstanceByType(MonthFacet.class);
         for(Long date : monthlist) {
-            request.addParameter(MonthFacet.QUERY_PARAM_NAME, date.toString());
+            request.addParameter(facet.getInputName(), date.toString());
             monthSet.add(date.intValue());
         }
         
@@ -950,5 +962,16 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
             Integer monthInt = cal.get(Calendar.MONTH);
             Assert.assertTrue(monthSet.contains(Integer.valueOf(monthInt + 1)));
         }
+    }
+    
+    private Facet getFacetInstanceByType(Class<? extends Facet> klass) {
+        User user = userDAO.getUser("admin");
+        for(Facet facet : facetService.getFacetList(user, new HashMap<String, String[]>())) {
+            if(facet.getClass().equals(klass)) {
+                return facet;
+            }
+        }
+        
+        return null;
     }
 }

@@ -14,7 +14,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,6 +28,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;
@@ -40,6 +41,7 @@ import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
@@ -47,6 +49,12 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
@@ -84,6 +92,8 @@ public class TrackerController extends AbstractController {
     
     public static final String MV_WKT = "wkt";
     public static final String MV_ERROR_MAP = "errorMap";
+    
+    public static final String NO_SURVEY_ERROR_KEY = "bdrs.record.noSurveyError";
 
     @Autowired
     private RecordDAO recordDAO;
@@ -101,6 +111,9 @@ public class TrackerController extends AbstractController {
     
     @Autowired
     private RedirectionService redirectionService;
+    
+    @Autowired
+    private MetadataDAO metadataDAO;
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
@@ -116,6 +129,10 @@ public class TrackerController extends AbstractController {
             @RequestParam(value = "guid", required = false) String guid,
             @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId) {
         Survey survey = surveyDAO.getSurvey(surveyId);
+        if (survey == null) {
+            return nullSurveyError();
+        }
+        
         Record record = recordDAO.getRecord(recordId);
         CensusMethod censusMethod = record == null? cmDAO.get(censusMethodId) : record.getCensusMethod();
         
@@ -213,15 +230,16 @@ public class TrackerController extends AbstractController {
     		taxonomic = Taxonomic.OPTIONALLYTAXONOMIC;
     	}
     	
-        String[] recordProperties;
+    	RecordPropertyType[] recordProperties;
         if(Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic) || Taxonomic.TAXONOMIC.equals(taxonomic)) {
-        	recordProperties = Record.RECORD_PROPERTY_NAMES;
+        	recordProperties = RecordPropertyType.values();
         } else {
         	recordProperties = Record.NON_TAXONOMIC_RECORD_PROPERTY_NAMES;
         }
         // Add all property form fields
-        for (String propertyName : recordProperties) {
-            surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName, species, taxonomic));
+        for (RecordPropertyType type : recordProperties) {
+        	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+            surveyFormFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty, species, taxonomic));
         }
         
         Collections.sort(surveyFormFieldList);
@@ -277,10 +295,12 @@ public class TrackerController extends AbstractController {
             @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyPk,
             // We are allowing a null census method ID to indicate a default form
             @RequestParam(value=PARAM_CENSUS_METHOD_ID, required=false, defaultValue="0") int censusMethodId) throws ParseException, IOException {
-        
-        log.debug("param wkt : " +  request.getParameter(PARAM_WKT));
+        Map<String, String[]> parameterMap = this.getModifiableParameterMap(request);
         
         Survey survey = surveyDAO.getSurvey(surveyPk);
+        if (survey == null) {
+            return nullSurveyError();
+        }
         
         RecordKeyLookup lookup = new TrackerFormRecordKeyLookup();
         TrackerFormToRecordEntryTransformer transformer = new TrackerFormToRecordEntryTransformer(locationService);
@@ -288,7 +308,7 @@ public class TrackerController extends AbstractController {
         AttributeParser parser = new WebFormAttributeParser();
         
         RecordDeserializer rds = new RecordDeserializer(lookup, adf, parser);
-        List<RecordEntry> entries = transformer.httpRequestParamToRecordMap(request.getParameterMap(), request.getFileMap());
+        List<RecordEntry> entries = transformer.httpRequestParamToRecordMap(parameterMap, request.getFileMap());
         List<RecordDeserializerResult> results = rds.deserialize(getRequestContext().getUser(), entries);
         
         // there should be exactly 1 result since we are only putting in 1 RecordEntry...
@@ -350,7 +370,7 @@ public class TrackerController extends AbstractController {
             mv.addObject(MV_ERROR_MAP, res.getErrorMap());
 
             mv.addObject("surveyId", surveyPk);
-            mv.addObject("censusMethodId", new Integer(censusMethodId));
+            mv.addObject("censusMethodId", Integer.valueOf(censusMethodId));
             if(species != null) {
                 mv.addObject("taxonSearch", species.getScientificName());
             }
@@ -387,7 +407,7 @@ public class TrackerController extends AbstractController {
             
             // add the record id to the redirection view for record highlighting
             if (res.getRecord() != null) {
-            	mv.addObject("recordId", res.getRecord().getId());
+            	mv.addObject("record_id", res.getRecord().getId());
             }
         }
 
@@ -437,5 +457,10 @@ public class TrackerController extends AbstractController {
         ModelAndView mv = new ModelAndView("formFieldListRenderer");
         mv.addObject("formFieldList", formFieldList);
         return mv;
+    }
+    
+    private ModelAndView nullSurveyError() {
+        getRequestContext().addMessage(NO_SURVEY_ERROR_KEY);
+        return new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(null), true));
     }
 }

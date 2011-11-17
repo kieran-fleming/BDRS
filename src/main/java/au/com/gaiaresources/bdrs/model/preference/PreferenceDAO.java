@@ -6,6 +6,7 @@ import java.util.Map;
 import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 
 /**
  * Performs database access for {@link Preference} and
@@ -23,6 +24,24 @@ public interface PreferenceDAO extends TransactionDAO {
      *         or null if one does not exist.
      */
     public PreferenceCategory getPreferenceCategory(Integer pk);
+    
+    /**
+     * Returns the preference category by name, for a portal
+     * 
+     * @param name
+     * @return
+     */
+    public PreferenceCategory getPreferenceCategoryByName(Session sesh, String name, Portal p);
+    
+    /**
+     * Returns the preference by key, for a portal
+     * 
+     * @param sesh
+     * @param key
+     * @param p
+     * @return
+     */
+    public Preference getPreferenceByKey(Session sesh, String key, Portal p);
 
     /**
      * Returns the <code>Preference</code> for the specified primary key.
@@ -98,6 +117,15 @@ public interface PreferenceDAO extends TransactionDAO {
      * @param pref the preference to be removed.
      */
     public void delete(Session sesh, Preference pref);
+    
+    
+    /**
+     * Delete a preference category
+     * 
+     * @param sesh
+     * @param prefCat
+     */
+    public void delete(Session sesh, PreferenceCategory prefCat);
 
     /***
      * Removes the specified preference from the database.

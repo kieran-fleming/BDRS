@@ -11,7 +11,8 @@ public enum AttributeType implements E {
     DECIMAL("DE", "Decimal"),
     
     BARCODE("BC", "Bar Code"),
-
+    REGEX("RE", "Regular Expression"),
+    
     DATE("DA", "Date"),
     TIME("TM", "Time"),
 

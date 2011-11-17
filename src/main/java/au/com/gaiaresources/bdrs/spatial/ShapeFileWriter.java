@@ -100,10 +100,8 @@ public class ShapeFileWriter {
             }
         }
         
-        List<Survey> surveyList = new ArrayList<Survey>(surveySet.size());
-        surveyList.addAll(surveySet);
-        List<CensusMethod> cmList = new ArrayList<CensusMethod>(cmSet.size());
-        cmList.addAll(cmSet);
+        List<Survey> surveyList = new ArrayList<Survey>(surveySet);
+        List<CensusMethod> cmList = new ArrayList<CensusMethod>(cmSet);
         return createZipShapefile(surveyList, cmList, shapefileTypeSet, recList, accessor);
     }
     
@@ -142,7 +140,8 @@ public class ShapeFileWriter {
             Set<ShapefileType> shapefileTypeSet, List<Record> recList, User accessor) throws Exception {
         
         if (shapefileTypeSet.isEmpty()) {
-            throw new IllegalArgumentException("Set<ShapefileType>, shapefileTypeSet, must have at least one item in it.");
+            // There are no shape file types so we will default to a point type.
+            shapefileTypeSet.add(ShapefileType.POINT);
         }
         
         boolean hasRecords = !recList.isEmpty();
@@ -152,10 +151,10 @@ public class ShapeFileWriter {
         Collections.sort(cmList);
        
         if (surveyList == null) {
-            surveyList = Collections.EMPTY_LIST;
+            surveyList = Collections.emptyList();
         }
         if (cmList == null) {
-            cmList = Collections.EMPTY_LIST;
+            cmList = Collections.emptyList();
         }
         
         boolean taxonomic = false;
@@ -586,10 +585,14 @@ public class ShapeFileWriter {
             Attribute a = av.getAttribute();
             String name = attrNameMap.get(a);
             if (name == null) {
-                log.error("cannot find name in attrNameMap for attribute id : " + a.getId());
+                log.error(String.format("cannot find name in attrNameMap for attribute id : %s and description : %s", a.getId(), a.getDescription()));
                 // this can be caused by removing an attribute from a survey/census method but the record
                 // still may have an AttributeValue associated with the Attribute. Log the error but continue
                 // processing the record.
+                
+                // You may also see this message if the attribute value has an attribute that is part of the taxon group.
+                // This cost 2 developers > 1 hour to find.
+                
                 continue;
             }
             if (targetMap.containsKey(name)) {
@@ -621,6 +624,7 @@ public class ShapeFileWriter {
                 
             // string
             case TIME:
+            case REGEX:
             case BARCODE:
             case STRING:
             case STRING_AUTOCOMPLETE:
@@ -677,6 +681,7 @@ public class ShapeFileWriter {
                 
             // string
             case TIME:
+            case REGEX:
             case BARCODE:
             case STRING:
             case STRING_AUTOCOMPLETE:
@@ -704,16 +709,5 @@ public class ShapeFileWriter {
                 throw new IllegalStateException("An attribute type is not handled properly: " + a.getType());
             }
         }
-    }
-    
-    private static String sanitizeString(String str) {
-        // Make the survey name a safe filename.
-        StringBuilder sb = new StringBuilder();
-        for (char c : str.toCharArray()) {
-            if (Character.isLetterOrDigit(c)) {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
     }
 }

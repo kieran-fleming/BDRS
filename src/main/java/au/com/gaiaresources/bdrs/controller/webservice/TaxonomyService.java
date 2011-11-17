@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -96,6 +95,18 @@ public class TaxonomyService extends AbstractController {
             JSONObject obj = JSONObject.fromObject(taxaDAO.getTaxonGroup(groupPk).flatten());
             response.getWriter().write(obj.toString());
         }
+    }
+    
+    @RequestMapping(value = "/webservice/taxon/getAllTaxonGroups.htm", method = RequestMethod.GET)
+    public void getAllTaxonGroups(HttpServletResponse response) throws IOException {
+
+        response.setContentType("application/json");
+        JSONArray array = new JSONArray();
+        for(TaxonGroup group : taxaDAO.getTaxonGroups()) {
+            array.add(group);
+        }
+        
+        response.getWriter().write(array.toString());
     }
     
     @RequestMapping(value = "/webservice/taxon/getSpeciesProfileById.htm", method = RequestMethod.GET)

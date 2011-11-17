@@ -1,7 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
-
 <h1>Advanced Review</h1>
 
 <!-- for handling the page description in theme -->
@@ -15,9 +14,12 @@
 	    <div class="facetCol left">
 	        <div class="columnBanner">Refine results for</div>
 	        <c:forEach var="facet" items="${ facetList }">
-		        <tiles:insertDefinition name="advancedReviewFacet">
-		            <tiles:putAttribute name="facet" value="${ facet }"/>
-		        </tiles:insertDefinition>
+	            <jsp:useBean id="facet" type="au.com.gaiaresources.bdrs.service.facet.Facet" ></jsp:useBean>
+		        <c:if test="<%= facet.isActive() %>">
+			        <tiles:insertDefinition name="advancedReviewFacet">
+			            <tiles:putAttribute name="facet" value="${ facet }"/>
+			        </tiles:insertDefinition>
+		        </c:if>
 	        </c:forEach>
 	    </div>
 	    <div class="resultCol right">
@@ -87,10 +89,10 @@
    jQuery(function() {
        // Insert click handlers to show and hide facet options
        <c:forEach var="facet" items="${ facetList }">
-           jQuery(".${ facet.queryParamName }Header").click(function() {
-               jQuery(".${ facet.queryParamName }OptContainer").slideToggle("fast", function() {
-                   var collapsed = jQuery(".${ facet.queryParamName }OptContainer").css("display") === "none";
-                   var treeNode = jQuery(".${ facet.queryParamName }Header .tree_node");
+           jQuery(".${ facet.prefix }_${ facet.queryParamName }Header").click(function() {
+               jQuery(".${ facet.prefix }_${ facet.queryParamName }OptContainer").slideToggle("fast", function() {
+                   var collapsed = jQuery(".${ facet.prefix }_${ facet.queryParamName }OptContainer").css("display") === "none";
+                   var treeNode = jQuery(".${ facet.prefix }_${ facet.queryParamName }Header .tree_node");
                    if(collapsed) {
                        treeNode.removeClass('tree_node_expanded');
                    } else {

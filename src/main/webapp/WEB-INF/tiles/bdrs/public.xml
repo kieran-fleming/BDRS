@@ -13,6 +13,12 @@
     <!-- page title renderer. allows page title overriding -->
     <definition name="title" template="/WEB-INF/jsp/bdrs/title.jsp"></definition>
     
+    <!-- Portal Select -->
+    <definition name="index" extends="template">
+        <put-attribute name="title" value="Select Portal"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/index.jsp"/>
+    </definition>
+    
     <!-- map viewer -->
     <definition name="viewMap" extends="template">
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/viewMap.jsp"/>
@@ -33,6 +39,24 @@
     <definition name="registrationConfirmed" extends="template">
         <put-attribute name="title" value="Registration Confirmed"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/registrationConfirmed.jsp"/>
+    </definition>
+
+    <!-- Password reminder -->
+    <definition name="password-reminder" extends="template">
+        <put-attribute name="title" value="Password Reminder"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/passwordReminder.jsp"/>
+    </definition>
+    
+    <!-- Privacy Statement page -->
+    <definition name="privacyStatement" extends="template">
+        <put-attribute name="title" value="Privacy Statement"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/privacyStatement.jsp"/>
+    </definition>
+    
+    <!-- Terms and Conditions page -->
+    <definition name="termsAndConditions" extends="template">
+        <put-attribute name="title" value="Terms and Conditions"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/termsAndConditions.jsp"/>
     </definition>
 
     <!-- Error page -->

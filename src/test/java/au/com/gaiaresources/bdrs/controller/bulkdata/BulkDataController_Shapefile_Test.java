@@ -346,11 +346,7 @@ public class BulkDataController_Shapefile_Test extends AbstractControllerTest {
     
     private MockMultipartFile prepareMockShapefile(File unzipDir) throws IOException {
         File zipFileToUpload = File.createTempFile("zipshapefiletoupload", ".zip");
-        List<File> filesToCompress = new LinkedList<File>();
-        for (File f : unzipDir.listFiles()) {
-            filesToCompress.add(f);
-        }
-        ZipUtils.compress(filesToCompress, zipFileToUpload);
+        ZipUtils.compress(unzipDir.listFiles(), zipFileToUpload);
         InputStream fileIn = null;
         byte[] fileBytes = null;
         try {
@@ -455,7 +451,7 @@ public class BulkDataController_Shapefile_Test extends AbstractControllerTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
     
     private void assertAttributeValue(Set<AttributeValue> avList, String attrName, String expectedValue) {

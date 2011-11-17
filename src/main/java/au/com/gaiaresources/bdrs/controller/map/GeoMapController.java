@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.map;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,14 +29,18 @@ import au.com.gaiaresources.bdrs.model.map.GeoMap;
 import au.com.gaiaresources.bdrs.model.map.GeoMapDAO;
 import au.com.gaiaresources.bdrs.model.map.GeoMapLayer;
 import au.com.gaiaresources.bdrs.model.map.GeoMapLayerDAO;
+import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.map.GeoMapService;
 
 @Controller
 public class GeoMapController extends AbstractController {
     
     @Autowired
-    GeoMapDAO geoMapDAO;
+    private GeoMapDAO geoMapDAO;
     @Autowired
-    GeoMapLayerDAO mapLayerDAO;
+    private GeoMapLayerDAO mapLayerDAO;
+    @Autowired
+    private GeoMapService mapService;
     
     private Logger log = Logger.getLogger(getClass());
     
@@ -68,12 +73,14 @@ public class GeoMapController extends AbstractController {
     public static final String PARAM_UPPER_ZOOM_LIMIT = "upperZoomLimit";
     public static final String PARAM_LOWER_ZOOM_LIMIT = "lowerZoomLimit";
 
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = LISTING_URL, method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mv = new ModelAndView("geoMapListing");
         return mv;
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView view(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GEO_MAP_PK_VIEW, defaultValue="0") Integer pk) {
@@ -85,6 +92,7 @@ public class GeoMapController extends AbstractController {
         return mv; 
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response, 
             @RequestParam(value=GEO_MAP_PK_SAVE, defaultValue="0") Integer pk,
@@ -165,6 +173,7 @@ public class GeoMapController extends AbstractController {
         return mv; 
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = LIST_SERVICE_URL, method = RequestMethod.GET)
     public void listService(
             @RequestParam(value = FILTER_NAME, defaultValue = "") String name,
@@ -198,14 +207,10 @@ public class GeoMapController extends AbstractController {
         response.getWriter().write(builder.toJson());
     }
     
+    // public
     @RequestMapping(value = GET_AVAILABLE_MAP_SERVICE_URL, method = RequestMethod.GET)
     public void getAvailableService(HttpServletRequest request, HttpServletResponse response) throws Exception {
-
-        Boolean anonAccess = !this.getRequestContext().isAuthenticated() ? true : null;
-        
-        PagedQueryResult<GeoMap> queryResult = geoMapDAO.search(null, null, null, null, anonAccess, true);
-        
-        List<GeoMap> mapList = queryResult.getList();
+        List<GeoMap> mapList = mapService.getAvailableMaps(getRequestContext().getUser());
         JSONArray array = new JSONArray();
         
         if (mapList != null) {
@@ -215,7 +220,7 @@ public class GeoMapController extends AbstractController {
         }
         // support for JSONP
         if (request.getParameter("callback") != null) {
-                response.setContentType("application/javascript");              
+                response.setContentType("application/javascript");
                 response.getWriter().write(request.getParameter("callback") + "(");
         } else {
                 response.setContentType("application/json");
@@ -226,6 +231,7 @@ public class GeoMapController extends AbstractController {
         }
     }
     
+    // public
     @RequestMapping(value = LIST_MAP_LAYER_SERVICE_URL, method = RequestMethod.GET) 
     public void getMapLayers(HttpServletRequest request, HttpServletResponse response,
         @RequestParam(value = GEO_MAP_PK_VIEW, required=false, defaultValue="0") int mapPk) throws Exception {
@@ -252,6 +258,7 @@ public class GeoMapController extends AbstractController {
         }
     }
     
+    // public
     @RequestMapping(value = VIEW_MAP_URL, method = RequestMethod.GET) 
     public ModelAndView viewMap(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_PK_VIEW, required=true) int mapPk) {
@@ -268,6 +275,7 @@ public class GeoMapController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = DELETE_URL, method = RequestMethod.POST)
     public ModelAndView deleteMap(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_PK_SAVE, required=true) int mapPk) {

@@ -25,6 +25,6 @@ public class RecaptchaController extends AbstractController {
     {
         boolean result = recaptcha.validate(getRequestContext().getSessionID(), getRequestContext().getRemoteAddress(), 
                                             challenge, response);
-        return new ModelAndView("recaptcha", "success", new Boolean(result));
+        return new ModelAndView("recaptcha", "success", Boolean.valueOf(result));
     }
 }

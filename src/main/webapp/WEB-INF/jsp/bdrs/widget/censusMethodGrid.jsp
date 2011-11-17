@@ -8,8 +8,8 @@
 <tiles:useAttribute name="editUrl" ignore="true" />
 <tiles:useAttribute name="showActions" ignore="true" />
 
-<h4>Filter Census Methods</h4>
-    <form id="${widgetId}SearchForm">
+<h4>Search Census Methods</h4>
+    <form class="widgetSearchForm" id="${widgetId}SearchForm">
         <table>
             <tr>
                 <td class="formlabel">Census Method Name:</td>
@@ -17,8 +17,8 @@
             </tr>
         </table>
     </form>
-<div class="buttonpanel textright">
-    <input type="button" id="${widgetId}Filter" class="form_action" value="Filter"/>
+<div class="buttonpanel buttonPanelRight textright">
+    <input type="button" id="${widgetId}Filter" class="form_action" value="Search"/>
 </div>
 
 <div id="${widgetId}Wrapper">

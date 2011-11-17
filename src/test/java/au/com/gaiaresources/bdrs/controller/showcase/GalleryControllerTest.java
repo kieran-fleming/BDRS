@@ -26,7 +26,7 @@ import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.showcase.Gallery;
 import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.image.ImageService;
+import au.com.gaiaresources.bdrs.util.ImageUtil;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 public class GalleryControllerTest extends AbstractControllerTest {
@@ -38,8 +38,6 @@ public class GalleryControllerTest extends AbstractControllerTest {
     private ManagedFileDAO managedFileDAO;
     @Autowired
     private FileService fileService;
-    @Autowired
-    private ImageService imageService;
     
     Gallery g1;
     Gallery g2;
@@ -49,7 +47,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
     String savedFilename = "test_image.jpeg"; 
     
     @Before
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         String filename = "sample_JPEG.jpg";
         File file = new File(getClass().getResource(filename).getFile());
         
@@ -78,6 +76,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         galleryDAO.save(g1);
         galleryDAO.save(g2);
+        login("admin", "password", new String[] { Role.ADMIN } );
     }
     
     @Test
@@ -189,7 +188,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         File file = new File(getClass().getResource(filename).getFile());
 
-        byte[] target = imageService.fileToByteArray(file);
+        byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
         MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
@@ -252,7 +251,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         File file = new File(getClass().getResource(filename).getFile());
 
-        byte[] target = imageService.fileToByteArray(file);
+        byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
         MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
@@ -319,7 +318,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         File file = new File(getClass().getResource(filename).getFile());
 
-        byte[] target = imageService.fileToByteArray(file);
+        byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
         MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
@@ -429,7 +428,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         File file = new File(getClass().getResource(filename).getFile());
 
-        byte[] target = imageService.fileToByteArray(file);
+        byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
         MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
@@ -526,6 +525,6 @@ public class GalleryControllerTest extends AbstractControllerTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

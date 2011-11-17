@@ -4,8 +4,8 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
-<jsp:useBean id="record" scope="request" type="au.com.gaiaresources.bdrs.model.record.Record" />
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
+<jsp:useBean id="recordFieldCollectionList" scope="request" type="java.util.List" />
 
 <%@page import="au.com.gaiaresources.bdrs.model.taxa.Attribute"%>
 <%@page import="au.com.gaiaresources.bdrs.model.taxa.AttributeScope"%>
@@ -13,8 +13,7 @@
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
     <!-- using censusmethod description here in case we want to display no text / more indepth text -->
-    <!-- escapeXml false so we can put anchors in the description -->
-    <p><c:out value="${censusMethod.description}" escapeXml="false" /></p>
+    <p><cw:validateHtml html="${censusMethod.description}"></cw:validateHtml></p>
 </c:if>
 
     <tiles:insertDefinition name="recordEntryMap">
@@ -31,10 +30,23 @@
 	<table class="form_table">
 	    <tbody>
 	        <c:forEach items="${formFieldList}" var="formField">
-				<tiles:insertDefinition name="formFieldRenderer">
-				    <tiles:putAttribute name="formField" value="${formField}"/>
-				    <tiles:putAttribute name="locations" value="${locations}"/>
-				</tiles:insertDefinition>
+	         <jsp:useBean id="formField" type="au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractRecordFormField" />
+	         	<c:if test="<%= formField.isPropertyFormField() %>">
+	         		<c:if test="${ formField.scope == 'SURVEY'}">
+						<tiles:insertDefinition name="formFieldRenderer">
+						    <tiles:putAttribute name="formField" value="${formField}"/>
+						    <tiles:putAttribute name="locations" value="${locations}"/>
+						</tiles:insertDefinition>
+					</c:if>
+	         	</c:if>
+	         	<c:if test="<%= formField.isAttributeFormField() %>">
+	         		<c:if test="${ formField.attribute.scope == 'SURVEY'}">
+						<tiles:insertDefinition name="formFieldRenderer">
+						    <tiles:putAttribute name="formField" value="${formField}"/>
+						    <tiles:putAttribute name="locations" value="${locations}"/>
+						</tiles:insertDefinition>
+					</c:if>
+	         	</c:if>
 	        </c:forEach>
 	    </tbody>
 	</table>
@@ -43,37 +55,46 @@
 	<div id="sightingsContainer">
 	    <!-- Add sightings description text -->
 	    <cw:getContent key="user/singleSiteMultiTaxaTable" />
-		<div id="add_sighting_panel" class="textright">
+		<div id="add_sighting_panel" class="buttonpanel textright">
 	        <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#sightingsContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
-		    <input type="hidden" id="sighting_index" name="sightingIndex" value="0"/>  
+		    <input type="hidden" id="sighting_index" name="sightingIndex" value="<%= recordFieldCollectionList.size() %>"/>  
 		    <input class="form_action" type="button" value="Add Sighting" onclick="bdrs.contribute.singleSiteMultiTaxa.addSighting('#sighting_index', '[name=surveyId]', '#sightingTable tbody');"/>
 		</div>
 		<table id="sightingTable" class="datatable">
 		    <thead>
 		       <tr>
 		           <c:forEach items="${ sightingRowFormFieldList }" var="sightingRowFormField">
-		               <th>
-			               <jsp:useBean id="sightingRowFormField" type="au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractRecordFormField" />
-			               <c:choose>
-		                       <c:when test="<%= sightingRowFormField.isPropertyFormField() %>">
-		                           <c:choose>
-			                            <c:when test="${ 'species' == sightingRowFormField.propertyName }">
-			                                Species                                        
-			                            </c:when>
-			                            <c:when test="${ 'number' == sightingRowFormField.propertyName }">
-			                                Number                            
-			                            </c:when>
-		                            </c:choose>
-		                       </c:when>
-		                       <c:when test="<%= sightingRowFormField.isAttributeFormField() %>">
-		                           <c:out value="${ sightingRowFormField.attribute.description }"/>
-		                       </c:when> 
-		                   </c:choose>
-	                   </th>
+				           <jsp:useBean id="sightingRowFormField" type="au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractRecordFormField" />
+		                   <c:if test="<%= sightingRowFormField.isPropertyFormField() %>">
+								<c:choose>
+									<c:when test="${ not sightingRowFormField.hidden }">
+										<c:if test="${sightingRowFormField.scope == 'RECORD'}">
+											<th>
+												<c:out value="${ sightingRowFormField.description }" />
+											</th>
+										</c:if>
+									</c:when>
+								</c:choose>
+							</c:if> 
+							<c:if test="<%= sightingRowFormField.isAttributeFormField() %>">
+								<c:if test="${ sightingRowFormField.attribute.scope == 'RECORD'}">
+									<th>
+									<c:out value="${ sightingRowFormField.attribute.description }" />
+									</th>
+								</c:if>
+							</c:if>
+						
 		           </c:forEach>
 		       </tr>
 		    </thead>
 		    <tbody>
+		    	<%-- Insert existing records here. --%>
+                
+                <c:forEach items="${recordFieldCollectionList}" var="recordFormFieldCollection">
+                    <tiles:insertDefinition name="singleSiteMultiTaxaRow">
+                        <tiles:putAttribute name="recordFormFieldCollection" value="${recordFormFieldCollection}"/>
+                    </tiles:insertDefinition>
+                </c:forEach>
 		    </tbody>
 		</table>
 	</div>
@@ -81,13 +102,13 @@
 	</div>
 	<c:choose>
 	    <c:when test="${ preview }">
-	        <div class="textright">
+	        <div class="buttonpanel textright">
 	            <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
 	            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
 	        </div>
 	    </c:when>
 	    <c:otherwise>
-	            <div class="textright">
+	            <div class="buttonpanel textright">
 	                <input class="form_action" type="submit" name="submitAndAddAnother" value="Submit and Add Another"/>
 	                <input class="form_action" type="submit" name="submit" value="Submit Sightings"/>
 	            </div>
@@ -110,7 +131,6 @@
         /**
          * Prepopulate fields
          */
-        bdrs.contribute.singleSiteAllTaxa.addSighting('#sighting_index', '[name=surveyId]', '#sightingTable tbody');
         bdrs.form.prepopulate();
     });
 </script>

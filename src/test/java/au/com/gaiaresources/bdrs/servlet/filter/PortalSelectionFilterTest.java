@@ -77,7 +77,7 @@ public class PortalSelectionFilterTest extends AbstractControllerTest {
         
         Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
         Assert.assertEquals(expectedPortal.getId(), new Integer(portalId.toString()));
-        Assert.assertEquals(PortalSelectionFilter.DEFAULT_REDIRECT_URL, response.getRedirectedUrl());
+        Assert.assertEquals(REQUEST_CONTEXT_PATH + PortalSelectionFilter.DEFAULT_REDIRECT_URL, response.getRedirectedUrl());
     }
     
     /**
@@ -233,7 +233,7 @@ public class PortalSelectionFilterTest extends AbstractControllerTest {
         
         Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
         Assert.assertEquals(expectedPortal.getId(), new Integer(portalId.toString()));
-        Assert.assertEquals(PortalSelectionFilter.DEFAULT_REDIRECT_URL, response.getRedirectedUrl());
+        Assert.assertEquals(REQUEST_CONTEXT_PATH + PortalSelectionFilter.DEFAULT_REDIRECT_URL, response.getRedirectedUrl());
     }
     
     @Test

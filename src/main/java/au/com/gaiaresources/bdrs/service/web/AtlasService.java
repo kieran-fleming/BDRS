@@ -38,7 +38,7 @@ import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
-import au.com.gaiaresources.bdrs.service.image.ImageService;
+import au.com.gaiaresources.bdrs.util.ImageUtil;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 /**
@@ -54,10 +54,10 @@ public class AtlasService {
     public static final String SPECIES_PROFILE_THUMB_40 = "40x40 Thumbnail";
     public static final String SPECIES_PROFILE_HABITAT = "Habitat";
     public static final String SPECIES_PROFILE_COMMON_NAME = "Common Name";
-	public static final String SPECIES_PROFILE_SYNONYM = "Synonym";
-	public static final String SPECIES_PROFILE_CONSERVATION_STATUS = "Conservation Status";
-	public static final String SPECIES_PROFILE_IDENTIFIER = "Identifier";
-	public static final String SPECIES_PROFILE_IMPORT_LIFE = "Life";
+    public static final String SPECIES_PROFILE_SYNONYM = "Synonym";
+    public static final String SPECIES_PROFILE_CONSERVATION_STATUS = "Conservation Status";
+    public static final String SPECIES_PROFILE_IDENTIFIER = "Identifier";
+    public static final String SPECIES_PROFILE_IMPORT_LIFE = "Life";
     
     Logger log = Logger.getLogger(getClass());
     @Autowired
@@ -71,8 +71,6 @@ public class AtlasService {
 
     @Autowired
     FileService fileService;
-    @Autowired
-    ImageService imageService;
     @Autowired
     PreferenceDAO preferenceDAO;
     
@@ -240,7 +238,7 @@ public class AtlasService {
             String[] split = authorYear.split(",");
             author = split[0] != null && split[0].startsWith("(") ? split[0].substring(1) : split[0];
             year = split.length > 1 ? (split[1] != null && split[1].endsWith(")") ? 
-                    split[1].substring(0, split[1].length()-1).trim() : split[1].trim()) : "";
+                    trimString(split[1].substring(0, split[1].length()-1)) : trimString(split[1])) : "";
         }
         taxon = setScientificName(taxon, guid, scientificName, author, year);
 
@@ -280,7 +278,8 @@ public class AtlasService {
                 }
             }
         } else {
-        	taxon = setCommonName(taxon, scientificName, guid);
+            // set the common name to the scientific name if none are specified
+            taxon = setCommonName(taxon, scientificName, guid);
         }
         
 
@@ -316,6 +315,7 @@ public class AtlasService {
                        type = "",
                        header = "", 
                        profileItemDescription = "", 
+                       managedFileDescription = "",
                        imageDescription = 
                            !StringUtils.nullOrEmpty(description) && !"null".equalsIgnoreCase(description) ? 
                                description : "", 
@@ -328,31 +328,43 @@ public class AtlasService {
                        license = imageObj.containsKey("licence") ? 
                                !StringUtils.nullOrEmpty(imageObj.getString("licence")) ? 
                                        imageObj.getString("licence") : "" : "",
-                       imageSource = imageObj.getString("infoSourceName");
+                       imageSource = imageObj.getString("infoSourceName"),
+                       docId = imageObj.containsKey("documentId") ? 
+                               !StringUtils.nullOrEmpty(imageObj.getString("documentId")) && 
+                               !"null".equals(imageObj.getString("documentId")) ?
+                                       imageObj.getString("documentId") : "" : "";
                 
                 // Thumbnail
                 if (imageObj.containsKey("thumbnail")) {
                     filename = imageObj.getString("thumbnail");
                     type = SpeciesProfile.SPECIES_PROFILE_THUMBNAIL;
                     header = SPECIES_PROFILE_THUMB;
+                    managedFileDescription = SPECIES_PROFILE_THUMB + 
+                        (!StringUtils.nullOrEmpty(docId) ? (" " + docId) : "") + 
+                        " for " + scientificName;
                     profileItemDescription = SPECIES_PROFILE_THUMB + " for " + scientificName; 
-                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, imageDescription, downloadFile(new URL(filename)));
+                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, 
+                                                       license, managedFileDescription, 
+                                                       imageDescription, 
+                                                       downloadFile(new URL(filename)));
                     createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
                     
                     // Now thumbnail the thumbnail...
                     BufferedImage fortyXforty = 
-                        imageService.resizeImage(fileService.getFile(mf, mf.getFilename()).getInputStream(), 40, 40);
+                        ImageUtil.resizeImage(fileService.getFile(mf, mf.getFilename()).getInputStream(), 40, 40);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ImageIO.write(fortyXforty, "png", baos);
                     baos.flush();
                     byte[] data = baos.toByteArray();
                     baos.close();
                     
-                    mf = createManagedFile("png", contentType, credit, license, imageDescription, data);
-                    
                     type = SpeciesProfile.SPECIES_PROFILE_IMAGE_40x40;
                     header = SPECIES_PROFILE_THUMB_40;
+                    managedFileDescription = SPECIES_PROFILE_THUMB_40 + 
+                        (!StringUtils.nullOrEmpty(docId) ? (" " + docId) : "") + 
+                        " for " + taxon.getScientificName();
                     profileItemDescription = SPECIES_PROFILE_THUMB_40 + " for " + taxon.getScientificName();
+                    mf = createManagedFile(".png", contentType, credit, license, managedFileDescription, imageDescription, data);
                     
                     createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
                 }
@@ -363,7 +375,11 @@ public class AtlasService {
                     type = SpeciesProfile.SPECIES_PROFILE_IMAGE;
                     header = SPECIES_PROFILE_IMAGE;
                     profileItemDescription = SPECIES_PROFILE_IMAGE + " for " + taxon.getScientificName();
-                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, imageDescription, downloadFile(new URL(filename)));
+                    managedFileDescription = SPECIES_PROFILE_IMAGE + 
+                        (!StringUtils.nullOrEmpty(docId) ? (" " + docId) : "") + 
+                        " for " + taxon.getScientificName();
+                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, 
+                                                       profileItemDescription, imageDescription, downloadFile(new URL(filename)));
                     createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
                 }
             }
@@ -500,30 +516,34 @@ public class AtlasService {
      * @param credit The credit for the file
      * @param license The license of the file
      * @param fileDescription The description of the file
+     * @param fileName
      * @param fileContent The byte array contents of the file
      * @return The newly created managed file
      * @throws IOException
      */
     private ManagedFile createManagedFile(String ext, String contentType, 
-            String credit, String license, String fileDescription, byte[] fileContent) throws IOException {
-        ManagedFile mf = new ManagedFile();
-        if (StringUtils.nullOrEmpty(contentType) || "null".equals(contentType.trim())) {
+            String credit, String license, String fileName, String fileDescription, byte[] fileContent) throws IOException {
+        ManagedFile mf = managedFileDAO.getManagedFileByName(SPECIES_PROFILE_SOURCE + " " + fileName + ext);
+        if (mf == null) {
+            mf = new ManagedFile();
+        }
+        if (StringUtils.nullOrEmpty(contentType) || "null".equals(trimString(contentType))) {
             contentType = "";
         }
-        mf.setContentType(contentType);
-        if (StringUtils.nullOrEmpty(credit) || "null".equals(credit.trim())) {
+        mf.setContentType(trimString(contentType));
+        if (StringUtils.nullOrEmpty(credit) || "null".equals(trimString(credit))) {
             credit = "";
         }
-        mf.setCredit(credit);
-        if (StringUtils.nullOrEmpty(license) || "null".equals(license.trim())) {
+        mf.setCredit(trimString(credit));
+        if (StringUtils.nullOrEmpty(license) || "null".equals(trimString(license))) {
             license = "";
         }
-        mf.setLicense(license);
-        if (StringUtils.nullOrEmpty(fileDescription) || "null".equals(fileDescription.trim())) {
-            fileDescription = "";
+        mf.setLicense(trimString(license));
+        if (StringUtils.nullOrEmpty(fileDescription) || "null".equals(trimString(fileDescription))) {
+            fileDescription = SPECIES_PROFILE_SOURCE + " " + fileName;
         }
-        mf.setDescription(fileDescription);
-        mf.setFilename(mf.getUuid()+ext);
+        mf.setDescription(trimString(fileDescription));
+        mf.setFilename(SPECIES_PROFILE_SOURCE + " " + fileName + ext);
         mf = managedFileDAO.save(mf);
         fileService.createFile(mf.getClass(), mf.getId(), mf.getFilename(), fileContent);
         mf.setContentType(fileService.getFile(mf, mf.getFilename()).getContentType());
@@ -606,36 +626,36 @@ public class AtlasService {
      */
     private IndicatorSpecies setClassification(IndicatorSpecies taxon,
             String family, String kingdom) {
-    	
-    	String groupName = SPECIES_PROFILE_IMPORT_LIFE;
+        
+        String groupName = SPECIES_PROFILE_IMPORT_LIFE;
         Preference preference = preferenceDAO.getPreferenceByKey("ala.species.group.by");
         if (preference != null && preference.getValue() != null) {
-			if (preference.getValue().equalsIgnoreCase("kingdom") && 
-	        	kingdom != null && 
-	        	!kingdom.isEmpty() &&
-	        	!kingdom.equalsIgnoreCase("null")) {
-    	   	    groupName = kingdom;
-        	} else if (preference.getValue().equalsIgnoreCase("family") && 
-	        	family != null && 
-    	    	!family.isEmpty() &&
-        		!family.equalsIgnoreCase("null")) {
-                	groupName = family;
-        	}
+            if (preference.getValue().equalsIgnoreCase("kingdom") && 
+                kingdom != null && 
+                !kingdom.isEmpty() &&
+                !kingdom.equalsIgnoreCase("null")) {
+                   groupName = kingdom;
+            } else if (preference.getValue().equalsIgnoreCase("family") && 
+                family != null && 
+                !family.isEmpty() &&
+                !family.equalsIgnoreCase("null")) {
+                    groupName = family;
+            }
         }
-    	
+        
         if (kingdom != null && !kingdom.isEmpty() && !kingdom.equalsIgnoreCase("null")) {
-            taxon = createTaxonMetadata(taxon, Metadata.TAXON_KINGDOM, kingdom);
+            taxon = createTaxonMetadata(taxon, Metadata.TAXON_KINGDOM, kingdom.trim());
         }
         if (family != null && !family.isEmpty() && !family.equalsIgnoreCase("null")) {
-        	taxon = createTaxonMetadata(taxon, Metadata.TAXON_FAMILY, family);
+            taxon = createTaxonMetadata(taxon, Metadata.TAXON_FAMILY, family.trim());
         }
         
         if (taxon.getTaxonGroup() == null) {
-        	TaxonGroup g = taxaDAO.getTaxonGroup(groupName);
+            TaxonGroup g = taxaDAO.getTaxonGroup(trimString(groupName));
             if (g == null) {
-                g = taxaDAO.createTaxonGroup(groupName, false, false, false, false, false, true);
+                g = taxaDAO.createTaxonGroup(trimString(groupName), false, false, false, false, false, true);
             }
-            taxon.setTaxonGroup(g);            
+            taxon.setTaxonGroup(g);
         }
         
         return taxon;
@@ -651,9 +671,9 @@ public class AtlasService {
     private IndicatorSpecies setCommonName(IndicatorSpecies taxon,
             String commonName, String commonGuid) {
         // common name
-        taxon.setCommonName(commonName);
+        taxon.setCommonName(trimString(commonName));
         if (commonGuid != null) {
-            taxon = createTaxonMetadata(taxon, Metadata.COMMON_NAME_SOURCE_DATA_ID, commonGuid);
+            taxon = createTaxonMetadata(taxon, Metadata.COMMON_NAME_SOURCE_DATA_ID, commonGuid.trim());
         }
         return taxon;
     }
@@ -666,7 +686,7 @@ public class AtlasService {
      */
     private IndicatorSpecies setRank(IndicatorSpecies taxon, String rankString) {
         // Rank
-        TaxonRank rank = TaxonRank.findByIdentifier(rankString);
+        TaxonRank rank = TaxonRank.findByIdentifier(trimString(rankString));
         taxon.setTaxonRank(rank);
         return taxon;
     }
@@ -699,19 +719,23 @@ public class AtlasService {
             String guid, String scientificName, String author, String year,
             String scientificNameAndAuthor) {
         // scientific name
-        taxon.setScientificName(scientificName);
-        taxon.setAuthor(author);
+        taxon.setScientificName(trimString(scientificName));
+        taxon.setAuthor(trimString(author));
         if (!StringUtils.nullOrEmpty(scientificNameAndAuthor)) {
-            taxon.setScientificNameAndAuthor(scientificNameAndAuthor);
+            taxon.setScientificNameAndAuthor(scientificNameAndAuthor.trim());
         } else {
             // set the scientific name and author to the name and author given here
-            taxon.setScientificNameAndAuthor(scientificName + " " + author);
+            taxon.setScientificNameAndAuthor(trimString(scientificName) + " " + trimString(author));
         }
-        taxon.setYear(year);
+        taxon.setYear(trimString(year));
 
         return createTaxonMetadata(taxon, Metadata.SCIENTIFIC_NAME_SOURCE_DATA_ID, guid);
     }
     
+    private String trimString(String string) {
+        return string != null ? string.trim() : string;
+    }
+
     /**
      * Helper method to create/modify a Metadata for an IndicatorSpecies.  This 
      * method will override any existing value for Metadata with the same key.
@@ -729,7 +753,7 @@ public class AtlasService {
         } else {
             taxon.getMetadata().remove(md);
         }
-        md.setValue(value);
+        md.setValue(trimString(value));
         metadataDAO.save(md);
         taxon.getMetadata().add(md);
         return taxon;
@@ -791,23 +815,23 @@ public class AtlasService {
                    contentType = "", 
                    credit = "", 
                    license = "";
-            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, fileDescription, downloadFile(new URL(filename)));
+            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, thumbnailDescription, fileDescription, downloadFile(new URL(filename)));
             createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
             
             // Now thumbnail the thumbnail...
             BufferedImage fortyXforty = 
-                imageService.resizeImage(fileService.getFile(mf, mf.getFilename()).getInputStream(), 40, 40);
+                ImageUtil.resizeImage(fileService.getFile(mf, mf.getFilename()).getInputStream(), 40, 40);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(fortyXforty, "png", baos);
             baos.flush();
             byte[] data = baos.toByteArray();
             baos.close();
-            
-            mf = createManagedFile("png", contentType, credit, license, fileDescription, data);
-            
+
             type = SpeciesProfile.SPECIES_PROFILE_IMAGE_40x40;
             header = SPECIES_PROFILE_THUMB_40;
             thumbnailDescription = SPECIES_PROFILE_THUMB_40 + " for " + taxon.getScientificName();
+            
+            mf = createManagedFile(".png", contentType, credit, license, thumbnailDescription, fileDescription, data);
             
             createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
         }
@@ -822,7 +846,7 @@ public class AtlasService {
                    contentType = "",
                    credit = "", 
                    license = "";
-            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, fileDescription, downloadFile(new URL(filename)));
+            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, thumbnailDescription, fileDescription, downloadFile(new URL(filename)));
             createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
         }
         

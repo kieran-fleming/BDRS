@@ -76,8 +76,8 @@ public class RecordService extends AbstractController {
         // RequestParam user - the user
         // RequestParam limit - the number of records to return
         // RequestParam species - the species to search for optional
-
-        List<Record> recordList = recordDAO.getRecord(userPk, 0, 0, 0, null,
+        User user = userDAO.getUser(userPk);
+        List<Record> recordList = recordDAO.getRecord(user, 0, 0, 0, null,
                 null, species, limit);
 
         JSONArray array = new JSONArray();
@@ -101,8 +101,9 @@ public class RecordService extends AbstractController {
         List<IndicatorSpecies> species = recordDAO
                 .getLastSpecies(userPk, limit);
         JSONArray array = new JSONArray();
+        User user = userDAO.getUser(userPk);
         for (IndicatorSpecies s : species) {
-            List<Record> recordList = recordDAO.getRecord(userPk, 0, 0, 0,
+            List<Record> recordList = recordDAO.getRecord(user, 0, 0, 0,
                     null, null, s.getScientificName(), 1);
             if (recordList.size() > 0) {
                 JSONObject ob = new JSONObject();
@@ -140,16 +141,11 @@ public class RecordService extends AbstractController {
             }
         }
 
-        // If you are not the administrator, you can only see your own records.
-        if (!user.isAdmin()) {
-            userPk = user.getId();
-        }
-
         Session sesh = getRequestContext().getHibernate();
         sesh.setFlushMode(FlushMode.MANUAL);
         /*List<Record> recordList = recordDAO.getRecord(userPk, groupPk,
                 surveyPk, taxonGroupPk, startDate, endDate, species, limit);*/
-        ScrollableRecords sr = recordDAO.getScrollableRecords(userPk, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, 1, limit);
+        ScrollableRecords sr = recordDAO.getScrollableRecords(user, groupPk, surveyPk, taxonGroupPk, startDate, endDate, species, 1, limit);
         
         int recordCount = 0;
         JSONArray array = new JSONArray();
@@ -201,10 +197,10 @@ public class RecordService extends AbstractController {
         }
 
         // convert JSON records in to Record objects
-        for (Object key : jsonRecordObject.keySet()) {
+        for (Object entry : jsonRecordObject.entrySet()) {
             Record record = new Record();
             Set<AttributeValue> newAttributes = new HashSet<AttributeValue>();
-            jsonRecord = (JSONObject) jsonRecordObject.get(key);
+            jsonRecord = (JSONObject) entry;
             // standard attributes
             double latitude = jsonRecord.getDouble("latitude");
             double longitude = jsonRecord.getDouble("longitude");
@@ -293,8 +289,8 @@ public class RecordService extends AbstractController {
         }
 
         // convert JSON records in to Record objects
-        for (Object key : jsonRecordObject.keySet()) {
-            jsonRecord = (JSONObject) jsonRecordObject.get(key);
+        for (Object entry : jsonRecordObject.entrySet()) {
+            jsonRecord = (JSONObject) entry;
             Record record = recordDAO.getRecord(jsonRecord
                     .getInt("online_recordid"));
             Set<AttributeValue> newAttributes = new HashSet<AttributeValue>();
@@ -399,12 +395,7 @@ public class RecordService extends AbstractController {
             }
         }
 
-        // If you are not the administrator, you can only see your own records.
-        if (!user.isAdmin()) {
-            userPk = user.getId();
-        }
-
-        ScrollableRecords sc = recordDAO.getScrollableRecords(userPk, groupPk,
+        ScrollableRecords sc = recordDAO.getScrollableRecords(user, groupPk,
                 surveyPk, taxonGroupPk, startDate, endDate, species);
 
         Survey survey = surveyDAO.getSurvey(surveyPk);
@@ -546,9 +537,9 @@ public class RecordService extends AbstractController {
         }
 
         // Delete the records
-        for (Object key : jsonRecordIdsMap.keySet()) {
+        for (Object entry : jsonRecordIdsMap.entrySet()) {
             try {
-                Integer id = Integer.valueOf((Integer) jsonRecordIdsMap.get(key));
+                Integer id = Integer.valueOf((Integer) entry);
                 recordDAO.deleteById(id);
             } catch (Exception e) {
                 log.error("The id in the jsonRecordIdsMap is not an Integer.");
@@ -680,10 +671,11 @@ public class RecordService extends AbstractController {
                 // Type cast record object to JSONObject
                 JSONObject jsonDeleteRecord = (JSONObject) delete_r;
                 // Get survey from map if exists in the map otherwise get it from the database
-                if(surveyMap.containsKey(jsonDeleteRecord.getInt("surveyid"))){
-                    survey = surveyMap.get(jsonDeleteRecord.getInt("surveyid"));
+                int surveyId = jsonDeleteRecord.getInt("surveyid");
+                if(surveyMap.containsKey(surveyId)){
+                    survey = surveyMap.get(surveyId);
                 }else{
-                    survey = surveyDAO.getSurvey(jsonDeleteRecord.getInt("surveyid"));
+                    survey = surveyDAO.getSurvey(surveyId);
                     surveyMap.put(survey.getId(), survey);
                 }
                 //delete the actual record
@@ -707,10 +699,11 @@ public class RecordService extends AbstractController {
             Record updateRecord = recordDAO.getRecord(jsonUpdateRecord.getInt("online_recordid"));
             Set<AttributeValue> newUpdateAttributes = new HashSet<AttributeValue>();
             // Get survey from map if exists in the map otherwise get it from the database
-            if(surveyMap.containsKey(jsonUpdateRecord.getInt("surveyid"))){
-                survey = surveyMap.get(jsonUpdateRecord.getInt("surveyid"));
+            int surveyId = jsonUpdateRecord.getInt("surveyid");
+            if(surveyMap.containsKey(surveyId)){
+                survey = surveyMap.get(surveyId);
             }else{
-                survey = surveyDAO.getSurvey(jsonUpdateRecord.getInt("surveyid"));
+                survey = surveyDAO.getSurvey(surveyId);
                 surveyMap.put(survey.getId(), survey);
             }
             //get attributes from the survey related to the current record

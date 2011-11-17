@@ -366,7 +366,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
     
     private Map<String, String> generateTrackerFormData(List<Attribute> attrList, String attributePrefix, Date today) throws ParseException {

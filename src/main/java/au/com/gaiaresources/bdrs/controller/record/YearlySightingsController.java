@@ -53,6 +53,8 @@ import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 @Controller
 public class YearlySightingsController extends AbstractController {
 
+    public static final String YEARLY_SIGHTINGS_URL = "/bdrs/user/yearlySightings.htm";
+    
     private Logger log = Logger.getLogger(getClass());
 
     @Autowired
@@ -72,7 +74,7 @@ public class YearlySightingsController extends AbstractController {
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
-    @RequestMapping(value = "/bdrs/user/yearlySightings.htm", method = RequestMethod.GET)
+    @RequestMapping(value = YEARLY_SIGHTINGS_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value="surveyId", required=true) int surveyId,
@@ -165,7 +167,7 @@ public class YearlySightingsController extends AbstractController {
 
     @SuppressWarnings("unchecked")
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
-    @RequestMapping(value = "/bdrs/user/yearlySightings.htm", method = RequestMethod.POST)
+    @RequestMapping(value = YEARLY_SIGHTINGS_URL, method = RequestMethod.POST)
     public ModelAndView submitRecord(MultipartHttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value="surveyId", required=true) int surveyId,
@@ -256,6 +258,7 @@ public class YearlySightingsController extends AbstractController {
         return mv;
     }
 
+    @SuppressWarnings("unused")
     private void logRequestParameters(HttpServletRequest request) {
         Enumeration e = request.getParameterNames();
         while(e.hasMoreElements()) {

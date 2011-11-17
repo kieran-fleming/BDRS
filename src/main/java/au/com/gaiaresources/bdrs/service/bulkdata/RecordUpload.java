@@ -219,13 +219,20 @@ public class RecordUpload {
     public Date getWhen() {
         Calendar calTime = Calendar.getInstance();
         Calendar calDate = Calendar.getInstance();
-        calTime.setTime(time);
-
-        calDate.setTime(when);
+        if (time != null) {
+        	calTime.setTime(time);
+        }
+        if (when != null) {
+        	calDate.setTime(when);
+        }
         calDate.add(Calendar.HOUR, calTime.get(Calendar.HOUR));
         calDate.add(Calendar.MINUTE, calTime.get(Calendar.MINUTE));
         calDate.add(Calendar.SECOND, calTime.get(Calendar.SECOND));
         calDate.set(Calendar.AM_PM, calTime.get(Calendar.AM_PM));
+        
+        if (time == null && when == null) {
+        	return null;
+        }
         
         return calDate.getTime();
     }
@@ -401,6 +408,11 @@ public class RecordUpload {
 
     @Override
     public String toString() {
+    	Date when = getWhen();
+    	String whenString = "";
+    	if (when != null){
+    		whenString = when.toString();
+    	}
         return "RecordUpload [behaviour=" + behaviour + ", className="
                 + className + ", commonName=" + commonName + ", createdAt="
                 + createdAt + ", createdBy=" + createdBy + ", error=" + error
@@ -408,14 +420,14 @@ public class RecordUpload {
                 + firstAppearance + ", groupName=" + groupName + ", habitat="
                 + habitat + ", held=" + held + ", id=" + id
                 + ", lastAppearance=" + lastAppearance + ", lastDate="
-                + getWhen() + ", lastTime=" + getWhen() + ", latitude="
+                + whenString + ", lastTime=" + whenString + ", latitude="
                 + latitude + ", locationName=" + locationName
                 + ", longitude="
                 + longitude + ", notes=" + notes + ", numberSeen=" + numberSeen
                 + ", recordedBy=" + recordedBy + ", recordedByUsername="
                 + recordedByUsername + ", scientificName=" + scientificName
-                + ", surveyName=" + surveyName + ", time=" + getWhen()
+                + ", surveyName=" + surveyName + ", time=" + whenString
                 + ", updatedAt=" + updatedAt + ", updatedBy=" + updatedBy
-                + ", when=" + getWhen() + "]";
+                + ", when=" + whenString + "]";
     }
 }

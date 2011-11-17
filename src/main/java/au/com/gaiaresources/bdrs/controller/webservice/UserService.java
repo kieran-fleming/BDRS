@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
@@ -56,10 +57,10 @@ import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
 public class UserService extends AbstractController {
 
     private Logger log = Logger.getLogger(getClass());
-
-    public static final String USER_NAME = "userName";
-    public static final String EMAIL_ADDRESS = "emailAddress";
-    public static final String FULL_NAME = "fullName";
+    
+    public static final String PARAM_ACTIVE = "active";
+    public static final String PARAM_CONTAINS = "contains";
+    public static final String PARAM_PARENT_GROUP_ID = "parentGroupId";
     
     @Autowired
     private UserDAO userDAO;
@@ -415,12 +416,12 @@ public class UserService extends AbstractController {
         }
     }
     
+    @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN,Role.ROOT})
     @RequestMapping(value="/webservice/user/searchUsers.htm", method=RequestMethod.GET)
     public void searchUsers(
-                @RequestParam(value = "userName", defaultValue = "") String username,
-                @RequestParam(value = "emailAddress", defaultValue = "") String emailAddress,
-                @RequestParam(value = "fullName", defaultValue = "") String fullName,
-                @RequestParam(value = "parentGroupId", defaultValue = "") Integer parentGroupId,
+                @RequestParam(value = PARAM_PARENT_GROUP_ID, defaultValue = "") Integer parentGroupId,
+                @RequestParam(value = PARAM_ACTIVE, required = false) Boolean active,
+                @RequestParam(value = PARAM_CONTAINS, required = false) String contains,
                 HttpServletRequest request, HttpServletResponse response) throws Exception {
         
         JqGridDataHelper jqGridHelper = new JqGridDataHelper(request);       
@@ -429,10 +430,10 @@ public class UserService extends AbstractController {
         User currentUser = this.getRequestContext().getUser();
         String[] allowedRolesToSearchFor = Role.getRolesLowerThanOrEqualTo(Role.getHighestRole(currentUser.getRoles()));
         String[] rolesToExclude = Role.getRolesHigherThan(Role.getHighestRole(currentUser.getRoles()));
-        PagedQueryResult<User> queryResult = userDAO.search(username, emailAddress, fullName, filter, allowedRolesToSearchFor, rolesToExclude, parentGroupId);
+        PagedQueryResult<User> queryResult = userDAO.search(contains, contains, contains, filter, allowedRolesToSearchFor, rolesToExclude, parentGroupId, active);
         
         JqGridDataBuilder builder = new JqGridDataBuilder(jqGridHelper.getMaxPerPage(), queryResult.getCount(), jqGridHelper.getRequestedPage());
-        //builder.addRow(new JqGridDataRow()
+
         if (queryResult.getCount() > 0) {
             for (User user : queryResult.getList()) {
                 JqGridDataRow row = new JqGridDataRow(user.getId());
@@ -468,10 +469,9 @@ public class UserService extends AbstractController {
 
     @RequestMapping(value = "/webservice/user/downloadUsers.htm", method = RequestMethod.GET)
 	public void downloadUsers(
-			@RequestParam(value = "ident", defaultValue = "") String ident,
-			@RequestParam(value = "userName", defaultValue = "") String username,
-            @RequestParam(value = "emailAddress", defaultValue = "") String emailAddress,
-            @RequestParam(value = "fullName", defaultValue = "") String fullName,
+	    @RequestParam(value = "ident", defaultValue = "") String ident,	
+            @RequestParam(value = PARAM_ACTIVE, required = false) Boolean active,
+            @RequestParam(value = PARAM_CONTAINS, required = false) String contains,
             HttpServletRequest request,
 			HttpServletResponse response) throws IOException {
 
@@ -491,7 +491,7 @@ public class UserService extends AbstractController {
 		}
 
 		//find the users
-		PagedQueryResult<User> queryResult = userDAO.search(username, emailAddress, fullName, null);
+		PagedQueryResult<User> queryResult = userDAO.search(contains, contains, contains, null, null, null, null, active);
 		List<User>  userList = queryResult.getList();
 
 		response.setContentType("application/vnd.ms-excel");

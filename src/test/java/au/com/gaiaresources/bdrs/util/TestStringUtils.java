@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -65,5 +66,34 @@ public class TestStringUtils {
         String[] subs = {"a", "ab", "abc"};
         String result = StringUtils.substitution(source, "%", subs);
         assertEquals("textatextabtextabc", result);
+    }
+    
+    @Test
+    public void testValidateHtml() {
+        // check for null handling
+        String expected = null;
+        String actual = StringUtils.validateHtml(expected);
+        Assert.assertEquals(expected, actual);
+        
+        // check for empty string handling
+        expected = "";
+        actual = StringUtils.validateHtml(expected);
+        Assert.assertNull(actual);
+        
+        // check unclosed tags
+        expected = "<input type=something that is not correct";
+        actual = StringUtils.validateHtml(expected);
+        Assert.assertNotNull(actual);
+        Assert.assertNotSame(expected, actual);
+        
+        // check invalid tags
+        expected = "<p>This paragraph is <b>not</p> correct!</b>";
+        Assert.assertNotNull(actual);
+        Assert.assertNotSame(expected, actual);
+        
+        // check closing html block
+        expected = "</body></html>";
+        Assert.assertNotNull(actual);
+        Assert.assertNotSame(expected, actual);
     }
 }

@@ -62,10 +62,6 @@ public class GeoMapLayerController_GetLayer_Test extends AbstractControllerTest 
     @Autowired
     AttributeDAO attrDAO;
     @Autowired
-    UserDAO userDAO;
-    @Autowired
-    GeoMapFeatureDAO gmfDAO;
-    @Autowired
     LocationService locationService;
 
     
@@ -79,8 +75,6 @@ public class GeoMapLayerController_GetLayer_Test extends AbstractControllerTest 
     
     Survey survey;
     GeoMapLayer layer1;
-    
-    GeoMapFeature gmf;
     
     User admin;
     User owner;

@@ -40,7 +40,7 @@
         <label for="shortProfile">import short profile(s) only</label>
         <input type="checkbox" id="shortProfile" checked="checked"></input>
     </div>
-    <div class="textright">
+    <div class="buttonpanel textright">
         <input class="form_action" type="button" value="Import Taxon" onclick="importALAProfile();"/>
     </div>
 </div>

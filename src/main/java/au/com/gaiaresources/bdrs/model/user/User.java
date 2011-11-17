@@ -272,10 +272,27 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
     public boolean isRoot() {
         return hasRole(Role.ROOT);
     }
-
+    
     @Transient
     @Sensitive
-    private boolean hasRole(String role) {
+    public boolean isSupervisor() {
+        return hasRole(Role.SUPERVISOR);
+    }
+    
+    @Transient
+    @Sensitive
+    public boolean isPoweruser() {
+        return hasRole(Role.POWERUSER);
+    }
+
+    /**
+     * Determines if the user has the given role.
+     * @param role the role to test for in the user
+     * @return true if the user has the role, false otherwise
+     */
+    @Transient
+    @Sensitive
+    public boolean hasRole(String role) {
         if (role == null) {
             return false;
         }

@@ -17,9 +17,6 @@ import org.springframework.util.StringUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortingCriteria;
-
 // I don't particularly like this since we need to instantiate
 // QueryPaginator every time we want to use it with a different
 // type

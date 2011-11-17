@@ -78,6 +78,54 @@ public class SurveyService extends AbstractController {
     static final String AUTHORISATION_PARAMETER = "ident";
     static final String GROUP_ID_PARAMETER = "groupId";
     static final String SURVEY_ID_PARAMETER = "surveyId";
+    
+    /**
+     * Returns a JSON encoded representation of the survey with the specified 
+     * primary key.
+     * 
+     * @param request the browser request
+     * @param response the server response
+     * @throws IOException
+     */
+    @RequestMapping(value = "/webservice/survey/getSurvey.htm", method = RequestMethod.GET)
+    public void getSurvey(HttpServletRequest request, 
+                            HttpServletResponse response,
+                            @RequestParam(required = true, value=SURVEY_ID_PARAMETER) int surveyId)
+        throws IOException {
+
+        if (request.getParameter(AUTHORISATION_PARAMETER) == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        String ident = request.getParameter(AUTHORISATION_PARAMETER);
+        User user = userDAO.getUserByRegistrationKey(ident);
+        if (user == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        
+        Survey survey = surveyDAO.getSurvey(surveyId);
+        JSONObject json;
+        if(survey == null) {
+            json = new JSONObject();
+        } else {
+            json = JSONObject.fromObject(survey.flatten());
+        }
+
+        // support for JSONP
+        if (request.getParameter("callback") != null) {
+            response.setContentType("application/javascript");
+            response.getWriter().write(request.getParameter("callback") + "(");
+        } else {
+            response.setContentType("application/json");
+        }
+
+        response.getWriter().write(json.toString());
+        if (request.getParameter("callback") != null) {
+            response.getWriter().write(");");
+        }
+    }
 
     @RequestMapping(value = "/webservice/survey/surveysForUser.htm", method = RequestMethod.GET)
     public void surveysForUser(HttpServletRequest request, HttpServletResponse response)

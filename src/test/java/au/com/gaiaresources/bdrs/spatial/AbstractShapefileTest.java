@@ -149,6 +149,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         taxaCmList.add(createAttribute("cattr_7", AttributeType.STRING_AUTOCOMPLETE, true));
         taxaCmList.add(createAttribute("cattr_8", AttributeType.TEXT, true));
         taxaCmList.add(createAttribute("cattr_9", AttributeType.STRING_WITH_VALID_VALUES, true, new String[] { "hello", "world", "goodbye"} ));
+        taxaCmList.add(createAttribute("cattr_10", AttributeType.REGEX, true));
         taxaCm.setAttributes(taxaCmList);
         cmDAO.save(taxaCm);
         
@@ -168,6 +169,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         cmAttrList.add(createAttribute("cattr_7", AttributeType.STRING_AUTOCOMPLETE, true));
         cmAttrList.add(createAttribute("cattr_8", AttributeType.TEXT, true));
         cmAttrList.add(createAttribute("cattr_9", AttributeType.STRING_WITH_VALID_VALUES, true, new String[] { "hello", "world", "goodbye"} ));
+        cmAttrList.add(createAttribute("cattr_10", AttributeType.REGEX, true));
         cm.setAttributes(cmAttrList);
         cmDAO.save(cm);
         
@@ -186,6 +188,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         surveyAttrList.add(createAttribute("sattr_7", AttributeType.STRING_AUTOCOMPLETE, true));
         surveyAttrList.add(createAttribute("sattr_8", AttributeType.TEXT, true));
         surveyAttrList.add(createAttribute("sattr_9", AttributeType.STRING_WITH_VALID_VALUES, true, new String[] { "hello", "world", "goodbye"} ));
+        surveyAttrList.add(createAttribute("sattr_10", AttributeType.REGEX, true));
         survey.setAttributes(surveyAttrList);
         
         surveyStartDate = cal.getTime();
@@ -208,6 +211,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         surveyAttrList2.add(createAttribute("sattr_7", AttributeType.STRING_AUTOCOMPLETE, true));
         surveyAttrList2.add(createAttribute("sattr_8", AttributeType.TEXT, true));
         surveyAttrList2.add(createAttribute("sattr_9", AttributeType.STRING_WITH_VALID_VALUES, true, new String[] { "hello", "world", "goodbye"} ));
+        surveyAttrList2.add(createAttribute("sattr_10", AttributeType.REGEX, true));
         secondSurvey.setAttributes(surveyAttrList2);
         
         surveyStartDate = cal.getTime();
@@ -441,7 +445,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         case DATE:    
             av.setDateValue(shpDateFormat.parse(value));
             break;
-            
+        case REGEX:
         case BARCODE:
         case TIME:
         case STRING:
@@ -511,7 +515,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
             }
         }
             break;
-            
+        case REGEX:
         case BARCODE:
         case TIME:
         case STRING:
@@ -561,7 +565,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         case DATE:    
             assertFeatureStringValue(feature, shpAttrName, "");
             break;
-            
+        case REGEX:
         case BARCODE:
         case TIME:
         case STRING:

@@ -2,8 +2,7 @@ package au.com.gaiaresources.bdrs.controller.attribute;
 
 import java.util.Map;
 
-import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
-import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 
@@ -112,40 +111,30 @@ public class AttributeFormFieldFactory {
      * This will create and save a new Metadata instance if an instance for the
      * specified property does not already exist.
      * 
-     * @param dao
-     *            the database object to use when saving metadata.
-     * @param survey
-     *            the survey where the metadata shall be added.
-     * @param propertyName
-     *            the name of the record property represented by this field
+     * @param recordProperty 
+     *            the <code>RecordProperty</code> that has access to the <code>RecordPropertySetting</code>
      * @return an <code>AttributeFormField</code>.
      * @see RecordPropertyAttributeFormField
      */
-    public AttributeFormField createAttributeFormField(MetadataDAO dao,
-            Survey survey, String propertyName) {
-        return new RecordPropertyAttributeFormField(dao, survey, propertyName);
+    public AttributeFormField createAttributeFormField(RecordProperty recordProperty) {
+    	return new RecordPropertyAttributeFormField(recordProperty);
     }
 
     /**
      * Updates the record property sorting weight metadata from the specified
      * POST parameter map.
      * 
-     * @param dao
-     *            the database object to use when saving metadata.
-     * @param survey
-     *            the survey where the metadata shall be added.
-     * @param propertyName
-     *            the name of the record property represented by this field
+	 * @param recordProperty 
+     *            the <code>RecordProperty</code> that has access to the <code>RecordPropertySetting</code>
      * @param parameterMap
      *            the map of POST parameters that the form field will utilise to
      *            populate the <code>Metadata</code> that is created.
      * @return an <code>AttributeFormField</code>.
      * @see RecordPropertyAttributeFormField
      */
-    public AttributeFormField createAttributeFormField(MetadataDAO dao,
-            Survey survey, String propertyName,
+    public AttributeFormField createAttributeFormField(RecordProperty recordProperty,
             Map<String, String[]> parameterMap) {
-        return new RecordPropertyAttributeFormField(dao, survey, propertyName,
+        return new RecordPropertyAttributeFormField(recordProperty,
                 parameterMap);
     }
 }

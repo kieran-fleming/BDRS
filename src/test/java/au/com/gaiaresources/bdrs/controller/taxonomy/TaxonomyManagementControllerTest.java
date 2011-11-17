@@ -12,11 +12,9 @@ import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
-
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.hibernate.type.MetaType;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -31,21 +29,31 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.preference.Preference;
+import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
+import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.AtlasService;
 
 public class TaxonomyManagementControllerTest extends AbstractControllerTest {
 
+    private static final List<String> SPECIES_PROFILES = new ArrayList<String>();
+    static {
+        SPECIES_PROFILES.add("urn:lsid:biodiversity.org.au:afd.taxon:1ed122bb-c4e3-49a6-9281-fcf1c49b1d4b");
+        SPECIES_PROFILES.add("urn:lsid:biodiversity.org.au:afd.taxon:a326cf7c-19d1-4714-9bec-61ec3eee0318");
+        SPECIES_PROFILES.add("urn:lsid:biodiversity.org.au:afd.taxon:cdddb387-fca5-48d9-85d2-16357c7b986b");
+    }
+    
     @Autowired
     private TaxaDAO taxaDAO;
     
@@ -68,6 +76,9 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     @Autowired
     AtlasService atlasService;
 
+    @Autowired
+    PreferenceDAO prefsDAO;
+    
     private Map<String, JSONObject> jsonObjs = new HashMap<String, JSONObject>();
 
     private Map<String, JSONObject> shortJSONObjs = new HashMap<String, JSONObject>();
@@ -173,13 +184,29 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         speciesB.setInfoItems(profileList);
         speciesB = taxaDAO.save(speciesB);
         
+        // set the preferences for the ala urls to use the file system instead
+        Preference alaUrlPref = new Preference();
+        alaUrlPref.setKey("ala.species.url");
+        alaUrlPref.setValue("file:///"+this.getClass().getResource("profiles").getPath()+"/");
+        // Just get the first category.
+        PreferenceCategory cat = new PreferenceCategory();
+        cat.setDescription("cat desc");
+        cat.setDisplayName("catdisplayname");
+        cat.setName("catname");
+        prefsDAO.save(null, cat);
+        
+        alaUrlPref.setPreferenceCategory(cat);
+        alaUrlPref.setIsRequired(false);
+        alaUrlPref.setDescription("Preference for getting the ALA species profiles from the resources.");
+        prefsDAO.save(alaUrlPref);
+        
         importSpecies = new IndicatorSpecies();
         importSpecies.setCommonName("Indicator Species Import");
         importSpecies.setScientificName("Indicator Species Import");
         importSpecies.setTaxonGroup(taxonGroupButterflies);
         importSpecies.setInfoItems(profileList);
         importSpecies = atlasService.createTaxonMetadata(importSpecies, Metadata.TAXON_SOURCE_DATA_ID, 
-                                                         "103104216");
+                                                         SPECIES_PROFILES.get(0));
         importSpecies = taxaDAO.save(importSpecies);
     }
 
@@ -428,6 +455,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                     value = "Test Species Attr String";
                     break;
+                case REGEX:
                 case BARCODE:
                     value = "#121212";
                     break;
@@ -533,6 +561,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
+                case REGEX:
                 case BARCODE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());
                     break;
@@ -650,6 +679,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                     value = "Test Species Attr String";
                     break;
+                case REGEX:
                 case BARCODE:
                     value="#121212";
                     break;
@@ -749,6 +779,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case STRING:
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
+                case REGEX:
                 case BARCODE:
                 case TIME:
                 case HTML:
@@ -801,39 +832,39 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
     
     @Ignore
     @Test
     public void testImportOneShortProfile() throws Exception {
-        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", true);
+        testImportTaxon(SPECIES_PROFILES.get(0), true);
     }
     
     @Ignore
     @Test
     public void testImportOneFullProfileOverrideShort() throws Exception {
-        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971", false);
+        testImportTaxon(SPECIES_PROFILES.get(0), false);
     }
     
     @Ignore
     @Test
     public void testImportOneFullProfile() throws Exception {
-        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", false);
+        testImportTaxon(SPECIES_PROFILES.get(1), false);
     }
     
     @Ignore
     @Test
     public void testImportMultipleShortProfile() throws Exception {
-        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
-                        "urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", true);
+        testImportTaxon(SPECIES_PROFILES.get(1) + "," +
+                        SPECIES_PROFILES.get(2), true);
     }
     
     @Ignore
     @Test
     public void testImportMultipleFullProfile() throws Exception {
-        testImportTaxon("urn:lsid:biodiversity.org.au:afd.taxon:ff9501a2-d721-49ac-a0d3-a321570b6971," +
-                        "urn:lsid:biodiversity.org.au:afd.taxon:07f7b800-8d4c-474f-851a-290a15d9a024", false);
+        testImportTaxon(SPECIES_PROFILES.get(0) + "," +
+                        SPECIES_PROFILES.get(2), false);
     }
     
     private void testImportTaxon(String guids, boolean shortProfile) throws Exception {
@@ -868,7 +899,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     @Test
     public void testImportFromEditWithGuid() throws Exception {
         testImportProfileToTaxon(importSpecies.getId(), 
-                                 "urn:lsid:catalogueoflife.org:taxon:eeade54e-29c1-102b-9a4a-00304854f820:ac2010");
+                                 SPECIES_PROFILES.get(2));
     }
     
     private void testImportProfileToTaxon(Integer pk, String guid) throws Exception {

@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 public class RegExpValidator extends AbstractValidator {
     
@@ -20,6 +21,8 @@ public class RegExpValidator extends AbstractValidator {
     
     private static final String FIT_REGEXP_MESSSAGE_KEY = "RegExpValidator.regExp";
     private static final String FIT_REGEXP_MESSSAGE = "Must fit regular expression %s ";
+    private static final String BLANK_MESSSAGE_KEY = "AbstractValidator.blank";
+    private static final String BLANK_MESSSAGE = "This cannot be blank";
 
     public RegExpValidator(PropertyService propertyService, boolean required,
             boolean blank) {
@@ -41,19 +44,14 @@ public class RegExpValidator extends AbstractValidator {
         
         if(isValid){
             String value = getSingleParameter(parameterMap, key);
-            if (value != null) {
+            if (!StringUtils.nullOrEmpty(value)) {
                 //use regular expression in attribute options if there is one, otherwise use default one
                 List<AttributeOption> options = null;
                 if (attribute != null)
                     options = attribute.getOptions();
-                StringBuffer buf = new StringBuffer();
+                
                 if (options != null && options.size() > 0){
-                    for(AttributeOption opt : options){
-                        buf.append(opt.getValue());
-                        buf.append(",");
-                    }
-                    buf.setLength(buf.length()-1);
-                    regExp = buf.toString();
+                    regExp = attribute.getOptionString();
                 }
                 
                 //actual validation
@@ -62,8 +60,14 @@ public class RegExpValidator extends AbstractValidator {
                 if(!matcher.matches()){
                     errorMap.put(key, String.format(propertyService.getMessage(FIT_REGEXP_MESSSAGE_KEY, FIT_REGEXP_MESSSAGE), regExp));
                 }
+            } else {
+                // the string is null or empty
+                if (required) {
+                    errorMap.put(key, propertyService.getMessage(BLANK_MESSSAGE_KEY, BLANK_MESSSAGE));
+                }
             }
         }
+        
         return isValid && !errorMap.containsKey(key);
     }
 }

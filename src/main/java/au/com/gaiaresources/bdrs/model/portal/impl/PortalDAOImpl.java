@@ -141,7 +141,7 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
         Portal p = super.save(sesh, portal);
         try {
             // seed portal with essential data...
-            new PortalInitialiser().init(p);
+            new PortalInitialiser().init(sesh, p);
         } catch (Exception e) {
             log.error("Could not initialise portal. Rolling back transaction...", e);
             throw e;
@@ -181,7 +181,7 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
         }
         
         if(portalList.size() > 1) {
-            log.warn(String.format("More than one portals with default = \"%s\" found. Returning the first.", new Boolean(isDefault).toString()));
+            log.warn(String.format("More than one portals with default = \"%s\" found. Returning the first.", Boolean.valueOf(isDefault).toString()));
         }
         
         return portalList.get(0);

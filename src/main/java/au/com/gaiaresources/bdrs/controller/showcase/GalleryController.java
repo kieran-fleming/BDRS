@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,10 +34,12 @@ import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.showcase.Gallery;
 import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
-import au.com.gaiaresources.bdrs.service.image.ImageService;
+import au.com.gaiaresources.bdrs.util.ImageUtil;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.managedFile.ManagedFileService;
 import au.com.gaiaresources.bdrs.util.FileUtils;
 
+@RolesAllowed( {Role.ADMIN} )
 @Controller
 public class GalleryController extends AbstractDownloadFileController {
     
@@ -82,8 +85,6 @@ public class GalleryController extends AbstractDownloadFileController {
     private ManagedFileService mfService;
     @Autowired
     private ManagedFileDAO mfDAO;
-    @Autowired
-    private ImageService imageService;
     @Autowired
     private FileService fileService;
     
@@ -215,9 +216,9 @@ public class GalleryController extends AbstractDownloadFileController {
                         fis = new FileInputStream(f);
 
                         // fixed width but height can be variable
-                        BufferedImage bf = imageService.resizeImage(new FileInputStream(f), SLIDESHOW_DEFAULT_WIDTH, SLIDESHOW_DEFAULT_HEIGHT);
+                        BufferedImage bf = ImageUtil.resizeImage(new FileInputStream(f), SLIDESHOW_DEFAULT_WIDTH, SLIDESHOW_DEFAULT_HEIGHT);
                         File targetFile = fileService.createTargetFile(mf.getClass(), mf.getId(), FILENAME_SLIDESHOW_PREFIX + mf.getFilename());
-                        imageService.saveImage(targetFile, bf, mf.getContentType(), JPEG_QUALITY);                       
+                        ImageUtil.saveImage(targetFile, bf, mf.getContentType(), JPEG_QUALITY);                       
                     } catch (IOException e) {
                         log.error("Error doing image resizing", e);
                         throw e;

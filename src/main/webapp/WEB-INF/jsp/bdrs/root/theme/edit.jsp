@@ -18,8 +18,6 @@
     </c:if>
     <input type="hidden" name="portalPk" value="${ portalId }"/>
     
-    <c:if test="${editAsRoot}">
-    <!-- These items should only be changable root...? -->
     <table class="form_table">
         <tbody>
             <tr>
@@ -42,7 +40,6 @@
             </tr>
         </tbody>
     </table>
-    </c:if>
     
     <c:if test="${ not empty editTheme.themeElements }">
         <h3 class="sep">Theme Elements</h3>
@@ -121,8 +118,15 @@
         <c:if test="${ editTheme.id != null }">
             <a href="javascript: void(0);" onclick="jQuery('#advanced_editing').toggle();">Advanced Editing</a>
             <span>&nbsp;|&nbsp;</span>
+            <input class="form_action" type="button" value="Download Theme" name="download" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/theme/downloadTheme.htm?themeId=${ editTheme.id }';"/>
         </c:if>
         <input class="form_action" type="submit" value="Revert Theme" name="revert" onclick="return confirm('Reverting this theme will delete all local changes. Do you wish to continue?');"/>
         <input class="form_action" type="submit" value="Save Theme"/>
     </div>
 </form>
+
+<script>
+    var downloadFile = function() {
+        
+    }
+</script>

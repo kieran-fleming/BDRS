@@ -7,24 +7,16 @@
 <tiles:useAttribute name="baseQueryString" ignore="true" />
 
 <h4>Search Users</h4>   
-    <form id="${widgetId}SearchForm">
+    <form class="widgetSearchForm" id="${widgetId}SearchForm">
 	    <table>
 	        <tr>
-	            <td class="formlabel">Login:</td>
-	            <td><input type="text" style="width:15em" name="userName" value="<c:out value="" />" size="40"  autocomplete="off"/></td>
-	        </tr>
-	        <tr>
-	            <td class="formlabel">Email Address:</td>
-	            <td><input type="text" style="width:15em" name="emailAddress" value="<c:out value="" />" size="40"  autocomplete="off" /></td>
-	        </tr>
-	        <tr>
-	            <td class="formlabel">Name:</td>
-	            <td><input type="text" style="width:15em" name="fullName" value="<c:out value="" />" size="40"  autocomplete="off" /></td>
+	            <td class="formlabel">Contains:</td>
+	            <td><input type="text" style="width:15em" name="contains" onkeypress="return ${widgetId}Grid.containsKeyPressed(event)" value="<c:out value="" />" size="60"  autocomplete="off"/></td>
 	        </tr>
 	    </table>
     </form>
-<div class="buttonpanel textright">
-    <input type="button" id="${widgetId}Filter" class="form_action" value="Filter"/>
+<div class="buttonpanel buttonPanelRight textright">
+    <input type="button" id="${widgetId}Filter" class="form_action" value="Search"/>
 </div>
 
 <div id="${widgetId}Wrapper">
@@ -80,5 +72,14 @@
         ${widgetId}Grid.setQueryString(f);
         ${widgetId}Grid.reload();
     });
+	
+	${widgetId}Grid.containsKeyPressed = function(e) {
+        if(e.keyCode == 13) {
+            jQuery("#${widgetId}Filter").click();
+            return false; // returning false will prevent the event from bubbling up.
+        } else {
+            return true;
+        }
+    };
 
 </script>

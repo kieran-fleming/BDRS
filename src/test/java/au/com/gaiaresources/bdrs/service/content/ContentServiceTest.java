@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import au.com.gaiaresources.bdrs.test.AbstractSpringContextTest;
 
-public class ContentServiceTest extends AbstractSpringContextTest {
+public class ContentServiceTest {
     
     @Test
     public void testRequestURLRegex() {

@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 
 public class JqGridDataHelper {
     

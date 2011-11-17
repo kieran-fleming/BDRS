@@ -8,25 +8,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import org.apache.log4j.Logger;
-
-import com.vividsolutions.jts.geom.Geometry;
 
 import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
 import au.com.gaiaresources.bdrs.config.AppContext;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
 import au.com.gaiaresources.bdrs.controller.record.ValidationType;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
@@ -35,10 +34,18 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.util.DateFormatter;
 import au.com.gaiaresources.bdrs.util.StringUtils;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 public class RecordDeserializer {
 
@@ -51,6 +58,7 @@ public class RecordDeserializer {
     private LocationService locationService = AppContext.getBean(LocationService.class);
     private FileService fileService = AppContext.getBean(FileService.class);
     private PropertyService propertyService = AppContext.getBean(PropertyService.class);
+    private MetadataDAO metadataDAO = AppContext.getBean(MetadataDAO.class);
     
     RecordKeyLookup klu;
     AttributeParser attributeParser;
@@ -105,7 +113,6 @@ public class RecordDeserializer {
      * @throws IOException
      */
     public List<RecordDeserializerResult> deserialize(User currentUser, List<RecordEntry> entries) throws ParseException, IOException {
-        
         List<RecordDeserializerResult> results = new LinkedList<RecordDeserializerResult>();
         
         for (RecordEntry entry : entries) {
@@ -179,13 +186,15 @@ public class RecordDeserializer {
             
             // If taxon is denoted by numeric ID, then use it!
             IndicatorSpecies species;
-            try {
+           
+        	try {
                 species = taxaDAO.getIndicatorSpecies(Integer.parseInt(entry.getValue(klu.getSpeciesIdKey())));
             } catch (NumberFormatException nfe) {
                 species = null;
             }
+        
             
-            // Validate Mandatory Fields AKA darwin core fields
+            // Validate darwin core fields
             RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
             Map<String, String[]> params = dataMap;
             Map<String, String[]> dateRangeParams = new HashMap<String, String[]>(params);
@@ -194,15 +203,48 @@ public class RecordDeserializer {
                             survey.getStartDate() == null ? "" : DateFormatter.format(survey.getStartDate(), DateFormatter.DAY_MONTH_YEAR),
                             survey.getEndDate() == null ? "" : DateFormatter.format(survey.getEndDate(), DateFormatter.DAY_MONTH_YEAR) } );
             
-            boolean isValid = validator.validate(params, ValidationType.REQUIRED_BLANKABLE_STRING, klu.getNotesKey(), null)
-                    & validator.validate(params, ValidationType.REQUIRED_HISTORICAL_DATE, klu.getDateKey(), null)
-                    & validator.validate(params, ValidationType.DOUBLE, klu.getAccuracyKey(), null)
-                    & validator.validate(dateRangeParams, ValidationType.DATE_WITHIN_RANGE, klu.getDateKey(), null)
-                    & validator.validate(params, ValidationType.INTEGER, klu.getRecordIdKey(), null);
+            boolean isValid = false;
+            RecordProperty recordProperty;
             
+            recordProperty = new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO);
+            if ( recordProperty.isRequired()) {
+            	validator.validate(params, ValidationType.REQUIRED_BLANKABLE_STRING, klu.getNotesKey(), null, recordProperty);
+            } else {
+            	validator.validate(params, ValidationType.STRING, klu.getNotesKey(), null, recordProperty);
+            }
+            
+            recordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
+            if(recordProperty.isRequired()) {
+            	validator.validate(params, ValidationType.REQUIRED_HISTORICAL_DATE, klu.getDateKey(), null, recordProperty);
+            } else {
+            	validator.validate(params, ValidationType.BLANKABLE_HISTORICAL_DATE, klu.getDateKey(), null, recordProperty);
+            }
+            		
+			recordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
+			if (recordProperty.isRequired()) {
+				validator.validate(dateRangeParams, ValidationType.REQUIRED_DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
+			} else {
+				validator.validate(dateRangeParams, ValidationType.DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
+			}
+	        		
+            recordProperty = new RecordProperty(survey, RecordPropertyType.ACCURACY, metadataDAO);
+            if (recordProperty.isRequired()) {
+            	validator.validate(params, ValidationType.REQUIRED_DOUBLE, klu.getAccuracyKey(), null, recordProperty);
+            } else {
+            	validator.validate(params, ValidationType.DOUBLE, klu.getAccuracyKey(), null, recordProperty);
+            }
+            
+            validator.validate(params, ValidationType.INTEGER, klu.getRecordIdKey(), null);
+            		
             if (entry.getGeometry() == null) {
-                isValid &= validator.validate(params, ValidationType.REQUIRED_DEG_LATITUDE, klu.getLatitudeKey(), null);
-                isValid &= validator.validate(params, ValidationType.REQUIRED_DEG_LONGITUDE, klu.getLongitudeKey(), null);    
+            	recordProperty = new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO);
+                if ( recordProperty.isRequired()) {
+                	validator.validate(params, ValidationType.REQUIRED_DEG_LATITUDE, klu.getLatitudeKey(), null, recordProperty);
+                    validator.validate(params, ValidationType.REQUIRED_DEG_LONGITUDE, klu.getLongitudeKey(), null, recordProperty);    
+                } else {
+                	validator.validate(params, ValidationType.DEG_LATITUDE, klu.getLatitudeKey(), null, recordProperty);
+                    validator.validate(params, ValidationType.DEG_LONGITUDE, klu.getLongitudeKey(), null, recordProperty); 
+                }
             } else {
                 // make sure the geometry is valid !
                 boolean geomValid = entry.getGeometry().isValid();
@@ -231,46 +273,59 @@ public class RecordDeserializer {
             String speciesSearch = entry.getValue(klu.getSpeciesNameKey());
             String numberString = entry.getValue(klu.getIndividualCountKey());
             
+            recordProperty = new RecordProperty(survey, RecordPropertyType.NUMBER, metadataDAO);
+            RecordProperty speciesRecordProperty = new RecordProperty(survey, RecordPropertyType.SPECIES, metadataDAO);
+            
+            
             if(isTaxonomicRecord) {
                     ValidationType numberValidationType;
                     ValidationType speciesValidationType;
                 if(Taxonomic.TAXONOMIC.equals(taxonomic)) {
-                        numberValidationType = ValidationType.REQUIRED_POSITIVE_LESSTHAN;
+                	if (speciesRecordProperty.isRequired())  {
                         speciesValidationType = ValidationType.REQUIRED_TAXON;
+                	} else {
+                		speciesValidationType = ValidationType.TAXON;
+                	}
+                	if (recordProperty.isRequired()) {
+                		numberValidationType = ValidationType.REQUIRED_POSITIVE_LESSTHAN;
+                	} else {
+                		numberValidationType = ValidationType.POSITIVE_LESSTHAN;
+                	}
                 } else {
                         numberValidationType = ValidationType.POSITIVE_LESSTHAN;
                         speciesValidationType = ValidationType.TAXON;
                 }
                 
-                isValid &= validator.validate(params, numberValidationType, klu.getIndividualCountKey(), null);
+                validator.validate(params, numberValidationType, klu.getIndividualCountKey(), null, recordProperty);
                 
                 // No need to check if the species primary key has already resolved a species
                 IndicatorSpecies speciesForSurveyCheck = species;
+                
                 if(species == null) {
-                    boolean speciesValid = validator.validate(params, speciesValidationType, klu.getSpeciesNameKey(), null); 
+                    boolean speciesValid = validator.validate(params, speciesValidationType, klu.getSpeciesNameKey(), null, speciesRecordProperty); 
                     if (speciesValid) {
                         speciesForSurveyCheck = getSpeciesFromName(speciesSearch);
                     }
                     isValid = isValid & speciesValid;
                 }
-                
-                // If the record is optionally taxonomic and there is a species with
-                // no number or a number with no species, then there is an error
-                if(Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic)) {
-                    // What's with this logic? surely it can be done cleaner!
-                    if(             (species == null) &&
-                                    (!((StringUtils.nullOrEmpty(speciesSearch) && StringUtils.nullOrEmpty(numberString)) ||
-                                    (!StringUtils.nullOrEmpty(speciesSearch) && !StringUtils.nullOrEmpty(numberString))))) {
-                            isValid = false;
-                            Map<String, String> errorMap = validator.getErrorMap();
-                            String errMsg = propertyService.getMessage(
-                                            TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE_KEY, 
-                                            TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE);
-                            errorMap.put(klu.getIndividualCountKey(), errMsg);
-                            errorMap.put(klu.getSpeciesNameKey(), errMsg);
-                    }
+                if(!(speciesRecordProperty.isHidden() && recordProperty.isHidden())){
+	                // If the record is optionally taxonomic and there is a species with
+	                // no number or a number with no species, then there is an error
+	                if(Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic)) {
+	                    // What's with this logic? surely it can be done cleaner!
+	                    if(             (species == null) && speciesRecordProperty.isRequired() && recordProperty.isRequired() && 
+	                                    (!((StringUtils.nullOrEmpty(speciesSearch) && StringUtils.nullOrEmpty(numberString)) ||
+	                                    (!StringUtils.nullOrEmpty(speciesSearch) && !StringUtils.nullOrEmpty(numberString))))) {
+	                            isValid = false;
+	                            Map<String, String> errorMap = validator.getErrorMap();
+	                            String errMsg = propertyService.getMessage(
+	                                            TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE_KEY, 
+	                                            TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE);
+	                            errorMap.put(klu.getIndividualCountKey(), errMsg);
+	                            errorMap.put(klu.getSpeciesNameKey(), errMsg);
+	                    }
+	                }
                 }
-                
                 if (speciesForSurveyCheck != null && survey.getSpecies() != null && survey.getSpecies().size() > 0) {
 
                     // a species set size > 0 indicates the survey has a limited number of species
@@ -309,7 +364,7 @@ public class RecordDeserializer {
                 }
             }
             
-            if(!isValid) {
+            if(validator.getErrorMap().size() > 0) {
                 rsResult.setErrorMap(validator.getErrorMap());
                 // and early end of loop
                 continue;
@@ -346,7 +401,10 @@ public class RecordDeserializer {
             	record.setUser(user);
             }
             record.setSurvey(survey);
-            record.setNotes(entry.getValue(klu.getNotesKey()));
+            recordProperty = new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO);
+            if (!recordProperty.isHidden()) {
+            	record.setNotes(entry.getValue(klu.getNotesKey()));
+            }
             record.setHeld(false);
             record.setFirstAppearance(false);
             record.setLastAppearance(false);
@@ -359,11 +417,11 @@ public class RecordDeserializer {
     
             // Dates
             String timeString = attributeParser.getTimeValue(klu.getTimeKey(), klu.getTimeHourKey(), klu.getTimeMinuteKey(), entry.getDataMap());
-            String[] timeStringSplit = timeString != null ? timeString.split(":") : null;;
+            String[] timeStringSplit = timeString != null ? timeString.split(":") : null;
             
             // default record time is midnight.
-            int hour = 0;
-            int minute = 0;
+            Integer hour = null;
+            Integer minute = null;
             
             if (timeStringSplit != null && timeStringSplit.length == 2) {
                 try {
@@ -376,28 +434,42 @@ public class RecordDeserializer {
                 } catch (NumberFormatException nfe) {
                     
                 }
-            } else {
-                log.warn("Error parsing record time - using 00:00 as time.");
             }
     
-            Calendar cal = new GregorianCalendar();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-            Date date = dateFormat.parse(entry.getValue(klu.getDateKey()));
-            cal.setTime(date);
-            cal.set(Calendar.HOUR_OF_DAY, hour);
-            cal.set(Calendar.MINUTE, minute);
+         // Dates
+            Date date;
+            if(entry.getValue(klu.getDateKey()) == null){
+            	date = null;
+            }else{
+            	date = dateFormat.parse(entry.getValue(klu.getDateKey()));
+            }
+            Calendar cal = new GregorianCalendar();
+            if(date != null) {
+            	cal.setTime(date);
+            }
+            if (minute != null) {
+            	cal.set(Calendar.MINUTE, minute);
+            }
+            if (hour != null) {
+            	 cal.set(Calendar.HOUR_OF_DAY, hour);
+            }
             cal.clear(Calendar.MILLISECOND);
-            date = cal.getTime();
-            record.setWhen(date);
-            record.setTime(date.getTime());
-            record.setLastDate(date);
-            record.setLastTime(date.getTime());
-    
+            if(date != null && hour != null && minute != null) {
+            	record.setWhen(cal.getTime());
+                record.setTime(cal.getTimeInMillis());
+                record.setLastDate(cal.getTime());
+                record.setLastTime(cal.getTimeInMillis());
+            }
             if (entry.getGeometry() == null) {
                 // Position
-                double latitude = Double.parseDouble(entry.getValue(klu.getLatitudeKey()));
-                double longitude = Double.parseDouble(entry.getValue(klu.getLongitudeKey()));
-                record.setPoint(locationService.createPoint(latitude, longitude));    
+            	// Geometry is nullable now
+            	if(!(StringUtils.nullOrEmpty(entry.getValue(klu.getLatitudeKey())) && StringUtils.nullOrEmpty(entry.getValue(klu.getLongitudeKey())))){
+            		double latitude = Double.parseDouble(entry.getValue(klu.getLatitudeKey()));
+                    double longitude = Double.parseDouble(entry.getValue(klu.getLongitudeKey()));
+                    record.setPoint(locationService.createPoint(latitude, longitude));
+            	}
+                    
             } else {
                 // we always store our geometries in SRID 4326 aka WGS84
                 Geometry theGeom = entry.getGeometry();
@@ -405,7 +477,6 @@ public class RecordDeserializer {
                 theGeom.setSRID(4326);
                 record.setGeometry(theGeom);
             }
-
             Location loc = null;
             // First try to get the location by primary key.
             if(entry.getValue(klu.getLocationKey()) != null) {
@@ -434,14 +505,14 @@ public class RecordDeserializer {
             
             String accuracyStr = entry.getValue(klu.getAccuracyKey());
             record.setAccuracyInMeters(StringUtils.notEmpty(accuracyStr) ? Double.parseDouble(accuracyStr) : null);
-    
+           
             // Attach the record Attributes.
             TypedAttributeValue recAttr;
             List<TypedAttributeValue> attrValuesToDelete = new ArrayList<TypedAttributeValue>();
             Set recAtts = record.getAttributes();
             // Survey Attributes
             for (Attribute attribute : survey.getAttributes()) {
-                if(attrDictFact.getDictionaryAttributeScope().contains(attribute.getScope())) {
+                if (attrDictFact.getDictionaryAttributeScope().contains(attribute.getScope())) {
                     recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), 
                                                     attribute, record, entry.getDataMap(), entry.getFileMap());
                     if (attributeParser.isAddOrUpdateAttribute()) {
@@ -493,8 +564,13 @@ public class RecordDeserializer {
                         }
                     }
                 }
-            }            
-            recordDAO.saveRecord(record);
+            }
+            
+            Record testRecord;
+            testRecord = recordDAO.saveRecord(record);
+            if (testRecord != null) {
+            	Geometry g = testRecord.getGeometry();
+            }
             rsResult.setRecord(record);
             
             for(TypedAttributeValue attrVal : attrValuesToDelete) {
@@ -511,7 +587,7 @@ public class RecordDeserializer {
      * @return
      */
     private IndicatorSpecies getSpeciesFromName(String name) {
-        if (name == null) {
+        if (StringUtils.nullOrEmpty(name)) {
             return null;
         }
         List<IndicatorSpecies> taxaList = taxaDAO.getIndicatorSpeciesByNameSearch(name);

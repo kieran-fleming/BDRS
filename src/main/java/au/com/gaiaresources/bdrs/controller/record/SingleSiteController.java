@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +17,9 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -30,6 +29,10 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordFormFieldCollection;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
@@ -37,21 +40,27 @@ import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
+import au.com.gaiaresources.bdrs.model.record.impl.AdvancedRecordFilter;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * The <code>SingleSiteMultiTaxa</code> controller is a record add form renderer
@@ -60,20 +69,60 @@ import au.com.gaiaresources.bdrs.util.StringUtils;
  * 
  * @author benk
  */
-@Controller
-public class SingleSiteController extends AbstractController {
-    
-    private static final String[] SITE_RECORD_PROPERTY_NAMES = new String[] {
-            Record.RECORD_PROPERTY_LOCATION, Record.RECORD_PROPERTY_POINT,
-            Record.RECORD_PROPERTY_WHEN, Record.RECORD_PROPERTY_TIME,
-            Record.RECORD_PROPERTY_NOTES };
-    private static final String[] TAXA_RECORD_PROPERTY_NAMES = new String[] {
-            Record.RECORD_PROPERTY_SPECIES, Record.RECORD_PROPERTY_NUMBER };
-    
+
+public abstract class SingleSiteController extends AbstractController {
+
+    private static final RecordPropertyType[] TAXA_RECORD_PROPERTY_NAMES = new RecordPropertyType[] {
+            RecordPropertyType.SPECIES, RecordPropertyType.NUMBER };
+
     public static final String PREFIX_TEMPLATE = "%d_";
+
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_CENSUS_METHOD_ID = "censusMethodId";
+    public static final String PARAM_ACCURACY = "accuracyInMeters";
+    
+    public static final String PARAM_SPECIES = "species";
+    public static final String PARAM_NUMBER = "number";
+    
+    public static final String PARAM_LATITUDE = "latitude";
+    public static final String PARAM_LONGITUDE = "longitude";
+    public static final String PARAM_DATE = "date";
+    public static final String PARAM_TIME_HOUR = "time_hour";
+    public static final String PARAM_TIME_MINUTE = "time_minute";
+    public static final String PARAM_NOTES = "notes";
+    public static final String PARAM_LOCATION = "location";
+    
+    public static final String PARAM_SIGHTING_INDEX = "sightingIndex";
+    
+    private static final int STARTING_SIGHTING_INDEX = 0;
+    
+    public static final String ROW_VIEW = "singleSiteMultiTaxaRow";
+    
+    public static final String MSG_CODE_SUCCESS = "bdrs.record.singlesitemultitaxa.save.success";
+    public static final String MSG_CODE_SUCCESS_ADD_ANOTHER = "bdrs.record.singlesitemultitaxa.save.successAddAnother";
+    
+    /**
+     * The survey scoped form fields that may be populated with attribute
+     * value data.
+     */
+    public static final String MODEL_SURVEY_FORM_FIELD_LIST = "formFieldList";
+    
+    /**
+     * The list of record form field collection objects that may be populated with
+     * attribute value data,.
+     */
+    public static final String MODEL_RECORD_ROW_LIST = "recordFieldCollectionList";
+    
+    /**
+     * The form fields used to create the header of the sightings table
+     */
+    public static final String MODEL_SIGHTING_ROW_LIST = "sightingRowFormFieldList";
 
     @Autowired
     private RecordDAO recordDAO;
+    @Autowired
+    private AttributeDAO attributeDAO;
     @Autowired
     private SurveyDAO surveyDAO;
     @Autowired
@@ -82,249 +131,524 @@ public class SingleSiteController extends AbstractController {
     private LocationDAO locationDAO;
     @Autowired
     private CensusMethodDAO cmDAO;
+    @Autowired
+    private MetadataDAO metadataDAO;
 
     @Autowired
     private LocationService locationService;
     @Autowired
     private FileService fileService;
-    @Autowired
-    private PropertyService propertyService;
-    
+
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
-    
+
     @Autowired
     private RedirectionService redirectionService;
+
+    private Logger log = Logger.getLogger(getClass());
 
     /**
      * Saves multiple records for a single site. Site information that is used
      * for all records are specified via parameters. Record specific data such
-     * as the sighted taxon will be retrieved from the request parameters. 
-     * Record specific parameters are prefixed by the row index 
+     * as the sighted taxon will be retrieved from the request parameters.
+     * Record specific parameters are prefixed by the row index
      * 
-     * @param request the browser request
-     * @param response the server response
-     * @param surveyId the primary key of the survey where the record shall be added
-     * @param latitude the latitude of the sighting
-     * @param longitude the longitude of the sighting
-     * @param date the calendar date of the sighting
-     * @param time the time when the sighting occurred
-     * @param notes additional notes to be attached to all records
-     * @param sightingIndex the number of records to be saved.
-     * @return 
-     * @throws ParseException throws if the date cannot be parsed
-     * @throws IOException thrown if uploaded files cannot be saved
-     */    
-    protected ModelAndView saveRecordHelper(MultipartHttpServletRequest request,
-            HttpServletResponse response, int surveyId, double latitude,
-            double longitude, Date date, String time_hour, String time_minute,
-            String notes, int sightingIndex) throws ParseException, IOException {
-        User user = getRequestContext().getUser();
-        Survey survey = surveyDAO.getSurvey(surveyId);
-        
-        // Dates
-        int hour = Integer.parseInt(request.getParameter("time_hour"));
-        int minute = Integer.parseInt(request.getParameter("time_minute"));
+     * @param request
+     *            the browser request
+     * @param response
+     *            the server response
+     * @param surveyId
+     *            the primary key of the survey where the record shall be added
+     * @param latitude
+     *            the latitude of the sighting
+     * @param longitude
+     *            the longitude of the sighting
+     * @param date
+     *            the calendar date of the sighting
+     * @param time
+     *            the time when the sighting occurred
+     * @param notes
+     *            additional notes to be attached to all records
+     * @param sightingIndex
+     *            the number of records to be saved.
+     * @return
+     * @throws ParseException
+     *             throws if the date cannot be parsed
+     * @throws IOException
+     *             thrown if uploaded files cannot be saved
+     */
+    protected ModelAndView saveRecordHelper(
+            MultipartHttpServletRequest request, HttpServletResponse response,
+            int surveyId, Double latitude, Double longitude, Date date,
+            String time_hour, String time_minute, String notes,
+            Integer sightingIndex) throws ParseException, IOException {
 
+        Map<String, String[]> paramMap = this.getModifiableParameterMap(request);
+
+        User user = getRequestContext().getUser();
+
+        Survey survey = surveyDAO.getSurvey(surveyId);
+
+        // Dates
+        Date dateTemplate = null;
         Calendar cal = new GregorianCalendar();
-        cal.setTime(date);
-        cal.set(Calendar.HOUR_OF_DAY, hour);
-        cal.set(Calendar.MINUTE, minute);
+        if (date != null) {
+            cal.setTime(date);
+        }
+        Integer hour, minute;
+        if (StringUtils.nullOrEmpty(time_minute)) {
+            minute = null;
+        } else {
+            //minute = Integer.parseInt(request.getParameter("time_minute"));
+            minute = Integer.parseInt(time_minute);
+            cal.set(Calendar.MINUTE, minute);
+        }
+        if (StringUtils.nullOrEmpty(time_hour)) {
+            hour = null;
+        } else {
+            //hour = Integer.parseInt(request.getParameter("time_hour"));
+            hour = Integer.parseInt(time_hour);
+            cal.set(Calendar.HOUR_OF_DAY, hour);
+        }
         cal.clear(Calendar.MILLISECOND);
-        Date dateTemplate = cal.getTime();
+        if (date != null || hour != null || minute != null) {
+            dateTemplate = cal.getTime();
+        }
         
+        Double accuracy = null;
+        String accuracyString = request.getParameter(PARAM_ACCURACY);
+        if (!StringUtils.nullOrEmpty(accuracyString)) {
+            try {
+                accuracy = Double.parseDouble(accuracyString);    
+            } catch (NumberFormatException nfe) {
+                accuracy = null;
+            }
+        }
+        
+        Location loc = null;
+        String locIdString = request.getParameter(PARAM_LOCATION);
+        if (!StringUtils.nullOrEmpty(locIdString)) {
+            try {
+                loc = locationDAO.getLocation(Integer.parseInt(locIdString));
+            } catch (NumberFormatException nfe) {
+                loc = null;
+            }
+        }
+
         Record record;
-        
+
         String surveyPrefix = AttributeParser.DEFAULT_PREFIX;
         WebFormAttributeParser attributeParser = new WebFormAttributeParser();
-    	List<Record> records = new ArrayList<Record>();
-        for(int index=0; index < sightingIndex; index++) {
-            String recordPrefix = String.format(PREFIX_TEMPLATE, index);
+        List<Record> records = new ArrayList<Record>();
+
+        for (int index = STARTING_SIGHTING_INDEX; index < sightingIndex; index++) {
+            String recordPrefix = getSightingPrefix(index);
             
-            record = new Record();
-            
+            // Attempt to retrieve a record
+            try {
+                String recIdString = request.getParameter(recordPrefix + PARAM_RECORD_ID);
+                if (StringUtils.notEmpty(recIdString)) {
+                    Integer recId = Integer.parseInt(recIdString);
+                    record = recordDAO.getRecord(recId);
+                    // the rec id we attempted to retrieve does not exist, new record
+                    if (record == null) {
+                        record = new Record();
+                    }    
+                } else {
+                    // rec id string is null or empty, make a new record
+                    record = new Record();
+                }
+                
+            } catch (NumberFormatException nfe) {
+                // fall back to a new record
+                record = new Record();
+            }
+
             // Set record visibility to survey default. Setting via web form not supported.
             // Survey's default record visibility can be set in the 'admin -> projects' interface
+            // This will also set an existing record's visibility back to the survey default.
             record.setRecordVisibility(survey.getDefaultRecordVisibility());
-            
+
             record.setUser(user);
             record.setSurvey(survey);
-            record.setNotes(notes);
-            record.setPoint(locationService.createPoint(latitude, longitude));
+            record.setAccuracyInMeters(accuracy);
+            if (notes != null) {
+                record.setNotes(notes);
+            }
+            if (loc != null) {
+                record.setLocation(loc);
+                record.setPoint(loc.getPoint());
+            } else {
+                // clear the location item...
+                record.setLocation(null);
+                if (latitude != null && longitude != null) {
+                    record.setPoint(locationService.createPoint(latitude, longitude));
+                }
+            }
 
             // Avoiding (for no reason) using the same instance of the date
-            Date recordDate = new Date(dateTemplate.getTime());
-            record.setWhen(recordDate);
-            record.setTime(recordDate.getTime());
-            record.setLastDate(recordDate);
-            record.setLastTime(recordDate.getTime());
-            
+            if (dateTemplate != null) {
+                Date recordDate = new Date(dateTemplate.getTime());
+                record.setWhen(recordDate);
+                record.setTime(recordDate.getTime());
+                record.setLastDate(recordDate);
+                record.setLastTime(recordDate.getTime());
+            }
+
             // Constants
             record.setHeld(false);
             record.setFirstAppearance(false);
             record.setLastAppearance(false);
-            
+
             // Taxonomy
-            String speciesPkStr = request.getParameter(String.format("%sspecies", recordPrefix));
-            if(speciesPkStr != null && !speciesPkStr.trim().isEmpty()) {
-            	int speciesPk = Integer.parseInt(speciesPkStr);
+            String speciesPkStr = request.getParameter(String.format("%s" + PARAM_SPECIES, recordPrefix));
+            if (speciesPkStr != null && !speciesPkStr.trim().isEmpty()) {
+                int speciesPk = Integer.parseInt(speciesPkStr);
                 IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesPk);
                 record.setSpecies(species);
             }
 
             // Number
-            // if there is no number, don't save the record
             // this can happen in the singleSiteAllTaxa page
-            String count = request.getParameter(String.format("%snumber", recordPrefix));
-            if (StringUtils.nullOrEmpty(count)) {
-                continue;
+            String count = request.getParameter(String.format("%s" + PARAM_NUMBER, recordPrefix));
+            if (!StringUtils.nullOrEmpty(count)) {
+                try {
+                    record.setNumber(Integer.parseInt(count));
+                } catch (NumberFormatException e) {
+                    log.error("Value should be an integer: " + e.getMessage());
+                }
             }
-            record.setNumber(Integer.parseInt(count));
-            
-            Map<Attribute, AttributeValue> recAttrMap = new HashMap<Attribute, AttributeValue>();
-            for(AttributeValue recAttr : record.getAttributes()) {
-                recAttrMap.put(recAttr.getAttribute(), recAttr);
-            }
-            
+
+            records.add(recordDAO.saveRecord(record));
+
             // Record Attributes
             AttributeValue recAttr;
             String prefix;
-            for(Attribute attribute : survey.getAttributes()) {
-                if(!AttributeScope.LOCATION.equals(attribute.getScope())) {
-                    prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix : recordPrefix;
-                    recAttr = attributeParser.parse(prefix, attribute, record, request.getParameterMap(), request.getFileMap());
-                    if(attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = recordDAO.saveAttributeValue(recAttr);
-                        if(attributeParser.getAttrFile() != null) {
+            for (Attribute attribute : survey.getAttributes()) {
+                if (!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                    prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix
+                            : recordPrefix;
+                    recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
+                    if (attributeParser.isAddOrUpdateAttribute()) {
+                        recAttr = attributeDAO.save(recAttr);
+                        if (attributeParser.getAttrFile() != null) {
                             fileService.createFile(recAttr, attributeParser.getAttrFile());
                         }
                         record.getAttributes().add(recAttr);
-                    }
-                    else {
+                    } else {
                         record.getAttributes().remove(recAttr);
-                        recordDAO.delete(recAttr);
+                        attributeDAO.delete(recAttr);
                     }
                 }
             }
-            
-            records.add(record);
         }
-        
-        recordDAO.saveRecordList(records);
 
         ModelAndView mv;
 
-        if(request.getParameter("submitAndAddAnother") != null) {
-            mv = new ModelAndView(new RedirectView("/bdrs/user/surveyRenderRedirect.htm", true));
+        if (request.getParameter("submitAndAddAnother") != null) {
+            mv = new ModelAndView(new RedirectView(
+                    "/bdrs/user/surveyRenderRedirect.htm", true));
             mv.addObject("surveyId", survey.getId());
-            
-            String tmpl = propertyService.getMessage("bdrs.record.singlesitemultitaxa.save.success");
-            getRequestContext().addMessage(String.format(tmpl, records.size()));
-        }
-        else {
-            mv = new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(survey), true));
-            String tmpl = propertyService.getMessage("bdrs.record.singlesitemultitaxa.save.success");
-            getRequestContext().addMessage(String.format(tmpl, records.size()));
+
+            getRequestContext().addMessage(MSG_CODE_SUCCESS_ADD_ANOTHER, new Object[] { records.size() });
+        } else {
+            mv = new ModelAndView(new RedirectView(
+                    redirectionService.getMySightingsUrl(survey), true));
+            getRequestContext().addMessage(MSG_CODE_SUCCESS, new Object[] { records.size() });
         }
 
         return mv;
     }
-    
+
     @InitBinder
-    public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) {
+    public void initBinder(HttpServletRequest request,
+            ServletRequestDataBinder binder) {
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
         binder.registerCustomEditor(Date.class, new CustomDateEditor(
                 dateFormat, true));
     }
-    
+
     protected ModelAndView ajaxGetSightingsTable(HttpServletRequest request,
-            HttpServletResponse response, int surveyId, int sightingIndex,
-            String redirectUrl) {
+            HttpServletResponse response, int surveyId, int sightingIndex) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         Record record = new Record();
-        
+
         // Add survey scope attribute form fields
-        String prefix = String.format(PREFIX_TEMPLATE, sightingIndex);
+        String prefix = getSightingPrefix(sightingIndex);
         List<FormField> formFieldList = new ArrayList<FormField>();
-        for(Attribute attribute : survey.getAttributes()) {
-            if(!AttributeScope.SURVEY.equals(attribute.getScope()) &&
-                    !AttributeScope.LOCATION.equals(attribute.getScope()) &&
-                    !attribute.isTag()) {
+        for (Attribute attribute : survey.getAttributes()) {
+            // Only record scoped attributes should be in the sightings table.
+            if (AttributeScope.RECORD.equals(attribute.getScope())
+                    && !attribute.isTag()) {
                 formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, null, prefix));
             }
         }
         // Add all property form fields
-        for (String propertyName : TAXA_RECORD_PROPERTY_NAMES) {
-            formFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName, null, null, prefix));
+        for (RecordPropertyType type : TAXA_RECORD_PROPERTY_NAMES) {
+            RecordProperty recordProperty = new RecordProperty(survey, type,
+                    metadataDAO);
+            formFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty, null, null, prefix));
         }
         Collections.sort(formFieldList);
-        
-        ModelAndView mv = new ModelAndView(redirectUrl);
+
+        ModelAndView mv = new ModelAndView(ROW_VIEW);
         mv.addObject("record", record);
         mv.addObject("survey", survey);
         mv.addObject("formFieldList", formFieldList);
         return mv;
     }
 
+    /**
+     * This is used by subclasses in the GET handler
+     * 
+     * @param request
+     * @param response
+     * @param surveyId
+     * @param viewName
+     * @param censusMethodId
+     * @return
+     */
     protected ModelAndView addRecord(HttpServletRequest request,
-            HttpServletResponse response, int surveyId, String redirectUrl, Integer censusMethodId) {
+            HttpServletResponse response, int surveyId, String viewName,
+            Integer censusMethodId) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         Record record = null;
         CensusMethod censusMethod = null;
-        if(request.getParameter("recordId") != null && !request.getParameter("recordId").isEmpty()) {
-            record = recordDAO.getRecord(Integer.parseInt(request.getParameter("recordId")));
+        if (request.getParameter(PARAM_RECORD_ID) != null
+                && !request.getParameter(PARAM_RECORD_ID).isEmpty()) {
+            record = recordDAO.getRecord(Integer.parseInt(request.getParameter(PARAM_RECORD_ID)));
             censusMethod = record.getCensusMethod();
-        }
-        else {
+        } else {
             record = new Record();
             censusMethod = cmDAO.get(censusMethodId);
+            // Set record visibility to survey default. Setting via web form not supported.
+            // Survey's default record visibility can be set in the 'admin -> projects' interface
+            record.setRecordVisibility(survey.getDefaultRecordVisibility());
         }
         
-        // Set record visibility to survey default. Setting via web form not supported.
-        // Survey's default record visibility can be set in the 'admin -> projects' interface
-        record.setRecordVisibility(survey.getDefaultRecordVisibility());
+        User accessor = getRequestContext().getUser();
+        
+        // get the records for this form instance (if any)
+        List<Record> recordsForFormInstance = getRecordsForFormInstance(record, accessor);
         
         // Add survey scope attribute form fields
         List<FormField> sightingRowFormFieldList = new ArrayList<FormField>();
         List<FormField> formFieldList = new ArrayList<FormField>();
-        for(Attribute attribute : survey.getAttributes()) {
-            if(!attribute.isTag() && !AttributeScope.LOCATION.equals(attribute.getScope())) {
-                if(AttributeScope.SURVEY.equals(attribute.getScope())) {
-                    formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
+        
+        // save a list of the record scoped attributes for construction of form fields for each
+        // record (aka sighting table row) later...
+        List<Attribute> recordScopedAttributeList = new ArrayList<Attribute>();
+        
+        for (Attribute attribute : survey.getAttributes()) {
+            if (!attribute.isTag()
+                    && !AttributeScope.LOCATION.equals(attribute.getScope())) {
+                if (AttributeScope.SURVEY.equals(attribute.getScope())) {
+                    formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, getAttributeValue(attribute, record)));
                 } else {
+                    recordScopedAttributeList.add(attribute);
                     sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
                 }
             }
         }
-        // Add all property form fields
-        for (String propertyName : SITE_RECORD_PROPERTY_NAMES) {
-            formFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName));
+        
+        // Add all property form fields.
+        // save a list of the record scoped record properties for construction of form fields
+        // for each record (aka sighting table row) later...
+        List<RecordProperty> recordScopedRecordPropertyList = new ArrayList<RecordProperty>();
+        
+        for (RecordPropertyType type : RecordPropertyType.values()) {
+            RecordProperty recordProperty = new RecordProperty(survey, type,
+                    metadataDAO);
+            
+            if (!recordProperty.isHidden()) {
+                if (recordProperty.getScope().equals(AttributeScope.SURVEY)) {
+                    formFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty));
+                } else {
+                    recordScopedRecordPropertyList.add(recordProperty);
+                    sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty));
+                }
+            }
         }
-        for (String propertyName : TAXA_RECORD_PROPERTY_NAMES) {
-            // No need for a prefix here because this is only used to generate a header
-            sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, propertyName));
-        }
+
         Collections.sort(formFieldList);
         Collections.sort(sightingRowFormFieldList);
-        
+
         Metadata predefinedLocationsMD = survey.getMetadataByKey(Metadata.PREDEFINED_LOCATIONS_ONLY);
-        boolean predefinedLocationsOnly = predefinedLocationsMD != null && 
-            Boolean.parseBoolean(predefinedLocationsMD.getValue());
-        
-        Set<Location> locations = new TreeSet<Location>(new LocationNameComparator());
+        boolean predefinedLocationsOnly = predefinedLocationsMD != null
+                && Boolean.parseBoolean(predefinedLocationsMD.getValue());
+
+        Set<Location> locations = new TreeSet<Location>(
+                new LocationNameComparator());
         locations.addAll(survey.getLocations());
-        if(!predefinedLocationsOnly) {
+        if (!predefinedLocationsOnly) {
             locations.addAll(locationDAO.getUserLocations(getRequestContext().getUser()));
         }
+
+        // 2 is the minimum possible number of sighting row form fields.
+        // If the number of sighting row form fields equals this there are no record scoped
+        // attributes to display on the page, hence it is meaningless to be able to add sighting rows.
+        // Hide the button.
+        Boolean hideAddBtn = false;
+        if (sightingRowFormFieldList.size() == 2) {
+            RecordPropertyFormField r = (RecordPropertyFormField) sightingRowFormFieldList.get(0);
+            RecordPropertyFormField r1 = (RecordPropertyFormField) sightingRowFormFieldList.get(1);
+            if (r.isHidden() && r1.isHidden()) {
+                hideAddBtn = true;
+            }
+        }
+
+        ModelAndView mv = new ModelAndView(viewName);
         
-        ModelAndView mv = new ModelAndView(redirectUrl);
-        mv.addObject("record", record);
+        int sightingIndex = STARTING_SIGHTING_INDEX;
+        
+        // the final list of populated form field collections that we will use to render the web form.
+        List<RecordFormFieldCollection> recFormFieldCollectionList = new ArrayList<RecordFormFieldCollection>();
+        
+        // modify the list
+        // note we need to reassign as it is a new list instance...
+        recordsForFormInstance = modifyRecordDisplayList(recordsForFormInstance, survey);
+        
+        for (Record rec : recordsForFormInstance) {
+            boolean highlight = rec.equals(record);
+            String prefix = getSightingPrefix(sightingIndex++);
+            
+            RecordFormFieldCollection rffc = new RecordFormFieldCollection(prefix, 
+                                                                           rec, 
+                                                                           highlight, 
+                                                                           recordScopedRecordPropertyList,
+                                                                           recordScopedAttributeList);
+            
+            recFormFieldCollectionList.add(rffc);
+        }
+
+        // form field list is the survey scoped attributes.
+        // contains the form field and the data (optional).
+        // note: NON record scoped attributes only!
+        mv.addObject(MODEL_SURVEY_FORM_FIELD_LIST, formFieldList);
+        
+        // sightings row form field list is the record scoped attributes
+        // this is used to create the sightings table header row - no values!
+        // note: record scoped attributes only!
+        mv.addObject(MODEL_SIGHTING_ROW_LIST, sightingRowFormFieldList);
+        
+        // form field collections used to poplate the body of the sightings
+        // table. i.e., data is in here!
+        // note: record scoped attributes only!
+        mv.addObject(MODEL_RECORD_ROW_LIST, recFormFieldCollectionList);
+        
         mv.addObject("survey", survey);
         mv.addObject("locations", locations);
         mv.addObject("preview", request.getParameter("preview") != null);
-        mv.addObject("formFieldList", formFieldList);
-        mv.addObject("sightingRowFormFieldList", sightingRowFormFieldList);
+
+        mv.addObject("hideAddBtn", hideAddBtn);
         mv.addObject("censusMethod", censusMethod);
         return mv;
+    }
+    
+    private List<Record> getRecordsForFormInstance(Record rec, User accessor) {
+        
+        // early return if the record is a non persisted instance - i.e. this will return
+        // an empty form.
+        if (rec.getId() == null) {
+            return Collections.emptyList();
+        }
+        
+        AdvancedRecordFilter recFilter = new AdvancedRecordFilter();
+        recFilter.setStartDate(rec.getWhen());
+        recFilter.setEndDate(rec.getWhen());
+        recFilter.setSurveyPk(rec.getSurvey().getId().intValue());
+        recFilter.setUser(rec.getUser());
+        recFilter.setAccessor(accessor);
+        
+        ScrollableRecords scrollableRecords = recordDAO.getScrollableRecords(recFilter);
+        
+        List<Record> result = new ArrayList<Record>();
+
+        while (scrollableRecords.hasMoreElements()) {
+            Record recordUnderTest = scrollableRecords.nextElement();
+            
+            // Make sure the geometry is the same. I'm not sure whether it's better to
+            // do this in the database or not. I'll consider that an optimization
+            // and will look into it if performance becomes an issue.
+            Geometry geomA = rec.getGeometry();
+            Geometry geomB = recordUnderTest.getGeometry();
+            if (geomA != null && geomB == null) {
+                // early continue, records cannot be from the same form instance
+                continue;
+            }
+            if (geomA == null && geomB != null) {
+                // early continue, records cannot be from the same form instance
+                continue;
+            }
+            // finally, check for both non null and whether the geometries are the same
+            if ((geomA != null && geomB != null) && !geomA.equalsExact(geomB)) {
+                // early continue, records cannot be from the same form instance
+                continue;
+            }
+            
+            // make sure all survey scoped attributes are the same...
+            
+            // if even 1 survey scoped attribute value has been deemed to be different, the record will
+            // not be accepted.
+            boolean identicalSurveyScopedAttributeValues = true;
+            
+            for (AttributeValue av : rec.getAttributes()) {
+                // we are only concerned about survey scoped attributes.
+                // not sure if we need to consider location scoped attributes or not.
+                // record attributes should definitely NOT be considered here.
+                if (av.getAttribute().getScope() == AttributeScope.SURVEY) {
+                    AttributeValue avToTest = getAttributeValue(av.getAttribute(), recordUnderTest);
+                    
+                    if (avToTest == null) {
+                        // early loop continue - item not added to final result
+                        identicalSurveyScopedAttributeValues = false;
+                        break;
+                    }
+                    if (!AttributeValueUtil.isAttributeValuesEqual(av, avToTest)) {
+                        identicalSurveyScopedAttributeValues = false;
+                        break;
+                    }
+                }
+            }
+            
+            // record has been deemed to be part of the same single site form instance.
+            // add to the result.
+            if (identicalSurveyScopedAttributeValues) {
+                result.add(recordUnderTest);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Returns the AttributeValue with the corresponding Attribute from the 
+     * attribute values contained inside the record parameter.
+     * 
+     * @param a - attribute to look for
+     * @param r - record to look for the attribute value set
+     * @return AttributeValue if found, otherwise null
+     */
+    private AttributeValue getAttributeValue(Attribute a, Record r) {
+        return AttributeValueUtil.getByAttribute(r.getAttributes(), a);
+    }
+    
+    
+    private static String getSightingPrefix(int sightingIndex) {
+        return String.format(PREFIX_TEMPLATE, sightingIndex);
+    }
+    
+    /**
+     * Overridable method that we can use to alter what items are displayed in the form instance.
+     * 
+     * Original intent was to allow SingleSiteAllTaxa form to have non persisted records that
+     * contained species that weren't part of the recordsForFormInstance list.
+     * 
+     * @param recordsForFormInstance - the records determined by SingleSiteController that belong to the form instance
+     * @param survey - The survey for the records
+     * @return List<Record>, a new list instance with an updated record list
+     */
+    protected List<Record> modifyRecordDisplayList(List<Record> recordsForFormInstance, Survey survey) {
+        return recordsForFormInstance;
     }
 }

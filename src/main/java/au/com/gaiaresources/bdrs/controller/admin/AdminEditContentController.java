@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.admin;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,15 +20,17 @@ import edu.emory.mathcs.backport.java.util.TreeSet;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 
+@RolesAllowed({Role.ADMIN})
 @Controller
 public class AdminEditContentController extends AbstractController {
     Logger log = Logger.getLogger(AdminEditContentController.class);
     @Autowired
+    private ContentService contentService;
+    @Autowired
     private ContentDAO contentDAO;
-
-    private ContentService contentService = new ContentService();
     
     @RequestMapping(value = "/admin/editContent.htm", method = RequestMethod.GET)
     public ModelAndView renderPage(HttpServletRequest request,
@@ -45,16 +48,16 @@ public class AdminEditContentController extends AbstractController {
     // all of your content!
     @RequestMapping(value="/admin/resetContentToDefault.htm", method = RequestMethod.GET)
     public String reset(HttpServletRequest request, HttpServletResponse response, 
-            @RequestParam(value = "key", required = false) String key) throws Exception {
+            @RequestParam(value = "key", required = false) String key) throws Exception {   
         Portal currentPortal = getRequestContext().getPortal();
         if (currentPortal == null) {
             // something has gone seriously wrong for this to happen...
             throw new Exception("The portal cannot be null");
         }
         if (key == null) {
-            contentService.initContent(contentDAO, currentPortal, ContentService.getRequestURL(request));
+            contentService.initContent(currentPortal);
         } else {
-            contentService.initContent(contentDAO, currentPortal, key, ContentService.getRequestURL(request));
+            contentService.initContent(currentPortal, key, null);
         }
         return "redirect:/admin/editContent.htm";
     }

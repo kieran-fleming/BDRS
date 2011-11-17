@@ -9,7 +9,7 @@
 	<p>
 		<c:out value="${groupDataString}"/>
 	</p>
-	<div id="actionPanel" class="textcenter">
+	<div id="buttonpanel actionPanel" class="textcenter">
 		<input class="form_action" type="button" value="Download" onclick="window.document.location = '${pageContext.request.contextPath}/mobile/home.html'"/>
 	    <input class="form_action" type="button" value="Cancel" onclick="window.document.location='home.htm'"/>
 	</div>

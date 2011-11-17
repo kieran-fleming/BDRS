@@ -171,6 +171,6 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
 
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

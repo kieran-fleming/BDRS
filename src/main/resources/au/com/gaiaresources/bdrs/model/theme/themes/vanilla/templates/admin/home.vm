@@ -1,0 +1,4 @@
+<div class="pageContent">
+<h1>Welcome to the Biological Data Recording System!</h1>
+${bdrs.getContent("admin/home")}
+</div>

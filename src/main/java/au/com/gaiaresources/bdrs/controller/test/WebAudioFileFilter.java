@@ -6,11 +6,11 @@ import java.util.Arrays;
 
 public class WebAudioFileFilter implements FileFilter {
     
-    public static final String[] WEB_AUDIO_EXTENSIONS;
+    private static final String[] WEB_AUDIO_EXTENSIONS;
     static {
         String[] extensions = {"ogg", "mp3"};
         Arrays.sort(extensions);
-        WEB_AUDIO_EXTENSIONS = extensions;
+        WEB_AUDIO_EXTENSIONS = extensions.clone();
     };
     
     @Override

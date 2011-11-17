@@ -22,7 +22,7 @@
 	<div id="emailHeader">
         <table>
            <tr>
-               <td><input type="button" class="right" id="selectUsers" value="To:" onclick="showPopupDialog()"></input></td>
+               <td><input type="button" class="right form_action" id="selectUsers" value="To:" onclick="showPopupDialog()"></input></td>
                <td><input id="toUsers"></input></td>
                <td></td>
            </tr>

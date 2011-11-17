@@ -19,12 +19,6 @@
             <!--  Make this true if we ever want to set the key at request time -->
             <rtexprvalue>false</rtexprvalue>
         </attribute>
-        <attribute>
-            <name>fallback</name>
-            <required>true</required>
-            <!--  Make this true if we ever want to set the key at request time -->
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
     </tag>
 	
 	<!--  Get Content -->
@@ -183,6 +177,34 @@
         </attribute>
     </tag>
     
+  
+    <!--  Validate HTML -->
+	<tag>
+        <name>validateHtml</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.ValidateHtml</tag-class>
+        <body-content>empty</body-content>
+        <description>Validate html entities within a string</description>
+        <attribute>
+            <name>html</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <description>The html string you want validated</description>
+        </attribute>
+    </tag>
+    
+    <!-- Escape Regular Expression -->
+    <tag>
+        <name>regexEscaper</name>
+        <tag-class>au.com.gaiaresources.bdrs.servlet.jsp.tag.RegexEscaperTag</tag-class>
+        <body-content>empty</body-content>
+        <description>Escape a regular expression string</description>
+        <attribute>
+            <name>regex</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <description>The regex string you want to escape</description>
+        </attribute>
+    </tag>
     
   <tag>
     <description>Banner Menu Tag</description>

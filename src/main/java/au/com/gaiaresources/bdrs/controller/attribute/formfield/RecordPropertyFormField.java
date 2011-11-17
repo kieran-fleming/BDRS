@@ -2,10 +2,9 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 
 import org.apache.commons.lang.NotImplementedException;
 
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 
 /**
@@ -16,39 +15,27 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
 
     private IndicatorSpecies species;
     private Taxonomic taxonomic;
-    private String propertyName;
-
-    private int weight = 0;
+    private RecordProperty recordProperty;
 
     /**
      * Creates a new <code>RecordPropertyFormField</code> for a record property.
      * 
-     * @param survey
-     *            the survey containing the record
      * @param record
      *            the record to be updated
-     * @param propertyName
-     *            the name of the bean property represented by this field.
+     * @param recordProperty
+     *            the <code>RecordProperty</code> represented by this field
      * @param species
      *            the indicator species to be represented by this field, or null
      *            otherwise.
      * @param prefix
      *            the prefix to be prepended to input names.
      */
-    RecordPropertyFormField(Survey survey, Record record, String propertyName,
+    public RecordPropertyFormField(Record record, RecordProperty recordProperty,
             IndicatorSpecies species, Taxonomic taxonomic, String prefix) {
-
-        super(survey, record, prefix);
-
-        this.propertyName = propertyName;
+        super(recordProperty.getSurvey(), record, prefix);
+        this.recordProperty = recordProperty;
         this.taxonomic = taxonomic;
         this.species = species;
-
-        String mdkey = String.format(Metadata.RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE, this.propertyName);
-        Metadata md = survey.getMetadataByKey(mdkey);
-        if (md != null) {
-            this.weight = Integer.parseInt(md.getValue());
-        }
     }
 
     /**
@@ -56,7 +43,7 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
      */
     @Override
     public int getWeight() {
-        return this.weight;
+        return recordProperty.getWeight();
     }
 
     /**
@@ -83,11 +70,57 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
 		this.taxonomic = taxonomic;
 	}
 
+	/**
+	 * Returns the fields <code>RecordPropertyType</code>
+	 * @return the fields <code>RecordPropertyType</code>
+	 */
 	public String getPropertyName() {
-        return propertyName;
+        return this.recordProperty.getRecordPropertyType().getName();
     }
 
+	/**
+	 * Not implemented
+	 */
     public void setPropertyName(String propertyName) {
         throw new NotImplementedException();
     }
+    /**
+     * Returns the fields description on the form or null when no description is available.
+     * @return String description of the field on the form.
+     */
+    public String getDescription() {
+    	return this.recordProperty.getDescription();
+    }
+    
+    /**
+     * Gets the required value from the <code>RecordProperty</code>
+     * @return  Either true or false
+     */
+    public boolean isRequired() {
+    	return this.recordProperty.isRequired();
+    }
+    
+    /**
+     * Gets the scope from the <code>RecordProperty</code>
+     * @return  a String containing the scope
+     */
+    public AttributeScope getScope() {
+    	return this.recordProperty.getScope();
+    }
+    
+    /**
+     * Gets the hidden value from the <code>RecordProperty</code>
+     * @return  Either true or false
+     */
+    public boolean isHidden() {
+    	return this.recordProperty.isHidden();
+    }
+    
+    /**
+	 * @return the recordProperty
+	 */
+	public RecordProperty getRecordProperty() {
+		return recordProperty;
+	}
+    
 }

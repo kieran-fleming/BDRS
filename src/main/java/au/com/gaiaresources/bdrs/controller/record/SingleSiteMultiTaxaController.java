@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import au.com.gaiaresources.bdrs.security.Role;
+
 /**
  * The <code>SingleSiteMultiTaxa</code> controller is a record add form renderer
  * that allows multiple sightings of differing taxa to be created for a single
@@ -22,8 +24,15 @@ import org.springframework.web.servlet.ModelAndView;
  * 
  * @author benk
  */
+@RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
 @Controller
 public class SingleSiteMultiTaxaController extends SingleSiteController {
+    
+    public static final String SINGLE_SITE_MULTI_TAXA_URL = "/bdrs/user/singleSiteMultiTaxa.htm";
+    public static final String PARAM_RECORD_ID = SingleSiteController.PARAM_RECORD_ID;
+    public static final String PARAM_SURVEY_ID = SingleSiteController.PARAM_SURVEY_ID;
+    public static final String PARAM_CENSUS_METHOD_ID = SingleSiteController.PARAM_CENSUS_METHOD_ID;
+    
     /**
      * Displays a blank form displaying inputs for the latitude, longitude,
      * date, time and notes.
@@ -33,12 +42,11 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @param surveyId the primary key of the survey where the record shall be added.
      * @return
      */
-    @RolesAllowed( {"ROLE_USER","ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER","ROLE_ADMIN"} )
-    @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa.htm", method = RequestMethod.GET)
+    @RequestMapping(value = SINGLE_SITE_MULTI_TAXA_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId,
-                                    @RequestParam(value = "censusMethodId", required = false, defaultValue = "0") Integer censusMethodId) {
+                                    @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,
+                                    @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId) {
         return addRecord(request, response, surveyId, "singleSiteMultiTaxa", censusMethodId);
     }
     
@@ -52,14 +60,13 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @param sightingIndex the row index where 0 is the first row.
      * @return 
      */
-    @RolesAllowed( {"ROLE_USER","ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER","ROLE_ADMIN"} )
     @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa/sightingRow.htm", method = RequestMethod.GET)
     public ModelAndView ajaxAddSightingRow(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId,
-                                    @RequestParam(value="sightingIndex", defaultValue="0") int sightingIndex) {
+                                    @RequestParam(value= PARAM_SURVEY_ID, required=true) int surveyId,
+                                    @RequestParam(value=PARAM_SIGHTING_INDEX, defaultValue="0") int sightingIndex) {
         
-        return ajaxGetSightingsTable(request, response, surveyId, sightingIndex, "singleSiteMultiTaxaRow");
+        return super.ajaxGetSightingsTable(request, response, surveyId, sightingIndex);
     }
 
     /**
@@ -81,19 +88,17 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @throws ParseException throws if the date cannot be parsed
      * @throws IOException thrown if uploaded files cannot be saved
      */
-    @SuppressWarnings("unchecked")
-    @RolesAllowed( {"ROLE_USER","ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER","ROLE_ADMIN"} )
-    @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa.htm", method = RequestMethod.POST)
+    @RequestMapping(value = SINGLE_SITE_MULTI_TAXA_URL, method = RequestMethod.POST)
     public ModelAndView saveRecord(MultipartHttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId,
-                                    @RequestParam(value="latitude", required=true) double latitude,
-                                    @RequestParam(value="longitude", required=true) double longitude,
-                                    @RequestParam(value="date", required=true) Date date,
-                                    @RequestParam(value="time_hour", required=true) String time_hour,
-                                    @RequestParam(value="time_minute", required=true) String time_minute,
-                                    @RequestParam(value="notes", required=true) String notes,
-                                    @RequestParam(value="sightingIndex", required=true) int sightingIndex) throws ParseException, IOException {
+                                    @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,
+                                    @RequestParam(value=SingleSiteController.PARAM_LATITUDE, required=false) Double latitude,
+                                    @RequestParam(value=SingleSiteController.PARAM_LONGITUDE, required=false) Double longitude,
+                                    @RequestParam(value=SingleSiteController.PARAM_DATE, required=false) Date date,
+                                    @RequestParam(value=SingleSiteController.PARAM_TIME_HOUR, required=false) String time_hour,
+                                    @RequestParam(value=SingleSiteController.PARAM_TIME_MINUTE, required=false) String time_minute,
+                                    @RequestParam(value=SingleSiteController.PARAM_NOTES, required=false) String notes,
+                                    @RequestParam(value=SingleSiteController.PARAM_SIGHTING_INDEX, required=true) int sightingIndex) throws ParseException, IOException {
         return saveRecordHelper(request, response, surveyId, latitude, longitude, date, time_hour, time_minute, notes, sightingIndex);
     }
 }

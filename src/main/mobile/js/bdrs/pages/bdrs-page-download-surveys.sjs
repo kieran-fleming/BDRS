@@ -2,7 +2,6 @@ exports.Create = function() {
 },
 
 exports.Show = function() {
-
 	// show download in progress dialog
 	jQuery.mobile.pageLoading(false);
 	waitfor(){
@@ -27,49 +26,48 @@ exports.Show = function() {
 		}
 	}
 	
-	// check all checkboxes with class local
-	jQuery('.bdrs-page-download-surveys .local').attr('checked', 'true');
-	
+	//check the check-box for all surveys that exist on the device
+	var localSurveys = bdrs.mobile.survey.getLocal();
+	for (var i=0; i<localSurveys.length; i++) {
+		jQuery('#checkbox-' + localSurveys[i].server_id()).prop('checked',true);
+	}
 	bdrs.mobile.restyle('.bdrs-page-download-surveys .surveyListContainer');
 	
 	// Add click Handler to surveys
 	jQuery('.bdrs-page-download-surveys .downloadSurvey').change(function(event){
-		
 		var sid = jQuery(this).attr('survey-id');
-		
-		if (jQuery(this).hasClass('local')) {
-			// The survey that was selecetd exists on the device, ask user to confirm delete.
-			if (confirm("Do you really want to remove this survey from your device?")) {
-				// TODO: Delete all the data related to the selected survey
-				persistence.flush(function() {
-					// removes local class from downloaded survey
-					jQuery('.bdrs-page-download-surveys label[for="checkbox-' + sid + '"]').removeClass('local');
-				});
+		if (sid !== undefined) {
+			bdrs.mobile.setParameter('deleting-survey-id', sid);
+			var clickedSurvey = bdrs.mobile.survey.getByServerId(sid);
+			if (clickedSurvey !== null && clickedSurvey.local() === true) {
+				// The survey that was selecetd exists on the device, ask user to confirm delete.
+				jQuery.mobile.changePage("#survey-delete-confirm", "slidedown");
+			} else if(clickedSurvey !== null && clickedSurvey.local() === false) {
+				jQuery.mobile.pageLoading(false);
+				// get surveydata from server
+				var result = bdrs.mobile.survey.getRemote(sid);
+				if(result.errorMsg === undefined) {
+					// persist surveydata in local survey 
+					var survey = bdrs.mobile.survey.save(sid, result);
+					if (survey.errorMsg === undefined) {
+						// make the survey default
+						bdrs.mobile.survey.makeDefault(survey);
+						//add class local to survey listitem
+						jQuery(this).addClass('local')
+					} else {
+						bdrs.mobile.Error(survey.errorMsg);
+					}
+				} else {
+					bdrs.mobile.Error(result.errorMsg);
+				}
 			} else {
-				// TODO: re-check checkbox
+				bdrs.mobile.Error("Could not find survey with server_id = " + sid);
 			}
 		} else {
-			// show download in progress dialog
-			jQuery.mobile.pageLoading(false);
-			// get surveydata from server
-			var result = bdrs.mobile.survey.getRemote(sid);
-			if(result){
-				// persist surveydata in local survey 
-				var survey = bdrs.mobile.survey.save(sid, result);
-				if (survey){
-					// make the survey default
-					bdrs.mobile.survey.makeDefault(survey);
-				}else{
-					// TODO: show user error while saving survey
-				}
-			}else{
-				//TODO: show user error while retrieving survey data from server
-			}
-			// hide download in progress dialog
-			jQuery.mobile.pageLoading(true);
+			bdrs.mobile.Error("The clickhandler of the survey failed to retrieve the value of the 'survey-id attribute.");
 		}
-
 	});
+	
 },
 
 /* 
@@ -77,4 +75,4 @@ exports.Show = function() {
  */
 exports.Hide = function() {
 	jQuery('.bdrs-page-download-surveys .surveyList').empty();
-}
+};

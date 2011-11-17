@@ -80,6 +80,7 @@ public class ShapeFileWriterTest extends AbstractSpringContextTest {
         assertAttributesExist(readList, attrNameTypeMap, AttributeType.INTEGER_WITH_RANGE, AttributeType.INTEGER);
         assertAttributesExist(readList, attrNameTypeMap, AttributeType.DECIMAL, AttributeType.DECIMAL);
         assertAttributesExist(readList, attrNameTypeMap, AttributeType.BARCODE, AttributeType.STRING);
+        assertAttributesExist(readList, attrNameTypeMap, AttributeType.REGEX, AttributeType.STRING);
         // we are writing out dates as strings now. this won't have any real consequence on our system as
         // normally when we use the writer we are writing out surveys where the attribute name is mapped
         // to an actual system attribute, thus the type will normally be preserved.

@@ -535,7 +535,7 @@ public class RecordDwcaWriter {
             try {
                 Object value = PropertyUtils.getProperty(r, path);
                 if (value == null) {
-                    throw new IllegalStateException("coord value cannot be null");
+                    return null;
                 }
                 if (value instanceof Double) {
                     double truncDouble = this.locService.truncate(((Double) value).doubleValue());
@@ -622,7 +622,7 @@ public class RecordDwcaWriter {
             
             case DATE:
                 return av.getDateValue() != null ? av.getDateValue().toString() : "";
-                
+            case REGEX:
             case BARCODE:
             case TIME:
             case STRING:

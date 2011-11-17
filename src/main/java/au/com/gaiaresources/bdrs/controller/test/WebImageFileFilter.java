@@ -6,11 +6,11 @@ import java.util.Arrays;
 
 public class WebImageFileFilter implements FileFilter {
     
-    public static final String[] WEB_IMAGE_EXTENSIONS;
+    private static final String[] WEB_IMAGE_EXTENSIONS;
     static {
         String[] extensions = {"png", "gif", "jpg"};
         Arrays.sort(extensions);
-        WEB_IMAGE_EXTENSIONS = extensions;
+        WEB_IMAGE_EXTENSIONS = extensions.clone();
     };
     
     @Override

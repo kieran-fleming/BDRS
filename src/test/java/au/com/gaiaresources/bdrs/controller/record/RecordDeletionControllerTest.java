@@ -387,6 +387,7 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
                     recAttr.setStringValue(attr.getOptions().iterator().next()
                             .getValue());
                     break;
+                case REGEX:
                 case BARCODE:
                     recAttr.setStringValue("#232323");
                     break;
@@ -448,6 +449,7 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
                     case STRING:
                         recAttr.setStringValue("This is a test string record attribute for groups");
                         break;
+                    case REGEX:
                     case BARCODE:
                         recAttr.setStringValue("#232323");
                         break;

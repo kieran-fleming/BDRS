@@ -57,9 +57,11 @@ import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
 import au.com.gaiaresources.bdrs.service.lsid.Lsid;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 public abstract class AbstractBulkDataService {
+    public static final String XLS_CONTENT_TYPE = "application/vnd.ms-excel";
 
     // http://support.microsoft.com/kb/120596
     public static final int MAX_EXCEL_ROW_COUNT = 65536;
@@ -76,6 +78,10 @@ public abstract class AbstractBulkDataService {
      * Header of the column containing Location primary keys.
      */ 
     public static final String LOCATION_SHEET_LOCATION_ID = "Location ID";
+    /**
+     * Header of the column containing Location name.
+     */ 
+    public static final String LOCATION_SHEET_LOCATION_NAME = "Location Name";
     /**
      * Header of the column containing the type (survey or user) of the location.
      */
@@ -155,8 +161,9 @@ public abstract class AbstractBulkDataService {
         if(limit < 0) {
             limit = Long.MAX_VALUE;
         }
+        User accessor = RequestContextHolder.getContext().getUser();
         
-        RecordRow rowPrinter = getRecordRow();
+        RecordRow rowPrinter = getRecordRow(survey);
         Workbook wb = new HSSFWorkbook();
         if (survey != null) {
             rowPrinter.createCellStyles(wb);
@@ -205,10 +212,13 @@ public abstract class AbstractBulkDataService {
                 if(r.getLocation() != null && !survey.getLocations().contains(r.getLocation())) {
                     locationRow.writeUserLocation(wb, r.getLocation());
                 }
-                rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
-                
-                if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
-                    sesh.clear();
+                // only write the row if the record is visible
+                if (!r.hideDetails(accessor)) {
+                    rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
+                    
+                    if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
+                        sesh.clear();
+                    }
                 }
             }
 
@@ -221,7 +231,7 @@ public abstract class AbstractBulkDataService {
     public void exportUsers(List<User> userList, OutputStream outputStream)
             throws IOException {
 
-        RecordRow rowPrinter = getRecordRow();
+        RecordRow rowPrinter = getRecordRow(null);
         Workbook wb = new HSSFWorkbook();
 
         rowPrinter.createCellStyles(wb);
@@ -506,7 +516,7 @@ public abstract class AbstractBulkDataService {
     private void importBulkRecords(Survey survey, BulkUpload bulkUpload,
             Sheet recordSheet) throws ParseException {
         boolean headerParsed = false;
-        RecordRow recordRow = getRecordRow();
+        RecordRow recordRow = getRecordRow(survey);
         RecordUpload recordUpload;
         Row row = null;
         Row superRow = null;
@@ -543,24 +553,27 @@ public abstract class AbstractBulkDataService {
                     recordUpload.setSurveyName(survey.getName());
                     // if the record date is outside the survey date range,
                     // add an error message for that record
-                    if ((survey.getStartDate() != null && recordUpload.getWhen().before(survey.getStartDate()))
-                            || (survey.getEndDate() != null && recordUpload.getWhen().after(survey.getEndDate()))) {
-                        SimpleDateFormat sdf = new SimpleDateFormat(
-                                "dd MMM yyy HH:mm");
-                        recordUpload.setErrorMessage("Observation date "
-                                + sdf.format(recordUpload.getWhen())
-                                + " outside survey "
-                                + (survey.getStartDate() != null
-                                        && survey.getEndDate() != null ? "range ("
-                                        + sdf.format(survey.getStartDate())
-                                        + " - "
-                                        + sdf.format(survey.getEndDate()) + ")"
-                                        : "start date ("
-                                                + sdf.format(survey.getStartDate())
-                                                + ")") + ".");
-                        recordUpload.setError(true);
+                    if(recordUpload.getWhen() != null) {
+                        if ((survey.getStartDate() != null && recordUpload.getWhen().before(survey.getStartDate()))
+                                || (survey.getEndDate() != null && recordUpload.getWhen().after(survey.getEndDate()))) {
+                            SimpleDateFormat sdf = new SimpleDateFormat(
+                                    "dd MMM yyy HH:mm");
+                            recordUpload.setErrorMessage("Observation date "
+                                    + sdf.format(recordUpload.getWhen())
+                                    + " outside survey "
+                                    + (survey.getStartDate() != null
+                                            && survey.getEndDate() != null ? "range ("
+                                            + sdf.format(survey.getStartDate())
+                                            + " - "
+                                            + sdf.format(survey.getEndDate()) + ")"
+                                            : "start date ("
+                                                    + sdf.format(survey.getStartDate())
+                                                    + ")") + ".");
+                            recordUpload.setError(true);
+                        }
                     }
 
+                    
                     bulkUpload.addRecordUpload(recordUpload);
                     if (recordUpload.isError()) {
                         errorCount += 1;
@@ -1124,5 +1137,5 @@ public abstract class AbstractBulkDataService {
         return missingItems;
     }
 
-    protected abstract RecordRow getRecordRow();
+    protected abstract RecordRow getRecordRow(Survey survey);
 }

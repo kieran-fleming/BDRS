@@ -81,6 +81,7 @@ bdrs.persistence.defineSchema = function() {
             description: "TEXT",
             tag: "BOOL",
             scope: "TEXT",
+            isDWC: "BOOL"
         });
     Attribute.hasMany('options', AttributeOption, 'attribute');
     Attribute.hasMany('attributeValues', AttributeValue, 'attribute');
@@ -204,6 +205,78 @@ bdrs.persistence.defineSchema = function() {
     });
 };
 
+/////////////////////////////////////////
+// Persistence Utilities
+/////////////////////////////////////////
+bdrs.persistence.util = {};
+
+/**
+ * Creates join rows in the survey to species join table.
+ * @param survey_server_id the primary key of the survey on the server.
+ * @param species_server_id_list the list of server primary keys of the species 
+ * to be joined to the survey.
+ * @param success_callback invoked on successful completion of the transaction.
+ * @param error_callback invoked on error.
+ */
+bdrs.persistence.util.joinSurveyToSpecies = function(survey_server_id, species_server_id_list, success_callback, error_callback) {
+    persistence.transaction(function(tx) {
+        var t_id_params = [];
+        for (var i=0; i<species_server_id_list.length; i++) {
+            t_id_params[i] = '?';
+        }
+
+        var query = "\
+INSERT INTO `Species_surveys_Survey` \
+SELECT t.id as Species_surveys, s.id as Survey_species \
+FROM survey s, species t \
+WHERE s.server_id = ? AND t.server_id IN ("+t_id_params.join(',')+")";
+
+        var args = [survey_server_id].concat(species_server_id_list);
+        tx.executeSql(query, args, success_callback, error_callback);
+    });
+};
+
+/**
+ * Creates a join row between the survey and all species currently in the database.
+ * @param survey_server_id the primary key of the survey on the server.
+ * @param success_callback invoked on successful completion of the transaction.
+ * @param error_callback invoked on error.
+ */
+bdrs.persistence.util.joinSurveyToAllSpecies = function(survey_server_id, success_callback, error_callback) {
+    persistence.transaction(function(tx) {
+        var query = "\
+INSERT INTO `Species_surveys_Survey` \
+SELECT t.id as Species_surveys, s.id as Survey_species \
+FROM survey s, species t \
+WHERE s.server_id = ?";
+        tx.executeSql(query, [survey_server_id], success_callback, error_callback);
+    });
+};
+
+/**
+ * Returns a list of server primary keys for all species in the database.
+ * @param success_callback invoked on successful completion of the transaction 
+ * with a list of primary keys as a parameter.
+ * @param error_callback invoked by the transaction on error.
+ */
+bdrs.persistence.util.getAllSpeciesServerId = function(success_callback, error_callback) {
+    persistence.transaction(function(tx) {
+        var query = "Select server_id from species";
+        tx.executeSql(query, [], function(data) {
+            var ids = [];
+            for(var i=0;i<data.length; i++) {
+                ids.push(data[i].server_id);
+            }
+            success_callback(ids);
+        }, error_callback);
+    });    
+};
+
+
+
+/////////////////////////////////////////
+// Database Initialisation
+/////////////////////////////////////////
 bdrs.persistence.dbname = 'csdb';
 persistence.debug = false;
 

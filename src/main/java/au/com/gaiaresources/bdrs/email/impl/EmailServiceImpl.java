@@ -16,6 +16,7 @@ import org.springframework.mail.javamail.MimeMessagePreparator;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
@@ -25,7 +26,7 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private TemplateService templateService;
     @Autowired
-    private ContentDAO contentDAO;
+    private ContentService contentService;
     
     private Properties emailProperties;
     
@@ -68,12 +69,14 @@ public class EmailServiceImpl implements EmailService {
     
     @Override
     public void sendTemplateMessage(String to, String from, String subject, String templateName, Map<String, Object> subsitutionParams) {
+        ContentService.putContentParams(subsitutionParams);
+        Portal portal = (Portal) subsitutionParams.get("portal");
         // first check the contentDAO for the template
-        // if it is not found, use the file system template
-        String templateString = contentDAO.getContentValue(
-            "email/"+templateName.substring(0, templateName.indexOf(".")), 
-            (Portal) subsitutionParams.get("portal"),
-            (String) subsitutionParams.get("contextPath"));
+        // if it is not found, use the file system template        
+        String contentKey = "email/"+templateName.substring(0, templateName.indexOf("."));
+        // although the param name is 'contextPath' it's actually the application url
+        String templateString = contentService.getContent(portal, contentKey);
+        
         String text = "";
         // this is probably unnecessary now as the contentDAO should handle loading 
         // the file system value when the value does not exist

@@ -142,7 +142,7 @@ exports.Show = function() {
         bdrs.mobile.Debug('Loaded Census Method : ' + bdrs.mobile.getParameter('censusMethodId'));
         bdrs.mobile.pages.record._insertCensusMethodAttributes(record, cmethod, attributeValueMap);
         
-        isTaxonomic = cmethod.taxonomic() !== bdrs.mobile.pages.record.NONTAXONOMIC;
+        isTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.TAXONOMIC;
         isOptionallyTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.OPTIONALLYTAXONOMIC;
         
     } else {
@@ -153,7 +153,7 @@ exports.Show = function() {
         methodAttrsWrapperElem.empty();
         
         // No census method means that the record will be optionally taxonomic.
-        isTaxonomic = true;
+        isTaxonomic = false;
         isOptionallyTaxonomic = true;
     }
     
@@ -190,10 +190,10 @@ exports.Show = function() {
         siblingCountElem.text(siblingCount);
     }
 
-    if(isTaxonomic) {
+    if(isTaxonomic || isOptionallyTaxonomic) {
         // Is Taxonomy Required
         var templateParams = {
-            required : !isOptionallyTaxonomic
+            required : isTaxonomic
         };
         // add the number slider.
         bdrs.template.renderOnlyCallback('recordNumberSlider', templateParams, function(element) {
@@ -234,6 +234,9 @@ exports.Show = function() {
                     bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
                     
                     jQuery.mobile.pageLoading(true);
+                },
+                open: function(event, ui){
+                	jQuery('.ui-autocomplete').css('z-index',100);
                 },
                 html: true
             });
@@ -309,6 +312,8 @@ exports.Hide = function() {
     jQuery('#record-taxongroup-attributes').empty();
     jQuery('#record-sub-methods').empty();
     
+    jQuery('#record-form :input').val(null);
+    
     jQuery('.recent-taxa-widget').remove();
     jQuery("#record-type").text('');
 }
@@ -358,7 +363,9 @@ exports._insertSurveyAttributes = function(record, survey, attributeValueMap) {
     bdrs.mobile.Info('Survey Name : ' + survey.name() );
     var attributes;
     waitfor(attributes) {
-        survey.attributes().order('weight', true).list(resume);
+    	//temporarily ignores dwc fields that exist in the AttributesTable
+        //survey.attributes().order('weight', true).list(resume);
+    	survey.attributes().filter("isDWC", '!=', true).order('weight', true).list(resume);
     }
     
     bdrs.mobile.Debug('Survey Attributes');
@@ -676,6 +683,7 @@ exports._record = function() {
 
     var record;
     var attributeValueMap = {};
+    var survey = bdrs.mobile.survey.getDefault();
     bdrs.mobile.Debug('Pulled attributes from record form');
     var selectedRecordId = bdrs.mobile.getParameter('selected-record');
     if (selectedRecordId === undefined) {
@@ -718,12 +726,12 @@ exports._record = function() {
     }
 
     if(cmethod !== null && cmethod !== undefined) {
-        isTaxonomic = cmethod.taxonomic() !== bdrs.mobile.pages.record.NONTAXONOMIC;
+        isTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.TAXONOMIC;
         isOptionallyTaxonomic = cmethod.taxonomic() === bdrs.mobile.pages.record.OPTIONALLYTAXONOMIC;
     } else {
         // If there is no census method, the record is
         // optionally taxonomic by default
-        isTaxonomic = true;
+        isTaxonomic = false;
         isOptionallyTaxonomic = true;
     }
     
@@ -772,6 +780,7 @@ exports._record = function() {
             }
             persistence.add(sp);
             tg.species().add(sp);
+            survey.species().add(sp);
             species = sp;
             waitfor() {
                 persistence.flush(resume);
@@ -781,9 +790,7 @@ exports._record = function() {
         }
         
         species.records().add(record);
-        
-        var survey = bdrs.mobile.survey.getDefault();
-        
+
         // Update Species Count index.
         bdrs.mobile.Debug('Updating species count');
         if(species_startedit !== undefined && species_startedit !== null ){

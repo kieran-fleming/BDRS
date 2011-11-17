@@ -1,10 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.record;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.Assert;
@@ -23,6 +25,7 @@ import au.com.gaiaresources.bdrs.controller.record.validator.Validator;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -436,18 +439,87 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
 
         value = "<br>";
         paramMap.put(key, new String[] { value });
-        Assert.assertFalse(validator.validate(paramMap, ValidationType.HTML, key, null));
+        boolean validated = validator.validate(paramMap, ValidationType.HTML, key, null);
+        Assert.assertTrue(validated);
+        
+        value = "</html";
+        paramMap.put(key, new String[] { value });
+        validated = validator.validate(paramMap, ValidationType.HTML, key, null);
+        Assert.assertFalse(validated);
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+    }
+    
+    @Test
+    public void testValidateRegex() {
+        String key = "test";
+        String value = "";
+        String regex = "\\d+(\\.?\\d+)?"; // regex for numbers
+        RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
+
+        Attribute att = new Attribute();
+        att.setName(key+"_attribute");
+        List<AttributeOption> options = new ArrayList<AttributeOption>(1);
+        AttributeOption opt = new AttributeOption();
+        opt.setValue(regex);
+        options.add(opt);
+        att.setOptions(options);
+        
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REQUIRED_REGEX, key, att));
         Assert.assertTrue(validator.getErrorMap().containsKey(key));
         validator.getErrorMap().clear();
         
-        // test that if there is an attribute, its name is used instead of the key
-        // in the error map
-        value = "<br>";
+        value = ".45";
         paramMap.put(key, new String[] { value });
-        Attribute attr = new Attribute();
-        attr.setName("test");
-        Assert.assertFalse(validator.validate(paramMap, ValidationType.HTML, key, attr));
-        Assert.assertTrue(validator.getErrorMap().containsKey(attr.getName()));
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
         validator.getErrorMap().clear();
+        
+        value = "0.45";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
+
+        value = "1,200";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+        
+        value = "1";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
+
+        // test word characters
+        regex = "[A-Z](\\w*\\s*)*\\."; // matches a sentence
+        att.getOptions().remove(opt);
+        opt.setValue(regex);
+        att.getOptions().add(opt);
+        att.setOptions(options);
+        
+        value = "I";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+        
+        value = "I.";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        
+        value = "I think this should be valid.";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        
+        value = "this will not be valid.";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.REGEX, key, att));
+        Assert.assertTrue(validator.getErrorMap().containsKey(key));
+        validator.getErrorMap().clear();
+        
+        value = "I can even use numb3r5 and _und3r5c0r35 and CAPITALS.";
+        paramMap.put(key, new String[] { value });
+        Assert.assertTrue(validator.validate(paramMap, ValidationType.REGEX, key, att));
     }
 }

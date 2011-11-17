@@ -14,6 +14,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
+
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
@@ -38,7 +40,12 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
             }
 
         } else {
-
+            // Error has occured, request rollback
+            // Important to stop the hibernate session from becoming unusable
+            // if an exception related to the session occurs. (e.g., exception on
+            // insert due to string being too long).
+            Interceptor.requestRollback(request);
+            
             logger.error("An unhandled error occured", ex);
 
             // Create a pretty version of the exception.
@@ -63,7 +70,7 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
             	headers.put(key, request.getHeader(key).toString());
             }
             params.put("headers", headers.toString());
-            
+            params.put("portal", RequestContextHolder.getContext().getPortal());
             params.put("stacktrace", exceptionText);
             params.put("requesturi", request.getRequestURI());
             params.put("userName", request.getRemoteUser());

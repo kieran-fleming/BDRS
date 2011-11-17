@@ -17,6 +17,7 @@ import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.service.db.DeleteCascadeHandler;
 import au.com.gaiaresources.bdrs.service.db.DeletionService;
 
@@ -51,6 +52,8 @@ public class ManagedFileDAOImpl extends AbstractDAOImpl implements ManagedFileDA
     
     @Override
     public ManagedFile getManagedFile(Session sesh, String uuid) {
+        // Trim the white space from the uuid to make the system more robust
+        uuid = uuid.trim();
         List<ManagedFile> files = find(sesh, "from ManagedFile f where f.uuid = ?", uuid);
         return files.isEmpty() ? null : files.get(0);
     }
@@ -63,7 +66,7 @@ public class ManagedFileDAOImpl extends AbstractDAOImpl implements ManagedFileDA
     
     @Override
     public PagedQueryResult<ManagedFile> getManagedFiles(PaginationFilter filter) {
-        HqlQuery q = new HqlQuery("from ManagedFile f");
+        HqlQuery q = new HqlQuery("from ManagedFile f order by f.createdAt");
         return new QueryPaginator<ManagedFile>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter);
     }
 
@@ -80,5 +83,27 @@ public class ManagedFileDAOImpl extends AbstractDAOImpl implements ManagedFileDA
     @Override 
     public ManagedFile saveOrUpdate(ManagedFile mf) {
         return super.saveOrUpdate(super.getSession(), mf);
+    }
+
+    @Override
+    public ManagedFile getManagedFile(String themeFileUUID, Portal portal) {
+        try {
+            disablePortalFilter();
+            return getManagedFile(themeFileUUID);
+        } finally {
+            enablePortalFilter();
+        }
+    }
+
+    @Override
+    public ManagedFile getManagedFileByDescription(String fileDescription) {
+        List<ManagedFile> files = find("from ManagedFile f where f.description = ?", fileDescription);
+        return files.isEmpty() ? null : files.get(0);
+    }
+
+    @Override
+    public ManagedFile getManagedFileByName(String fileName) {
+        List<ManagedFile> files = find("from ManagedFile f where f.filename = ?", fileName);
+        return files.isEmpty() ? null : files.get(0);
     }
 }

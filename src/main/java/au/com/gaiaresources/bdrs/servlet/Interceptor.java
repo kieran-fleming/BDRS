@@ -29,6 +29,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
+import au.com.gaiaresources.bdrs.model.menu.MenuItem;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
@@ -37,8 +39,10 @@ import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.UserDetails;
+import au.com.gaiaresources.bdrs.service.menu.MenuService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.web.GoogleKeyService;
+import au.com.gaiaresources.bdrs.servlet.view.FileView;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 public class Interceptor implements HandlerInterceptor {
@@ -55,10 +59,11 @@ public class Interceptor implements HandlerInterceptor {
 
     @Autowired
     private PortalDAO portalDAO;
-    
+
+    @Autowired
+    private MenuService menuService;
     @Autowired
     private ThemeDAO themeDAO;
-    
     @Autowired
     private PropertyService propertyService;
     
@@ -146,6 +151,7 @@ public class Interceptor implements HandlerInterceptor {
                 ((au.com.gaiaresources.bdrs.security.UserDetails)c.getUserDetails()).setUser(rebind);
             }
         }
+        
         if(c.getPortal() == null) {
             c.setTheme(null);
         } else {
@@ -153,6 +159,14 @@ public class Interceptor implements HandlerInterceptor {
             c.setPortal(portalDAO.getPortal(c.getPortal().getId()));
             c.setTheme(themeDAO.getActiveTheme(c.getPortal()));
         }
+        
+        // bind the menu to the context
+        List<MenuItem> menu = menuService.getMenus(c.getUser());
+        if (menu == null || menu.size() < 1) {
+            // write an error message so the user will know why they don't have any menus
+            RequestContextHolder.getContext().addMessage("bdrs.menu.error");
+        }
+        c.setMenu(menu);
         
         return true;
     }
@@ -162,25 +176,27 @@ public class Interceptor implements HandlerInterceptor {
                            Object handler, ModelAndView modelAndView) throws Exception {
     	if (modelAndView != null) {
     	    RequestContext requestContext = RequestContextHolder.getContext();
-            modelAndView.getModel().put("context", requestContext);
+            
             
             // Theming
             Theme theme = null;
             Map<String, ThemeElement> themeElementMap = new HashMap<String, ThemeElement>();
+            Portal portal = requestContext.getPortal();
             
-            if( request.getParameter(Theme.DISABLE_THEME) != null) {
+            if(request.getParameter(Theme.DISABLE_THEME) != null) {
                 requestContext.addMessage(propertyService.getMessage("theme.disabled"));
+                // fallback to the default theme
+                log.info("Theme is disabled, falling back to the default theme");
+                theme = themeDAO.getDefaultTheme(portal);
             } else {
                 theme = requestContext.getTheme();
-                modelAndView.getModel().put("theme", theme);
-                if(theme != null) {
-                    for(ThemeElement elem : theme.getThemeElements()) {
-                        themeElementMap.put(elem.getKey(), elem);
-                    }
+                if (theme == null && portal != null && 
+                        !(modelAndView.getView() instanceof FileView) && 
+                        !(modelAndView.getView() instanceof RedirectView)) {
+                    theme = themeDAO.getActiveTheme(portal);
                 }
-                modelAndView.getModel().put("themeMap", themeElementMap);
             }
-           
+            
             if (modelAndView.getView() instanceof RedirectView) {
                 requestContext.newTx();
             } else {
@@ -190,7 +206,10 @@ public class Interceptor implements HandlerInterceptor {
                 // view occurs.
                 String googleMapKey = gkService.getGoogleMapApiKey(request.getServerName());
                 if (googleMapKey == null) {
-                    log.error("No google maps key found - google maps will not work");
+                    if (!request.getRequestURL().toString().startsWith("http://localhost")) {
+                        // google maps always works with localhost so only log when NOT requested from localhost
+                        log.error("No google maps key found - google maps will not work");   
+                    }
                     modelAndView.getModel().put(GOOGLE_MAP_KEY, "");
                 } else {
                     modelAndView.getModel().put(GOOGLE_MAP_KEY, googleMapKey);
@@ -200,15 +219,26 @@ public class Interceptor implements HandlerInterceptor {
                     modelAndView.getModel().put(MV_USER_ID, loggedInUser.getId().toString());
                     modelAndView.getModel().put(MV_USER_IS_ADMIN, loggedInUser.isAdmin());
                 }
-                if (theme != null && theme.getId() != null) {
-                    // if performance becomes an issue consider caching the ThemePages using a service.
-                    // remember to invalidate the cache when changing the theme!
-                    
-                    // the page key will be the view name
-                    ThemePage themePage = themeDAO.getThemePage(theme.getId().intValue(), modelAndView.getViewName());
-                    if (themePage != null) {
-                        modelAndView.addObject(PARAM_PAGE_TITLE, themePage.getTitle());
-                        modelAndView.addObject(PARAM_PAGE_DESCRIPTION, themePage.getDescription());
+                
+                modelAndView.getModel().put("context", requestContext);
+                
+                if(theme != null) {
+                    sessionFactory.getCurrentSession().update(theme);
+                    modelAndView.getModel().put("theme", theme);
+                    for(ThemeElement elem : theme.getThemeElements()) {
+                        themeElementMap.put(elem.getKey(), elem);
+                    }
+                    modelAndView.getModel().put("themeMap", themeElementMap);
+                    if (theme.getId() != null) {
+                        // if performance becomes an issue consider caching the ThemePages using a service.
+                        // remember to invalidate the cache when changing the theme!
+                        
+                        // the page key will be the view name
+                        ThemePage themePage = themeDAO.getThemePage(theme.getId().intValue(), modelAndView.getViewName());
+                        if (themePage != null) {
+                            modelAndView.addObject(PARAM_PAGE_TITLE, themePage.getTitle());
+                            modelAndView.addObject(PARAM_PAGE_DESCRIPTION, themePage.getDescription());
+                        }
                     }
                 }
             }
@@ -245,7 +275,7 @@ public class Interceptor implements HandlerInterceptor {
     	        log.info("roll back requested");
     	        tx.rollback();
     	    } else {
-    	        tx.commit();
+                tx.commit();
     	    }
     	}
     	RequestContextHolder.clear();

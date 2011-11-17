@@ -37,6 +37,6 @@ $.fn.ketchup.messages = {
   'optionallyTaxonomicSpeciesAndNumber': 'The Species and Number must both be blank, or both filled in.<br/>The Species must be an item from the list.',
   'color':              'Must be a valid hex color starting with #',
   'uuid':               'Not a valid file UUID',
-  'regExp':				'Must fit regular expression $arg1',
-  'regExpOrBlank':		'Must fit regular expression $arg1 or blank'
+  'regExp':				'Must fit regular expression $arg2',
+  'regExpOrBlank':		'Must fit regular expression $arg2 or blank'
 };

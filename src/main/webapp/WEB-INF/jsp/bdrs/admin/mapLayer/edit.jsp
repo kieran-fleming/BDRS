@@ -106,8 +106,8 @@
 
     jQuery(function() {
 
-		bdrs.util.createColorPicker('#strokeColor');
-		bdrs.util.createColorPicker('#fillColor');
+		bdrs.util.createColorPicker(jQuery('#strokeColor'));
+		bdrs.util.createColorPicker(jQuery('#fillColor'));
 		
         $('.dataSourceSelector').change(function() {
             var selected = $('input[name=layerSrc]:checked', '#mapLayerForm').val();

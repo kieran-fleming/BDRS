@@ -162,6 +162,12 @@ bdrs.mobile.validation.RegExpValidator = function() {
 	var regExp ="";
 	
 	this.isValid = function(elem) {
+		// blank is allowed unless required which will be caught by the required validator
+		var val = jQuery.trim(elem.val());
+        if(val.length === 0) {
+            // Blank is allowed.
+            return true;
+        }
 		this.regExp = elem.attr('regexp');
 		var pattern = new RegExp(elem.attr('regexp'));
 		return pattern.test(elem.val());

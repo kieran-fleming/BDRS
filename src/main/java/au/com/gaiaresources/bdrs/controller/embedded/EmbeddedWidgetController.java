@@ -1,15 +1,11 @@
 package au.com.gaiaresources.bdrs.controller.embedded;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +26,9 @@ import au.com.gaiaresources.bdrs.model.showcase.Gallery;
 import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
+@RolesAllowed( {Role.ADMIN} )
 @Controller
 public class EmbeddedWidgetController extends AbstractController {
 

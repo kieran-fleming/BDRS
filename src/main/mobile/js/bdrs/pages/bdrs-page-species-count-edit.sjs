@@ -74,6 +74,9 @@ exports.Show = function() {
 
             jQuery.mobile.pageLoading(true);
         },
+        open: function(event, ui){
+        	jQuery('.ui-autocomplete').css('z-index',100);
+        },
         html: true
     });
 };

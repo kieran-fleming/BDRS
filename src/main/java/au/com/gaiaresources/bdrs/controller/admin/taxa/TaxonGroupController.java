@@ -1,9 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.admin.taxa;
 
+import javax.annotation.security.RolesAllowed;
+
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.security.Role;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
  * @author Tim Carpenter
  *
  */
+@RolesAllowed({Role.ADMIN})
 @Controller
 public class TaxonGroupController extends AbstractController {
     @Autowired

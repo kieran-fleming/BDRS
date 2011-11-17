@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.activation.FileDataSource;
+import javax.annotation.security.RolesAllowed;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
@@ -16,6 +17,7 @@ import au.com.gaiaresources.bdrs.model.region.RegionService;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.security.Role;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+ @RolesAllowed({Role.ADMIN})
 @Controller
 public class IndicatorSpeciesController extends AbstractController {
     @Autowired

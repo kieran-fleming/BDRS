@@ -22,7 +22,7 @@ public class ScrollableRecordsImpl implements ScrollableRecords {
     
     private boolean hasMoreElements = false;
     private int entriesPerPage = -1;
-    private int currentPageEntryIndex = 0;
+    private int currentPageEntryIndex = -1;
     private Record record = null;
     
     /**
@@ -45,15 +45,21 @@ public class ScrollableRecordsImpl implements ScrollableRecords {
         this.entriesPerPage = entriesPerPage;
         
         // To set the row number, the scoll mode cannot be forward only.
+        
+        // The currentPageEntryIndex is set to -1 so that after the invocation
+        // to recordAt, it will be appropriately set to 0. If you do not do this,
+        // hasMoreElements will return false.
+        // currentPageEntryIndex = -1;
         recordAt((pageNumber-1) * entriesPerPage);
     }
 
     @Override
     public boolean hasMoreElements() {
-        boolean nextEntryAllowed = (entriesPerPage < 0) || (entriesPerPage > -1 && currentPageEntryIndex < entriesPerPage);
         if(record == null) {
             nextRecord();
         }
+        boolean nextEntryAllowed = (entriesPerPage < 0) || (entriesPerPage > -1 && currentPageEntryIndex < entriesPerPage);
+        
         return nextEntryAllowed && hasMoreElements;
     }
 

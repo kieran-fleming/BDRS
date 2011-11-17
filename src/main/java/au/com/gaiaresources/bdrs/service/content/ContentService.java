@@ -17,17 +17,23 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
+import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 /**
  * @author stephanie
  *
  */
+@Service
 public class ContentService {
+    
     private static Logger log = Logger.getLogger(ContentService.class);
     
     private static final String CONTENT_PACKAGE = "/au/com/gaiaresources/bdrs/service/content/";
@@ -65,7 +71,9 @@ public class ContentService {
         tmp.put("user/widgetBuilder", "user_widgetBuilder.vm");
         
         /* In content package resources */
+        tmp.put("admin/home", CONTENT_PACKAGE + "admin_home.vm");
         tmp.put("admin/manageUsers", CONTENT_PACKAGE + "admin_manageUsers.vm");
+        tmp.put("admin/approveUsers", CONTENT_PACKAGE + "admin_approveUsers.vm");
         tmp.put("admin/groupEdit/members", CONTENT_PACKAGE + "admin_groupEdit_members.vm");
         tmp.put("admin/groupEdit/groups", CONTENT_PACKAGE + "admin_groupEdit_groups.vm");
         tmp.put("admin/emailUsers", CONTENT_PACKAGE + "admin_emailUsers.vm");
@@ -80,6 +88,12 @@ public class ContentService {
         tmp.put("admin/taxonomy/editTaxonomicGroups", CONTENT_PACKAGE + "admin_taxonomy_editTaxonomicGroups.vm");
         tmp.put("admin/map/editMapLayer", CONTENT_PACKAGE + "admin_map_editMapLayer.vm");
         tmp.put("admin/manageFiles/editFile", CONTENT_PACKAGE + "admin_managedFiles_editFile.vm");
+        tmp.put("admin/gallery/editGallery", CONTENT_PACKAGE + "admin_gallery_editGallery.vm");
+        tmp.put("admin/gallery/listGallery", CONTENT_PACKAGE + "admin_gallery_listGallery.vm");
+        tmp.put("admin/content/edit", CONTENT_PACKAGE + "admin_content_edit.vm");
+        
+        tmp.put("user/profile/editProfile", CONTENT_PACKAGE + "user_profile_editProfile.vm");
+        tmp.put("user/locations/edit.vm", CONTENT_PACKAGE + "user_locations_edit.vm");
         
         /* In email package resources */
         tmp.put("email/ExpertConfirmation", "/au/com/gaiaresources/bdrs/email/ExpertConfirmation.vm");
@@ -89,8 +103,8 @@ public class ContentService {
         tmp.put("email/TeacherClassListing", "/au/com/gaiaresources/bdrs/email/TeacherClassListing.vm");
         tmp.put("email/UnhandledError", "/au/com/gaiaresources/bdrs/email/UnhandledError.vm");
         tmp.put("email/UserSignUp", "/au/com/gaiaresources/bdrs/email/UserSignUp.vm");
-        tmp.put("email/UserSignupApproval", "/au/com/gaiaresources/bdrs/email/UserSignupApproval.vm");
-        tmp.put("email/UserSignupApproved", "/au/com/gaiaresources/bdrs/email/UserSignupApproved.vm");
+        tmp.put("email/UserSignUpApproval", "/au/com/gaiaresources/bdrs/email/UserSignUpApproval.vm");
+        tmp.put("email/UserSignUpApproved", "/au/com/gaiaresources/bdrs/email/UserSignUpApproved.vm");
         tmp.put("email/UserSignUpWait", "/au/com/gaiaresources/bdrs/email/UserSignUpWait.vm");
         tmp.put("email/ContactRecordOwner", "/au/com/gaiaresources/bdrs/email/ContactRecordOwner.vm");
         tmp.put("email/ContactRecordOwnerToSelf", "/au/com/gaiaresources/bdrs/email/ContactRecordOwnerSendToSelf.vm");
@@ -98,17 +112,20 @@ public class ContentService {
         CONTENT = Collections.unmodifiableMap(tmp);
     }
     
+    @Autowired
+    private ContentDAO contentDAO;
+    
     /**
      * Initialize all of the content to the default template file content.
      * @param portal
      * @throws IOException
      */
-    public void initContent(ContentDAO contentDAO, Portal portal, String contextPath) throws IOException {
+    public void initContent(Portal portal) throws IOException {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("portal", portal);
 
         for (Entry<String, String> entry : CONTENT.entrySet()) {
-            initContent(contentDAO, portal, entry.getKey(), entry.getValue(), contextPath);
+            initContent(portal, entry.getKey(), entry.getValue());
         }
     }
 
@@ -116,22 +133,10 @@ public class ContentService {
      * Initialize the content of the given key to the default value.
      * @param portal
      * @param key
+     * @param applicationUrl - the domain + context path of the application
      * @throws IOException
      */
-    public Content initContent(ContentDAO contentDAO, Portal portal, String key, String contextPath) throws IOException {
-        return initContent(contentDAO, portal, key, null, contextPath);
-    }
-
-    /**
-     * Initialize the content of the given key to the given value.
-     * @param portal
-     * @param key
-     * @param value
-     * @throws IOException
-     */
-    public Content initContent(ContentDAO contentDAO, Portal portal, String key, String value, String contextPath) throws IOException {
-        // note we now copy stuff directly from the file - all the templating stuff is 
-        // left in its original form.
+    public Content initContent(Portal portal, String key, String value) throws IOException {
         if (value == null)
             value = CONTENT.get(key);
         InputStream stream = PortalInitialiser.class.getResourceAsStream(value);
@@ -140,15 +145,9 @@ public class ContentService {
         }
         try {
             String text = readStream(stream);
-            // replace ${bdrs.application.url}
-            if (text.contains("bdrs.application.url")) {
-                String repString = (contextPath == null ? "" : contextPath)+"/portal/"+
-                     (portal != null ? portal.getId() : "\\$\\{portal.id\\}");
-                text = text.replaceAll("\\$\\{bdrs.application.url\\}", repString);
-            }
             
             // we might be reinitializing content, so check first if it exists
-            Content content = contentDAO.getContent(key, false);
+            Content content = contentDAO.getContent(key);
             if (content == null) {
                 content = contentDAO.saveNewContent(key, text);
             } else {
@@ -167,7 +166,13 @@ public class ContentService {
         }
     }
     
-    public String getContent(ContentDAO contentDAO, Portal currentPortal, String key, String contextPath) {
+    /**
+     * 
+     * @param currentPortal
+     * @param key - the key of the content to retrieve
+     * @param applicationUrl - the domain + context path of the application
+     */
+    public String getContent(Portal currentPortal, String key) {
         Content item = contentDAO.getContent(key);
         if (item == null) {
             log.warn("Didn't find content \"" + key + "\" in the DAO, " +
@@ -179,7 +184,7 @@ public class ContentService {
             }
             
             try {
-                item = initContent(contentDAO, currentPortal, key, null, contextPath);
+                item = initContent(currentPortal, key, null);
                 if (item == null) {
                     log.warn("Couldn't load default for content \"" + key + "\".");
                     return "";
@@ -188,9 +193,16 @@ public class ContentService {
                 log.warn("IOException when loading default content \"" + key + "\".");
                 return "";
             }
-            
         }
         return item.getValue();
+    }
+    
+    /**
+     * Saves content. Could make it only save content keys that exist in the static map?
+     * 
+     */
+    public void saveContent(Portal currentPortal, String key, String value) {
+        contentDAO.saveContent(key, value);
     }
 
     private static String readStream(InputStream inStream) throws IOException {
@@ -201,11 +213,11 @@ public class ContentService {
 
     public static String getRequestURL(HttpServletRequest request) {
         String url = request.getRequestURL().toString();
-        return url.substring(0, url.indexOf(request.getContextPath())+request.getContextPath().length());
+        return getRequestURL(url);
     }
     
     private static final Pattern requestUrlPattern = Pattern.compile("(http://[^/]*/[^/]+?)/.*");
-    
+
     public static String getRequestURL(String url) {
         if (url == null) {
             throw new IllegalArgumentException("String, url, cannot be null");
@@ -234,5 +246,64 @@ public class ContentService {
             return m.group(1);
         }
         throw new IllegalArgumentException("No request url detected : " + url);
+    }
+
+    public static Map<String, Object> getContentParams() {
+        return getContentParams(null, null, null);
+    }
+    
+    public static Map<String, Object> getContentParams(Portal portal, String requestPath, User currentUser) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        putContentParams(portal, requestPath, currentUser, params);
+        return params;
+    }
+    
+    private static void putContentParams(Portal portal, String requestPath, User currentUser, Map<String, Object> params) {
+        if (portal == null) {
+            portal = RequestContextHolder.getContext().getPortal();
+        }
+        
+        if (requestPath == null) {
+            requestPath = RequestContextHolder.getContext().getRequestPath();
+        }
+        
+        if (currentUser == null) {
+            currentUser = RequestContextHolder.getContext().getUser();
+        }
+
+        if (portal != null && !params.containsKey("portal")) {
+            params.put("portal", portal);
+        }
+        if (currentUser != null && !params.containsKey("currentUser")) {
+            params.put("currentUser", currentUser);
+        }
+        if (requestPath != null) {
+            try {
+                if (!params.containsKey(BDRS_CONTEXT_PATH)) {
+                    params.put(BDRS_CONTEXT_PATH, getContextPath(requestPath));
+                }
+            } catch (Exception e) {
+                // catch an illegal argument exception 
+            }
+            try {
+                if (!params.containsKey(BDRS_APPLICATION_URL)) {
+                    params.put(BDRS_APPLICATION_URL, getRequestURL(requestPath) + "/portal/"+portal.getId());
+                }
+            } catch (Exception e) {
+                // catch an illegal argument exception
+            }
+        }
+    }
+    
+    public static final String BDRS_APPLICATION_URL = "bdrsApplicationUrl",
+                               BDRS_CONTEXT_PATH = "bdrsContextPath",
+                               BDRS_CURRENT_USER_FIRST_NAME = "current";
+
+    /**
+     * Add the required content substitution parameters to the given map
+     * @param subsitutionParams
+     */
+    public static void putContentParams(Map<String, Object> params) {
+        putContentParams(null, null, null, params);
     }
 }

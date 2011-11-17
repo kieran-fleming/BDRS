@@ -39,19 +39,20 @@
     
     <!-- User Meta Data Form Fields originally this was meant to be in vanilla_content.xml -->
     <!-- Use this tile inside a form to populate it with the configured user metadata -->
-    <definition name="userMetaDataFormFields" template="/WEB-INF/jsp/vanilla/user/userMetaDataFormFields.jsp">
+    <definition name="userMetaDataFormFields" template="/WEB-INF/jsp/bdrs/user/userMetaDataFormFields.jsp">
         <put-attribute name="metaList" type="object"/>
     </definition>
 
     <!-- My Sightings -->
     <definition name="mySightings" extends="user-template">
-        <put-attribute name="title" value="Records Map"/>
+        <put-attribute name="title" value="My Sightings"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/mySightings.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customJavaScript">
+            <add-attribute>bdrs/review/mySightings.js</add-attribute>
         </put-list-attribute>
     </definition>
-    
+
     <!-- Advanced Review Sightings -->
     <definition name="advancedReview" extends="user-template">
         <put-attribute name="title" value="Sightings"/>
@@ -202,16 +203,6 @@
         <put-list-attribute name="customJavaScript">
             
         </put-list-attribute>
-    </definition>
-    
-    <definition name="singleSiteAllTaxaRow" template="/WEB-INF/jsp/bdrs/user/record/render/singleSiteAllTaxa/singleSiteAllTaxaRow.jsp">
-        <put-attribute name="sightingIndex"/>
-        <put-attribute name="record"/>
-        <put-attribute name="survey"/>
-        <put-attribute name="recAttrMap"/>
-        <put-attribute name="recAttrFileURLMapping"/>
-        <!--<put-attribute name="attribute"/>
-        <put-attribute name="index"/>-->
     </definition>
     
     <!-- No Script Message -->

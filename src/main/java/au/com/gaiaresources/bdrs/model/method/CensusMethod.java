@@ -23,7 +23,6 @@ import au.com.gaiaresources.bdrs.db.impl.MetadataPortalPersistentImpl;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
-import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 
 /**
@@ -46,6 +45,11 @@ public class CensusMethod extends MetadataPortalPersistentImpl implements Compar
     private static final boolean DEFAULT_DRAW_POINT_ENABLED = true;
     private static final boolean DEFAULT_DRAW_LINE_ENABLED = false;
     private static final boolean DEFAULT_DRAW_POLYGON_ENABLED = false;
+    
+    /**
+     * Name given to the default census method.
+     */
+    public static final String DEFAULT_NAME = "Standard Taxonomic (Default)";
     
     /**
      * Get the name of this <code>Location</code>.

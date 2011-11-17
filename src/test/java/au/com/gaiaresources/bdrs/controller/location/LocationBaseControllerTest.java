@@ -226,6 +226,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
             case STRING_AUTOCOMPLETE:
             case TEXT:
             case BARCODE:
+            case REGEX:
             case TIME:
             case HTML:
             case HTML_COMMENT:
@@ -338,6 +339,9 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
                 case STRING:
                     value = "Test Survey Attr String";
                     break;
+                case REGEX:
+                    value = "";
+                    break;
                 case BARCODE:
                     value = "#123456";
                     break;
@@ -396,6 +400,6 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
 
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

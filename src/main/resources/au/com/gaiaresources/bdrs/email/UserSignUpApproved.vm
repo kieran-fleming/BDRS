@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <p>Hi ${newUser.firstName} ${newUser.lastName}!</p>
+        
+        <p>Your account for the ${portal.getName()} has been approved.</p>
+        
+        <p>Please click on the following link (or copy and paste it into your browser) to login.</p>
+        
+        <p><a href="${bdrsApplicationUrl}/home.htm?signin=true">${bdrsApplicationUrl}/home.htm?signin=true</a></p>
+        
+        <p>Your username, <strong>${newUser.name}</strong>, should be used to sign in to the site.</p>
+    </body>
+</html>

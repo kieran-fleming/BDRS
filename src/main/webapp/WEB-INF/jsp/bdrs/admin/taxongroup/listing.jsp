@@ -10,7 +10,7 @@
 </p>
 
 
-<div class="textright">
+<div class="buttonpanel textright">
     <input class="form_action" type="button" value="Add Taxon Group" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxongroup/edit.htm';"/>
 </div>
 <table id="taxon_group_listing" class="datatable">

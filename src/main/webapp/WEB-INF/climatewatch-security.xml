@@ -7,16 +7,18 @@
     <!--
     <global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>
      -->
-
-    <http realm="ClimateWatch Realm" access-denied-page="/accessDenied.htm">
+    
+    <http realm="ClimateWatch Realm" access-denied-page="/accessDenied.htm" entry-point-ref="bdrsAuthenticationEntryPoint">
+        <custom-filter position="FORM_LOGIN_FILTER" ref="bdrsAuthenticationFilter" />
+        
 
         <intercept-url pattern="/authenticated/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
 
         <intercept-url pattern="/secure/**/*" access="ROLE_USER,ROLE_TEACHER,ROLE_ADMIN"/>
-        <intercept-url pattern="/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT,ROLE_POWER_USER,ROLE_SUPERVISOR"/>
         <intercept-url pattern="/root/**/*" access="ROLE_ROOT"/>
         <intercept-url pattern="/bdrs/mobile/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
-        <intercept-url pattern="/user/**/*" access="ROLE_USER,ROLE_POWERUSER,ROLE_SUPERVISOR,ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/user/**/*" access="ROLE_USER,ROLE_POWER_USER,ROLE_SUPERVISOR,ROLE_ADMIN,ROLE_ROOT"/>
 
         <intercept-url pattern="/teacher/**/*" access="ROLE_TEACHER,ROLE_ADMIN"/>
         <intercept-url pattern="/power/**/*" access="ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
@@ -27,7 +29,7 @@
 
         <intercept-url pattern="/bdrs/public/**/*" access=""/>
         <intercept-url pattern="/bdrs/user/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
-        <intercept-url pattern="/bdrs/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/bdrs/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT,ROLE_POWER_USER,ROLE_SUPERVISOR"/>
         <intercept-url pattern="/bdrs/root/**/*" access="ROLE_ROOT"/>
         
         <intercept-url pattern="/portal/*/authenticated/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
@@ -36,7 +38,7 @@
         <intercept-url pattern="/portal/*/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
         <intercept-url pattern="/portal/*/root/**/*" access="ROLE_ROOT"/>
         <intercept-url pattern="/portal/*/bdrs/mobile/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
-        <intercept-url pattern="/portal/*/user/**/*" access="ROLE_USER,ROLE_POWERUSER,ROLE_SUPERVISOR,ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/portal/*/user/**/*" access="ROLE_USER,ROLE_POWER_USER,ROLE_SUPERVISOR,ROLE_ADMIN,ROLE_ROOT"/>
 
         <intercept-url pattern="/portal/*/teacher/**/*" access="ROLE_TEACHER,ROLE_ADMIN"/>
         <intercept-url pattern="/portal/*/power/**/*" access="ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
@@ -47,19 +49,22 @@
 
         <intercept-url pattern="/portal/*/bdrs/public/**/*" access=""/>
         <intercept-url pattern="/portal/*/bdrs/user/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
-        <intercept-url pattern="/portal/*/bdrs/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT"/>
+        <intercept-url pattern="/portal/*/bdrs/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT,ROLE_POWER_USER,ROLE_SUPERVISOR"/>
         <intercept-url pattern="/portal/*/bdrs/root/**/*" access="ROLE_ROOT"/>
         
         <intercept-url pattern="/cc/user/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_TEACHER,ROLE_ADMIN"/>
         <intercept-url pattern="/cc/admin/**/*" access="ROLE_ADMIN"/>
         <!--intercept-url pattern="/html/mobile/*.manifest" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/-->
         <!-- intercept-url pattern="/public/**/*" access=""/ -->
+        
+        <!-- 
         <form-login login-page="/home.htm?signin=true"
                     authentication-failure-url="/loginfailed.htm"
-                    default-target-url="/authenticated/redirect.htm"/>
+                    default-target-url="/authenticated/redirect.htm" />
+                    -->
         <logout logout-url="/logout" logout-success-url="/home.htm" invalidate-session="false"/>
     </http>
-    <authentication-manager>
+    <authentication-manager alias="authenticationManager">
         <authentication-provider user-service-ref="userAuthenticationService">
             <password-encoder hash="md5"/>
         </authentication-provider>

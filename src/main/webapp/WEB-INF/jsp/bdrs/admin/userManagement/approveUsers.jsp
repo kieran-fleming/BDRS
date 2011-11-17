@@ -1,3 +1,13 @@
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
+
 <h1>Approve Users</h1>
 
-<p>This page is still under development</p>
+<cw:getContent key="admin/approveUsers" />
+
+<tiles:insertDefinition name="adminUserSearch">
+	<tiles:putAttribute name="approveUsers" value="true"/>
+</tiles:insertDefinition>

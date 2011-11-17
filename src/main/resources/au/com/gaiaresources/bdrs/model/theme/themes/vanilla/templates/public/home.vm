@@ -1,0 +1,43 @@
+<div class="pageContent">
+    <h1 class="textcenter">Welcome to the Biological Data Recording System</h1>
+    <div class="left_col">
+        <div style="height: 37.5em;"></div>
+        <h3>Supported By</h3>
+        <a href="http://www.ala.org.au/">
+            <img src="${asset}images/bdrs/atlasoflivingaust.png" alt="Atlas of Living Australia"/>
+        </a>
+    </div>
+    <div class="center_col">
+        ${bdrs.getContent("public/home")}
+    </div>
+    <div class="right_col">
+        <div id="statistics">
+            <h3>Latest Statistics</h3>
+            <table>
+                <tbody>
+                   <tr>
+                       <th>Number of users</th>
+                       <td class="boldtext">${userCount}</td>
+                   </tr>
+                    <tr>
+                        <th>Total number of records</th>
+                        <td class="boldtext">${recordCount}</td>
+                    </tr>
+                    <tr>
+                        <th>Number of species recorded</th>
+                        <td class="boldtext">${uniqueSpeciesCount}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            #{if}(${latestRecord} && ${latestRecord.species})
+                <p>
+                    The last sighting was a ${latestRecord.species.commonName},  
+                    <span class="scientificName">${latestRecord.species.scientificName}</span>
+                    in the group ${latestRecord.species.taxonGroup.name}.
+                </p>
+            #{end}
+        </div>
+    </div>
+</div>
+<div style="clear: both;"></div>

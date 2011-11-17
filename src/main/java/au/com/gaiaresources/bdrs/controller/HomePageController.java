@@ -43,6 +43,8 @@ public class HomePageController extends AbstractController {
     private static final String[] DEVICES_WITH_APP = { "Android"};
 
     public static final String HOME_URL = "/home.htm";
+    public static final String AUTHENTICATED_REDIRECT_URL = "/authenticated/redirect.htm";
+    public static final String LOGIN_FAILED_URL = "/loginfailed.htm";
 
     @RequestMapping(value = HOME_URL, method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request,
@@ -147,7 +149,7 @@ public class HomePageController extends AbstractController {
      * @param request
      * @return
      */
-    @RequestMapping(value = "/loginfailed.htm", method = RequestMethod.GET)
+    @RequestMapping(value = LOGIN_FAILED_URL, method = RequestMethod.GET)
     public ModelAndView renderLoginFailed(HttpServletRequest request) {
         getRequestContext().addMessage(new Message("login.failed"));
 
@@ -168,7 +170,7 @@ public class HomePageController extends AbstractController {
      * @param res
      * @return
      */
-    @RequestMapping(value = "/authenticated/redirect.htm", method = RequestMethod.GET)
+    @RequestMapping(value = AUTHENTICATED_REDIRECT_URL, method = RequestMethod.GET)
     public String redirectForRole(HttpServletRequest req,
             HttpServletResponse res) {
         // Catch a login redirect.
@@ -187,14 +189,13 @@ public class HomePageController extends AbstractController {
             if (rolesList.contains(Role.ADMIN)) {
                 return getRedirectAdminHome();
             } else if (rolesList.contains(Role.SUPERVISOR)) {
-                return "redirectWithoutModel:/teacher/home.htm";
+                return "redirectWithoutModel:/user/home.htm";
             } else if (rolesList.contains(Role.POWERUSER)) {
-                return "redirectWithoutModel:/power/home.htm";
+                return "redirectWithoutModel:/user/home.htm";
             } else if (rolesList.contains(Role.USER)) {
                 return "redirectWithoutModel:/user/home.htm";
             } 
         }
-
         return getRedirectHome();
     }
 

@@ -111,11 +111,45 @@ public class PortalController extends AbstractController {
         @RequestParam(value="add_portalEntryPoint", required=false) int[] add_portalEntryPointIndexes,
         @RequestParam(value="portalEntryPoint_id", required=false) int[] portalEntryPointPks) throws Exception {
         
-        Portal portal = parsePortalEditForm(getRequestContext().getHibernate(),
+        try {
+            Portal portal = parsePortalEditForm(getRequestContext().getHibernate(),
                                             request, pk, name, isDefault, add_portalEntryPointIndexes, portalEntryPointPks);
-        
-        getRequestContext().addMessage("bdrs.portal.save.success", new Object[]{portal.getName()});
-        return new ModelAndView(new RedirectView("/bdrs/root/portal/listing.htm", true));
+            getRequestContext().addMessage("bdrs.portal.save.success", new Object[]{portal.getName()});
+            return new ModelAndView(new RedirectView("/bdrs/root/portal/listing.htm", true));
+        } catch (IllegalArgumentException e) {
+            getRequestContext().addMessage("bdrs.portal.save.fail", new Object[]{e.getMessage()});
+            // reconstruct the parameters so the view is the same
+            // as the one they submitted
+            Portal portal;
+            List<PortalEntryPoint> portalEntryPointList;
+            if (pk != 0) {
+                portal = portalDAO.getPortal(pk);
+                portalEntryPointList = portalDAO.getPortalEntryPoints(portal);
+            } else {
+                portal = new Portal();
+                portalEntryPointList = new ArrayList<PortalEntryPoint>();
+                portal.setName(name);
+                portal.setDefault(isDefault);
+            }
+            if (add_portalEntryPointIndexes != null) {
+                for (int entryPointId : add_portalEntryPointIndexes) {
+                    PortalEntryPoint entryPoint = new PortalEntryPoint();
+                    
+                    String pattern = request.getParameter(String.format(PORTAL_ENTRY_POINT_ADD_PATTERN_TMPL, entryPointId));
+                    String redirect = request.getParameter(String.format(PORTAL_ENTRY_POINT_ADD_REDIRECT_TMPL, entryPointId));
+                    
+                    entryPoint.setPortal(portal);
+                    entryPoint.setPattern(pattern);
+                    entryPoint.setRedirect(redirect);
+                    portalEntryPointList.add(entryPoint);
+                }
+            }
+            
+            ModelAndView mv = new ModelAndView("portalEdit");
+            mv.addObject("portal", portal);
+            mv.addObject("portalEntryPointList", portalEntryPointList);
+            return mv;
+        }
     }
 
     @RolesAllowed( { Role.ROOT })
@@ -156,7 +190,11 @@ public class PortalController extends AbstractController {
         sesh.disableFilter(PortalPersistentImpl.PORTAL_FILTER_PORTALID_PARAMETER_NAME);
         sesh.beginTransaction();
         
-        parsePortalEditForm(sesh, request, pk, name, isDefault, add_portalEntryPointIndexes, portalEntryPointPks);
+        try {
+            parsePortalEditForm(sesh, request, pk, name, isDefault, add_portalEntryPointIndexes, portalEntryPointPks);
+        } catch (IllegalArgumentException e) {
+            log.warn("Error while mocking portal save for testing entry point: " + e.getMessage());
+        }
         
         PortalMatches matches = portalFilterMatcher.match(sesh, testUrl);
         
@@ -189,16 +227,22 @@ public class PortalController extends AbstractController {
         if(portal == null) {
             portal = new Portal();
         }
+        // return an error if we try to create a portal with the same name as another
+        Portal namedPortal = portalDAO.getPortalByName(sesh, name);
+        if (namedPortal != null && !portal.equals(namedPortal)) {
+            throw new IllegalArgumentException("Portal name must be unique.");
+        }
         portal.setName(name);
-        portal.setDefault(isDefault);
         if(isDefault) {
             // Only one default portal is allowed.
             Portal defaultPortal = portalDAO.getPortal(true);
-            if(portal.getId() != null && !portal.equals(defaultPortal)) {
+            if(defaultPortal != null) {
                 defaultPortal.setDefault(false);
                 defaultPortal = portalDAO.save(sesh, defaultPortal);
             }
         }
+        portal.setDefault(isDefault);
+        
         portal = portalDAO.save(sesh, portal);
         
         Map<Integer, PortalEntryPoint> portalEntryPointMap = new HashMap<Integer, PortalEntryPoint>(); 

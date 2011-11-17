@@ -7,9 +7,10 @@ public class Role {
     public static final String SUPERVISOR = "ROLE_SUPERVISOR";
     public static final String POWERUSER = "ROLE_POWER_USER";
     public static final String USER = "ROLE_USER";
+    public static final String ANONYMOUS = "ROLE_ANONYMOUS";
 
     private static final String[] ROLE_ORDER = { ROOT, ADMIN, SUPERVISOR,
-            POWERUSER, USER };
+            POWERUSER, USER, ANONYMOUS };
 
     public static void checkRole(String text) throws SecurityException {
         for (String s : ROLE_ORDER) {

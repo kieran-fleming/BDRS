@@ -35,6 +35,7 @@ import au.com.gaiaresources.bdrs.controller.attribute.AttributeFormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
+import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -228,21 +229,27 @@ public class LocationBaseController extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/locationListing.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyLocationListing(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="surveyId", required = true) int surveyId) {
         Survey survey = getSurvey(surveyId);
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         ModelAndView mv = new ModelAndView("locationListing");
         mv.addObject("survey", survey);
         return mv;
     }
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/locationListing.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyLocationListing(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="surveyId", required = true) int surveyId) {
         Survey survey = getSurvey(surveyId);
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         List<Location> locationList = new ArrayList<Location>();
 
         // Updated Locations
@@ -297,12 +304,15 @@ public class LocationBaseController extends AbstractController {
      * @param locationId (optional) The id of the location to edit.  If null, a new location will be created.
      * @return
      */
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editLocation.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyLocation(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="surveyId", required = true) int surveyId,
             @RequestParam(value="locationId", required = false) Integer locationId) {
         Survey survey = getSurvey(surveyId);
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         FormFieldFactory formFieldFactory = new FormFieldFactory();
         Location location = null;
         List<FormField> surveyFormFieldList = new ArrayList<FormField>();
@@ -346,13 +356,15 @@ public class LocationBaseController extends AbstractController {
      * @param locationId (optional) The id of the location to edit.  If null, a new location will be created.
      * @return
      */
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editLocation.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyLocation(MultipartHttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="surveyId", required = true) int surveyId,
             @RequestParam(value="locationId", required = false) Integer locationId) {
         Survey survey = getSurvey(surveyId);
-        
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         if (request.getParameter("goback") == null) {
             List<Location> locationList = survey.getLocations();
 

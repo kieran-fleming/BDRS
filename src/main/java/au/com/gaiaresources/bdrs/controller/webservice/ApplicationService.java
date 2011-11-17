@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -157,6 +159,7 @@ public class ApplicationService extends AbstractController {
         JSONArray speciesArray = new JSONArray();
         JSONArray taxonGroupArray = new JSONArray();
         JSONArray censusMethodArray = new JSONArray();
+        JSONArray recordPropertiesArray = new JSONArray();
         for (Attribute a : survey.getAttributes()) {
             // Not sending any location scoped attributes because they do not get populated by the recording form.
             if(!AttributeScope.LOCATION.equals(a.getScope())) {
@@ -197,6 +200,14 @@ public class ApplicationService extends AbstractController {
         }
         log.debug("Flatted Census Methods in  :" + (System.currentTimeMillis() - now));now = System.currentTimeMillis();
         
+        for (RecordPropertyType recordPropertyType : RecordPropertyType.values()) {
+        	RecordProperty recordProperty = new RecordProperty(survey, recordPropertyType, metadataDAO);
+        	if (!recordProperty.isHidden()) {
+        		recordPropertiesArray.add(recordProperty.flatten(true, false));
+        	}
+        }
+        log.debug("Flatted RecordProperties in  :" + (System.currentTimeMillis() - now));now = System.currentTimeMillis();
+        
         // Store restructured survey data in JSONObject
         JSONObject surveyData = new JSONObject();
         surveyData.put("attributesAndOptions", attArray);
@@ -205,6 +216,7 @@ public class ApplicationService extends AbstractController {
         surveyData.put("indicatorSpecies", speciesArray);
         surveyData.put("taxonGroups", taxonGroupArray);
         surveyData.put("censusMethods", censusMethodArray);
+        surveyData.put("recordProperties", recordPropertiesArray);
 
         // support for JSONP
         if (request.getParameter("callback") != null) {
@@ -450,6 +462,7 @@ public class ApplicationService extends AbstractController {
             case MULTI_CHECKBOX:
             case MULTI_SELECT:
             case BARCODE:
+            case REGEX:
                 recAttr.setStringValue(value);
                 break;
             case SINGLE_CHECKBOX:

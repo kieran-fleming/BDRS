@@ -1,7 +1,11 @@
 <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut metus 
-    lacinia tellus posuere elementum. Proin at leo nibh, a hendrerit odio. 
-    Integer consectetur metus eget mauris sagittis in eleifend metus dictum. 
-    Sed sed lacus dui. Nullam sit amet iaculis leo. Fusce vulputate porta eros 
-    in hendrerit. 
+    Themes control the look and feel of the portal.  A new portal should come with 
+    at least one default theme which cannot be edited but can be downloaded.  To start
+    changing the look and feel of the portal, click the download link next to the default theme.  
+    Then go to Admin &gt; Manage Portal &gt; Manage Files.  On this screen, click the "Add Media" button 
+    and upload the file on the next page.  Once you have uploaded the file, you will need to copy the 
+    uuid (the text under the column Identifier) for your file.  Return to the themes list and click the 
+    "Add Theme" button.  Enter a theme name into the name field, paste the uuid you just copied into the 
+    uuid field and check the "Is Active" box.  Click the "Save Theme" button to save your theme.  The editable fields 
+    will show on the screen and you can start changing them to control the look and feel of the portal.
 </p>

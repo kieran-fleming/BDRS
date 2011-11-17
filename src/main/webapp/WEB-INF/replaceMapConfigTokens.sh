@@ -10,7 +10,7 @@ DB_PASS=$(xmlstarlet select -N w="http://www.springframework.org/schema/beans" -
 DB_CONNECT=$(xmlstarlet select -N w="http://www.springframework.org/schema/beans" -T -t -m "//w:property[@name='url']" -v @value -n climatewatch-hibernate-datasource.xml)
 
 DB_HOST=$(echo $DB_CONNECT | grep -o //.*: | grep -o '[a-zA-Z0-9_]*')
-DB_NAME=$(echo $DB_CONNECT | egrep -o :[0-9]+/.* | egrep -o /.*$ | grep -o '[a-zA-Z0-9_]*')
+DB_NAME=$(echo $DB_CONNECT | egrep -o :[0-9]+/.* | egrep -o /.*$ | grep -o '[a-zA-Z0-9_-]*')
 DB_PORT=$(echo $DB_CONNECT | egrep -o :[0-9]+/ | egrep -o [0-9]+)
 
 echo "Replacement variables:"

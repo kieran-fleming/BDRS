@@ -1,0 +1,6 @@
+<p>Welcome, ${currentUser.getFirstName()} ${currentUser.getLastName()}!</p>
+<p>
+        This is the administration interface. From here you can
+        not only view, edit and add records, you can also create and administer
+        surveys and their locations, species, fields and access controls.
+</p>

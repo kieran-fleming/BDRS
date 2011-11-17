@@ -26,6 +26,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordAttributeFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
@@ -153,7 +154,6 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertViewName(mv, viewName);
-        ModelAndViewAssert.assertModelAttributeAvailable(mv, "record");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "survey");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "preview");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "formFieldList");
@@ -163,10 +163,10 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             if (formField.isAttributeFormField()) {
                 Assert.assertEquals(AttributeScope.SURVEY, ((RecordAttributeFormField) formField).getAttribute().getScope());
             } else if (formField.isPropertyFormField()) {
-                String propertyName = ((RecordPropertyFormField) formField).getPropertyName();
+                String typeName = ((RecordPropertyFormField) formField).getPropertyName();
                 // It should not be either the species or the number
-                Assert.assertFalse(Record.RECORD_PROPERTY_SPECIES.equals(propertyName));
-                Assert.assertFalse(Record.RECORD_PROPERTY_NUMBER.equals(propertyName));
+                Assert.assertFalse(RecordPropertyType.SPECIES.getName().equals(typeName));
+                Assert.assertFalse(RecordPropertyType.NUMBER.getName().equals(typeName));
             } else {
                 Assert.assertTrue(false);
             }
@@ -176,10 +176,10 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             if (formField.isAttributeFormField()) {
                 Assert.assertFalse(AttributeScope.SURVEY.equals(((RecordAttributeFormField) formField).getAttribute().getScope()));
             } else if (formField.isPropertyFormField()) {
-                String propertyName = ((RecordPropertyFormField) formField).getPropertyName();
+            	String typeName = ((RecordPropertyFormField) formField).getPropertyName();
                 // It should not be either the species or the number
-                Assert.assertTrue(Record.RECORD_PROPERTY_SPECIES.equals(propertyName)
-                        || Record.RECORD_PROPERTY_NUMBER.equals(propertyName));
+                Assert.assertTrue(RecordPropertyType.SPECIES.getName().equals(typeName)
+                        || RecordPropertyType.NUMBER.getName().equals(typeName));
             } else {
                 Assert.assertTrue(false);
             }
@@ -233,8 +233,8 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                     Assert.assertNull(propertyField.getRecord().getId());
                     Assert.assertEquals(survey, propertyField.getSurvey());
 
-                    Assert.assertTrue(Record.RECORD_PROPERTY_SPECIES.equals(propertyField.getPropertyName())
-                            || Record.RECORD_PROPERTY_NUMBER.equals(propertyField.getPropertyName()));
+                    Assert.assertTrue(RecordPropertyType.SPECIES.getName().equals(propertyField.getPropertyName())
+                            || RecordPropertyType.NUMBER.getName().equals(propertyField.getPropertyName()));
 
                 } else {
 
@@ -356,6 +356,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                         // Reparsing the date strips out the hours, minutes and seconds
                         valueMap.put(attr, dateFormat.parse(value));
                         break;
+                    case REGEX:
                     case STRING_AUTOCOMPLETE:
                     case STRING:
                     case BARCODE:
@@ -460,6 +461,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 case DATE:
                     Assert.assertEquals(expected, recAttr.getDateValue());
                     break;
+                case REGEX:
                 case STRING_AUTOCOMPLETE:
                 case STRING:
                 case TEXT:
@@ -527,6 +529,8 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         Assert.assertTrue(mv.getView() instanceof RedirectView);
         redirect = (RedirectView) mv.getView();
         Assert.assertEquals("/bdrs/user/surveyRenderRedirect.htm", redirect.getUrl());
+        
+        this.assertMessageCode(SingleSiteController.MSG_CODE_SUCCESS_ADD_ANOTHER);
     }
     
     @Test
@@ -551,6 +555,6 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

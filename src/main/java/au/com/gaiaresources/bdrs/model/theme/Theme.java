@@ -38,9 +38,13 @@ public class Theme extends PortalPersistentImpl {
     public static final String THEME_DIR_PROCESSED = "processed";
     public static final String ASSET_DOWNLOAD_URL_TMPL = "%s/files/download.htm?className=%s&id=%d&fileName=%s/";
     public static final String ASSET_KEY = "asset";
+    public static final String CONTENT_KEY = "content(\\.\\w+)+";
+    public static final String DEFAULT_THEME_NAME = "Default BDRS Theme (%s)";
+    //public static final String THEME_DIR_DEFAULT = "default";
     
     private String name;
     private boolean active = false;
+    private boolean isDefault = false;
     /**
      * The UUID of a <code>ManagedFile</code>
      */
@@ -58,6 +62,15 @@ public class Theme extends PortalPersistentImpl {
         this.active = active;
     }
 
+    @Column(name = "ISDEFAULT", nullable = false)
+    public boolean isDefault() {
+        return this.isDefault;
+    }
+    
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+    
     @Column(name = "NAME", nullable = false)
     public String getName() {
         return name;
@@ -66,7 +79,7 @@ public class Theme extends PortalPersistentImpl {
         this.name = name;
     }
 
-    @Column(name = "THEME_FILE_UUID", nullable = false)
+    @Column(name = "THEME_FILE_UUID", nullable = true)
     public String getThemeFileUUID() {
         return themeFileUUID;
     }

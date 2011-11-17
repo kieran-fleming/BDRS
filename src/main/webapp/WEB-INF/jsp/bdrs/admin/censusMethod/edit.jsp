@@ -27,7 +27,7 @@
         <tr>
             <th>Description:</th>
             <td>
-            	<textarea maxlength="1023" rows="4" name="description"><c:out value="${censusMethod.description}"/></textarea>
+            	<textarea rows="4" class="validate(maxlength(1023))" name="description"><c:out value="${censusMethod.description}"/></textarea>
             </td>
         </tr>
         <tr>

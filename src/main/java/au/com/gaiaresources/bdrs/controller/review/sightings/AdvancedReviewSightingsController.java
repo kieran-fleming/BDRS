@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
@@ -27,27 +26,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.CensusMethodTypeFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.Facet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.FacetOption;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.MonthFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.MultimediaFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.SurveyFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.TaxonGroupFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.UserFacet;
-import au.com.gaiaresources.bdrs.controller.review.sightings.facet.YearFacet;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
 import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
-import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
+import au.com.gaiaresources.bdrs.service.facet.Facet;
+import au.com.gaiaresources.bdrs.service.facet.FacetOption;
+import au.com.gaiaresources.bdrs.service.facet.FacetService;
+import au.com.gaiaresources.bdrs.service.facet.SurveyFacet;
+import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -63,7 +56,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
     public static final String VIEW_TYPE_TABLE = "table";
     public static final Set<String> VALID_SORT_PROPERTIES;
     
-    public static final String SURVEY_ID_QUERY_PARAM_NAME = "surveyId";
+    
     public static final String SORT_BY_QUERY_PARAM_NAME = "sortBy";
     public static final String SORT_ORDER_QUERY_PARAM_NAME = "sortOrder";
     public static final String SEARCH_QUERY_PARAM_NAME = "searchText";
@@ -88,22 +81,21 @@ public class AdvancedReviewSightingsController extends AbstractController{
     private Logger log = Logger.getLogger(getClass());
     
     @Autowired
-    private RecordDAO recordDAO;
-    @Autowired
     private SurveyDAO surveyDAO;
     @Autowired
     private AbstractBulkDataService bulkDataService;
+    @Autowired
+    private FacetService facetService;
     
     /**
      * Provides a view of the facet listing and a skeleton of the map or list
      * view. The map or list view will populate itself via asynchronous 
      * javascript requests. 
      */
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = "/review/sightings/advancedReview.htm", method = RequestMethod.GET)
     public ModelAndView advancedReview(HttpServletRequest request, 
                                        HttpServletResponse response,
-                                       @RequestParam(value=SURVEY_ID_QUERY_PARAM_NAME, required=false) Integer surveyId,
+                                       @RequestParam(value=SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, required=false) Integer surveyId,
                                        @RequestParam(value=RESULTS_PER_PAGE_QUERY_PARAM_NAME, required=false, defaultValue=DEFAULT_RESULTS_PER_PAGE) Integer resultsPerPage,
                                        @RequestParam(value=PAGE_NUMBER_QUERY_PARAM_NAME, required=false, defaultValue=DEFAULT_PAGE_NUMBER) Integer pageNumber) {
         // We are changing the flush mode here to prevent checking for dirty
@@ -114,9 +106,11 @@ public class AdvancedReviewSightingsController extends AbstractController{
         // we are potentially loading a lot of objects into the session cache
         // and continually checking if it is dirty is prohibitively expensive.
         // https://forum.hibernate.org/viewtopic.php?f=1&t=936174&view=next
-        getRequestContext().getHibernate().setFlushMode(FlushMode.MANUAL);
+        RequestContext requestContext = getRequestContext();
+        requestContext.getHibernate().setFlushMode(FlushMode.MANUAL);
+        User user = requestContext.getUser();
         
-        List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
+        List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         Long recordCount = countMatchingRecords(facetList,
                                                 surveyId,
                                                 request.getParameter(SEARCH_QUERY_PARAM_NAME));
@@ -128,7 +122,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
         ModelAndView mv = new ModelAndView("advancedReview");
         mv.addObject("mapViewSelected", !VIEW_TYPE_TABLE.equals(request.getParameter("viewType")));
         mv.addObject("facetList", facetList);
-        mv.addObject("surveyId", request.getParameter(SURVEY_ID_QUERY_PARAM_NAME));
+        mv.addObject("surveyId", request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
         mv.addObject("sortBy", request.getParameter(SORT_BY_QUERY_PARAM_NAME));
         mv.addObject("sortOrder", request.getParameter(SORT_ORDER_QUERY_PARAM_NAME));
         mv.addObject("searchText", request.getParameter(SEARCH_QUERY_PARAM_NAME));
@@ -151,7 +145,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
     /**
      * Returns the list of records matching the {@link Facet} criteria as KML.
      */
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = "/review/sightings/advancedReviewKMLSightings.htm", method = RequestMethod.GET)
     public void advancedReviewKMLSightings(HttpServletRequest request, HttpServletResponse response) throws IOException, JAXBException {
         
@@ -163,13 +156,15 @@ public class AdvancedReviewSightingsController extends AbstractController{
         // we are potentially loading a lot of objects into the session cache
         // and continually checking if it is dirty is prohibitively expensive.
         // https://forum.hibernate.org/viewtopic.php?f=1&t=936174&view=next
-        getRequestContext().getHibernate().setFlushMode(FlushMode.MANUAL);
+        RequestContext requestContext = getRequestContext();
+        requestContext.getHibernate().setFlushMode(FlushMode.MANUAL);
+        User user = requestContext.getUser();
         
         Integer surveyId = null;
-        if(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME) != null) {
-            surveyId = Integer.parseInt(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME));
+        if(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME) != null) {
+            surveyId = Integer.parseInt(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
         }
-        List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
+        List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         
         KMLWriter writer = KMLUtils.createKMLWriter(request.getContextPath(), null);
         User currentUser = getRequestContext().getUser();
@@ -201,7 +196,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
     /**
      * Returns a JSON array of records matching the {@link Facet} criteria.
      */
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = "/review/sightings/advancedReviewJSONSightings.htm", method = RequestMethod.GET)
     public void advancedReviewJSONSightings(HttpServletRequest request, 
                                             HttpServletResponse response,
@@ -216,14 +210,16 @@ public class AdvancedReviewSightingsController extends AbstractController{
         // we are potentially loading a lot of objects into the session cache
         // and continually checking if it is dirty is prohibitively expensive.
         // https://forum.hibernate.org/viewtopic.php?f=1&t=936174&view=next
-        Session sesh = getRequestContext().getHibernate(); 
+        RequestContext requestContext = getRequestContext();
+        Session sesh = requestContext.getHibernate(); 
         sesh.setFlushMode(FlushMode.MANUAL);
+        User user = requestContext.getUser();
         
         Integer surveyId = null;
-        if(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME) != null) {
-            surveyId = new Integer(request.getParameter(SURVEY_ID_QUERY_PARAM_NAME));
+        if(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME) != null) {
+            surveyId = new Integer(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
         }
-        List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
+        List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
                                                                      surveyId,
                                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
@@ -252,15 +248,15 @@ public class AdvancedReviewSightingsController extends AbstractController{
      * {@link Facet} criteria. This function should only be used if the records
      * are part of a single survey.
      */
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = "/review/sightings/advancedReviewDownload.htm", method = RequestMethod.GET)
     public void advancedReviewDownload(HttpServletRequest request, 
                                        HttpServletResponse response,
-                                       @RequestParam(value=SURVEY_ID_QUERY_PARAM_NAME, required=true) int surveyId) throws IOException {
+                                       @RequestParam(value=SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, required=true) int surveyId) throws IOException {
+        RequestContext requestContext = getRequestContext();
+        requestContext.getHibernate().setFlushMode(FlushMode.MANUAL);
+        User user = requestContext.getUser();
         
-        getRequestContext().getHibernate().setFlushMode(FlushMode.MANUAL);
-        
-        List<Facet> facetList = getFacetList((Map<String, String[]>)request.getParameterMap());
+        List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
                                                      surveyId,
                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
@@ -275,41 +271,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
                                             sc, response.getOutputStream());
     }
 
-    /**
-     * Generates the {@link List} of {@link Facet}s. Each facet will be configured
-     * with the necessary {@link FacetOption}s and selection state.
-     * @param parameterMap a mapping of query parameters.
-     * @return the ordered {@link List} of {@link Facet}s. 
-     */
-    private List<Facet> getFacetList(Map<String, String[]> parameterMap) {
-        
-        List<Facet> facetList = new ArrayList<Facet>();
-        facetList.add(new UserFacet(recordDAO, parameterMap));
-        facetList.add(new TaxonGroupFacet(recordDAO, parameterMap));
-        facetList.add(new MonthFacet(recordDAO, parameterMap));
-        facetList.add(new YearFacet(recordDAO, parameterMap));
-        
-        boolean addSurveyFacet = true;
-        if(parameterMap.get(SURVEY_ID_QUERY_PARAM_NAME) != null && 
-                parameterMap.get(SURVEY_ID_QUERY_PARAM_NAME).length == 1) {
-            try {
-                Integer.parseInt(parameterMap.get(SURVEY_ID_QUERY_PARAM_NAME)[0].toString());
-                addSurveyFacet = false;
-            } catch(NumberFormatException nfe) {
-                addSurveyFacet = true;
-            }
-        }
-        
-        if(addSurveyFacet) {
-            facetList.add(new SurveyFacet(recordDAO, parameterMap));
-        }
-        
-        facetList.add(new MultimediaFacet(recordDAO, parameterMap));
-        facetList.add(new CensusMethodTypeFacet(recordDAO, parameterMap));
-        
-        return facetList;
-    }
-    
     long countMatchingRecords(List<Facet> facetList, Integer surveyId, String searchText) {
         HqlQuery hqlQuery = new HqlQuery("select count(distinct record) from Record record");
         applyFacetsToQuery(hqlQuery, facetList, surveyId, searchText);

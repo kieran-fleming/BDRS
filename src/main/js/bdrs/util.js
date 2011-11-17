@@ -72,6 +72,41 @@ bdrs.util.formatDate = function(date) {
     }
 };
 
+/**
+ * Parses a date from the format dd MMM yyyy to a date object, or null if it cannot be parsed.
+ * @param dateStr [string] the raw value to be parsed.
+ */
+bdrs.util.parseDate = function(dateStr) {
+        var dateSplit = dateStr.split(' ');
+        if(dateSplit.length !== 3) {
+            return null;
+        }
+        
+        var day = parseInt(dateSplit[0], 10);
+        var month = dateSplit[1].toLowerCase();
+        var year = parseInt(dateSplit[2], 10);
+        
+        // Resolve the months
+        var complete = false;
+        for(var i=0; !complete && i<bdrs.monthNames.length; i++) {
+            if(bdrs.monthNames[i].toLowerCase() === month.toLowerCase()) {
+                complete = true;
+                month = i;  // converted to an index.
+            }
+        }
+        
+        if(!complete) {
+            return null; 
+        }
+        
+        var date = new Date(year, month, day);
+        if(/Invalid|NaN/.test(date)) {
+            return null;
+        } else {
+            return date;
+        }
+};
+
 bdrs.util.zerofill = function(number, width) {
     width -= number.toString().length;
     if (width>0){
@@ -122,7 +157,7 @@ bdrs.util.preventReturnKeySubmit = function(event) {
     }      
 
      return (key != 13);
-}
+};
 
 /**
  * Maximise the amount of screen real-estate provided to an element by wrapping
@@ -166,17 +201,17 @@ bdrs.util.maximise = function(triggerSelector, contentSelector, maximiseLabel, m
     }
 };
 
-bdrs.util.createColorPicker = function(selector) {
-	var getBeforeShowFunc = function(selector) {
+bdrs.util.createColorPicker = function(jqueryElement) {
+    var getBeforeShowFunc = function(jqueryElement) {
         return function(el) {
-            var color = $(selector).val();
-            $(selector).ColorPickerSetColor(color);
+            var color = jqueryElement.val();
+            jqueryElement.ColorPickerSetColor(color);
         };
     };
-    var getOnChangeFunc = function(selector) {
+    var getOnChangeFunc = function(jqueryElement) {
         return function(hsb, hex, rgb, el) {
             var color = '#' + hex;
-            $(selector).val(color);
+            jqueryElement.val(color);
         }
     };
     var getOnSubmitFunc = function() {
@@ -185,9 +220,9 @@ bdrs.util.createColorPicker = function(selector) {
             $(el).ColorPickerHide();
         }
     };
-	$(selector).ColorPicker({
-        onBeforeShow: getBeforeShowFunc(selector),
-        onChange: getOnChangeFunc(selector),
+    jqueryElement.ColorPicker({
+        onBeforeShow: getBeforeShowFunc(jqueryElement),
+        onChange: getOnChangeFunc(jqueryElement),
         onSubmit: getOnSubmitFunc()
     });
 };

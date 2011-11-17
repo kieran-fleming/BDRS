@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <%@page import="au.com.gaiaresources.bdrs.model.record.Record"%>
 <jsp:useBean id="record" scope="request" type="au.com.gaiaresources.bdrs.model.record.Record" />
@@ -10,8 +11,7 @@
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
     <!-- using censusmethod description here in case we want to display no text / more indepth text -->
-    <!-- escapeXml false so we can put anchors in the description -->
-    <p><c:out value="${censusMethod.description}" escapeXml="false" /></p>
+    <p><cw:validateHtml html="${censusMethod.description}"/></p>
 </c:if>
 
 <tiles:insertDefinition name="recordEntryMap">
@@ -32,7 +32,16 @@
     
     <p class="error textcenter" id="wktMessage">
     </p>
-    <input type="hidden" name="wkt" value="${wkt}" />
+	
+	<%-- only include the wkt input if we are drawing lines or polygons 
+	   if the wkt key/value pair exists in the post dictionary, the lat/lon
+	   fields will be ignored as the wkt entry takes precedence.
+	--%>
+	<c:if test="<%= !survey.isPredefinedLocationsOnly() %>" >
+	   <c:if test="${censusMethod != null and (censusMethod.drawLineEnabled or censusMethod.drawPolygonEnabled)}">
+	 	 <input type="hidden" name="wkt" value="${wkt}" />
+	   </c:if>
+	</c:if>
     
     <c:if test="${!survey.recordVisibilityModifiable}">
         <input type="hidden" name="recordVisibility" value="${survey.defaultRecordVisibility}" />
@@ -89,13 +98,13 @@
     
 <c:choose>
     <c:when test="${ preview }">
-        <div class="textright">
+        <div class="buttonpanel textright">
             <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
             <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
         </div>
     </c:when>
     <c:otherwise>
-            <div class="textright">
+            <div class="buttonpanel textright">
                 <input class="form_action" type="submit" name="submitAndAddAnother" value="Submit and Add Another"/>
                 <input class="form_action" type="submit" name="submit" value="Submit Sighting"/>
             </div>

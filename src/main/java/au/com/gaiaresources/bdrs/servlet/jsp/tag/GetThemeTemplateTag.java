@@ -1,13 +1,11 @@
 package au.com.gaiaresources.bdrs.servlet.jsp.tag;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -16,10 +14,15 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import au.com.gaiaresources.bdrs.config.AppContext;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
+import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
+import au.com.gaiaresources.bdrs.service.theme.ThemeService;
+import au.com.gaiaresources.bdrs.servlet.BdrsPluginFacade;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 /**
  * Performs the rendering of themable blocks by delegating templates to the
@@ -36,40 +39,55 @@ public class GetThemeTemplateTag extends TagSupport {
      * The key of the theme element containing the name of the template to use.
      */
     private String key;
-    /**
-     * The default implementation of this block. The fallback must be a relative
-     * url to a JSP template within the web context.
-     */
-    private String fallback;
     
     private Logger log = Logger.getLogger(this.getClass());
-
+    
     @SuppressWarnings("unchecked")
     public int doEndTag() {
-
+        
         try {
             Map<String, ThemeElement> themeMap = getAttribute("themeMap", Map.class);
-            ThemeElement themeElement = themeMap.get(getKey());
+            ThemeElement themeElement = themeMap == null ? null : themeMap.get(getKey());
             Theme theme = getAttribute("theme", Theme.class);
 
+            TemplateService templateService = getBean(TemplateService.class);
+            Map<String, Object> templateParams = new HashMap<String, Object>();
+            String themeElemVal;
             if (theme == null || themeElement == null) {
                 log.warn("Cannot find Theme or ThemeElement. Rendering fallback template.");
                 log.warn("Theme = " + theme);
                 log.warn("key = " + getKey());
                 log.warn("ThemeElement = " + themeElement);
-                renderFallback();
+                // get the default theme and theme element of the same name
+                ThemeDAO themeDAO = getBean(ThemeDAO.class);
+                Portal portal = RequestContextHolder.getContext().getPortal();
+                theme = themeDAO.getDefaultTheme(portal);
+                themeElement = themeDAO.getThemeElement(theme.getId(), getKey());
+                //templateParams.putAll(ContentService.getContentParams(portal, null, null));
+                themeElemVal = themeElement.getDefaultValue();
             } else {
-
-                TemplateService templateService = getBean(TemplateService.class);
-
-                String path = new File(Theme.THEME_DIR_PROCESSED,
-                        themeElement.getCustomValue()).getPath();
-                templateService.mergeTemplate(theme, path, getAttributes(theme), pageContext.getOut());
+                themeElemVal = themeElement.getCustomValue();
             }
+            templateParams.putAll(getAttributes(theme));
+            
+            Portal portal = RequestContextHolder.getContext().getPortal();
+            User currentUser = RequestContextHolder.getContext().getUser();
+            String requestUrl = RequestContextHolder.getContext().getRequestPath();
+            
+            // Access the bdrs api through 'bdrs' in velocity
+            templateParams.put("bdrs", new BdrsPluginFacade(portal, requestUrl, currentUser));
+            
+            File templateFile = new File(ThemeService.getThemeDirectory(theme), themeElemVal);
+            String path = templateFile.getPath();
+            templateService.mergeTemplate(theme, path, templateParams, pageContext.getOut());
         } catch (Exception ve) {
-            log.error(ve);
-            log.error(ve.getMessage());
-            renderFallback();
+            log.error("Problem loading template", ve);
+            try {
+                pageContext.setAttribute("templateKey", getKey());
+                pageContext.include("/WEB-INF/jsp/bdrs/templateError.jsp");
+            } catch (Exception e) {
+                log.error("Problem loading error template", e);
+            }
         }
         return EVAL_PAGE;
     }
@@ -80,24 +98,6 @@ public class GetThemeTemplateTag extends TagSupport {
 
     public void setKey(String key) {
         this.key = key;
-    }
-
-    public String getFallback() {
-        return fallback;
-    }
-
-    public void setFallback(String fallback) {
-        this.fallback = fallback;
-    }
-
-    private void renderFallback() {
-        try {
-            pageContext.include(getFallback());
-        } catch (ServletException e) {
-            log.error(e);
-        } catch (IOException e) {
-            log.error(e);
-        }
     }
 
     private Map<String, Object> getAttributes(Theme theme) {

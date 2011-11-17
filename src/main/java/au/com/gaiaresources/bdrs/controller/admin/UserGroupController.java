@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.admin;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -22,7 +23,9 @@ import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
+@RolesAllowed({Role.ADMIN,Role.SUPERVISOR})
 @Controller
 public class UserGroupController extends AbstractController {
     
@@ -46,6 +49,8 @@ public class UserGroupController extends AbstractController {
     
     public static final String USER_ID_LIST = "userIds";
     public static final String GROUP_ID_LIST = "groupIds";
+    
+    public static final String MSG_KEY_GROUP_SAVE_SUCCESS = "bdrs.group.save.success";
     
     private DisplayTagHelper groupListTableHelper = new DisplayTagHelper(TABLE_ID);
     
@@ -81,16 +86,17 @@ public class UserGroupController extends AbstractController {
             @RequestParam(value = GROUP_DESC, required=true) String desc,
             HttpServletRequest request, HttpServletResponse response) {
         
+		// groupId is an array to workaround the issue where there is a get parameter
+		// and an input field with the same name. Both get submitted to the form causing
+		// a double of the groupId. The integer array handles both variations.
         Group groupToEdit = groupDAO.get(groupId[0]);
         groupToEdit.setName(name);
         groupToEdit.setDescription(desc);
         groupDAO.updateGroup(groupToEdit);
         
-        ModelAndView mv = createBaseEditModelAndView(groupToEdit);
+        getRequestContext().addMessage(MSG_KEY_GROUP_SAVE_SUCCESS, new Object[] { groupToEdit.getName() });
         
-        getRequestContext().addMessage(new Message("Group details successfully saved."));
-        
-        return mv;
+        return redirect(LISTING_URL);
     }
     
     @RequestMapping(value = CREATE_URL, method = RequestMethod.POST)

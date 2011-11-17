@@ -1,4 +1,4 @@
-package au.com.gaiaresources.bdrs.controller;
+        package au.com.gaiaresources.bdrs.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -7,7 +7,7 @@ import org.displaytag.util.ParamEncoder;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 
 public class DisplayTagHelper {
 

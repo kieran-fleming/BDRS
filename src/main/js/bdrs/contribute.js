@@ -161,6 +161,26 @@ bdrs.contribute.yearlysightings.locationSelected = function(event) {
 //--------------------------------------
 bdrs.contribute.singleSiteMultiTaxa = {};
 
+/**
+ * 
+ * @param {Object} sightingIndexSelector - on the form page there is a hidden input, aka the sighting index, that shows
+ * how many rows need to be saved. This is the jquery selector for the sighting index element.
+ * @param {Object} surveyIdSelector - on the form there is a hidden input for the survey id, this is the selector for
+ * the survey id element.
+ * @param {Object} speciesRequired - a boolean, sets validation on the species field.
+ * @param {Object} numberRequired - a boolean, sets validation on the number field.
+ */
+bdrs.contribute.singleSiteMultiTaxa.init = function(sightingIndexSelector, surveyIdSelector, speciesRequired, numberRequired) {
+	var sightingIndexElem = jQuery(sightingIndexSelector);
+    var sightingIndex = parseInt(sightingIndexElem.val(), 10);
+    // note we don't increment the sighting index during init
+    var surveyId = jQuery(surveyIdSelector).val();
+	
+	for (var i=0; i< sightingIndex; ++i) {
+		bdrs.contribute.singleSiteMultiTaxa.attachRowControls(i, surveyId, speciesRequired, numberRequired);
+	}
+};
+
 bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource = function(request, callback) {
 
     var params = {};
@@ -195,7 +215,17 @@ bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource = function(request, call
     });
 };
 
-bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody) {
+
+/**
+ * @param {Object} sightingIndexSelector - on the form page there is a hidden input, aka the sighting index, that shows
+ * how many rows need to be saved. This is the jquery selector for the sighting index element.
+ * @param {Object} surveyIdSelector - on the form there is a hidden input for the survey id, this is the selector for
+ * the survey id element.
+ * @param {Object} sightingTableBodyy - jQuery selector for the sighting table body element
+ * @param {Object} speciesRequired - a boolean, sets validation on the species field.
+ * @param {Object} numberRequired - a boolean, sets validation on the number field.
+ */
+bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody, speciesRequired, numberRequired) {
     var sightingIndexElem = jQuery(sightingIndexSelector);
     var sightingIndex = parseInt(sightingIndexElem.val(), 10);
     sightingIndexElem.val(sightingIndex+1);
@@ -210,32 +240,44 @@ bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector
     jQuery.get(url, param, function(data) {
         jQuery(sightingTableBody).append(data);
         
-        // Attach the autocomplete
-        var search_elem = jQuery("[name="+sightingIndex+"_survey_species_search]");
-        search_elem.data("surveyId", surveyId); 
-        search_elem.autocomplete({
-            source: bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource,
-            select: function(event, ui) {
-                var taxon = ui.item.data;
-                jQuery("[name="+sightingIndex+"_species]").val(taxon.id);
-            },
-            html: true,
-            minLength: 2,
-            delay: 300
-        });
-        
-        // Attach the datepickers
-        bdrs.initDatePicker();
-        // attach the validation
-        var species_elem = jQuery("[name="+sightingIndex+"_species]");
-        species_elem.addClass("validate(optionallyTaxonomicSpeciesAndNumber([name="+sightingIndex+"_number]))");
-        
-        var count_elem = jQuery("[name="+sightingIndex+"_number]");
-        count_elem.addClass("validate(positiveIntegerLessThanOneMillionOrBlank, optionallyTaxonomicSpeciesAndNumber([name="+sightingIndex+"_species]))");
-        
-        search_elem.parents("tr").ketchup();
+		bdrs.contribute.singleSiteMultiTaxa.attachRowControls(sightingIndex, surveyId);
     });
 };
+
+bdrs.contribute.singleSiteMultiTaxa.attachRowControls = function(sightingIndex, surveyId, speciesRequired, numberRequired) {
+
+	// Attach the autocomplete
+    var search_elem = jQuery("[name="+sightingIndex+"_survey_species_search]");
+    search_elem.data("surveyId", surveyId); 
+    search_elem.autocomplete({
+        source: bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource,
+        select: function(event, ui) {
+            var taxon = ui.item.data;
+            jQuery("[name="+sightingIndex+"_species]").val(taxon.id).blur();
+        },
+        html: true,
+        minLength: 2,
+        delay: 300
+    });
+    
+    // Attach the datepickers
+    bdrs.initDatePicker();
+    // attach the validation
+    var species_elem = jQuery("[name="+sightingIndex+"_species]");
+    if (speciesRequired) {
+        species_elem.addClass("validate(required)");
+    }
+    
+    var count_elem = jQuery("[name="+sightingIndex+"_number]");
+    if (numberRequired) {
+        count_elem.addClass("validate(positiveIntegerLessThanOneMillion)");
+    } else {
+        count_elem.addClass("validate(positiveIntegerLessThanOneMillionOrBlank)");
+    }
+    
+    search_elem.parents("tr").ketchup();
+}
+
 //--------------------------------------
 // End Single Site Multiple Taxa -------
 // -------------------------------------
@@ -256,7 +298,7 @@ bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, 
       sightingIndex: sightingIndex,
       surveyId: surveyId
   };
-  
+ 
   jQuery.ajax(url, {
 	  data: param, 
 	  success: function(data) {
@@ -264,12 +306,11 @@ bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, 
 	      
 	      // Attach the datepickers
 	      bdrs.initDatePicker();
-	      
-	      search_elem.parents("tr").ketchup();
   	  },
   	  async: false
-  }
-  );
+  });
+  
+  jQuery(sightingTableBody).ketchup();
   
   // update the sightingIndex field to match the attribute count
   sightingIndexElem.val(jQuery(sightingTableBody).find('tr').length);

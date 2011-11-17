@@ -114,13 +114,13 @@
 	
 	<c:choose>
 	    <c:when test="${ preview }">
-	        <div class="textright">
+	        <div class="buttonpanel textright">
 	            <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
 	            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
 	        </div>
 	    </c:when>
 	    <c:otherwise>
-	            <div class="textright">
+	            <div class="buttonpanel textright">
 	                <input type="submit" value="Submit Sightings" class="form_action"/>
 	            </div>
 	        </form>

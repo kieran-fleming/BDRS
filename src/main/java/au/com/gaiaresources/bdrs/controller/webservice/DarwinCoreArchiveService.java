@@ -18,6 +18,7 @@ import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
+import au.com.gaiaresources.bdrs.model.record.impl.AdvancedRecordFilter;
 import au.com.gaiaresources.bdrs.model.record.impl.RecordFilter;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
@@ -48,7 +49,7 @@ public class DarwinCoreArchiveService extends AbstractDownloadFileController {
     public void downloadArchive(HttpServletRequest request, HttpServletResponse response) throws IOException {
         
         RedirectionService redirService = new RedirectionService(ContentService.getRequestURL(request));
-        RecordFilter recFilter = new RecordFilter();
+        RecordFilter recFilter = new AdvancedRecordFilter();
         recFilter.setRecordVisibility(RecordVisibility.PUBLIC);
         
         ScrollableRecords scrollableRec = recordDAO.getScrollableRecords(recFilter);

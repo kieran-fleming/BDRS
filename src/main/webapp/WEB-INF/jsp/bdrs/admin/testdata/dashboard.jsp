@@ -78,7 +78,7 @@
             </tr>
         </tbody>
     </table>
-    <div class="textright">
+    <div class="buttonpanel textright">
         <a id="clearTestData" href="${pageContext.request.contextPath}/bdrs/admin/testdata/clearData.htm" class="delete">Empty</a>
         &nbsp;|&nbsp;
         <input class="form_action" type="submit" value="Create Test Data"/>

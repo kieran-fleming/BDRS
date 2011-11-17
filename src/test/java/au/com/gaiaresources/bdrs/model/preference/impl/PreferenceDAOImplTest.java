@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
@@ -23,8 +24,10 @@ public class PreferenceDAOImplTest extends AbstractControllerTest {
     PreferenceCategory cat;
     PreferenceCategory cat2;
     
+    Portal anotherPortal;
+    
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         cat = new PreferenceCategory();
         cat.setDescription("cat desc");
         cat.setDisplayName("catdisplayname");
@@ -33,7 +36,7 @@ public class PreferenceDAOImplTest extends AbstractControllerTest {
         cat2 = new PreferenceCategory();
         cat2.setDescription("cat desc");
         cat2.setDisplayName("catdisplayname");
-        cat2.setName("catname");
+        cat2.setName("catnametwo");
         
         pref1 = new Preference();
         pref1.setDescription("desc1");
@@ -55,6 +58,10 @@ public class PreferenceDAOImplTest extends AbstractControllerTest {
         prefDAO.save(null, cat2);
         prefDAO.save(null, pref1);
         prefDAO.save(null, pref2);
+        
+        anotherPortal = new Portal();
+        anotherPortal.setName("another portal");
+        anotherPortal = portalDAO.save(anotherPortal);
     }
     
     @Test
@@ -72,5 +79,29 @@ public class PreferenceDAOImplTest extends AbstractControllerTest {
         // dont assert the size as we have some preference categories seeded as part of the test setup stuff
         Assert.assertTrue(result.contains(cat));
         Assert.assertTrue(result.contains(cat2));
+    }
+    
+    @Test
+    public void testGetPrefCatByNameAndPortal() {
+        PreferenceCategory cat = prefDAO.getPreferenceCategoryByName(null, "catname", this.defaultPortal);
+        Assert.assertNotNull("pref cat should be returned", cat);
+        
+        PreferenceCategory cat2 = prefDAO.getPreferenceCategoryByName(null, "sdfkfkjhsdfjkg", this.defaultPortal);
+        Assert.assertNull("no pref cat should be returned", cat2);
+        
+        PreferenceCategory cat3 = prefDAO.getPreferenceCategoryByName(null, "catname", this.anotherPortal);
+        Assert.assertNull("no pref cat should be returned", cat3);
+    }
+    
+    @Test
+    public void testGetPrefByKeyAndPortal() {
+        Preference pref = prefDAO.getPreferenceByKey(null, Preference.GOOGLE_MAP_KEY_PREFIX + "my_key", this.defaultPortal);
+        Assert.assertNotNull("pref should be returned", pref);
+        
+        Preference badPref = prefDAO.getPreferenceByKey(null, "sadlfkjsdafjklsadf", this.defaultPortal);
+        Assert.assertNull("no pref should be returned", badPref);
+        
+        Preference badPref2 = prefDAO.getPreferenceByKey(null, Preference.GOOGLE_MAP_KEY_PREFIX + "my_key", anotherPortal);
+        Assert.assertNull("no pref should be returned", badPref2);
     }
 }

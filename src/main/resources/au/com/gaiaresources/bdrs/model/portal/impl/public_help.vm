@@ -1,4 +1,4 @@
-<h1>Public Help for ${portalName}</h1>
+<h1>Public Help for ${portal.getName()}</h1>
 
 <h3>Help</h3>
 <p>

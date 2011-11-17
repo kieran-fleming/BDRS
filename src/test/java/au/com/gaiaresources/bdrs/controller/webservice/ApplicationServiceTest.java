@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import au.com.gaiaresources.bdrs.model.taxa.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -18,12 +17,19 @@ import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
-import au.com.gaiaresources.bdrs.model.portal.Portal;
-import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
+import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -47,6 +53,9 @@ public class ApplicationServiceTest extends AbstractControllerTest {
     
     @Autowired
     private AttributeDAO attributeDAO;
+    
+    @Autowired
+    private MetadataDAO metadataDAO;
     
     @Before
     public void setup(){
@@ -249,6 +258,64 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         //count the species in the survey
         JSONArray indicatorSpecies = JSONArray.fromObject(responseContent.get("indicatorSpecies"));
         Assert.assertEquals("IndicatorSpecies size does not match", indicatorSpecies.size(), (birdAndFrogSurveyInDb.getSpecies().size() - frogSurveyInDb.getSpecies().size()));
+    }
+    
+    /**
+     * Test getting recordProperties from survey.
+     * Default settings for recordProperties.
+     * @throws Exception
+     */
+    @Test
+    public void testGetSurveyCheckRecordProperties() throws Exception {
+    	request.setMethod("GET");
+        request.setRequestURI("/webservice/application/survey.htm");
+        request.addParameter("ident", userDAO.getUser("user").getRegistrationKey());
+        request.addParameter("sid", birdAndFrogSurveyInDb.getId().toString());
+        JSONArray surveysOnDevice = new JSONArray();
+        surveysOnDevice.add(frogSurveyInDb.getId());
+        request.addParameter("surveysOnDevice", surveysOnDevice.toString());
+        
+        handle(request, response);
+        
+        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        
+        //count the record properties
+        int expectedRecordPropertiesCount = RecordPropertyType.values().length;
+        
+        JSONArray recordProperties = JSONArray.fromObject(responseContent.get("recordProperties"));
+        Assert.assertEquals("Expected the recordProperties size to be " + expectedRecordPropertiesCount, expectedRecordPropertiesCount, recordProperties.size());
+    }
+    
+    /**
+     * Test getting recordProperties from survey.
+     * Two recordProperties are set to hidden in the survey.
+     * @throws Exception
+     */
+    @Test
+    public void testGetSurveyCheckRecordProperties1() throws Exception {
+    	
+    	RecordProperty speciesProperty = new RecordProperty(birdAndFrogSurveyInDb, RecordPropertyType.SPECIES, metadataDAO);
+    	speciesProperty.setHidden(true);
+    	RecordProperty locationProperty = new RecordProperty(birdAndFrogSurveyInDb, RecordPropertyType.LOCATION, metadataDAO);
+    	locationProperty.setHidden(true);
+    	
+    	request.setMethod("GET");
+        request.setRequestURI("/webservice/application/survey.htm");
+        request.addParameter("ident", userDAO.getUser("user").getRegistrationKey());
+        request.addParameter("sid", birdAndFrogSurveyInDb.getId().toString());
+        JSONArray surveysOnDevice = new JSONArray();
+        surveysOnDevice.add(frogSurveyInDb.getId());
+        request.addParameter("surveysOnDevice", surveysOnDevice.toString());
+        
+        handle(request, response);
+        
+        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        
+        //count the record properties
+        int expectedRecordPropertiesCount = RecordPropertyType.values().length - 2;
+        
+        JSONArray recordProperties = JSONArray.fromObject(responseContent.get("recordProperties"));
+        Assert.assertEquals("Expected the recordProperties size to be " + expectedRecordPropertiesCount, expectedRecordPropertiesCount, recordProperties.size());
     }
 
 }

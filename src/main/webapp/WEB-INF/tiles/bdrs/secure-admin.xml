@@ -273,9 +273,8 @@
         </put-list-attribute>
     </definition>
     
-    <definition name="adminUserSearch" extends="admin-template">
-    	<put-attribute name="title" value="Edit Users"/>
-    	<put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/adminUserSearch.jsp"/>
+	<!-- the admin user search widget -->
+    <definition name="adminUserSearch" template="/WEB-INF/jsp/bdrs/admin/userManagement/adminUserSearch.jsp">
     </definition>
 
 	<definition name="adminEditContent" extends="admin-template">
@@ -423,5 +422,11 @@
         <put-attribute name="title" value="Approve Users" />
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/approveUsers.jsp" />
         <put-attribute name="maps" value="false"/>
+    </definition>
+	
+	<!-- Edit Users -->
+	<definition name="editUsers" extends="admin-template">
+        <put-attribute name="title" value="Edit Users"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/userManagement/editUsers.jsp"/>
     </definition>
 </tiles-definitions>

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -25,6 +26,7 @@ import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData.UserMetaDataType;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 public class UserProfileControllerTest extends AbstractControllerTest {
 
@@ -32,6 +34,8 @@ public class UserProfileControllerTest extends AbstractControllerTest {
     private UserDAO userDAO;
     @Autowired
     private MetadataDAO metadataDAO;
+    @Autowired
+    private RedirectionService redirService;
 
     private Integer userId;
     
@@ -77,7 +81,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
     @Test
     public void testUserProfileGet() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/user/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_USER_URL);
 
         ModelAndView mv = handle(request, response);
 
@@ -107,7 +111,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
     @Test
     public void testUserProfilePost() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/user/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_USER_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -137,19 +141,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
 
         // Check the return contents of the modelandview...
         ModelAndView mv = this.handle(request, response);
-
-        // the MAV object should contain some fields ready for displaying to the user...
-        Assert.assertEquals("Billy", mv.getModel().get(UserProfileController.FIRST_NAME));
-        Assert.assertEquals("Bob", mv.getModel().get(UserProfileController.LAST_NAME));
-        Assert.assertEquals("billy@bob.com.au", mv.getModel().get(UserProfileController.EMAIL_ADDR));
-        Assert.assertEquals("testuser", mv.getModel().get(UserProfileController.USER_NAME));
-
-        Map<String, String> metaMap = getMetaValueMap(mv);
-        Assert.assertEquals("SA", metaMap.get(Metadata.STATE));
-        Assert.assertEquals("123123123", metaMap.get(Metadata.TELEPHONE));
-
-        assertUserMetaDataList(mv);
-
+        
         // This causes a problem since the user object is never written to the DB, when you evict it
         // and try to retrieve the item you get a null. Retrieving the item without evicting it
         // causes the current instance of that object to be returned, i.e. it hasn't been written
@@ -180,14 +172,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertEquals(UserMetaData.FALSE, u.getMetadataValue("receiveEmail"));
         Assert.assertEquals(UserMetaData.TRUE, u.getMetadataValue("otherBool"));
         
-        List<UserMetaData> list = getMetaObject(mv);
-
-        // anything but UserMetaData.TRUE is considered false
-        Assert.assertFalse(UserMetaData.TRUE.equals(getUserMetaData(list, "receiveEmail").getValue()));
-        Assert.assertTrue(UserMetaData.TRUE.equals(getUserMetaData(list, "otherBool").getValue()));
-
-        Assert.assertEquals((int) userId, Integer.parseInt((String) mv.getModel().get(UserProfileController.USER_ID)));
-        Assert.assertEquals(UserProfileController.USER_INDICATOR, (String) mv.getModel().get(UserProfileController.EDIT_AS));
+        this.assertRedirect(mv, redirService.getHomeUrl());
     }
 
     @Test
@@ -199,7 +184,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         userDAO.createUser("emailuser", "charles", "carey", emailAddr, encodedPassword, registrationKey, new String[] { "ROLE_USER" });
 
         request.setMethod("POST");
-        request.setRequestURI("/user/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_USER_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -226,37 +211,26 @@ public class UserProfileControllerTest extends AbstractControllerTest {
 
         Assert.assertEquals((int) userId, Integer.parseInt((String) mv.getModel().get(UserProfileController.USER_ID)));
         Assert.assertEquals(UserProfileController.USER_INDICATOR, (String) mv.getModel().get(UserProfileController.EDIT_AS));
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
     }
 
     @Test
     public void testInvalidPassword() throws Exception {
         request.setMethod("POST");
-        request.setRequestURI("/user/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_USER_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
         request.setParameter(UserProfileController.EMAIL_ADDR, "testemail@testprovider.com.au");
         request.setParameter(Metadata.TELEPHONE, "123123123");
         request.setParameter(Metadata.STATE, "SA");
+        // password too short
+        request.setParameter(UserProfileController.PASSWORD, "123");
 
         ModelAndView mv = this.handle(request, response);
 
-        // the MAV object should contain some fields ready for displaying to the user...
-        Assert.assertEquals("Billy", mv.getModel().get(UserProfileController.FIRST_NAME));
-        Assert.assertEquals("Bob", mv.getModel().get(UserProfileController.LAST_NAME));
-        // email field is now blank.
-        Assert.assertEquals("testemail@testprovider.com.au", mv.getModel().get(UserProfileController.EMAIL_ADDR));
-        Assert.assertEquals("testuser", mv.getModel().get(UserProfileController.USER_NAME));
-
-        Map<String, String> metaMap = getMetaValueMap(mv);
-        Assert.assertEquals("SA", metaMap.get(Metadata.STATE));
-        Assert.assertEquals("123123123", metaMap.get(Metadata.TELEPHONE));
-
-        assertUserMetaDataList(mv);
-
-        // Ideally we also want to validate the return message but I don't know how that stuff works yet
-        Assert.assertEquals((int) userId, Integer.parseInt((String) mv.getModel().get(UserProfileController.USER_ID)));
-        Assert.assertEquals(UserProfileController.USER_INDICATOR, (String) mv.getModel().get(UserProfileController.EDIT_AS));
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
     }
 
     @Test(expected = Exception.class)
@@ -264,7 +238,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -288,7 +262,9 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         request.setParameter(UserProfileController.PASSWORD, "aardvark");
 
         // Check the return contents of the modelandview...
-        this.handle(request, response);
+        ModelAndView mv = this.handle(request, response);
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
     }
 
     @SuppressWarnings("unchecked")
@@ -297,7 +273,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -330,19 +306,6 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         // Check the return contents of the modelandview...
         ModelAndView mv = this.handle(request, response);
 
-        // the MAV object should contain some fields ready for displaying to the user...
-        Assert.assertEquals("Billy", mv.getModel().get(UserProfileController.FIRST_NAME));
-        Assert.assertEquals("Bob", mv.getModel().get(UserProfileController.LAST_NAME));
-        Assert.assertEquals("billy@bob.com.au", mv.getModel().get(UserProfileController.EMAIL_ADDR));
-        Assert.assertEquals("testuser", mv.getModel().get(UserProfileController.USER_NAME));
-        Assert.assertEquals(true, mv.getModel().get(UserProfileController.USER_ACTIVE));
-
-        Map<String, String> metaMap = getMetaValueMap(mv);
-        Assert.assertEquals("SA", metaMap.get(Metadata.STATE));
-        Assert.assertEquals("123123123", metaMap.get(Metadata.TELEPHONE));
-
-        assertUserMetaDataList(mv);
-
         // This causes a problem since the user object is never written to the DB, when you evict it
         // and try to retrieve the item you get a null. Retrieving the item without evicting it
         // causes the current instance of that object to be returned, i.e. it hasn't been written
@@ -370,29 +333,12 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_NAME_KEY));
         Assert.assertEquals("", u.getMetadataValue(Metadata.SCHOOL_SUBURB_KEY));
         Assert.assertEquals("", u.getMetadataValue(Metadata.COUNTRY));
-        
-        Assert.assertEquals(true, mv.getModel().get(UserProfileController.USER_ACTIVE));
-        Assert.assertEquals((int) userId, Integer.parseInt((String) mv.getModel().get(UserProfileController.USER_ID)));
-        Assert.assertEquals(UserProfileController.ADMIN_INDICATOR, (String) mv.getModel().get(UserProfileController.EDIT_AS));
-        
+                
         Assert.assertEquals(2, u.getRoles().length);
         Assert.assertEquals(Role.POWERUSER, u.getRoles()[0]);
         Assert.assertEquals(Role.USER, u.getRoles()[1]);
         
-        ArrayList<String> allowedRoles = (ArrayList<String>)mv.getModel().get("allowedRoles");
-
-        Assert.assertFalse(allowedRoles.contains(Role.ROOT));
-        Assert.assertTrue(allowedRoles.contains(Role.ADMIN));
-        Assert.assertTrue(allowedRoles.contains(Role.SUPERVISOR));
-        Assert.assertTrue(allowedRoles.contains(Role.POWERUSER));
-        Assert.assertTrue(allowedRoles.contains(Role.USER));
-        
-        ArrayList<String> assignedRoles = (ArrayList<String>)mv.getModel().get("assignedRoles");
-        Assert.assertFalse(assignedRoles.contains(Role.ROOT));
-        Assert.assertFalse(assignedRoles.contains(Role.ADMIN));
-        Assert.assertFalse(assignedRoles.contains(Role.SUPERVISOR));
-        Assert.assertTrue(assignedRoles.contains(Role.POWERUSER));
-        Assert.assertTrue(assignedRoles.contains(Role.USER));
+        this.assertRedirect(mv, redirService.getUserListUrl());
     }
     
     @SuppressWarnings("unchecked")
@@ -401,7 +347,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -439,15 +385,17 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertFalse(assignedRoles.contains(Role.SUPERVISOR));
         Assert.assertTrue(assignedRoles.contains(Role.POWERUSER));
         Assert.assertTrue(assignedRoles.contains(Role.USER));
+        
+        this.assertRedirect(mv, redirService.getUserListUrl());
     }
     
     @SuppressWarnings("unchecked")
-    @Test(expected = Exception.class)
+    @Test
     public void testAdminPostInvalidRole() throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
         request.setParameter(UserProfileController.LAST_NAME, "Bob");
@@ -477,7 +425,10 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         request.setParameter(Role.ROOT, "on");
 
         // Check the return contents of the modelandview...
-        this.handle(request, response);
+        ModelAndView mv = this.handle(request, response);
+        Assert.assertTrue(getRequestContext().getMessageContents().contains(UserProfileController.ERROR_EDIT_PROMOTE));
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
     }
 
     @SuppressWarnings("unchecked")
@@ -486,7 +437,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("GET");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
         request.setParameter(UserProfileController.USER_ID, userId.toString());
 
         ModelAndView mv = handle(request, response);
@@ -521,9 +472,9 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         Assert.assertTrue(assignedRoles.contains(Role.USER));
     }
     
-    // we expect an exception to be thrown because an ADMIN is trying to edit the details of the ROOT,
+    // we expect an error to be thrown because an ADMIN is trying to edit the details of the ROOT,
     // note the ROOT is also an ADMIN
-    @Test(expected = Exception.class)
+    @Test
     public void testAdminEditHigherRoleUserFailure() throws Exception {
         User u = userDAO.getUser("testuser");
         u.setRoles(new String[] { Role.ROOT, Role.ADMIN });
@@ -532,7 +483,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
         request.setParameter(UserProfileController.USER_ID, userId.toString());
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
@@ -559,7 +510,53 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         // request.setParameter(Role.ROOT, "on");
 
         // Check the return contents of the modelandview...
-        this.handle(request, response);
+        ModelAndView mv = this.handle(request, response);
+        Assert.assertTrue(getRequestContext().getMessageContents().contains(UserProfileController.ERROR_EDIT_HIGHER));
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
+    }
+    
+    // we expect an error to be thrown because an ADMIN is trying to Lower the privileges of another ADMIN,
+    @Test
+    public void testAdminEditSameRoleUserFailure() throws Exception {
+        User u = userDAO.getUser("testuser");
+        u.setRoles(new String[] { Role.ADMIN });
+        userDAO.updateUser(u);
+        
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        request.setMethod("POST");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
+        request.setParameter(UserProfileController.USER_ID, userId.toString());
+
+        request.setParameter(UserProfileController.FIRST_NAME, "Billy");
+        request.setParameter(UserProfileController.LAST_NAME, "Bob");
+        request.setParameter(UserProfileController.EMAIL_ADDR, "billy@bob.com.au");
+        
+        request.setParameter(UserProfileController.USER_NAME, "usertest");
+
+        request.setParameter(Metadata.TELEPHONE, "123123123");
+        request.setParameter(Metadata.STATE, "SA");
+
+        // can set all this stuff but it won't have an effect...
+        request.setParameter(Metadata.CLIMATEWATCH_USERNAME, "aaa");
+        request.setParameter(Metadata.SCHOOL_NAME_KEY, "bbb");
+        request.setParameter(Metadata.SCHOOL_SUBURB_KEY, "ccc");
+
+        // this item doesn't already exist in the metadata
+        request.setParameter(Metadata.COUNTRY, "eee");
+
+        // change password...
+        request.setParameter(UserProfileController.PASSWORD, "aardvark");
+
+        // Assigning a role higher than the editing user
+        // request.setParameter(Role.ROOT, "on");
+
+        // Check the return contents of the modelandview...
+        ModelAndView mv = this.handle(request, response);
+        Assert.assertTrue(getRequestContext().getMessageContents().contains(UserProfileController.ERROR_EDIT_LOWER));
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
     }
     
  // we expect an exception to be thrown because an ADMIN is trying to edit the details of the ROOT,
@@ -573,7 +570,7 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         login("admin", "password", new String[] { Role.ADMIN });
 
         request.setMethod("POST");
-        request.setRequestURI("/admin/profile.htm");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
         request.setParameter(UserProfileController.USER_ID, userDAO.getUser("admin").getId().toString());
 
         request.setParameter(UserProfileController.FIRST_NAME, "Billy");
@@ -600,7 +597,35 @@ public class UserProfileControllerTest extends AbstractControllerTest {
         // request.setParameter(Role.ROOT, "on");
 
         // Check the return contents of the modelandview...
-        this.handle(request, response);
+        ModelAndView mv = handle(request, response);
+        
+        this.assertViewName(mv, UserProfileController.USER_PROFILE_VIEW);
+    }
+    
+    @Test
+    public void testCancelAsUser() throws Exception {
+        login("admin", "password", new String[] { Role.USER });
+
+        request.setMethod("POST");
+        request.setRequestURI(UserProfileController.EDIT_AS_USER_URL);
+        request.setParameter(UserProfileController.PARAM_CANCEL, "Cancel");
+        
+        ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, redirService.getHomeUrl());
+    }
+    
+    @Test
+    public void testCancelAsAdmin() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        request.setMethod("POST");
+        request.setRequestURI(UserProfileController.EDIT_AS_ADMIN_URL);
+        request.setParameter(UserProfileController.PARAM_CANCEL, "Cancel");
+        
+        ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, redirService.getUserListUrl());
     }
     
 

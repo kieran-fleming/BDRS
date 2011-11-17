@@ -9,25 +9,6 @@
 <tiles:useAttribute name="showActions" ignore="true" />
 <tiles:useAttribute name="deleteUrl" ignore="true" />
 
-<!--
-<h4>Search Map Layers</h4>
-    <form id="${widgetId}SearchForm">
-        <table>
-            <tr>
-                <td class="formlabel">Map Name:</td>
-                <td><input type="text" style="width:15em" name="name" value="<c:out value="" />" size="40"  autocomplete="off" /></td>
-            </tr>
-            <tr>
-                <td class="formlabel">Map Description:</td>
-                <td><input type="text" style="width:15em" name="description" value="<c:out value="" />" size="40"  autocomplete="off" /></td>
-            </tr>
-        </table>
-    </form>
-<div class="buttonpanel textright">
-    <input type="button" id="${widgetId}Filter" class="form_action" value="Filter"/>
-</div>
--->
-
 <div id="${widgetId}Wrapper">
 <table id="${widgetId}"></table>
 <div id="${widgetId}Pager"></div>

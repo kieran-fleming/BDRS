@@ -36,7 +36,7 @@
 	                <th>Mandatory</th>
 	                <th>Scope</th>
 	                <th>Options (separated by comma)</th>
-	                <th>Delete</th>
+	                <th>Hide / Delete</th>
 	            </tr>
 	        </thead>
 	        <tbody>

@@ -13,7 +13,6 @@
         <tr>
             <th>Portal Name</th>
             <th>Is Default</th>
-            <th>Theme</th>
         </tr>
     </thead> 
     <tbody>
@@ -33,9 +32,6 @@
                             &nbsp;
                         </c:otherwise>
                     </c:choose>
-                </td>
-                <td>
-                    <a href="${pageContext.request.contextPath}/bdrs/root/theme/listing.htm?portalId=${ portal.id }">Edit</a>
                 </td>
             </tr>
         </c:forEach>

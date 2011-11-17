@@ -53,6 +53,7 @@ public class RecordAttributeHandler implements OperatorHandler {
                 case IMAGE:
                 case FILE:
                 case BARCODE:
+                case REGEX:
                 case TIME:
                 case HTML:
                 case HTML_COMMENT:

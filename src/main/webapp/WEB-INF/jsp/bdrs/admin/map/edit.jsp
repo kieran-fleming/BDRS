@@ -11,6 +11,7 @@
 			<a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">edited</a> using this interface.  
 			If you need to Edit an existing Map, use the 
 			<a href="${pageContext.request.contextPath}/bdrs/admin/map/listing.htm">Edit Map interface</a> instead.
+			Note that maps will not be visible in the system until the Publish box is checked.
 		</p>
     </c:when>
     <c:otherwise>
@@ -19,6 +20,7 @@
 			Here you can edit an existing Map.  You will firstly have needed to use the 
 			<a href="${pageContext.request.contextPath}/bdrs/admin/map/edit.htm">Add Map</a> 
 			interface, and added Map Layers to it as well.
+			Note that maps will not be visible in the system until the Publish box is checked.
 		</p>
     </c:otherwise>
 </c:choose>

@@ -2,7 +2,10 @@ package au.com.gaiaresources.bdrs.service.bulkdata;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.util.CellReference;
@@ -10,30 +13,17 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.springframework.util.StringUtils;
 
 /**
  * Provides utility functions when working with XLS cells.
  */
 public class XlsCellUtil {
-    
-    /**
-     *  The expected format for dates coming from XLS.
-     */
-    public static final SimpleDateFormat DATE_FORMATTER;
-    /**
-     * The expected format for time coming from XLS.
-     */
-    public static final SimpleDateFormat TIME_FORMATTER;
-    
-    static {
-        DATE_FORMATTER = new SimpleDateFormat("dd MMM yyyy");
-        DATE_FORMATTER.setLenient(false);
-        
-        TIME_FORMATTER = new SimpleDateFormat("HH:mm");
-    }
-    
+
+    private static final String SIMPLE_DATE_FORMAT = "dd MMM yyyy";
+   
     @SuppressWarnings("unused")
-    private Logger log = Logger.getLogger(getClass());
+    private static Logger log = Logger.getLogger(XlsCellUtil.class);
     
     /**
      * Returns the cell in the first row and first column of the specified sheet,
@@ -136,7 +126,7 @@ public class XlsCellUtil {
                 break;
             case Cell.CELL_TYPE_STRING:
                 try {
-                    ret = DATE_FORMATTER.parse(cell.getStringCellValue());
+                    ret = getDateFormatter().parse(cell.getStringCellValue());
                 } catch(ParseException pe) {
                     throw new IllegalStateException(pe);
                 }
@@ -184,10 +174,13 @@ public class XlsCellUtil {
         return ret;
     }
     
+    private static final String TIME_PATTERN_STRING = "(\\d{1,2})[:\\.\\s-/]?(\\d\\d)\\s*([ap]\\.?m.\\.?)?";
+    private static final Pattern TIME_PATTERN = Pattern.compile(TIME_PATTERN_STRING, Pattern.CASE_INSENSITIVE);
+    
     /**
      * Converts the content of the specified cell to a Date. This method does
      * the same thing as {@link #cellToDate(Cell)} except that if a string is
-     * received, this method will use a {@link #TIME_FORMATTER} to parse the 
+     * received, this method will use a regex pattern to parse the 
      * text.
      *
      * @param cell the cell containing the content to be returned.
@@ -195,10 +188,26 @@ public class XlsCellUtil {
     public static Date cellToTime(Cell cell) {
         Date ret = null;
         if(cell.getCellType() == Cell.CELL_TYPE_STRING) {
-            try {
-                ret = TIME_FORMATTER.parse(cell.getStringCellValue());
-            } catch(ParseException pe) {
-                throw new IllegalStateException(pe);
+            Matcher matcher = TIME_PATTERN.matcher(cell.getStringCellValue());
+            if (matcher.find()) {
+                Calendar cal = Calendar.getInstance();
+                cal.clear();
+                
+                int hour = Integer.valueOf(matcher.group(1)); // group 1 is hour
+                int min = Integer.valueOf(matcher.group(2)); // group 2 is minute
+                String amPm = matcher.group(3); // group 3 is am/pm
+                
+                // if the hour is in 24 hour time but am/pm is specified, the am/pm is ignored
+                if (StringUtils.hasLength(amPm) && amPm.toLowerCase().equals("pm") && hour <= 12) {
+                    hour += 12;
+                }
+                
+                cal.set(Calendar.HOUR_OF_DAY, hour);
+                cal.set(Calendar.MINUTE, min);
+                
+                ret = cal.getTime();
+            } else {
+                throw new IllegalStateException("Invalid time format : " + cell.getStringCellValue());
             }
         } else {
             ret = cellToDate(cell);
@@ -209,5 +218,14 @@ public class XlsCellUtil {
     private static Cell evaluateFormulaCell(Cell cell) {
         FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
         return evaluator.evaluateInCell(cell);
+    }
+    
+    /**
+     *  The expected format for dates coming from XLS.
+     */
+    public static SimpleDateFormat getDateFormatter() {
+        SimpleDateFormat formatter = new SimpleDateFormat(SIMPLE_DATE_FORMAT);
+        formatter.setLenient(false);
+        return formatter;
     }
 }

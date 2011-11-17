@@ -1,0 +1,151 @@
+
+## Macro for writing a row to the field guide table
+#macro(fieldGuideTaxonRankRow $taxon)
+#if(${taxon.parent})
+    #fieldGuideTaxonRankRow(${taxon.parent})
+#end
+
+<tr class="fieldguide_taxon_rank_row">
+    <th class="textright">${taxon.getTaxonRank().getIdentifier()}</th>
+    <td
+        #if(${TaxonRank.SPECIES} == ${taxon.getTaxonRank()})
+            class="scientificName"
+        #elseif(${TaxonRank.GENUS} == ${taxon.getTaxonRank()})
+            class="scientificName"
+        #end
+    >
+        <a href="${pageContext.request.contextPath}/fieldguide/taxon.htm?id=${taxon.id}">
+            ${taxon.scientificName}
+        </a>
+    </td>
+</tr>
+#end
+## end fieldGuideTaxonRankRow macro
+
+<h1>
+    <span>
+        ${taxon.commonName}
+    </span>
+    <span class="scientificName">
+        ${taxon.scientificName}
+    </span>
+</h1>
+
+<h3 class="scientificClassificationHeader">Scientific Classification</h3>
+<table class="scientificClassification">
+    <tbody>
+        #fieldGuideTaxonRankRow(${taxon})
+    </tbody>
+</table>
+
+<h3 class="field_guide_header">Identification</h3>
+<table>
+    <tbody>
+        #foreach($taxonAttr in ${taxon.attributes})
+            #if(${taxonAttr.attribute.tag})
+                <tr>
+                    <th class="textright">
+                        ${taxonAttr.attribute.description}
+                    </th>
+                    <td>
+                    #if(${AttributeType.IMAGE} == ${taxonAttr.getAttribute().getType()})
+                        <a href="${pageContext.request.contextPath}/files/download.htm?${taxonAttr.getFileURL()}">
+                            <img class="max_size_img" src="${pageContext.request.contextPath}/files/download.htm?${taxonAttr.getFileURL()}" alt="${taxonAttr.stringValue}"/>
+                        </a>
+                    #elseif(${AttributeType.FILE} == ${taxonAttr.getAttribute().getType()})
+                        <a href="${pageContext.request.contextPath}/files/download.htm?${taxonAttr.getFileURL()}">
+                            ${taxonAttr.stringValue}
+                        </a>
+                    #else
+                        ${taxonAttr.stringValue}
+                    #end
+                    </td>
+                </tr>
+            #end
+        #end
+    </tbody>
+</table>
+
+<c:set var="profiledescription" value="" scope="page"></c:set>
+
+#foreach($profile in ${taxon.infoItems})
+    #if(${profile.content})
+        <div class="fieldguide_profile_item">
+            #if(${profile.description} != ${profiledescription})
+                <h3 class="field_guide_header">
+                    ${profile.description}
+                </h3>
+                #set($profiledescription=${profile.description})
+            #end
+            #if(${profile.isImgType()})
+                <a class="left" href="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${profile.content}">
+                    <img class="max_size_img" src="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${profile.content}"/>
+                </a>
+                
+                <cw:getManagedFile uuid="${profile.content}" var="managedFile"/>
+                <div class="right textright imageProperties">
+                    #if(${managedFile.credit})
+                        <div>
+                            Credit:&nbsp;${managedFile.credit}
+                        </div>
+                    #end
+                    #if(${managedFile.license})
+                        <div>
+                            Permission:&nbsp;${managedFile.license}
+                        </div>
+                    #end
+                    #if(${managedFile.description})
+                        <div>
+                            Description:&nbsp;${managedFile.description}
+                        </div>
+                    #end
+                </div>
+                <div class="clear"></div>
+            #end
+            #if(${profile.isAudioType()})
+                <audio src="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=${profile.content}" 
+                    controls="controls" preload>
+                    ${profile.content}
+                </audio>
+                <cw:getManagedFile uuid="${profile.content}" var="managedFile"/>
+                <div class="right textright">
+                    <div>
+                        Credit:&nbsp;${managedFile.credit}
+                    </div>
+                    <div>
+                        Permission:&nbsp;${managedFile.license}
+                    </div>
+                </div>
+                <div class="clear"></div>
+            #else
+                <p><span class="profileContent 
+                    #if(${profile.isScientificNameType()})
+                        scientificName
+                    #end
+                    ">
+                ${profile.content}
+                #if(${profile.source})
+                    #if(${profile.isTextType()})
+                            <br></br>
+                    #else
+                        ,&nbsp;
+                     #end
+                     <span class="profileSource">Source:&nbsp;${profile.source}</span>
+                 #end
+                 </p>
+            #end
+        </div>
+    #end
+#end
+
+<script type="text/javascript">
+    html5media.configureFlowplayer = function (tag, element, config){
+        if(tag === 'audio') {
+            config.clip.type = 'audio';
+       }
+        config.plugins.controls.all = false;
+        config.plugins.controls.play = true;
+        config.plugins.controls.scrubber = true;
+        config.plugins.controls.volume = true;
+   }
+</script>

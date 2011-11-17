@@ -2,8 +2,8 @@ package au.com.gaiaresources.bdrs.controller.file;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,9 +25,10 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.managedFile.ManagedFileService;
 
 /**
@@ -35,6 +36,7 @@ import au.com.gaiaresources.bdrs.service.managedFile.ManagedFileService;
  * pertaining to the creating and updating of taxonomy (indicator species) and
  * taxonomy related objects.
  */
+@RolesAllowed({ Role.ADMIN })
 @Controller
 public class ManagedFileController extends AbstractController {
 

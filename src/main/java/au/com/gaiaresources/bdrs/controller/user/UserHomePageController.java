@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.user;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class UserHomePageController extends AbstractController {
@@ -24,6 +26,7 @@ public class UserHomePageController extends AbstractController {
     @Autowired
 	private LocationDAO locationDAO;
     
+    @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN,Role.ROOT})
     @RequestMapping(value = "/user/home.htm", method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request) {
         ModelAndView view = new ModelAndView("userHome");

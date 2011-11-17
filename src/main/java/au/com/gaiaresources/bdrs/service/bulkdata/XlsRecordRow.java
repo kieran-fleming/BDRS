@@ -19,10 +19,12 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.util.StringUtils;
 
+import au.com.gaiaresources.bdrs.config.AppContext;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
-import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
-import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyService;
@@ -52,20 +54,86 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
     private BulkDataReadWriteService bdrws;
     
     private Set<CensusMethod> censusMethods;
-
-    private CensusMethodDAO censusMethodDAO;
+    
+    private MetadataDAO metadataDAO = AppContext.getBean(MetadataDAO.class);
+    
+    private Survey survey;
     
     // The cell that is currently being processed when loading data
     private Cell currentReadCell;
-
-    public XlsRecordRow(PropertyService propertyService, SurveyService surveyService, CensusMethodDAO censusMethodDAO,
-                        BulkDataReadWriteService bulkDataReadWriteService) {
-        this.surveyService = surveyService;
-        this.censusMethodDAO = censusMethodDAO;
+    
+    
+    /**
+     * Stores necessary object locally and creates a map with header values for the non hidden fields.
+     * @param propertyService to access key value pairs from a properties file
+     * @param surveyService 
+     * @param censusMethodDAO
+     * @param bulkDataReadWriteService
+     * @param survey
+     */
+    public XlsRecordRow(PropertyService propertyService, SurveyService surveyService,
+            BulkDataReadWriteService bulkDataReadWriteService, Survey survey) {
+    	 this.surveyService = surveyService;
+         this.bdrws = bulkDataReadWriteService;
+         this.survey = survey;
+         LinkedHashMap<String, String> headerMap = new LinkedHashMap<String, String>();
+         
+         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.id", "ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.id", ""));
+         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.parentId", "Parent ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.parentId", ""));
+         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.censusMethod.id", "CENSUS METHOD ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.censusMethod.id", ""));
+         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.censusMethod", "CENSUS METHOD"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.censusMethod", ""));
+         
+         
+         if(!new RecordProperty(survey, RecordPropertyType.SPECIES, metadataDAO).isHidden()) {
+        	 headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.scientificName", "SCIENTIFIC NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.scientificName", ""));
+             headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.commonName", "COMMON NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.commonName", "")); 
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.LOCATION, metadataDAO).isHidden()) {
+        	 headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.location.id", "LOCATION ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.location.id", ""));
+             headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.locationName", "LOCATION NAME"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.locationName", "")); 
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO).isHidden()) {
+        	 headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.latitude", "LATITUDE"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.latitude", ""));
+             headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.longitude", "LONGITUDE"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.longitude", ""));
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO).isHidden()) {
+        	 headerMap.put(getPropertyDescription(RecordPropertyType.WHEN), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.date", ""));
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.TIME, metadataDAO).isHidden()) {
+        	 headerMap.put(getPropertyDescription(RecordPropertyType.TIME), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.time", "")); 
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.NUMBER, metadataDAO).isHidden()) {
+        	 headerMap.put(getPropertyDescription(RecordPropertyType.NUMBER), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.numberSeen", "")); 
+         }
+         
+         if(!new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO).isHidden()) {
+        	 headerMap.put(getPropertyDescription(RecordPropertyType.NOTES), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.notes", "")); 
+         }
+         
+         this.setHeaderMap(headerMap);
+    }
+    
+    /**
+	 * Deprecated in favour of using the constructor that also takes a <code>Survey</code>
+     * Stores necessary object locally and creates a map with header values.
+     * @param propertyService to access key value pairs from a properties file
+     * @param surveyService
+     * @param censusMethodDAO
+     * @param bulkDataReadWriteService
+     */
+     @Deprecated
+    public XlsRecordRow(PropertyService propertyService, SurveyService surveyService,
+            BulkDataReadWriteService bulkDataReadWriteService) {
+    	
+    	this.surveyService = surveyService;
         this.bdrws = bulkDataReadWriteService;
         
         LinkedHashMap<String, String> headerMap = new LinkedHashMap<String, String>();
-        
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.id", "ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.id", ""));
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.parentId", "Parent ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.parentId", ""));
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.censusMethod.id", "CENSUS METHOD ID"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.censusMethod.id", ""));
@@ -82,6 +150,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         headerMap.put(propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.notes", "NOTES"), propertyService.getPropertyValue(PropertyService.BULKDATA, "xls.row.header.bdrs.help.notes", ""));
 
         this.setHeaderMap(headerMap);
+    	
     }
 
     protected void setHeaderMap(LinkedHashMap<String, String> headerMap) {
@@ -94,9 +163,26 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
 
         Cell headerCell;
         CellStyle recordHeaderStyle = getCellStyleByKey(STYLE_RECORD_HEADER);
+        
+        //key is recordproperty description and value is recordproperty
+        HashMap<String, RecordProperty> recordPropertiesMap = getRecordPropertiesMap();
 
         int colIndex = 0;
         for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+        	
+        	//skip rest of the loop when recordproperty is hidden
+        	String key = entry.getKey();
+        	if (key.equals("Scientific Name") || key.equals("Common Name")) {
+        		key = new RecordProperty(survey, RecordPropertyType.SPECIES, metadataDAO).getDescription();
+        	} else if (key.equals("Latitude") || key.equals("Longitude")) {
+        		key = new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO).getDescription();
+        	} else if (key.equals(AbstractBulkDataService.LOCATION_SHEET_LOCATION_NAME) || key.equals(AbstractBulkDataService.LOCATION_SHEET_LOCATION_ID)) {
+        		key = new RecordProperty(survey, RecordPropertyType.LOCATION, metadataDAO).getDescription();
+        	}
+        	if(recordPropertiesMap.containsKey(key) && recordPropertiesMap.get(key).getDescription().equals(key) && recordPropertiesMap.get(key).isHidden() == true){
+        		continue;
+        	}
+        	
             if (superHeaderRow.getCell(colIndex) == null) {
                 Cell superRowCell = superHeaderRow.createCell(colIndex);
                 setCellStyle(superRowCell, recordHeaderStyle);
@@ -165,29 +251,48 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         colIndex = writeRowId(lsidService, row, rec, colIndex);
         colIndex = writeRowParentId(lsidService, row, rec, colIndex);
         colIndex = writeRowCensusMethod(row, rec, colIndex);
-
-        if (rec.getSpecies() != null) {
-            colIndex = writeRowTaxonomy(row, rec, colIndex);
-        } else {
-            // Two blank cells. One for the scientific name the other for the common name.
-            colIndex = writeRowBlank(row, colIndex);
-            colIndex = writeRowBlank(row, colIndex);
+        
+        if(!new RecordProperty(survey, RecordPropertyType.SPECIES, metadataDAO).isHidden()) {
+        	if (rec.getSpecies() != null) {
+                colIndex = writeRowTaxonomy(row, rec, colIndex);
+            } else {
+                // Two blank cells. One for the scientific name the other for the common name.
+                colIndex = writeRowBlank(row, colIndex);
+                colIndex = writeRowBlank(row, colIndex);
+            }
         }
 
         // Location, lat, long
-        colIndex = writeRowLocation(row, rec, colIndex);
-        colIndex = writeRowLatitude(row, rec, colIndex);
-        colIndex = writeRowLongitude(row, rec, colIndex);
+        if(!new RecordProperty(survey, RecordPropertyType.LOCATION, metadataDAO).isHidden()) {
+        	colIndex = writeRowLocation(row, rec, colIndex);
+        }
+        
+        if(!new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO).isHidden()) {
+        	colIndex = writeRowLatitude(row, rec, colIndex);
+        	colIndex = writeRowLongitude(row, rec, colIndex);
+        }
 
         // Date Time
-        colIndex = writeRowDate(row, rec, colIndex);
-        colIndex = writeRowTime(row, rec, colIndex);
-        if (rec.getNumber() != null) {
-            colIndex = writeRowCount(row, rec, colIndex);
-        } else {
-            colIndex = writeRowBlank(row, colIndex);
+        if(!new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO).isHidden()) {
+        	colIndex = writeRowDate(row, rec, colIndex);
         }
-        colIndex = writeRowNotes(row, rec, colIndex);
+        
+        if(!new RecordProperty(survey, RecordPropertyType.TIME, metadataDAO).isHidden()) {
+        	colIndex = writeRowTime(row, rec, colIndex);
+        }
+        
+        if(!new RecordProperty(survey, RecordPropertyType.NUMBER, metadataDAO).isHidden()) {
+	        if (rec.getNumber() != null) {
+	            colIndex = writeRowCount(row, rec, colIndex);
+	        } else {
+	            colIndex = writeRowBlank(row, colIndex);
+	        }
+        }
+        
+        if(!new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO).isHidden()) {
+        	colIndex = writeRowNotes(row, rec, colIndex);
+        }
+        
         colIndex = writeRowAttributes(row, rec, colIndex);
     }
 
@@ -362,19 +467,19 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         String headerName;
         String cellValue;
         completeHeader = new ArrayList<String>();
-
+        
         // Check core fields
-        for (Map.Entry<String, String> entry : headerMap.entrySet()) {
-            headerName = entry.getKey();
-
-            cellValue = row.getCell(colIndex++).getStringCellValue();
-            if (!headerName.equals(cellValue)) {
-                log.warn(String.format("Unexpected header value expected=\"%s\" actual=\"%s\"", headerName, cellValue));
+        for (int i=0; i<headerMap.size(); i++) {
+        	cellValue = row.getCell(colIndex++).getStringCellValue();
+            headerName = headerMap.get(cellValue);
+            if (headerName != null) {
+            	completeHeader.add(headerName);
+            } else {
+            	log.warn(String.format("Unexpected header value=\"%s\", this value does not exist in headerMap.", cellValue));
                 // The header does not exactly match what we expect
                 throw new ParseException("Unexpected header value \""
                         + cellValue + "\"", colIndex);
             }
-            completeHeader.add(headerName);
         }
 
         // Check attribute fields
@@ -472,24 +577,77 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
             // Skip over the census method name
             colIndex += 1;
             
-            colIndex = readRowTaxonomy(row, recUpload, colIndex);
-            colIndex = readRowLocation(survey, row, recUpload, colIndex);
-
-            colIndex = readRowLatitude(row, recUpload, colIndex);
-            colIndex = readRowLongitude(row, recUpload, colIndex);
-            if (!recUpload.hasLatitudeLongitude()
-                    && recUpload.isGPSLocationName()) {
-                throw new IllegalArgumentException(
-                        "A latitude and longitude and/or location name is required.");
+            RecordProperty speciesRecordPropery = new RecordProperty(survey, RecordPropertyType.SPECIES, metadataDAO); 
+            RecordProperty locationRecordProperty = new RecordProperty(survey, RecordPropertyType.LOCATION, metadataDAO);
+            RecordProperty pointRecordProperty = new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO);
+            RecordProperty whenRecordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
+            RecordProperty timeRecordProperty = new RecordProperty(survey, RecordPropertyType.TIME, metadataDAO);
+            RecordProperty numberRecordProperty = new RecordProperty(survey, RecordPropertyType.NUMBER, metadataDAO);
+            RecordProperty notesRecordProperty = new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO);
+            
+            
+            if (!speciesRecordPropery.isHidden()) {
+            	colIndex = readRowTaxonomy(row, recUpload, colIndex);
+            	if(speciesRecordPropery.isRequired() && (recUpload.getScientificName() == null || recUpload.getCommonName() == null || recUpload.getScientificName().equalsIgnoreCase("") || recUpload.getCommonName().equalsIgnoreCase(""))) {
+            		throw new IllegalArgumentException(
+                    "The scientific name and common name are required.");
+            	}
             }
+            
+            if (!locationRecordProperty.isHidden()) {
+            	colIndex = readRowLocation(survey, row, recUpload, colIndex);
+            	if (locationRecordProperty.isRequired()) {
+            		if ((recUpload.getLocationId() == null || recUpload.getLocationName() == null || recUpload.getLocationName().equalsIgnoreCase("")) && !recUpload.isGPSLocationName()) {
+            			throw new IllegalArgumentException(
+                        "The location id and location name are required.");
+            		}
+            	}
+            }
+            
+            if (!pointRecordProperty.isHidden()) {
+            	 colIndex = readRowLatitude(row, recUpload, colIndex);
+                 colIndex = readRowLongitude(row, recUpload, colIndex);
+                 if (pointRecordProperty.isRequired() && !recUpload.hasLatitudeLongitude()) {
+                	 throw new IllegalArgumentException(
+                     "Latitude and Longitude are required");
+                 }
+            }
+            
+            if (!whenRecordProperty.isHidden()) {
+            	 colIndex = readRowDate(row, recUpload, colIndex);
+            	 if (whenRecordProperty.isRequired() && recUpload.getWhen() == null) {
+                     throw new IllegalArgumentException("The attribute " + whenRecordProperty.getDescription() + " is required.");
+            	 }
 
-            colIndex = readRowDate(row, recUpload, colIndex);
-            colIndex = readRowTime(row, recUpload, colIndex);
-            colIndex = readRowCount(row, recUpload, colIndex);
-            colIndex = readRowNotes(row, recUpload, colIndex);
-            colIndex = readRowAttributes(survey, row, recUpload, colIndex);
+			}
+            
+			if (!timeRecordProperty.isHidden()) {
+                colIndex = readRowTime(row, recUpload, colIndex);
+                if (timeRecordProperty.isRequired() && recUpload.getTime() == null) {
+                	   throw new IllegalArgumentException("The attribute " + timeRecordProperty.getDescription() + " is required.");
+                }
+			}
+			
+			if (!numberRecordProperty.isHidden()) {
+                colIndex = readRowCount(row, recUpload, colIndex);
+                if (numberRecordProperty.isRequired() && recUpload.getNumberSeen() == null) {
+                	throw new IllegalArgumentException("The attribute " + numberRecordProperty.getDescription() + " is required.");
+                }
 
+			}
+			
+			if (!notesRecordProperty.isHidden()) {
+                colIndex = readRowNotes(row, recUpload, colIndex);
+                if (notesRecordProperty.isRequired() && (recUpload.getNotes() == null || recUpload.getNotes().equalsIgnoreCase(""))) {
+                	throw new IllegalArgumentException("The attribute " + notesRecordProperty.getDescription() + " is required.");
+                }
+                
+			}
+			
+			colIndex = readRowAttributes(survey, row, recUpload, colIndex);
+			
         } catch (Exception e) {
+        	
             recUpload.setError(true);
             String msg = e.getMessage() == null ? e.toString() : e.getMessage();
             
@@ -499,11 +657,8 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
             String errMsg = String.format("Cell %s%d[ value=\"%s\" ]: %s %s", cellColRef, currentReadCell.getRowIndex() + 1, value, e.getClass().getSimpleName(), msg);
             recUpload.setErrorMessage(errMsg);
             
-            log.debug(recUpload.getErrorMessage());
-            
             log.warn(e.toString(), e);
         }
-        //log.debug(recUpload.isError());
         return recUpload;
     }
 
@@ -556,7 +711,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
                         // It should be referring to the 'canonical' way that we 
                         // convert dates to strings.
                         Date d = XlsCellUtil.cellToDate(currentReadCell);
-                        attrValue = XlsCellUtil.DATE_FORMATTER.format(d);
+                        attrValue = XlsCellUtil.getDateFormatter().format(d);
                         break;
                     case IMAGE:
                     case FILE:
@@ -598,22 +753,19 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
 
     protected int readRowTime(Row row, RecordUpload recUpload, int colIndex) {
         currentReadCell = row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK);
-        Date time = XlsCellUtil.cellToTime(currentReadCell);
-        if (time == null) {
-            throw new IllegalArgumentException("This attribute is required.");
+        if (Cell.CELL_TYPE_BLANK != currentReadCell.getCellType()) {
+	        Date time = XlsCellUtil.cellToTime(currentReadCell);
+	        recUpload.setTime(time);
         }
-        recUpload.setTime(time);
         return colIndex;
     }
 
     protected int readRowDate(Row row, RecordUpload recUpload, int colIndex) {
-        
         currentReadCell = row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK);
-        Date when = XlsCellUtil.cellToDate(currentReadCell); 
-        if (when == null) {
-            throw new IllegalArgumentException("This attribute is required.");
+        if (Cell.CELL_TYPE_BLANK != currentReadCell.getCellType()) {
+        	 Date when = XlsCellUtil.cellToDate(currentReadCell); 
+             recUpload.setWhen(when);
         }
-        recUpload.setWhen(when);
         return colIndex;
     }
 
@@ -660,10 +812,11 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         currentReadCell = row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK);
         String locationName = XlsCellUtil.cellToString(currentReadCell);
         recUpload.setLocationName(locationName);
-        if (survey.isPredefinedLocationsOnly() && recUpload.isGPSLocationName()) {
+        
+/*        if (survey.isPredefinedLocationsOnly() && recUpload.isGPSLocationName()) {
             throw new IllegalArgumentException(
                     "This attribute must be a predefined location.");
-        }
+        }*/
         
         return colIndex;
     }
@@ -699,25 +852,19 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         currentReadCell = row.getCell(colIndex++, Row.CREATE_NULL_AS_BLANK);
         recUpload.setCommonName(XlsCellUtil.cellToString(currentReadCell));
         
-        CensusMethod cm = null;
-        if(recUpload.getCensusMethodId() != null) {
-            cm = censusMethodDAO.get(recUpload.getCensusMethodId());
-        }
-        
-        if (cm != null && Taxonomic.TAXONOMIC.equals(cm.getTaxonomic())) {
-            if (!((recUpload.getScientificName() != null && !recUpload.getScientificName().isEmpty()) || (recUpload.getCommonName() != null && !recUpload.getCommonName().isEmpty()))) {
-                throw new IllegalArgumentException(
-                        "The scientific name or common name is required.");
-            }
-        }
         return colIndex;
     }
     
     @Override
     public int writeCoreHelp(Sheet helpSheet, int rowIndex) {
+    	HashMap<String, RecordProperty> recordPropertiesMap = getRecordPropertiesMap();
         Row row;
         int colIndex = 0;
         for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+        	String key = entry.getKey();
+        	if(recordPropertiesMap.containsKey(key) && recordPropertiesMap.get(key).getDescription().equals(key) && recordPropertiesMap.get(key).isHidden() == true){
+        		continue;
+        	}
             row = helpSheet.createRow(rowIndex++);
             colIndex = 0;
             row.createCell(colIndex++).setCellValue(entry.getKey());
@@ -729,5 +876,27 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
 
     public List<String> getCompleteHeader() {
         return Collections.unmodifiableList(completeHeader);
+    }
+    
+    /**
+     * Gets the description related to the <code>RecordPropertyType</code> of a specific survey.
+     * @param type from which we require the description
+     * @return the description
+     */
+    private String getPropertyDescription(RecordPropertyType type) {
+    	return new RecordProperty(survey, type, metadataDAO).getDescription();
+    }
+    
+    /**
+     * Creates a Map with <code>RecordProperty</code> descriptions as the key and <code>RecordProperty</code> as the value.
+     * @return recordPropertiesMap
+     */
+    private HashMap<String, RecordProperty> getRecordPropertiesMap() {
+        HashMap<String, RecordProperty> recordPropertiesMap = new HashMap<String, RecordProperty>();
+        for (RecordPropertyType type : RecordPropertyType.values()) {
+        	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO); 
+        	recordPropertiesMap.put(recordProperty.getDescription(), recordProperty);
+        }
+        return recordPropertiesMap;
     }
 }

@@ -1,13 +1,14 @@
 package au.com.gaiaresources.bdrs.controller.attribute;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.NotImplementedException;
 
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertySetting;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
-import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
-import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 
 /**
  * The <code>RecordPropertyAttributeFormField</code> represents a
@@ -18,71 +19,55 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 public class RecordPropertyAttributeFormField extends
         AbstractAttributeFormField {
 
-    private String propertyName;
-    private Survey survey;
-    private Metadata metadata;
-
-    private MetadataDAO metadataDAO;
-
-    private String weightName;
+	private RecordProperty recordProperty;
 
     /**
      * Creates a new form field representing a <code>Record</code> property.
      * This will create and save a new Metadata instance if an instance for the
      * specified property does not already exist.
      * 
-     * @param metadataDAO
-     *            the database object to use when saving metadata.
-     * @param survey
-     *            the survey where the metadata shall be added.
-     * @param propertyName
-     *            the name of the record property represented by this field
+     * @param recordProperty
+     *            the <code>RecordProperty</code> represented by this field
      */
-    public RecordPropertyAttributeFormField(MetadataDAO metadataDAO,
-            Survey survey, String propertyName) {
-        this.survey = survey;
-        this.propertyName = propertyName;
-        this.metadataDAO = metadataDAO;
-
-        String mdkey = String.format(Metadata.RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE, propertyName);
-        Metadata md = survey.getMetadataByKey(mdkey);
-        if (md == null) {
-            md = new Metadata();
-            md.setKey(mdkey);
-            md.setValue(String.valueOf(PersistentImpl.DEFAULT_WEIGHT));
-
-            md = metadataDAO.save(md);
-            this.survey.getMetadata().add(md);
-        }
-
-        this.metadata = md;
-        this.weightName = String.format("property_weight_%s", this.propertyName);
+    public RecordPropertyAttributeFormField(RecordProperty recordProperty) {
+    	this.recordProperty = recordProperty;
     }
 
     /**
      * Updates the record property sorting weight metadata from the specified
      * POST parameter map.
      * 
-     * @param metadataDAO
-     *            the database object to use when saving metadata.
-     * @param survey
-     *            the survey where the metadata shall be added.
-     * @param propertyName
-     *            the name of the record property represented by this field
+	 * @param recordProperty
+     *            the <code>RecordProperty</code> represented by this field
      * @param parameterMap
      *            the map of POST parameters that the form field will utilise to
      *            populate the <code>Metadata</code> that is created.
      */
-    public RecordPropertyAttributeFormField(MetadataDAO metadataDAO,
-            Survey survey, String propertyName,
+    public RecordPropertyAttributeFormField(RecordProperty recordProperty,
             Map<String, String[]> parameterMap) {
-        this(metadataDAO, survey, propertyName);
-        String weightStr = getParameter(parameterMap, this.weightName);
-        if(weightStr == null) {
-//            weightStr = String.valueOf(PersistentImpl.DEFAULT_WEIGHT);
-            Thread.dumpStack();
-        }
-        this.metadata.setValue(weightStr);
+        this(recordProperty);
+    	HashMap<RecordPropertySetting, String> mdKeys = RecordProperty.getMetaDataKeys(this.recordProperty.getRecordPropertyType());
+    	for (RecordPropertySetting setting : RecordPropertySetting.values()){
+    		String key = mdKeys.get(setting);
+    		String[] values = parameterMap.get(key);
+			if (values != null && values.length > 0 && setting.equals(RecordPropertySetting.WEIGHT)) {
+				this.recordProperty.setWeight(Integer.valueOf(values[0]));
+    		} else if (values != null && values.length > 0 && setting.equals(RecordPropertySetting.DESCRIPTION)) {
+    			this.recordProperty.setDescription(values[0]);
+    		} else if (setting.equals(RecordPropertySetting.REQUIRED)) {
+    			if (values != null && values.length > 0) {
+					this.recordProperty.setRequired(Boolean.valueOf(values[0]));
+				} else {
+					this.recordProperty.setRequired(false);
+				}
+    		} else if (setting.equals(RecordPropertySetting.HIDDEN)) {
+    			if (values != null && values.length > 0) {
+					this.recordProperty.setHidden(Boolean.valueOf(values[0]));
+				} else {
+					this.recordProperty.setHidden(false);
+				}
+    		}
+    	}
     }
 
     /**
@@ -90,7 +75,7 @@ public class RecordPropertyAttributeFormField extends
      */
     @Override
     public int getWeight() {
-        return Integer.parseInt(metadata.getValue());
+    	return recordProperty.getWeight();
     }
 
     /**
@@ -98,15 +83,48 @@ public class RecordPropertyAttributeFormField extends
      */
     @Override
     public void setWeight(int weight) {
-        metadata.setValue(String.valueOf(weight));
+    	recordProperty.setWeight(weight);
+    }
+    
+    /**
+     * Gets the description from the <code>RecordProperty</code> or null when no description is available.
+     * @return String description of the field on the form.
+     */
+    public String getDescription() {
+    	return recordProperty.getDescription();
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the required value from the <code>RecordProperty</code>
+     * @return  Either true or false
+     */
+    public boolean isRequired() {
+    	return recordProperty.isRequired();
+    }
+    
+    /**
+     * Gets the <code>AttributeScope</code> from the <code>RecordProperty</code>
+     * @return  An <code>AttributeScope</code>
+     */
+    public AttributeScope getScope() {
+    	return recordProperty.getScope();
+    }
+
+    /**
+     * Gets the hidden value from the <code>RecordProperty</code>
+     * @return  Either true or false
+     */
+    public boolean isHidden() {
+    	return recordProperty.isHidden();
+    }
+
+    /**
+     * Not implemented, functionality is already implemented in <code>RecordProperty</code>
+     * @see RecordProperty
      */
     @Override
     public PersistentImpl save() {
-        return metadataDAO.save(this.metadata);
+    	throw new NotImplementedException();
     }
 
     /**
@@ -124,7 +142,7 @@ public class RecordPropertyAttributeFormField extends
      *         field.
      */
     public String getPropertyName() {
-        return propertyName;
+    	return recordProperty.getRecordPropertyType().getName();       
     }
 
     /**
@@ -142,6 +160,6 @@ public class RecordPropertyAttributeFormField extends
      */
     @Override
     public String getWeightName() {
-        return this.weightName;
+    	return null;
     }
 }

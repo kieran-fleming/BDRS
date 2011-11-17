@@ -98,6 +98,9 @@ public abstract class AttributeParser {
             }
             boolean isValid = validator.validate(parameterMap, validationType, paramKey, attribute);
             return isValid;
+        case REGEX:
+            validationType = attribute.isRequired() ? ValidationType.REQUIRED_REGEX : ValidationType.REGEX;
+            return validator.validate(parameterMap, validationType, paramKey, attribute);
         case BARCODE:
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_BARCODE : ValidationType.BARCODE;
             return validator.validate(parameterMap, validationType, paramKey, attribute);
@@ -162,14 +165,13 @@ public abstract class AttributeParser {
             Map<String, String[]> parameterMap,
             Map<String, MultipartFile> fileMap, TypedAttributeValue attributeValue)
             throws ParseException {
-        String attrValue;
-        attrValue = getParameter(parameterMap, paramKey);
-        attrFile = fileMap.get(fileKey);
         AttributeType attrType = attribute.getType();
-        
         if (attrType == AttributeType.TIME) {
             // parse out the time attribute if required...
+            duckPunchTimeParameter("", attribute, parameterMap);
         }
+        String attrValue = getParameter(parameterMap, paramKey);
+        attrFile = fileMap.get(fileKey);
         
         if(AttributeType.MULTI_CHECKBOX.equals(attrType) || 
                         AttributeType.MULTI_SELECT.equals(attrType) || 
@@ -205,6 +207,7 @@ public abstract class AttributeParser {
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
                 case BARCODE:
+                case REGEX:
                 case HTML:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:

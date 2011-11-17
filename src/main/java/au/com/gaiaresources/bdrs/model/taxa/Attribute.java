@@ -117,6 +117,26 @@ public class Attribute extends PortalPersistentImpl {
     }
 
     /**
+     * @return The options as a comma separated String.
+     */
+    @Transient
+    public String getOptionString() {
+        return getOptionString(",");
+    }
+    
+    /**
+     * @return The options as a comma separated String.
+     */
+    @Transient
+    public String getOptionString(String delimiter) {
+        if(this.options != null && !this.options.isEmpty()) {
+            return StringUtils.joinList(this.options, delimiter);
+        } else  {
+            return "";
+        }
+    }
+    
+    /**
      * {@inheritDoc}
      */
     @CompactAttribute
@@ -127,7 +147,13 @@ public class Attribute extends PortalPersistentImpl {
     public void setTag(boolean tag) {
         this.tag = tag;
     }
-    
+
+    /**
+     * Note: null attribute scope should default to SURVEY scope. This is the responsibility
+     * of consumers of Attribute objects.
+     * 
+     * @return
+     */
     @CompactAttribute
     @Enumerated(EnumType.STRING)
     @Column(name = "SCOPE", nullable=true)

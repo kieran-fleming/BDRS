@@ -8,6 +8,7 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,12 +16,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
-import au.com.gaiaresources.bdrs.model.map.GeoMapFeatureDAO;
-import au.com.gaiaresources.bdrs.model.map.GeoMapLayerDAO;
-import au.com.gaiaresources.bdrs.model.record.RecordDAO;
-import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
-import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 // You may note we do not test the 'shape file is too big' case here, I didn't want to commit
@@ -29,23 +25,16 @@ public class GeoMapController_ShpCheckService_Test extends
         AbstractControllerTest {
 
     @Autowired
-    GeoMapLayerDAO layerDAO;
-    @Autowired
-    SurveyDAO surveyDAO;
-    @Autowired
     ManagedFileDAO fileDAO;
     @Autowired
     FileService fileService;
-    @Autowired 
-    AttributeDAO attrDAO;
-    @Autowired
-    RecordDAO recDAO;
-    @Autowired 
-    UserDAO userDAO;
-    @Autowired
-    GeoMapFeatureDAO featureDAO;
 
     Logger log = Logger.getLogger(getClass());
+    
+    @Before
+    public void setup() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+    }
     
     @Test
     public void checkShp_emptyUuidError() throws Exception {

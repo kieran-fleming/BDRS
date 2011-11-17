@@ -1,6 +1,7 @@
 <!-- list the user groups currently in the database  -->
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <h1>Edit Groups</h1>
 

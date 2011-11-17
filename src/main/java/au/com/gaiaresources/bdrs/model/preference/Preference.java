@@ -4,6 +4,7 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -70,6 +71,7 @@ public class Preference extends PortalPersistentImpl {
     }
 
     @Column(name = "DESCRIPTION", nullable = false)
+    @Lob  // makes a 'text' type in the database
     public String getDescription() {
         return description;
     }

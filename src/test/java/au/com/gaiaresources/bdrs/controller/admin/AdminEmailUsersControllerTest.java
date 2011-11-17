@@ -5,11 +5,13 @@ package au.com.gaiaresources.bdrs.controller.admin;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.security.Role;
 
 /**
  * @author stephanie
@@ -17,6 +19,11 @@ import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
  */
 public class AdminEmailUsersControllerTest extends AbstractControllerTest {
 
+    @Before
+    public void setup() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+    }
+    
     /**
      * Test method for {@link au.com.gaiaresources.bdrs.controller.admin.AdminEmailUsersController#renderPage(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}.
      * @throws Exception 

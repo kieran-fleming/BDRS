@@ -301,6 +301,10 @@ $.fn.ketchup.validation('uniqueAndRequired', function(element, value, uniqueElem
 $.fn.ketchup.validation('optionallyTaxonomicSpeciesAndNumber', function(element, value, otherSelector) {
     var other = jQuery(otherSelector);
     var otherValue = other.val();
+    if (undefined == otherValue){
+    	//if the other selector is not found then we can't compare the two values
+    	return true;
+    }
     var bothBlank = value.length === 0 && otherValue.length === 0;
     var noneBlank = value.length > 0 && otherValue.length > 0;
     var isValid = bothBlank || noneBlank;
@@ -326,17 +330,16 @@ $.fn.ketchup.validation('uuid', function(element, value, otherSelector) {
 });
 
 $.fn.ketchup.validation('regExp', function(element, value, regExp) {
+	regExp = "^" + regExp + "$";
 	var pattern = new RegExp(regExp);
-	if (pattern.test(value))
-		return true;
-	else
-		return false;
+	return pattern.test(value);
 });
 
-$.fn.ketchup.validation('regExpOrBlank', function(element, value, regExp) {
+$.fn.ketchup.validation('regExpOrBlank', function(element, value, regExp, origRegex) {
 	if (element.val().length === 0) {
 		return true;
 	} else {
+		regExp = "^" + regExp + "$";
 		var pattern = new RegExp(regExp);
 		return pattern.test(value);
 	}

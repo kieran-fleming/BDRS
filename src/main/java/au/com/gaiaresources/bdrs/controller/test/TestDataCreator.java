@@ -507,6 +507,7 @@ public class TestDataCreator implements TestDataConstants {
             case STRING_AUTOCOMPLETE:
                 taxonAttr.setStringValue(generateLoremIpsum(3, 3));
                 break;
+            case REGEX:
             case BARCODE:
                 taxonAttr.setStringValue(generateLoremIpsum(1, 1));
                 break;

@@ -7,6 +7,11 @@
 /* Styles that affect layout and default rendering for new   */
 /* features should be added here.                            */
 /*************************************************************/
+
+.ui-datepicker {
+    z-index: 4000 !important;
+}
+
 /************************************/
 /* Record Map                       */
 /************************************/
@@ -121,18 +126,7 @@
     width: 340px;
 }
 #selectUsers {
-    float: right;
-    color: #666;
-    font-weight: normal;
-    margin: 0px 0px 0px 0px;
-    padding: 4px 16px 4px 16px;
-    font-size: 1em;
-    cursor: pointer;
-    border: 1px solid #666;
-    -webkit-border-radius: 0px;
-    -khtml-border-radius: 0px;
-    -moz-border-radius: 0px;
-    border-radius: 0px;
+    float: right; 
 }
 
 #popupDialog select.multiSelect{
@@ -150,17 +144,19 @@ table.locationList {
     border-collapse: collapse;
 }
 div.locationList {
-    height: 450px;
     overflow: auto;
 }
-/* styling to make the user locations the same height as the map */
-div.userlocationList {
-    height: 466px;
+
+div.locationList table tbody tr td {
+    text-align: center;
+}
+
+div.locationList table tbody tr td input[type=text] {
+	width: 210px;
 }
 
 .locations_map {
-    float: left;
-    width: 65%;
+    width: 100%;
     height: 465px;
 }
 
@@ -250,6 +246,10 @@ label.multiCheckboxLabel {
     float: left;
 }
 
+#attribute_input_table td {
+	white-space: nowrap;
+}
+
 /*********************************************************/
 /* Styling for location attributes on record entry forms */
 /*********************************************************/
@@ -309,20 +309,6 @@ label.multiCheckboxLabel {
 table.datatable {
     width: 100%;
     border-collapse: collapse;
-}
-
-.datatable th {
-    color: #FFF;
-    background-color: #484848;
-    font-weight: bold;
-    border: 1px solid #484848;
-}
-
-.datatable td {
-    border-top: 1px dotted #484848;
-    border-right: 1px dotted #484848;
-    border-bottom: 1px dotted #484848;
-    border-left: 1px dotted #484848;
 }
 
 .datatable input.fillwidth {
@@ -438,6 +424,10 @@ legend {
    text-align: center;
 }
 
+.textjustify {
+	text-align: justify;
+}
+
 .vertmiddle {
     vertical-align: middle;
 }
@@ -546,6 +536,18 @@ legend {
     padding: 0.5em 0em 0.5em 0em;
 }
 
+/* used when you want the buttons to appear to the right of a form.
+ */
+.buttonPanelRight{
+	position:relative;
+	float:right;
+	top:-47px;
+}
+
+.widgetSearchForm {
+	padding: 0 0 1em 0;
+}
+
 .max_size_img {
     max-width: 250px;
     max-height: 140px;
@@ -570,16 +572,6 @@ html.embed {
 .maximise {
     width: 100%;
     height: 100%;
-}
-
-body {
-    font-size: 12px;
-    font-family: Arial, Helvetica, sans-serif;
-    line-height: 135%;
-    color: #333333;
-    margin: 0px;
-    padding: 0px;
-    display: block;
 }
 
 h1 {
@@ -720,6 +712,8 @@ input[disabled] {
 
 .map_wrapper {
     color: #484848;
+	/* IE7 fix for slideToggling the map wrapper */
+	zoom:1;
 }
 
 .mapLogoMax {
@@ -733,17 +727,28 @@ input[disabled] {
 	display:none;
 }
 
-.maximimizedMapLink {
-	margin: 10px;
+.shrinkMapLink {
 	border-radius: 0.5em;
 	 -webkit-border-radius: 0.5em;
     -khtml-border-radius: 0.5em;
     -moz-border-radius: 0.5em;
+
 	background: white;
-	padding-left: 4px;
-	padding-right: 4px;
-	color: #000000;
-	font-weight: bold;
+   
+	padding: 0.2em 1em 0.2em 1em;
+	
+	position: fixed;
+	top: 3px;
+	right: 3px;
+	z-index: 3100;
+}
+
+.align_radio input[type=radio]{
+    vertical-align: text-bottom;
+}
+
+.align_checkbox input[type=checkbox]{
+    vertical-align: text-bottom;
 }
 
 /************************************/
@@ -1045,6 +1050,10 @@ ul.ui-menu li.ui-menu-item {
     padding-right: 0px;
 }
 
+.preference_category {
+	padding: 0 0 2em 0;
+}
+
 /************************************/
 /* Browser Detection                */
 /************************************/
@@ -1060,7 +1069,7 @@ ul.ui-menu li.ui-menu-item {
     border-bottom: 1px dotted white;
 }
 
-.taxonProperties table.datatable td {
+table.datatable td {
     max-width: 310px;
     word-wrap: break-word;
 }
@@ -1156,7 +1165,7 @@ h3.field_guide_header {
 }
 
 .facetCol {
-    width: 27.1%;
+    width: 27%;
 }
 
 .resultCol {
@@ -1192,29 +1201,6 @@ h3.field_guide_header {
     
 }
 
-.alaSightingsContent .controlPanel {
-    border-bottom: 1px solid #2D4977;
-}
-
-.alaSightingsContent .displayTab {
-    padding: 0.0em 1.5em 0.0em 1.5em;
-    line-height: 2em;
-    margin: 0px 0px 0px 4px;
-    
-    border-style: solid;
-    border-color: #2D4977;
-    border-width: 1px 1px 0px 1px;
-}
-
-.alaSightingsContent .displayTab:hover {
-    background-color: #D0DCE4;
-}
-
-.alaSightingsContent .displayTabSelected {
-    font-weight: bold;
-    color: #333333;
-}
-
 .alaSightingsTable {
     width: 100%;
 }
@@ -1242,35 +1228,92 @@ h3.field_guide_header {
 }
 
 /**********************/
-/* My sightings       */
+/* Tab View           */
 /**********************/
-#sightingFilter .sightingFilterItem {
-    float: left;
+
+.controlPanel {
+    border-bottom: 1px solid #2D4977;
 }
 
-#sightingFilter .sightingFilterSubmit {
-    float: left;
-	padding: 1.1em 0 0 0;
+.displayTab {
+    padding: 0.0em 1.5em 0.0em 1.5em;
+    line-height: 2em;
+    margin: 0px 0px 0px 4px;
+    
+    border-style: solid;
+    border-color: #2D4977;
+    border-width: 1px 1px 0px 1px;
 }
 
-#sightingFilter label {
-    padding: 0em 0.5em 0em 0.5em;
-    font-weight: bolder;
+.displayTab:hover {
+    background-color: #D0DCE4;
 }
 
-#sightingFilter div {
-    padding: 0 0.5em 0 0;
-}
-
-#sightingFilter div div input[type=text] {
-    margin-top: 0.3em;
-}
-
-#recordTable .taxonNameCell .commonName {
-    border-bottom: 1px dotted #484848;
+.displayTabSelected {
     font-weight: bold;
+    color: #333333;
 }
 
+/**********************/
+/* My Sightings       */
+/**********************/
+
+#sightings_criteria .interrogative {
+    font-size: 1.2em;
+    text-align: left;
+}
+
+#sightings_criteria th {
+    width: 15%;
+    padding: 0.2em;
+}
+
+#sightings_criteria td {
+    width: 35%;
+    padding: 0.2em;
+}
+
+#sightings_tabs {
+    padding-top: 1em;
+}
+
+.pagenumber {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.record_dialog_content {
+    white-space: nowrap;
+    
+}
+
+.record_dialog_content th,
+.record_dialog_content td {
+    padding: 0.2em;
+}
+
+.record_dialog_content_cell {
+    white-space: normal;
+}
+
+.order_type {
+    padding-top: 0.5em;
+}
+
+.criteria_link {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#permalink_input {
+    margin: 10px;
+}
+
+.recordCountPanel {
+    margin-top: 0.5em;
+}
 
 /***********************/
 /* open layers toolbar */
@@ -1326,4 +1369,173 @@ table.bulkDataTableForm tbody tr th {
 /*******************/
 .searchTaxonomyHeader {
 	width: 80px;
+}
+
+/************************/
+/* Portal preferences   */
+/************************/
+
+table.preference_table_header {
+	width: 100%
+}
+
+table.preference_table_header td.right_cell {
+	width: 350px;
+}
+
+table.preference_table {
+	padding: 0 0 1em 0;
+}
+
+.preference_table td.description_col {
+    padding: 6px 8px 6px 6px;
+}
+
+.preference_table td.description_col div {
+
+}
+
+.preference_table td.description_col dl {
+    margin-left: 0em;
+}
+
+.preference_table td.description_col dl dd {
+    margin-left: 1em;
+}
+
+.preference_table td.description_col textarea {
+	/* IE7 hack */
+    width: 99%;
+}
+
+.preference_table td.key_col {
+	width: 200px;
+	padding: 6px;
+}
+
+.preference_table td.key_col input[type=text] {
+    width: 200px;
+}
+
+.preference_table td.value_col {
+	width: 200px;
+    padding: 6px;
+}
+
+.preference_table td.value_col input[type=text] {
+    width: 200px;
+}
+
+.preference_table td.delete_col {
+    width: 50px;
+}
+
+/************************************/
+/* Menu Layout Styling              */
+/************************************/
+
+/* Suckerfish Menu Structure */
+#horiz-menu a {
+    display: block;
+    float: left;
+    height: 20px;
+    line-height: 20px;
+    padding: 0 15px;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+}
+
+#horiz-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+#horiz-menu li {
+    margin: 0;
+    padding: 0;
+    padding-right: 2px;
+    float: left;
+    list-style: none;
+    position: relative;
+    z-index: 100;
+}
+
+#horiz-menu a:link,
+#horiz-menu a:visited {
+    display: block;
+    float: left;
+    padding: 0 30px;
+}
+
+/* Level 1 Menus */
+
+/* Menu Transitions */
+ul.menu ul li a {
+    padding-left: 30px;
+}
+
+ul.menu ul ul li a {
+    padding-left:40px;
+}
+
+ul.menu ul ul ul li a {
+    padding-left:55px;
+}
+
+ul.menu ul ul ul ul li a{
+    padding-left:70px;
+}
+
+#horiz-menu li li a:link,
+#horiz-menu li li a:visited{
+    padding: 0;
+    text-indent: 10px;
+    border: 0;
+}
+
+#horiz-menu ul li {
+    position: relative;
+}
+
+#horiz-menu li ul {
+    top: 30px;
+    position: absolute;
+    z-index: 10000;
+    left: -999em;
+    margin: 0;
+    padding: 0;
+}
+
+/* margin for pullouts */
+#horiz-menu li:hover ul ul,
+#horiz-menu li:hover ul ul ul,
+#horiz-menu li:hover ul ul ul ul,
+#horiz-menu li.sfhover ul ul,
+#horiz-menu li.sfhover ul ul ul,
+#horiz-menu li.sfhover ul ul ul ul {
+    left: -999em;
+}
+
+#horiz-menu li:hover ul,
+#horiz-menu li li:hover ul,
+#horiz-menu li li li:hover ul,
+#horiz-menu li li li li:hover ul,
+#horiz-menu li.sfhover ul,
+#horiz-menu li li.sfhover ul,
+#horiz-menu li li li.sfhover ul,
+#horiz-menu li li li li.sfhover ul{
+    left: 0;
+}
+
+#horiz-menu li:hover,
+#horiz-menu li.sfhover {
+      left: 0;
+}
+
+/***************************/
+/* general highlight style */
+/***************************/
+.bdrsHighlight {
+    background-color: #FFECA3;
 }

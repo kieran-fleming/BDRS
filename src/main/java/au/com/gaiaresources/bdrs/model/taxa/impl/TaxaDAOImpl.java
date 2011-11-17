@@ -583,10 +583,10 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 		}
 		query.append("%");
     	
-        return find("from IndicatorSpecies i where UPPER(commonName) like UPPER('"
-                + query.toString()
-                + "') or UPPER(scientificName) like UPPER ('"
-                + query.toString() + "')", new Object[0], 30);
+		String searchString = query.toString();
+		
+        return find("from IndicatorSpecies i where UPPER(commonName) like UPPER(?) or UPPER(scientificName) like UPPER (?)", 
+                    new Object[] {searchString, searchString}, 30);
     }
 	
     @Override

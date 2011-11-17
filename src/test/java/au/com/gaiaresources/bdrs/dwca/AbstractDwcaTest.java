@@ -11,12 +11,9 @@ import org.gbif.dwc.record.DarwinCoreRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.text.Archive;
 import org.gbif.dwc.text.StarRecord;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.controller.AbstractGridControllerTest;
-import au.com.gaiaresources.bdrs.controller.BdrsMockHttpServletRequest;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
@@ -30,12 +27,7 @@ import au.com.gaiaresources.bdrs.service.web.RedirectionService;
  *
  */
 public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
-    
-    protected static final String REQUEST_SCHEME = "http";
-    protected static final String REQUEST_SERVER_NAME = "www.mybdrs.com.au";
-    protected static final int REQUEST_SERVER_PORT = 8080;
-    protected static final String REQUEST_CONTEXT_PATH = "CONTEXTPATH";
-    
+       
     protected final DateFormat ISO8601Local = new SimpleDateFormat(RecordDwcaWriter.ISO_DATE_FORMAT);
     
     protected static final String APPLICATION_URL = REQUEST_SCHEME + "://" + REQUEST_SERVER_NAME + ":" + REQUEST_SERVER_PORT + "/" + REQUEST_CONTEXT_PATH;
@@ -67,12 +59,20 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
             Assert.assertFalse("sci name id lsid should be null", StringUtils.hasLength(dwcr.getScientificNameID()));
         }
         
-        String expectedLat = String.format("%f", locService.truncate(rec.getLatitude().doubleValue()));
-        String expectedLon = String.format("%f", locService.truncate(rec.getLongitude().doubleValue()));
-                    
-        Assert.assertEquals("lat should match", expectedLat, dwcr.getDecimalLatitude());
-        Assert.assertEquals("lon should match", expectedLon, dwcr.getDecimalLongitude());
-
+        if (rec.getLatitude() != null) {
+            String expectedLat = String.format("%f", locService.truncate(rec.getLatitude().doubleValue()));
+            Assert.assertEquals("lat should match", expectedLat, dwcr.getDecimalLatitude());    
+        } else {
+            Assert.assertFalse("lat should be empty", StringUtils.hasLength(dwcr.getDecimalLatitude()));
+        }
+        
+        if (rec.getLongitude() != null) {
+            String expectedLon = String.format("%f", locService.truncate(rec.getLongitude().doubleValue()));
+            Assert.assertEquals("lon should match", expectedLon, dwcr.getDecimalLongitude());    
+        } else {
+            Assert.assertFalse("lon should be empty", StringUtils.hasLength(dwcr.getDecimalLongitude()));
+        }
+        
         Assert.assertEquals("survey lsid should match", lsidService.toLSID(rec.getSurvey()).toString(), dwcr.getDatasetID());
         Assert.assertEquals("recording user shoul match", rec.getUser().getFullName(), dwcr.getRecordedBy());
         if (rec.getNumber() != null) {
@@ -80,9 +80,12 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
         } else {
             Assert.assertFalse("individual count be empty", StringUtils.hasLength(dwcr.getIndividualCount()));
         }
-        Assert.assertEquals("date should match", ISO8601Local.format(rec.getWhen()), dwcr.getEventDate());
         
-        
+        if (rec.getWhen() != null) {
+            Assert.assertEquals("date should match", ISO8601Local.format(rec.getWhen()), dwcr.getEventDate());    
+        } else {
+            Assert.assertFalse("date should be empty", StringUtils.hasLength(dwcr.getEventDate()));
+        }        
         
         Iterator<org.gbif.dwc.record.Record> starRecIter = starRecord.iterator();
         while (starRecIter.hasNext()) {
@@ -126,7 +129,7 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
         
         case DATE:
             return av.getDateValue() != null ? av.getDateValue().toString() : "";
-            
+        case REGEX:
         case BARCODE:
         case TIME:
         case STRING:
@@ -155,12 +158,7 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
     private Record getRecord(List<Record> recList, String catalogNumber) {
         // catalog number is mapped to record Id so...
         int id = Integer.parseInt(catalogNumber);
-        for (Record rec : recList) {
-            if (rec.getId().intValue() == id) {
-                return rec;
-            }
-        }
-        return null;
+        return recordDAO.getRecord(id);
     }
     
     protected int countArchivedRecords(List<Record> recList) {
@@ -199,9 +197,5 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
             }
         }
         return null;
-    }
-    
-    protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new BdrsMockHttpServletRequest();
     }
 }

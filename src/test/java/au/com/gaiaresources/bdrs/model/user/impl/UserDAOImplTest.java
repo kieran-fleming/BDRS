@@ -14,7 +14,7 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -172,7 +172,9 @@ public class UserDAOImplTest extends AbstractTransactionalTest      {
     // indirectly testing AbstractDAOImpl.count()
     @Test
     public void testCount() {
-        Assert.assertEquals(8, userDAO.count(User.class).intValue());
+        // created one user for each of the testnames +2 accounts for the admin and root
+        // accounts created on portal initialisation
+        Assert.assertEquals(testnames.length + 2, userDAO.count(User.class).intValue());
     }
     
     @Test
@@ -196,7 +198,7 @@ public class UserDAOImplTest extends AbstractTransactionalTest      {
     public void testGetByGroup() {
         PaginationFilter filter = new PaginationFilter(0, 10);
         filter.addSortingCriteria("name", SortOrder.ASCENDING);
-        PagedQueryResult<User> result = userDAO.search(null, null, null, filter, null, null, specialId);
+        PagedQueryResult<User> result = userDAO.search(null, null, null, filter, null, null, specialId, null);
         Assert.assertEquals(2, result.getCount());
     }
     
@@ -205,7 +207,16 @@ public class UserDAOImplTest extends AbstractTransactionalTest      {
     public void testGetByNoGroupWithFilter() {
         PaginationFilter filter = new PaginationFilter(0, 10);
         filter.addSortingCriteria("name", SortOrder.ASCENDING);
-        PagedQueryResult<User> result = userDAO.search("role", null, null, filter, null, null, null);
+        PagedQueryResult<User> result = userDAO.search("role", null, null, filter, null, null, null, null);
+        Assert.assertEquals(5, result.getCount());
+    }
+    
+    // make sure the OR statement is working correctly in the search method.
+    @Test
+    public void testContains() {
+        PaginationFilter filter = new PaginationFilter(0, 10);
+        filter.addSortingCriteria("name", SortOrder.ASCENDING);
+        PagedQueryResult<User> result = userDAO.search("son", "son", "son", filter, null, null, null, null);
         Assert.assertEquals(5, result.getCount());
     }
 }

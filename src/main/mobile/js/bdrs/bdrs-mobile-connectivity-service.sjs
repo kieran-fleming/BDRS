@@ -23,6 +23,8 @@ exports.startTimer = function() {
         bdrs.mobile.connectivity._pollingTimer = 
             setTimeout(function(){bdrs.mobile.connectivity.timeoutTriggered();}, 
                         bdrs.mobile.connectivity.getPollingPeriod());
+    } else {
+    	clearTimeout(bdrs.mobile.connectivity._pollingTimer);
     }
 };
 

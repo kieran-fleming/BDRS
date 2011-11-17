@@ -1,0 +1,17 @@
+<html>
+    <body>
+        <p>Hi ${admin.firstName} ${admin.lastName}!</p>
+        
+        <p>An approval request for the ${portal.getName()} was received for a new user, ${newUser.firstName} ${newUser.lastName}</p>
+        
+        <p>Please click on the following link (or copy and paste it into your browser) to review the new user.</p>
+        
+        <p><a href="${bdrsApplicationUrl}/admin/profile.htm?USER_ID=${newUser.id}">${bdrsApplicationUrl}/admin/profile.htm?USER_ID= ${newUser.id}</a></p>
+        
+        <p>You may view all users awaiting approval by clicking the following link (or copy and paste it into your browser).</p>
+        
+        <p><a href="${bdrsApplicationUrl}/bdrs/admin/userManagement/approveUsers.htm">${bdrsApplicationUrl}/bdrs/admin/userManagement/approveUsers.htm</a></p>
+        
+        <p>Your username, <strong>${admin.name}</strong>, should be used to sign in to the site.</p>
+    </body>
+</html>

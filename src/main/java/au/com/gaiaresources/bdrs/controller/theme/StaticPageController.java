@@ -4,9 +4,8 @@ import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,15 +19,19 @@ import org.springframework.web.servlet.ModelAndView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 @Controller
 public class StaticPageController extends AbstractController {
     
     @Autowired
-    TemplateService templateService;
+    private TemplateService templateService;
     @Autowired
-    ThemeDAO themeDAO;
+    private ThemeDAO themeDAO;
+    @Autowired
+    private RedirectionService redirectionService;
     
     Logger log = Logger.getLogger(getClass());
     
@@ -40,7 +43,8 @@ public class StaticPageController extends AbstractController {
     public final static String STATIC_ADMIN_URL_CATCHALL = STATIC_ADMIN_URL + "**";
     public final static String STATIC_ADMIN_FILE_DIR = "static/admin/";
     
-    
+    public final static String NO_PAGE_ERROR = "bdrs.theme.noStaticPage";
+    public final static String NO_THEME_ERROR = "bdrs.theme.noActiveTheme";
     
     /*
      * Controller for managing static content uploaded in themes.
@@ -57,7 +61,6 @@ public class StaticPageController extends AbstractController {
      *    If you're feeling lucky you can do a similar thing for static pages with 
      *    different role requirements, user, admin, root etc!
      */
-    
     @RequestMapping(value = STATIC_PUBLIC_URL_CATCHALL, method = RequestMethod.GET)
     public ModelAndView displayPublicStaticPage(HttpServletRequest request,
                                 HttpServletResponse response) throws Exception {
@@ -72,6 +75,19 @@ public class StaticPageController extends AbstractController {
             String filename = requestUri.substring(contextPath.length() + staticUrlPrefix.length(), requestUri.length() - 3) + "vm";
 
             Theme theme = themeDAO.getActiveTheme(getRequestContext().getPortal());
+            
+            if (theme == null) {
+                getRequestContext().addMessage(NO_THEME_ERROR);
+                return redirect(redirectionService.getHomeUrl());
+            }
+            
+            File staticFile = new File(Theme.THEME_DIR_PROCESSED,
+                                       fileDir + filename);
+            
+            if (!staticFile.exists()) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return null;
+            }
             
             String path = new File(Theme.THEME_DIR_PROCESSED,
                                    fileDir + filename).getPath();
@@ -95,6 +111,7 @@ public class StaticPageController extends AbstractController {
         }
     }
     
+    @RolesAllowed({Role.ADMIN,Role.SUPERVISOR,Role.POWERUSER})
     @RequestMapping(value = STATIC_ADMIN_URL_CATCHALL, method = RequestMethod.GET) 
     public ModelAndView displayAdminStaticPage(HttpServletRequest request,
             HttpServletResponse response) throws Exception {

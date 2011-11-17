@@ -10,7 +10,7 @@
 <tiles:useAttribute name="showActions" ignore="true" />
 
 <h4>Search Map Layers</h4>
-    <form id="${widgetId}SearchForm">
+    <form class="widgetSearchForm" id="${widgetId}SearchForm">
         <table>
             <tr>
                 <td class="formlabel">Map Layer Name:</td>
@@ -22,8 +22,8 @@
             </tr>
         </table>
     </form>
-<div class="buttonpanel textright">
-    <input type="button" id="${widgetId}Filter" class="form_action" value="Filter"/>
+<div class="buttonpanel buttonPanelRight textright">
+    <input type="button" id="${widgetId}Filter" class="form_action" value="Search"/>
 </div>
 
 <div id="${widgetId}Wrapper">

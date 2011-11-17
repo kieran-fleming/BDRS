@@ -159,39 +159,7 @@ bdrs.advancedReview.initMapView = function(formSelector, mapId, mapOptions, idSe
     var queryParams = jQuery(formSelector).serialize();
     var kmlURL = bdrs.contextPath + "/review/sightings/advancedReviewKMLSightings.htm?" + queryParams;
     var selectedId = jQuery(idSelector).val();
-    var context = {
-            getStrokeColor: function(feature) {
-                if (feature.fid == selectedId) {
-                    return "red";
-                } else {
-                    return '#EE9900';
-                }
-            },
-            getFillColor: function(feature) {
-                if (feature.fid == selectedId) {
-                    return "red";
-                } else {
-                    return '#EE9900';
-                }
-            }
-        };
-        
-        var styles = {
-                "default": new OpenLayers.Style({
-                    'strokeWidth': 2,
-    	            'strokeOpacity': 1,
-    	            'strokeColor': '${getStrokeColor}', // using context.getColor
-    	            'fillColor': '${getFillColor}',
-    	            'fillOpacity': 0.8,
-    	            'pointRadius': 5
-                }, {context:context}),
-                "select": new OpenLayers.Style({
-                    fillColor: "#66ccff",
-                    strokeColor: "#3399ff"
-                })
-            };
-
-    var style = new OpenLayers.StyleMap(styles);
+    var style = bdrs.map.createOpenlayersStyleMap(selectedId.toString());
     
     var layerOptions = {
         visible: true,

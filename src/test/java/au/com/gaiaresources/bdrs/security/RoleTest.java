@@ -1,7 +1,6 @@
 package au.com.gaiaresources.bdrs.security;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import junit.framework.TestCase;
 
@@ -10,8 +9,8 @@ public class RoleTest extends TestCase {
     private String HIGHEST = Role.ROOT;
     private String SECOND_HIGHEST = Role.ADMIN;
     
-    private String LOWEST = Role.USER;
-    private String SECOND_LOWEST = Role.POWERUSER;
+    private String LOWEST = Role.ANONYMOUS;
+    private String SECOND_LOWEST = Role.USER;
     
     private String[] allRoles = Role.getAllRoles();
     
@@ -80,7 +79,7 @@ public class RoleTest extends TestCase {
     
     @Test
     public void testGetLowest() {
-        Assert.assertEquals(Role.USER, Role.getLowestRole(allRoles));
+        Assert.assertEquals(LOWEST, Role.getLowestRole(allRoles));
     }
     
     @Test

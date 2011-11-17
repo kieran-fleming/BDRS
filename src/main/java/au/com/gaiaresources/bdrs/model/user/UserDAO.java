@@ -50,7 +50,7 @@ public interface UserDAO extends TransactionDAO {
     
     PagedQueryResult<User> search(String username, String email, String name, PaginationFilter filter, String[] roles, String[] excludeRoles);
     
-    PagedQueryResult<User> search(String username, String email, String name, PaginationFilter filter, String[] roles, String[] excludeRoles, Integer groupId);
+    PagedQueryResult<User> search(String username, String email, String name, PaginationFilter filter, String[] roles, String[] excludeRoles, Integer groupId, Boolean active);
     
     void delete(User u);
 }

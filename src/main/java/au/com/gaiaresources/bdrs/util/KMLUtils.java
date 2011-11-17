@@ -1,10 +1,8 @@
 package au.com.gaiaresources.bdrs.util;
 
-
 import java.io.OutputStream;
 import java.util.List;
 
-import javax.servlet.ServletOutputStream;
 import javax.xml.bind.JAXBException;
 
 import org.apache.log4j.Logger;

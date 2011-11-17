@@ -228,6 +228,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
             case HTML_HORIZONTAL_RULE:
                 attributeTypeValueLookup.put(at, at.getCode());
                 break;
+            case REGEX:
             case BARCODE:
                 attributeTypeValueLookup.put(at, "#999999");
                 break;
@@ -314,6 +315,12 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 	regExp.setValue("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
                 	regExpList.add(taxaDAO.save(regExp));
                 	attr.setOptions(regExpList);
+                }else if(AttributeType.REGEX.equals(attrType)){
+                    List<AttributeOption> regExpList = new ArrayList<AttributeOption>();
+                    AttributeOption regExp = new AttributeOption();
+                    regExp.setValue("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+                    regExpList.add(taxaDAO.save(regExp));
+                    attr.setOptions(regExpList);
                 }
 
                 //attr = taxaDAO.save(attr);
@@ -328,6 +335,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 case STRING_WITH_VALID_VALUES:
                 case IMAGE:
                 case FILE:
+                case REGEX:
                 case BARCODE:
                 case TIME:
                 case HTML:
@@ -456,6 +464,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                             condition.setValue((Date) attributeTypeValueLookup.get(attrType));
                             falseValue = "09 Dec 2010";
                             break;
+                        case REGEX:
                         case BARCODE:
                             condition.setValue((String)attributeTypeValueLookup.get(attrType));
                             falseValue = "012t6589#";

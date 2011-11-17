@@ -14,7 +14,7 @@
 
 		<p>
 		    To start using Biodiversity Snapshots, go to the web site
-		    <a href="${bdrs.application.url}/home.htm">${bdrs.application.url}/home.htm</a>,
+		    <a href="${bdrsApplicationUrl}/home.htm">${bdrsApplicationUrl}/home.htm</a>,
 		    and log in using the details above.
 	    </p>
 

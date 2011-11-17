@@ -12,16 +12,26 @@
         <c:set var="category" value="${ categoryToPrefEntry.key }"/>
         <c:set var="preferenceList" value="${ categoryToPrefEntry.value }"/>
         <div class="preference_category">
-            <h2><c:out value="${ category.displayName }"/></h2>
-            <p>
-                <c:out value="${ category.description }"/>
-            </p>
             <div id="preferences${ category.id }Container">
-	            <div class="textright buttonpanel">
-	            	<a id="maximiseLink${ category.id }" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink${ category.id }', '#preferences${ category.id }Container', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
-	                <input type="button" class="form_action" value="Add <c:out value="${ category.displayName }"/> Preference" onclick="bdrs.preferences.addPreferenceRow( ${ category.id }, '#index', '#category_${ category.id }' );"/>
-	            </div>
-	            <table id="category_${ category.id }" class="datatable textcenter">
+            	
+				<table class="preference_table_header">
+					<tbody>
+						<tr>
+							<td><h2><c:out value="${ category.displayName }"/></h2>
+		                    <p>
+		                    	<!-- not escaping xml as this text is only settable server side -->
+		                        <c:out value="${ category.description }" escapeXml="false" />
+		                    </p></td>
+							<td class="right_cell" valign="bottom">
+								<div class="textright buttonpanel">
+				                    <a id="maximiseLink${ category.id }" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink${ category.id }', '#preferences${ category.id }Container', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
+				                    <input type="button" class="form_action" value="Add <c:out value="${ category.displayName }"/> Preference" onclick="bdrs.preferences.addPreferenceRow( ${ category.id }, '#index', '#category_${ category.id }' );"/>
+				                </div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+	            <table id="category_${ category.id }" class="preference_table datatable textjustify">
 	                <thead>
 	                    <tr>
 	                        <th>Description</th>
@@ -42,7 +52,8 @@
         </div>
     </c:forEach>
     
-    <div class="textright">
+    <div class="buttonpanel textright">
         <input class="form_action" type="submit" value="Save Preferences"/>
     </div>
 </form>
+

@@ -127,11 +127,15 @@
 	                                "#taxonProfileTable", "#newProfileIndex");
     });
 
-    var importALAProfile = function() { 
+    var importALAProfile = function() {
         var answer = confirm("Are you sure? Existing entries imported from ALA will be replaced!")
         if (answer) {
-            window.document.location='${pageContext.request.contextPath}/bdrs/admin/taxonomy/import.htm?pk='+jQuery('#taxonPk').val()+
-                (jQuery('#guid').val() ? '&guid='+jQuery('#guid').val() : '');
+			var taxonPk = jQuery('#taxonPk').val();
+			var guid = jQuery('#guid').val();
+			var url = '${pageContext.request.contextPath}/bdrs/admin/taxonomy/import.htm?pk='
+                + (taxonPk ? taxonPk : '') +
+                (guid ? '&guid='+guid : '');
+			window.document.location = url;
         }
     }
 </script>

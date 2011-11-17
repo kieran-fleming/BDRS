@@ -6,11 +6,17 @@ exports.type.TIME = "TM";
 exports.type.SINGLE_CHECKBOX = "SC";
 exports.type.MULTI_CHECKBOX = "MC";
 exports.type.MULTI_SELECT = "MS";
+exports.type.STRING = "ST";
 exports.type.STRING_WITH_VALID_VALUES = "SV";
+exports.type.TEXT = "TA";
+exports.type.STRING_AUTOCOMPLETE = "SA";
+exports.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE = "SD";
+exports.type.LATITUDE_LONGITUDE = "LL";
 exports.type.INTEGER_WITH_RANGE = "IR";
 exports.type.IMAGE = "IM";
 exports.type.DECIMAL = "DE";
 exports.type.BARCODE = "BC";
+exports.type.REGEX = "RE";
 exports.type.HTML = "HL";
 exports.type.HTML_COMMENT = "CM";
 exports.type.HTML_HORIZONTAL_RULE = "HR";
@@ -111,7 +117,9 @@ exports.AttributeValueFormField = function(attribute) {
                 tmplName = tmplName+"-file";
             }
 		    
-		} else if (bdrs.mobile.attribute.type.BARCODE === attribute.typeCode()) {
+		} else if (bdrs.mobile.attribute.type.BARCODE === attribute.typeCode() 
+				|| bdrs.mobile.attribute.type.REGEX === attribute.typeCode()
+				) {
 			
 			var attrOpts;
             waitfor(attrOpts) {
@@ -125,7 +133,8 @@ exports.AttributeValueFormField = function(attribute) {
 		        optString += opt.value() + ",";
 		    }
             optString = optString.slice(0,-1);
-			tmplParams[0].regExp = optString;
+            // prepend the '^' and append the '$' to make the js validation match java validation
+			tmplParams[0].regExp = "^" + optString + "$";
 			
 			if (bdrs.phonegap.isPhoneGap()) {
 		        tmplName = tmplName+"-btn";
@@ -318,3 +327,22 @@ exports.setPicture = function(id, img) {
 exports.createPicImg = function(picdata) {
     return jQuery('<img src=' + bdrs.mobile.attribute.IMG_SRC_BASE64_PREFIX + picdata + ' width="200" />');
 };
+
+/**
+ * Removes the attributes and their options from the database.
+ * @param attributes An array of entity objects.
+ */
+exports.removeAttributes = function(attributes) {
+	var attribute;
+	var options;
+	for (var i=0; i<attributes.length; i++) {
+		attribute = attributes[i];
+		waitfor (options) {
+			attribute.options().list(resume);
+		}
+		for (var j=0; j<options.length; j++) {
+			persistence.remove(options[j]);
+		}
+		persistence.remove(attribute);
+	}
+}

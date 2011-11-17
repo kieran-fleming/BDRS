@@ -22,7 +22,8 @@
     <c:when test="<%= formField.isPropertyFormField() %>">
        <%-- Special Handling for Lat and Lng (Position) --%>
        <c:choose>
-          <c:when test="${ 'point' == formField.propertyName }">
+          <c:when test="${ 'Point' == formField.propertyName }">
+          <c:if test="${not formField.hidden}">
               <tr>
                   <th>
                       <label for="latitude">Latitude</label>
@@ -36,6 +37,8 @@
                        </tiles:insertDefinition>
                   </td>
               </tr>
+              </c:if>
+              <c:if test="${not formField.hidden}">
               <tr>
                   <th>
                       <label for="longitude">Longitude</label>
@@ -49,12 +52,14 @@
                        </tiles:insertDefinition>
                   </td>
               </tr>
+              </c:if>
           </c:when>
-          <c:when test="${ 'location' == formField.propertyName }">
+          <c:when test="${ 'Location' == formField.propertyName }">
+            <c:if test="${not formField.hidden}">
               <c:if test="${ not empty locations }">
                   <tr>
                       <th>
-                          <label for="location">Location</label>
+                          <label for="location"><c:out value="${ formField.description }"/></label>
                       </th>
                       <td>
                           <tiles:insertDefinition name="propertyRenderer">
@@ -66,30 +71,13 @@
                       </td>
                   </tr>
               </c:if>
+             </c:if>
           </c:when>
           <c:otherwise>
+			<c:if test="${not formField.hidden}">
               <tr>
                   <th>
-                      <c:choose>
-                            <c:when test="${ 'species' == formField.propertyName }">
-                                Species                                        
-                            </c:when>
-                            <c:when test="${ 'when' == formField.propertyName }">
-                                Date                                       
-                            </c:when>
-                            <c:when test="${ 'time' == formField.propertyName }">
-                                Time                                        
-                            </c:when>
-                            <c:when test="${ 'notes' == formField.propertyName }">
-                                Additional&nbsp;Comments                                        
-                            </c:when>
-                            <c:when test="${ 'number' == formField.propertyName }">
-                                Individual Count                            
-                            </c:when>
-                            <c:when test="${ 'accuracyInMeters' == formField.propertyName }">
-                                Coordinate Uncertainty in Meters                            
-                            </c:when>
-                       </c:choose>
+					<c:out value="${ formField.description }"/>
                    </th>
                    <td>
                        <tiles:insertDefinition name="propertyRenderer">
@@ -97,6 +85,7 @@
                        </tiles:insertDefinition>
                    </td>
                </tr>
+			</c:if>
            </c:otherwise>
        </c:choose>
     </c:when>

@@ -18,14 +18,13 @@
             </c:when>
             <c:otherwise>
                 <!-- Reset all browser specific styles -->
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-reset.css" type="text/css">
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-fonts.css" type="text/css">
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/yui3-base.css" type="text/css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/yui3/yui3-reset.css" type="text/css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/yui3/yui3-fonts.css" type="text/css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/yui3/yui3-base.css" type="text/css">
                 
                 <!-- The BDRS core default styles -->
                 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bdrs/bdrs.css" type="text/css"/>
 
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/vanilla/base.css" type="text/css"/>
                 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/ketchup/jquery.ketchup.css" type="text/css"/>
                 
                 <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.8.11.custom.min.js"></script>

@@ -33,7 +33,7 @@ public class SingleSiteAllTaxaControllerTest extends SingleSiteMultiTaxaControll
      */
     @Test
     public void testAjaxAddSightingRow() throws Exception {
-        testAjaxAddSightingRow("/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm", "singleSiteAllTaxaRow");
+        testAjaxAddSightingRow("/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm", SingleSiteController.ROW_VIEW);
     }
 
     /**

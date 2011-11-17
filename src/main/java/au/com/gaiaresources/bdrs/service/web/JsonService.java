@@ -79,12 +79,19 @@ public class JsonService {
             addToAttributeMap(attrMap, RECORD_KEY_COMMON_NAME, record.getSpecies().getCommonName());
             addToAttributeMap(attrMap, RECORD_KEY_NUMBER, record.getNumber());
         }
-        addToAttributeMap(attrMap, RECORD_KEY_NOTES, record.getNotes());
+        
+        if (record.getNotes() != null) {
+        	addToAttributeMap(attrMap, RECORD_KEY_NOTES, record.getNotes());
+        }
+        
         addToAttributeMap(attrMap, RECORD_KEY_HABITAT, record.getHabitat());
         addToAttributeMap(attrMap, JSON_KEY_ATTRIBUTES, getOrderedAttributes(record.getOrderedAttributes(), contextPath));
         addToAttributeMap(attrMap, RECORD_KEY_BEHAVIOUR, record.getBehaviour());   
         
-        addToAttributeMap(attrMap, RECORD_KEY_WHEN, record.getWhen().getTime());
+        if(record.getWhen() != null) {
+        	addToAttributeMap(attrMap, RECORD_KEY_WHEN, record.getWhen().getTime());
+        }
+        
         
         // legacy
         addToAttributeMap(attrMap, RECORD_KEY_RECORD_ID, record.getId());

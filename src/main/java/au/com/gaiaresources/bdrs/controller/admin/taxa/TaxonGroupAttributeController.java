@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.TransactionStatus;
@@ -23,8 +25,10 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.util.CollectionUtils;
 
+@RolesAllowed({Role.ADMIN})
 @Controller
 public class TaxonGroupAttributeController extends AbstractController {
     @Autowired
@@ -104,7 +108,6 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("redirect:/admin/taxonGroups/attributes.htm", "taxonGroupID", attributeForm.getTaxonGroupId());
     }
     
-    
     @RequestMapping(value = "/admin/taxonGroups/editAttributeValueOptions", method = RequestMethod.GET, params = {"attributeID"})
     public ModelAndView renderOptions(@RequestParam("attributeID") Integer attributeID) {
     	Attribute attr = taxaService.getAttribute(attributeID);
@@ -118,8 +121,6 @@ public class TaxonGroupAttributeController extends AbstractController {
         model.put("options", new ArrayList<AttributeOption>(attr.getOptions()));
         return new ModelAndView("adminTaxonGroupAttributeOptions", model);
     }
-    
-    
     
     @RequestMapping(value = "/admin/taxonGroups/addAttributeOptions.htm", method = RequestMethod.GET)
     public ModelAndView addAttributeOptions(@RequestParam("attributeID") Integer attributeID) {

@@ -1,9 +1,15 @@
 [
     {
+        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.userManagement",
+        displayName: "User Management",
+        description: "Portal settings for user management."
+    },
+    {
 	    classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
         name: "category.apikey",
         displayName: "API Keys",
-        description: "Any keys for third party APIS that may be used with the BDRS e.g. Google Maps API. To add a google map API key the  must begin with 'google.map.key.' e.g. 'google.map.key.mysite'"
+        description: "Any keys for third party APIs that may be used with the BDRS.<br />To add a google map API key:<ul><li>The key must begin with 'google.map.key.' e.g. 'google.map.key.mysite'</li><li>The value must be a comma separated pair: domain,apikey.</li></ul>"
 	},
 	{
         classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
@@ -52,5 +58,21 @@
         preferenceCategoryName: "category.survey",
         portalName: null,
 		isRequired: true
+    },
+	{
+        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
+        key: "user.account.approvalRequired",
+        value: "false",
+        locked: true,
+        description: "Set this value to 'true' if an admin must approve user accounts they become active.",
+        preferenceCategoryName: "category.userManagement",
+        portalName: null,
+        isRequired: true
+    },
+    {
+        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        name: "category.facets",
+        displayName: "Facets",
+        description: "Configuration options for facets available on the Advanced Review screen." 
     }
 ]

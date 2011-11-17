@@ -211,6 +211,17 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
         uncachePreference(pref);
         super.delete(pref);
     }
+    
+    @Override 
+    public void delete(Session sesh, PreferenceCategory prefCat) {
+        if (sesh == null) {
+            throw new IllegalArgumentException("Session, sesh, cannot be null");
+        }
+        if (prefCat == null) {
+            throw new IllegalArgumentException("PreferenceCategory, prefCat, cannot be null");
+        }
+        super.delete(sesh, prefCat);
+    }
 
     private List<Preference> getAllPreferences(Session sesh) {
         if (sesh == null) {
@@ -319,5 +330,38 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
     public List<PreferenceCategory> getPreferenceCategories() {
         Session sesh = getSessionFactory().getCurrentSession();
         return (List<PreferenceCategory>)sesh.createQuery("from PreferenceCategory").list();
+    }
+    
+    @Override
+    public PreferenceCategory getPreferenceCategoryByName(Session sesh, String name, Portal p) {
+        if (sesh == null) {
+            sesh = getSessionFactory().getCurrentSession();
+        }
+        Object[] args = new Object[] { name, p };
+        List<PreferenceCategory> cats = find(sesh, "from PreferenceCategory c where c.name = ? and c.portal = ?", args);
+        if (cats.isEmpty()) {
+            return null;
+        }
+        if (cats.size() > 1) {
+            log.error(String.format("More than one PreferenceCategory with the name \"%s\" found. Returning the first.", name));
+        }
+        return cats.get(0);
+    }
+    
+    @Override
+    public Preference getPreferenceByKey(Session sesh, String key, Portal p) {
+        if (sesh == null) {
+            sesh = getSessionFactory().getCurrentSession();
+        }
+        
+        Object[] args = new Object[] { key, p };
+        List<Preference> prefs = find(sesh, "from Preference p where p.key = ? and p.portal = ?", args);
+        if (prefs.isEmpty()) {
+            return null;
+        }
+        if (prefs.size() > 1) {
+            log.error(String.format("More than one Preference with the key \"%s\" found. Returning the first.", key));
+        }
+        return prefs.get(0);
     }
 }

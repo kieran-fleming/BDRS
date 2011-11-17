@@ -33,15 +33,16 @@
 
 	<!-- phonegap -->
 	<script type="application/javascript" src="js/bdrs/bdrs-mobile-phonegap.js"></script>
-	<script type="text/javascript">
-        document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
-    </script>
 
     <!-- Platform specific -->
     <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.6.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/phonegap-testplugin.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/barcodescanner.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/nativedb.js"></script>
+
+    <script type="text/javascript">
+        document.addEventListener("deviceready", bdrs.phonegap.onDeviceReady, true);
+    </script>
     
 	<!-- persistence -->
     <script type="application/javascript" src="js/persistence.js"></script>
@@ -75,13 +76,11 @@
 
             bdrs.template = require("bdrs-mobile-template");
 
-	        bdrs.mobile.init = require("bdrs-mobile-init");
-	        bdrs.mobile.init.start();
-	        
 	        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
 	        bdrs.mobile.widget = require("bdrs-mobile-widget");
 	        bdrs.mobile.camera = require("bdrs-mobile-camera");
 	        bdrs.mobile.survey = require("bdrs-mobile-survey");
+			bdrs.mobile.censusmethod = require("bdrs-mobile-census-method");
 	        bdrs.mobile.fileMgr = require("bdrs-mobile-file-mgr");
 	        bdrs.mobile.connectivity = require("bdrs-mobile-connectivity-service");
 			bdrs.mobile.connectivity.init();
@@ -98,6 +97,7 @@
 	        bdrs.mobile.pages.point_intersect = require("bdrs-page-point-intersect");
 	        bdrs.mobile.pages.review = require("bdrs-page-review");
 	        bdrs.mobile.pages.download_surveys = require("bdrs-page-download-surveys");
+ 			bdrs.mobile.pages.survey_delete_confirm = require("bdrs-page-survey-delete-confirm");
 	        bdrs.mobile.pages.sites = require("bdrs-page-sites");
 	        bdrs.mobile.pages.site = require("bdrs-page-site");
 	        bdrs.mobile.pages.add_site = require("bdrs-page-add-site");
@@ -112,6 +112,10 @@
 	        bdrs.mobile.pages.trash = require("bdrs-page-trash");
 	        bdrs.mobile.pages.trash_restore_error = require("bdrs-page-trash-restore-error");
 	        bdrs.mobile.pages.trash_delete_confirm = require("bdrs-page-trash-delete-confirm");
+	        
+            require.path = "./js/bdrs/";
+            bdrs.mobile.init = require("bdrs-mobile-init");
+            bdrs.mobile.init.start();
         };
         if(bdrs.database.ready === true) {
             sjsInit();
@@ -719,7 +723,34 @@
     
     <div data-role="footer" data-theme="b" class="footer"> 
     </div><!-- /footer --> 
-</div><!-- /page --> 
+</div><!-- /page -->
+
+<!-- Delete Survey Confirmation Dialog -->  
+<div data-role="dialog" id="survey-delete-confirm" data-transition="slidedown"> 
+ 
+    <div data-role="header" data-theme="b"> 
+        <h1>Confirm Delete</h1> 
+    </div><!-- /header --> 
+    
+    <div data-role="content" class="bdrs-page-survey-delete-confirm">   
+        <h2>Confirm Delete</h2>
+        <h3>
+            Are you sure you want to permanently delete this survey and all it's related content and records?
+        </h3> 
+        <p>
+            If you delete this survey, the related content and records will be permanently removed from the mobile device.
+        </p>
+
+        <div class="center">
+            <button id="survey-delete-confirm-button">Delete</button>
+        </div>
+
+    </div><!-- /content --> 
+    <!-- 
+    <div data-role="footer" data-theme="b" class="footer"> 
+    </div>/footer --> 
+</div><!-- /page -->
+
 
 <!-- Dump Data --> 
 <div data-role="page" id="dump-data" data-theme="b" data-add-back-btn="true"> 

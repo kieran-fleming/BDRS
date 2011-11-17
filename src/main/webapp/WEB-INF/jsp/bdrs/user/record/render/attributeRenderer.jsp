@@ -1,6 +1,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <tiles:useAttribute name="formField" classname="au.com.gaiaresources.bdrs.controller.attribute.formfield.TypedAttributeValueFormField"/>
 <tiles:useAttribute name="errorMap" classname="java.util.Map" ignore="true"/>
@@ -84,7 +86,7 @@
               </c:when>
           </c:choose>
        </c:forEach>
-       <%= formField.getAttribute().getDescription() %>
+       <cw:validateHtml html="${formField.attribute.description}"/>
        <c:forEach var="optclose" items="<%= formField.getAttribute().getOptions() %>">
           <jsp:useBean id="optclose" type="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
               <c:choose>
@@ -118,7 +120,7 @@
                    </c:when>
                </c:choose>
             </c:forEach>
-            <%= formField.getAttribute().getDescription() %>
+            <cw:validateHtml html="${formField.attribute.description}"/>
             <c:forEach var="optclose2" items="<%= formField.getAttribute().getOptions() %>">
                <jsp:useBean id="optclose2" type="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
                    <c:choose>
@@ -207,9 +209,20 @@
         />
         
     </c:when>
-    
-    
-         <c:when test="${ formField.attribute.type == 'BARCODE'}">
+    <c:when test="${formField.attribute.type == 'BARCODE' || formField.attribute.type == 'REGEX'}">
+        <c:set var="regex" value=""></c:set>
+        <c:forEach var="opt" items="${formField.attribute.options}">
+                   <c:choose>
+                       <c:when test="${regex == ''}">
+                           <c:set var="regex" value="${opt}"></c:set>
+                       </c:when>
+                       <c:otherwise>
+                           <c:set var="regex" value="${regex}\\\\u002C${opt}"></c:set>
+                       </c:otherwise>
+                   </c:choose>
+            </c:forEach>
+        <c:set var="escapedRegex"><cw:regexEscaper regex="${regex}"/></c:set>
+        
         <input type="text"
             id="${ formPrefix }attribute_${ formField.attribute.id }"
             name="${ formPrefix }attribute_${ formField.attribute.id }"
@@ -217,16 +230,16 @@
                 <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>">
                    value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>"/>"
                 </c:when>
-                <c:when test="${ formField.attributeValue != null && formField.attributeValue.numericValue != null}">
-                   value="<c:out value="<%= formField.getAttributeValue().getNumericValue().intValue() %>"/>"
+                <c:when test="${ formField.attributeValue != null && formField.attributeValue.stringValue != null}">
+                   value="<c:out value="<%= formField.getAttributeValue().getStringValue() %>"/>"
                 </c:when>
             </c:choose>
             <c:choose>
                 <c:when test="${ formField.attribute.required }">
-                    class="validate(regExp(<c:out value="${formField.attribute.options[0]}"/>))"
+                    class="validate(regExp(${escapedRegex}, ${regex}))"
                 </c:when>
                 <c:otherwise>
-                     class="validate(regExpOrBlank(<c:out value="${formField.attribute.options[0]}"/>))"
+                     class="validate(regExpOrBlank(${escapedRegex}, ${regex}))"
                 </c:otherwise>
             </c:choose>
         />
@@ -259,9 +272,11 @@
         <textarea id="${ formPrefix }attribute_${ formField.attribute.id }"
             name="${ formPrefix }attribute_${ formField.attribute.id }"
             onkeypress = "return (jQuery(this).val().length <= 255)"
-            <c:if test="${ formField.attribute.required }">
-                class="validate(required)"
-            </c:if>
+			<c:choose>
+				<c:when test="${ formField.attribute.required }"> class="validate(required,maxlength(8191)" </c:when>
+				<c:otherwise> class="validate(maxlength(8191))" </c:otherwise>
+			</c:choose>
+            
         ><c:choose><c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>"><c:out value="<%= valueMap.get(formField.getPrefix()+\"attribute_\"+formField.getAttribute().getId()) %>"/></c:when><c:when test="${ formField.attributeValue != null}"><c:out value="${ formField.attributeValue.stringValue}"/></c:when></c:choose></textarea>
     </c:when>
     <c:when test="${ formField.attribute.type == 'DATE'}">
@@ -319,7 +334,7 @@
                 <c:forEach var="min" items="<%= new int[]{0,5,10,15,20,25,30,35,40,45,50,55} %>">
                     <jsp:useBean id="min" type="java.lang.Integer"/>
                     <option value="${ min }"
-                        <c:if test="<%= cal.get(Calendar.MINUTE) >= min && cal.get(Calendar.MINUTE) < min + 5 && selectTime %>">
+                        <c:if test="<%= cal.get(Calendar.MINUTE) >= min && min+5 > cal.get(Calendar.MINUTE) && selectTime %>">
                             selected="selected"
                         </c:if>
                     >

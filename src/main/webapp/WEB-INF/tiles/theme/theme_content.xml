@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+
+<tiles-definitions>
+
+    <!-- Admin -->
+    <!-- Home Page -->
+    <definition name="adminHome" extends="admin-template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/home.jsp"/>
+    </definition>
+
+    <!-- User -->
+    <!-- Home Page -->
+    <definition name="userHome" extends="user-template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/home.jsp"/>
+    </definition>
+
+    <!-- Public -->
+    <!-- Signin page -->
+    <definition name="signin" extends="template">
+        <put-attribute name="title" value="Sign in"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/signin.jsp"/>
+    </definition>
+
+    <!-- TODO - This is a workaround for mobile users until we get a mobile version up -->
+    <definition name="loginmobile" extends="template">
+        <put-attribute name="title" value="Sign in"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/signin.jsp"/>
+    </definition>
+
+    <!-- User Sign Up -->
+    <definition name="usersignup" extends="template">
+        <put-attribute name="title" value="Register"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/userSignUp.jsp"/>
+    </definition>
+
+    <!-- Home page -->
+    <definition name="home" extends="template">
+        <put-attribute name="title" value="Home"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/home.jsp"/>
+    </definition>
+
+    <!-- About page -->
+    <definition name="about" extends="template">
+        <put-attribute name="title" value="About"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/about.jsp"/>
+    </definition>
+
+    <!-- Help page -->
+    <definition name="helpme" extends="template">
+        <put-attribute name="title" value="Help"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/public/help.jsp"/>
+    </definition>
+    
+</tiles-definitions>

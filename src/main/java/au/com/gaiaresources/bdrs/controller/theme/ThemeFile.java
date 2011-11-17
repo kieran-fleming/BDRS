@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import au.com.gaiaresources.bdrs.model.theme.Theme;
+import au.com.gaiaresources.bdrs.service.theme.ThemeService;
 import au.com.gaiaresources.bdrs.util.FileUtils;
 
 /**
@@ -92,8 +93,7 @@ public class ThemeFile {
      * @throws FileNotFoundException
      */
     public boolean canEdit() throws FileNotFoundException {
-
-        return ThemeController.isTextContent(this.getContentType());
+        return ThemeService.isTextContent(this.getContentType());
     }
     
     public String getContentType() throws FileNotFoundException {

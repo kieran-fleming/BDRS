@@ -117,7 +117,11 @@ public class VanillaUserSignUpController extends AbstractController {
         }
         userDAO.updateUser(saveResult);
         if (saveResult != null) {
-            getRequestContext().addMessage(new Message("user.signup.success"));
+            if (registrationService.isAdminApprovalRequired()) {
+                getRequestContext().addMessage(new Message("user.signup.waiting")); 
+            } else {
+                getRequestContext().addMessage(new Message("user.signup.success"));
+            }
         } else {
             getRequestContext().addMessage(new Message("user.signup.failed"));
         }

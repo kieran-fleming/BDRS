@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import au.com.gaiaresources.bdrs.controller.record.AtlasController;
+import au.com.gaiaresources.bdrs.controller.record.SingleSiteAllTaxaController;
+import au.com.gaiaresources.bdrs.controller.record.SingleSiteMultiTaxaController;
+import au.com.gaiaresources.bdrs.controller.record.TrackerController;
+import au.com.gaiaresources.bdrs.controller.record.YearlySightingsController;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -24,90 +29,86 @@ import au.com.gaiaresources.bdrs.security.Role;
 public class RenderController extends AbstractController {
     @Autowired
     private SurveyDAO surveyDAO;
-    
+
     @Autowired
     private PreferenceDAO prefsDAO;
-    
+
     private Logger log = Logger.getLogger(this.getClass());
-    
+
     public static final String SURVEY_RENDER_REDIRECT_URL = "/bdrs/user/surveyRenderRedirect.htm";
-    public static final String PARAM_RECORD_ID = "recordId";
-    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_RECORD_ID = "record_id";
+    public static final String PARAM_SURVEY_ID = "survey_id";
+
+    // almost overlapping names here.
+    // This controller looks for 'surveyId'. Pages that this controller
+    // redirects to may use survey_id. So, both of these keys exist in the 
+    // dictionary after redirection.
+    public static final String PARAM_X_SURVEY_ID = "surveyId";
 
     /**
      * Redirects the request to the appropriate survey renderer depending upon
      * the <code>SurveyFormRendererType</code> of the survey.
-     *
-     * @param request the http request.
-     * @param response the http response.
-     * @param surveyId the primary key of the survey in question.
+     * 
+     * @param request
+     *            the http request.
+     * @param response
+     *            the http response.
+     * @param surveyId
+     *            the primary key of the survey in question.
      * @return redirected view to the survey renderer.
      */
-    @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN})
+    @RolesAllowed( { Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @SuppressWarnings("unchecked")
     @RequestMapping(value = SURVEY_RENDER_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView surveyRendererRedirect(HttpServletRequest request,
             HttpServletResponse response) {
-    	
-    	int surveyId = 0;
-    	
-    	try {
-			surveyId = Integer.parseInt(request.getParameter("surveyId"));
-    	} catch (NumberFormatException nfe) {
-    		try {
-    			log.debug("Default is : " + prefsDAO.getPreferenceByKey("survey.default").getValue());
-    			surveyId = Integer.parseInt(prefsDAO.getPreferenceByKey("survey.default").getValue());
-    		} catch (Exception e) {
-    			// Either preference isn't set (nullpointer) or it's not an integer (numberformatexception)
-    			try {
-    				log.error("Default survey is incorrectly configured");
-    				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    			} catch (IOException ioe) {
-    				log.error(ioe.getMessage(), ioe);
-    			}
-    			return null;
-    		}
-		}
-    	
+
+        int surveyId = 0;
+
+        try {
+            surveyId = Integer.parseInt(request.getParameter(PARAM_X_SURVEY_ID));
+        } catch (NumberFormatException nfe) {
+            try {
+                log.debug("Default is : "
+                        + prefsDAO.getPreferenceByKey("survey.default").getValue());
+                surveyId = Integer.parseInt(prefsDAO.getPreferenceByKey("survey.default").getValue());
+            } catch (Exception e) {
+                // Either preference isn't set (nullpointer) or it's not an integer (numberformatexception)
+                try {
+                    log.error("Default survey is incorrectly configured");
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                } catch (IOException ioe) {
+                    log.error(ioe.getMessage(), ioe);
+                }
+                return null;
+            }
+        }
+
         Survey survey = surveyDAO.getSurvey(surveyId);
         SurveyFormRendererType renderer = survey.getFormRendererType();
 
         renderer = renderer == null ? SurveyFormRendererType.DEFAULT : renderer;
         String redirectURL;
-        switch(renderer) {
-            case YEARLY_SIGHTINGS:
-                redirectURL = "yearlySightings.htm";
-                break;
-            case SINGLE_SITE_MULTI_TAXA:
-                // The single site multiple taxa form is only used for adding
-                // records. 
-                if(request.getParameter(PARAM_RECORD_ID) == null) {
-                    redirectURL = "singleSiteMultiTaxa.htm";
-                    
-                } else {
-                    redirectURL = "tracker.htm";
-                }
-                break;
-            case SINGLE_SITE_ALL_TAXA:
-                // The single site all taxa form is only used for adding
-                // records. 
-                if(request.getParameter("recordId") == null) {
-                    redirectURL = "singleSiteAllTaxa.htm";
-                    
-                } else {
-                    redirectURL = "tracker.htm";
-                }
-                break;
-            case ATLAS:
-                redirectURL = "atlas.htm";
-                break;
-            case DEFAULT:
-                // Fall through
-            default:
-                redirectURL = "tracker.htm";
+        switch (renderer) {
+        case YEARLY_SIGHTINGS:
+            redirectURL = YearlySightingsController.YEARLY_SIGHTINGS_URL;
+            break;
+        case SINGLE_SITE_MULTI_TAXA:
+            redirectURL = SingleSiteMultiTaxaController.SINGLE_SITE_MULTI_TAXA_URL;
+            break;
+        case SINGLE_SITE_ALL_TAXA:
+            redirectURL = SingleSiteAllTaxaController.SINGLE_SITE_ALL_TAXA_URL;
+            break;
+        case ATLAS:
+            redirectURL = AtlasController.ATLAS_URL;
+            break;
+        case DEFAULT:
+            // Fall through
+        default:
+            redirectURL = TrackerController.EDIT_URL;
         }
 
-        ModelAndView mv = new ModelAndView(new RedirectView(redirectURL));
+        ModelAndView mv = this.redirect(redirectURL);
         mv.addAllObjects(request.getParameterMap());
         mv.addObject(PARAM_SURVEY_ID, surveyId);
         return mv;

@@ -12,6 +12,7 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -28,6 +29,7 @@ import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.util.CSVUtils;
+import au.com.gaiaresources.bdrs.util.DateFormatter;
 
 
 /**
@@ -43,7 +45,7 @@ import au.com.gaiaresources.bdrs.util.CSVUtils;
 @AttributeOverride(name = "id", column = @Column(name = "ATTRIBUTE_VALUE_ID"))
 public class AttributeValue extends PortalPersistentImpl implements TypedAttributeValue {
 	
-	private Logger log = Logger.getLogger(getClass());
+    private Logger log = Logger.getLogger(getClass());
 	
     private Attribute attribute;
     private BigDecimal numericValue;
@@ -110,6 +112,7 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case BARCODE:
+        case REGEX:
         case TIME:
         case HTML:
         case HTML_COMMENT:
@@ -170,6 +173,7 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
     @CompactAttribute
     @Column(name = "STRING_VALUE")
     @Index(name="attribute_value_string_value_index")
+    @Lob  // makes a 'text' type in the database
     public String getStringValue() {
         return stringValue;
     }
@@ -187,11 +191,15 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
     @CompactAttribute
     @Column(name = "DATE_VALUE")
     public Date getDateValue() {
-        return dateValue;
+        return dateValue != null ? new Date(dateValue.getTime()) : null;
     }
 
     public void setDateValue(Date dateValue) {
-        this.dateValue = dateValue;
+        if (dateValue != null) {
+            this.dateValue = new Date(dateValue.getTime());
+        } else {
+            this.dateValue = null;
+        }
     }
 
     @Transient
@@ -213,7 +221,41 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
     
     @Override
     public String toString() {
-        return getStringValue();
+        Attribute a = getAttribute();
+        switch (a.getType()) {
+        case INTEGER:
+        case INTEGER_WITH_RANGE:
+        case DECIMAL:
+            return this.getNumericValue() != null ? this.getNumericValue().toString() : "NaN";          
+
+        case DATE:
+            return this.getDateValue() != null ? DateFormatter.format(this.getDateValue(), DateFormatter.DAY_MONTH_YEAR) : "";
+        case TIME:
+            return this.getDateValue() != null ? DateFormatter.format(this.getDateValue(), DateFormatter.TIME) : "";
+
+        case BARCODE:
+        case REGEX:
+        case STRING:
+        case STRING_AUTOCOMPLETE:
+        case TEXT:
+        
+        case HTML:
+        case HTML_COMMENT:
+        case HTML_HORIZONTAL_RULE:
+
+        case STRING_WITH_VALID_VALUES:
+        
+        case SINGLE_CHECKBOX:
+        case MULTI_CHECKBOX:
+        case MULTI_SELECT:
+
+        case IMAGE:
+        case FILE:
+            return this.getStringValue();
+
+            default:
+                throw new IllegalStateException("attribute type not handled : " + a.getTypeCode());
+        }
     }
 
     @Transient

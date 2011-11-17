@@ -136,6 +136,7 @@
             </table>
 
             <script type="text/javascript">
+            jQuery(function() {
                 jQuery("#user_search").autocomplete({
                    source: function(request, callback) {
                        var params = {};
@@ -258,6 +259,7 @@
                    delay: 300,
                    html:true
                 });
+			});
             </script>
 
         </div>

@@ -1,8 +1,5 @@
 package au.com.gaiaresources.bdrs.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -23,7 +20,7 @@ import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -103,7 +100,8 @@ public class QueryPaginatorTest extends AbstractControllerTest {
         filter.addSortingCriteria("name", SortOrder.ASCENDING);
 
         PagedQueryResult<User> result = critSearch("", "", "", filter);
-        Assert.assertEquals(14, result.getCount());
+        // should be a user for each test name +2 for the admin and root accounts
+        Assert.assertEquals(testnames.length + 2, result.getCount());
         Assert.assertEquals(1, result.getList().size());
         Assert.assertEquals("Aaaaaa", result.getList().get(0).getFirstName());
     }
@@ -114,7 +112,8 @@ public class QueryPaginatorTest extends AbstractControllerTest {
         filter.addSortingCriteria("name", SortOrder.ASCENDING);
 
         PagedQueryResult<User> result = hqlSearch("", "", "", filter);
-        Assert.assertEquals(14, result.getCount());
+        // should be a user for each test name +2 for the admin and root accounts
+        Assert.assertEquals(testnames.length + 2, result.getCount());
         Assert.assertEquals(1, result.getList().size());
         Assert.assertEquals("Aaaaaa", result.getList().get(0).getFirstName());
     }
@@ -134,8 +133,9 @@ public class QueryPaginatorTest extends AbstractControllerTest {
     @Test
     public void testDefaultSortByWeight() throws Exception {
         PagedQueryResult<User> result = hqlSearch(null, null, null, null);
-        Assert.assertEquals(14, result.getCount());
-        Assert.assertEquals(14, result.getList().size());
+        // should be a user for each test name +2 for the admin and root accounts
+        Assert.assertEquals(testnames.length + 2, result.getCount());
+        Assert.assertEquals(testnames.length + 2, result.getList().size());
         
         // there are 2 primed users, admin and root both with weight 0.
         // Item number 7 in the testnames array is Zenichowski and it

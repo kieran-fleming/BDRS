@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,6 +29,7 @@ import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import edu.emory.mathcs.backport.java.util.TreeSet;
 
@@ -35,6 +37,7 @@ import edu.emory.mathcs.backport.java.util.TreeSet;
  * @author stephanie
  *
  */
+@RolesAllowed({Role.ADMIN,Role.SUPERVISOR})
 @Controller
 public class AdminEmailUsersController extends AbstractController {
 
@@ -77,15 +80,13 @@ public class AdminEmailUsersController extends AbstractController {
             String address = string.trim();
             User toUser = userDAO.getUserByEmailAddress(address);
             Map<String, Object> subParams = createSubstitutionParams(toUser, fromUser, content);
-            subParams.put("bdrs.application.url", request.getContextPath() + "/portal/" + getRequestContext().getPortal().getId() + "/home.htm");
-            subParams.put("portal.id", getRequestContext().getPortal().getId());
             emailService.sendMessage(address, from, subject, content, subParams);
         }
     }
     
     private Map<String, Object> createSubstitutionParams(User toUser,
             User fromUser, String content) {
-        Map<String, Object> subParams = new HashMap<String, Object>();
+        Map<String, Object> subParams = ContentService.getContentParams();
         // find each variable in the message and replace with appropriate user variable
         int start = content.indexOf("${"), end = content.indexOf("}", start);
         for (; 

@@ -1,6 +1,6 @@
 <html>
     <body>
-        <p>You have contacted ${userFirstName} ${userLastName} about <a href="${bdrs.application.url}${viewRecordUrl}">one of their records.</a></p>
+        <p>You have contacted ${userFirstName} ${userLastName} about <a href="${bdrsApplicationUrl}${viewRecordUrl}">one of their records.</a></p>
   
         <p>You have sent them the following text:</p>
         

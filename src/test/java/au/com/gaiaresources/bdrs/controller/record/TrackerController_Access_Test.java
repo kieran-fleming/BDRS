@@ -38,9 +38,6 @@ import au.com.gaiaresources.bdrs.security.Role;
 public class TrackerController_Access_Test extends AbstractControllerTest {
 GeometryBuilder geomBuilder = new GeometryBuilder();
     
-
-    @Autowired
-    GeoMapLayerDAO layerDAO;
     @Autowired
     SurveyDAO surveyDAO;
     @Autowired
@@ -49,8 +46,6 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
     AttributeDAO attrDAO;
     @Autowired
     UserDAO userDAO;
-    @Autowired
-    GeoMapFeatureDAO gmfDAO;
 
     
     Attribute recAttr1;
@@ -254,6 +249,6 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

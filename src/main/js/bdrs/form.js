@@ -24,7 +24,7 @@ bdrs.form.prepopulate = function(){
 	}
 	
 	// update the date field to the current date last if it has not already been set
-    if (jQuery("#date").val().length === 0) {
+    if (jQuery("#date").val() != undefined && jQuery("#date").val().length === 0) {
     	jQuery("#date").val(bdrs.util.formatDate(new Date()));
     }
 };

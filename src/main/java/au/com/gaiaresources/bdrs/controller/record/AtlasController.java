@@ -22,11 +22,14 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.insecure.taxa.ComparePersistentImplByWeight;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.location.LocationNameComparator;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
@@ -47,15 +50,10 @@ public class AtlasController extends AbstractController {
 
     private Logger log = Logger.getLogger(getClass());
     
+    public static final String ATLAS_URL = "/bdrs/user/atlas.htm";
+    
     public static final String TAXON_GROUP_ATTRIBUTE_PREFIX = "taxonGroupAttr_";
     public static final String CENSUS_METHOD_ATTRIBUTE_PREFIX = "censusMethodAttr_";
-    
-    // aka taxonomic record property names
-    static final String[] RECORD_PROPERTY_NAMES = new String[] {
-            Record.RECORD_PROPERTY_SPECIES, Record.RECORD_PROPERTY_NUMBER,
-            Record.RECORD_PROPERTY_WHEN, Record.RECORD_PROPERTY_TIME,
-            Record.RECORD_PROPERTY_NOTES, Record.RECORD_PROPERTY_LOCATION,
-            Record.RECORD_PROPERTY_POINT, Record.RECORD_PROPERTY_ACCURACY };
 
     @Autowired
     private RecordDAO recordDAO;
@@ -67,11 +65,24 @@ public class AtlasController extends AbstractController {
     private LocationDAO locationDAO;
     @Autowired
     private AtlasService atlasService;
+    @Autowired
+    private MetadataDAO metadataDAO;
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
+    /**
+     * Note there is no POST method - the atlas form posts to the TrackerController
+     * 
+     * @param request
+     * @param response
+     * @param surveyId
+     * @param taxonSearch
+     * @param recordId
+     * @param guid
+     * @return
+     */
     @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
-    @RequestMapping(value = "/bdrs/user/atlas.htm", method = RequestMethod.GET)
+    @RequestMapping(value = ATLAS_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -129,12 +140,12 @@ public class AtlasController extends AbstractController {
             return mv;
         } else {
             // Add all attribute form fields
-            Map<String, FormField> formFieldMap = new HashMap<String, FormField>();
+            Map<RecordPropertyType, FormField> formFieldMap = new HashMap<RecordPropertyType, FormField>();
 
             // Add all property form fields
-            for (String propertyName : RECORD_PROPERTY_NAMES) {
-                formFieldMap.put(propertyName, 
-                                       formFieldFactory.createRecordFormField(survey, record, propertyName, species, Taxonomic.TAXONOMIC));
+            for (RecordPropertyType type : RecordPropertyType.values()) {
+            	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+            	formFieldMap.put(type,  formFieldFactory.createRecordFormField(record, recordProperty, species, Taxonomic.TAXONOMIC));
             }
             
             // Determine the file attribute to use for the form (if there is one)
@@ -159,7 +170,6 @@ public class AtlasController extends AbstractController {
                     }
                 }
             }
-            
             
             FormField fileFormField = formFieldFactory.createRecordFormField(survey, record, fileAttr, fileRecAttr);
             

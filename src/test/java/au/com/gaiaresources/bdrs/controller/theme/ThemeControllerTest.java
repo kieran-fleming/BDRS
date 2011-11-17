@@ -3,9 +3,18 @@ package au.com.gaiaresources.bdrs.controller.theme;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +31,7 @@ import junit.framework.Assert;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,6 +51,9 @@ import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
 import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.theme.ThemeService;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
+import au.com.gaiaresources.bdrs.servlet.view.FileView;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
 import edu.emory.mathcs.backport.java.util.Collections;
 
@@ -50,18 +63,18 @@ public class ThemeControllerTest extends AbstractControllerTest {
     
     private static final String TEST_CSS_FILE_PATH= "css/style.css";
     private static final String TEST_CSS_RAW_CONTENT = "#horiz-menu {background-image: url(${asset}../images/blockdefault.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: repeat-x;}";
-    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: no-repeat;}";
+    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: no-repeat;}";
     
     private static final String TEST_CSS_MODIFIED_RAW_CONTENT = ".horizontal-menu {background-image: url(${asset}../images/default.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/default.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/default.gif);background-repeat: repeat-x;}";
     
     private static final String TEST_TEMPLATE_FILE_PATH = "templates/template.vm"; 
     private static final String TEST_TEMPLATE_RAW_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"${asset}images/wild_backyards.jpg\" id=\"logo\"/></a>";
     // we now expect $asset to be overwritten at the unzipping/processing stage so the 2 strings below becomes...
     // note there is no context path. I assume this is because there is no context path when running these tests
-    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
-    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\""+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\""+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
     
     private static final String TEST_JS_FILE_PATH = "js/javascript.js";
     private static final String TEST_JS_RAW_CONTENT = "function foobar(a){ var b=${js.foobar.b};var c=a+b;return c;}";
@@ -638,7 +651,7 @@ public class ThemeControllerTest extends AbstractControllerTest {
         themePageList.add(TEST_THEME_PAGE_1);
         themePageList.add(TEST_THEME_PAGE_2);
         
-        files.put(ThemeController.THEME_CONFIG_FILENAME, createConfigFile(
+        files.put(ThemeService.THEME_CONFIG_FILENAME, createConfigFile(
                                                                           new String[]{TEST_CSS_FILE_PATH}, 
                                                                           new String[]{TEST_JS_FILE_PATH}, 
                                                                           configValues,
@@ -734,5 +747,92 @@ public class ThemeControllerTest extends AbstractControllerTest {
         byte[] data = bos.toByteArray();
         bos.close();
         return data;
-    } 
+    }
+    
+    
+    @Test
+    public void testDownloadZip() throws Exception {
+        ManagedFile mf = new ManagedFile();
+        mf.setContentType("application/zip");
+        mf.setFilename("testTheme.zip");
+        mf.setCredit("");
+        mf.setLicense("");
+        mf.setDescription("");
+        mf = managedFileDAO.save(mf);
+        byte[] testTheme = createTestTheme(DEFAULT_CONFIG_VALUES);
+        fileService.createFile(mf.getClass(), mf.getId(), mf.getFilename(), testTheme);
+        
+        login("root", "password", new String[] { Role.ROOT,Role.ADMIN });
+        Portal portal = getRequestContext().getPortal();
+        
+        Map<String, ThemeElement> themeElementMap = new HashMap<String, ThemeElement>();
+        List<ThemeElement> themeElements = new ArrayList<ThemeElement>(DEFAULT_CONFIG_VALUES.size());
+        for(Map.Entry<String, String> entry : DEFAULT_CONFIG_VALUES.entrySet()) {
+            ThemeElement te = new ThemeElement();
+            te.setKey(entry.getKey());
+            te.setDefaultValue(entry.getValue());
+            te.setCustomValue(CUSTOM_CONFIG_VALUES.get(entry.getKey()));
+            te.setType(ThemeElementType.TEXT);
+            te = themeDAO.save(te);
+            themeElements.add(te);
+            themeElementMap.put(te.getKey(), te);
+        }
+        
+        Theme expectedTheme = new Theme();
+        expectedTheme.setActive(true);
+        expectedTheme.setName("Test Theme");
+        expectedTheme.setThemeFileUUID(mf.getUuid());
+        expectedTheme.setCssFiles(new String[]{TEST_CSS_FILE_PATH});
+        expectedTheme.setJsFiles(new String[]{TEST_JS_FILE_PATH});
+        expectedTheme.setPortal(portal);
+        expectedTheme.setThemeElements(themeElements);
+        expectedTheme = themeDAO.save(expectedTheme);
+        
+        ZipUtils.decompressToDir(new ZipFile(fileService.getFile(mf, mf.getFilename()).getFile()), 
+                                 fileService.getTargetDirectory(expectedTheme, Theme.THEME_DIR_RAW, true));
+        
+        request.setMethod("GET");
+        request.setRequestURI("/bdrs/admin/theme/downloadTheme.htm");
+        request.setParameter("themeId", expectedTheme.getId().toString());
+        
+        ModelAndView mv = handle(request, response);
+        Assert.assertNull(mv);
+        Assert.assertEquals(testTheme.length, response.getContentLength());
+        byte[] responseBytes = response.getContentAsByteArray();
+        Assert.assertEquals(testTheme.length, responseBytes.length);
+        /*for (int i = 0; i < testTheme.length && i < responseBytes.length; i++) {
+            Assert.assertEquals("byte " + i + " of files is different", testTheme[i], responseBytes[i]);
+        }*/
+    }
+    
+    @Test
+    public void testRefreshTheme() throws Exception {
+        login("root", "password", new String[] { Role.ROOT });
+        Portal portal = getRequestContext().getPortal();
+        Theme activeTheme = getRequestContext().getTheme();
+
+        // get a theme besides the active one
+        List<Theme> themes = themeDAO.getThemes(portal);
+        if (activeTheme == null) {
+            activeTheme = themes.get(0);
+        } else {
+            for (Theme theme : themes) {
+                if (theme.equals(activeTheme)) {
+                    activeTheme = theme;
+                }
+            }
+        }
+        request.setMethod("GET");
+        request.setRequestURI("/bdrs/admin/theme/refreshTheme.htm");
+        request.setParameter("portalId", portal.getId().toString());
+        request.setParameter("themeId", activeTheme.getId().toString());
+
+        ModelAndView mv = handle(request, response);
+        ModelAndViewAssert.assertViewName(mv, "themeListing");
+        ModelAndViewAssert.assertModelAttributeValue(mv, "portalId", portal.getId());
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "themeList");
+        
+        // assert that the active theme and the selected one are the same
+        Assert.assertEquals(activeTheme, themeDAO.getActiveTheme(portal));
+    }
 }

@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.util;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +8,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -87,7 +95,8 @@ public class FileUtils {
         if(!(temp.mkdir())) {
             throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
         }
-        return (temp);
+        temp.deleteOnExit();
+        return temp;
     } 
     
     /**
@@ -168,6 +177,30 @@ public class FileUtils {
             }
             if (oStream != null) {
                 oStream.close();
+            }
+        }
+    }
+    
+    /**
+     * Reads an InputStream in JSON format into a {@link JSONArray} or {@link JSONObject}.
+     * @param <T> The type of JSON object to create, either {@link JSONArray} or {@link JSONObject}
+     * @param fileStream The {@link InputStream} to read
+     * @return A {@link JSONArray} or {@link JSONObject} representing the contents of the {@link InputStream}
+     * @throws IOException when there is an error reading the {@link InputStream}
+     * @throws JSONException when the {@link InputStream} is not properly formatted JSON
+     */
+    public static JSON readJsonStream(InputStream stream) throws IOException, JSONException {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(stream));
+            StringBuilder configJsonStr = new StringBuilder();
+            for(String line = reader.readLine(); line != null; line = reader.readLine()) {
+                configJsonStr.append(line);
+            }
+            return JSONSerializer.toJSON(configJsonStr.toString());
+        } finally {
+            if (reader != null) {
+                reader.close();
             }
         }
     }

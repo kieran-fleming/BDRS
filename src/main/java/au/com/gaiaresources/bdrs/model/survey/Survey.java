@@ -17,7 +17,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.apache.log4j.Logger;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
@@ -77,8 +76,6 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
     private static final boolean DEFAULT_RECORD_VISIBILITY_MODIFIABLE = true;
     
     private static final boolean DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY = true;
-    
-    private Logger log = Logger.getLogger(getClass());
 
     /**
      * {@inheritDoc}
@@ -471,4 +468,5 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         // the above null checks in.
         return this.getId().compareTo(o.getId());
     }
+	
 }

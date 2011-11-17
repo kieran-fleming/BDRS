@@ -1,8 +1,17 @@
 package au.com.gaiaresources.bdrs.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Random;
+
+import org.apache.log4j.Logger;
+import org.w3c.tidy.Tidy;
+
+import au.com.gaiaresources.bdrs.controller.record.validator.HtmlValidator.MyTidyMessageListener;
 
 /**
  * String utilities.
@@ -15,6 +24,8 @@ public final class StringUtils {
      */
     public static final String ALPHA_NUMERIC_CHARACTERS = 
                                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    
+    private static Logger log = Logger.getLogger(StringUtils.class);
     
     /**
      * Generate a random string containing characters from <code>ALPHA_NUMERIC_CHARACTERS</code>.
@@ -132,4 +143,79 @@ public final class StringUtils {
     public static String removeNonAlphaNumerics(String s) {
         return s.replaceAll("[^\\w]", "");
     }
+    
+    /**
+     * Validates and "tidies" an HTML String using Tidy.
+     * @param html The HTML String to validate and "tidy"
+     * @return The "tidied" HTML String or null if the String was invalid
+     */
+    public static String validateHtml(String html) {
+        return validateHtml(html, null);
+    }
+    
+    public static String validateHtml(String html, MyTidyMessageListener listener) {
+        if (nullOrEmpty(html)) {
+            return null;
+        }
+        
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = null;
+        try {
+            Tidy tidy = new Tidy();
+            // create a listener to handle errors
+            if (listener == null) {
+                listener = new MyTidyMessageListener();
+            }
+            tidy.setMessageListener(listener);
+            // create an output stream to redirect output from Tidy to the log file
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            pw = new PrintWriter(out);
+            tidy.setErrout(pw);
+            tidy.setXHTML(false);
+            
+            tidy.parse(new StringReader(html), sw);
+            
+            log.warn(out.toString());
+            // the listener only stores error messages, so if it has a message,
+            // there was an error in the validation
+            return listener.getErrors().size() > 0 ? null : sw.toString();
+        } finally {
+            if (pw != null) {
+                pw.close();
+            }
+            try {
+                sw.close();
+            } catch (IOException e) {
+                
+            }
+        }
+    }
+
+    /**
+     * Replaces all the '\' in the regex with '\\'.
+     * @param regex The regular expression to escape
+     * @return The escaped regular expression
+     */
+    public static String escapeRegex(String regex) {
+        return regex.replaceAll("\\\\", "\\\\\\\\");
+    }
+
+    /**
+     * Returns a String of the list elements separated by the delimiter.
+     * @param list The list of elements to join into a String
+     * @param delimiter The delimiter by which to separate the list items
+     * @return A String of list items separated by a delimiter
+     */
+    public static String joinList(List<? extends Object> list, String delimiter) {
+        StringBuilder sb = new StringBuilder();
+        for (Object object : list) {
+            sb.append(object.toString());
+            sb.append(delimiter);
+        }
+        // remove trailing delimiter
+        if (sb.length() > 0) {
+            sb.setLength(sb.length()-1);
+        }
+        return sb.toString();
+    };
 }

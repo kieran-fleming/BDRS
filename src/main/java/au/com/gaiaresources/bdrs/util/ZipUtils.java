@@ -7,6 +7,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -97,23 +99,64 @@ public class ZipUtils {
     static final int BUFFER = 2048;
 
     public static void compress(List<File> inFiles, File outFile) throws IOException {
+        // convert the list to an array
+        File[] files = new File[inFiles.size()];
+        files = inFiles.toArray(files);
+        compress(files, outFile);
+    }
+    
+    public static void compress(File[] inFiles, File outFile) throws IOException {
         FileOutputStream dest = null;
-        ZipOutputStream out = null;
         try {
             dest = new FileOutputStream(outFile);
+
+            compressToStream(inFiles, dest);
+            dest.close();
+        } catch (Exception e) {
+            log.error("Error zipping files", e);
+        } finally {
+            if (dest != null) {
+                dest.close();
+            }
+        }
+    }
+    
+    public static void compressToStream(File[] inFiles, OutputStream dest) throws IOException {
+        ZipOutputStream out = null;
+        try {
             out = new ZipOutputStream(new BufferedOutputStream(dest));
 
-            byte data[] = new byte[BUFFER];
+            compressFiles(inFiles, out, "");
+            out.close();
+        } catch (Exception e) {
+            log.error("Error zipping files", e);
+        } finally {
+            if (dest != null) {
+                dest.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+        }
+    }
 
-            for (File f : inFiles) {
-                log.info("Zipping: " + f.getAbsolutePath());
+    private static void compressFiles(File[] inFiles, ZipOutputStream out, String parent) throws IOException {
+        byte data[] = new byte[BUFFER];
 
+        for (File f : inFiles) {
+            log.info("Zipping: " + f.getAbsolutePath());
+
+            if (f.isDirectory()) {
+                compressFiles(f.listFiles(), out, parent + 
+                              (!StringUtils.nullOrEmpty(parent) ? "/" : "") + f.getName());
+            } else {
                 FileInputStream fi = null;
                 BufferedInputStream origin = null;
                 try {
                     fi = new FileInputStream(f);
                     origin =  new BufferedInputStream(fi, BUFFER);
-                    ZipEntry entry = new ZipEntry(f.getName());
+                    ZipEntry entry = new ZipEntry(parent + 
+                                                  (!StringUtils.nullOrEmpty(parent) ? "/" : "") + f.getName());
                     out.putNextEntry(entry);
                     int count;
                     while ((count = origin.read(data, 0, BUFFER)) != -1) {
@@ -127,16 +170,6 @@ public class ZipUtils {
                         origin.close();
                     }
                 }
-            }
-            out.close();
-        } catch (Exception e) {
-            log.error("Error zipping files", e);
-        } finally {
-            if (dest != null) {
-                dest.close();
-            }
-            if (out != null) {
-                out.close();
             }
         }
     }

@@ -11,7 +11,7 @@
     <textarea name="themeFileContent">${ content }</textarea>
     
     <div class="textright buttonpanel">
-        <a href="${pageContext.request.contextPath}/bdrs/root/theme/edit.htm?portalId=${ editTheme.portal.id }&themeId=${ editTheme.id }">Cancel</a>
+        <a href="${pageContext.request.contextPath}/bdrs/<c:if test="${editAsRoot}">root</c:if><c:if test="${editAsAdmin}">admin</c:if>/theme/edit.htm?portalId=${ editTheme.portal.id }&themeId=${ editTheme.id }">Cancel</a>
         <span>&nbsp;|&nbsp;</span>
         <input class="form_action" type="submit" value="Revert Changes" name="revert" onsubmit="return confirm('Reverting this theme will delete all local changes. Do you wish to continue?');"/>
         <input class="form_action" type="submit" value="Save Template"/>

@@ -67,8 +67,11 @@ public class TemplateService {
 
         // if there's an error we're just going to use the non processed string
         try {
-            templateEngine.evaluate(vContext, writer, "velocity log tag", value);
-            value = writer.toString();
+            if (templateEngine.evaluate(vContext, writer, "velocity log tag", value)) {
+                value = writer.toString();
+            } else {
+                log.error("Velocity template not evaluated, returning original string.");
+            }
         } catch (IOException e) {
             log.error("Error processing velocity template", e);
         }

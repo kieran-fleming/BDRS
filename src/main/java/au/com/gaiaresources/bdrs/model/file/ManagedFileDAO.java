@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 
 public interface ManagedFileDAO  extends TransactionDAO {
 
@@ -26,4 +27,9 @@ public interface ManagedFileDAO  extends TransactionDAO {
 
     void delete(ManagedFile mf);
 
+    ManagedFile getManagedFile(String themeFileUUID, Portal portal);
+
+    ManagedFile getManagedFileByDescription(String fileDescription);
+
+    ManagedFile getManagedFileByName(String fileName);
 }

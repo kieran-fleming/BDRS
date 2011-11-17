@@ -10,4 +10,14 @@ public class FilterManager {
         Filter filter = sesh.enableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
         filter.setParameter(PortalPersistentImpl.PORTAL_FILTER_PORTALID_PARAMETER_NAME, portal.getId());
     }
+    
+    public static void disablePortalFilter(org.hibernate.Session sesh) {
+        sesh.disableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
+    }
+    
+    public static void enablePortalFilter(org.hibernate.Session sesh, Portal portal) {
+        if (portal != null) {
+            setPortalFilter(sesh, portal);
+        }
+    }
 }

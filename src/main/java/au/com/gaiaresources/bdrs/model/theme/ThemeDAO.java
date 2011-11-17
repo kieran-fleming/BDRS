@@ -88,4 +88,27 @@ public interface ThemeDAO {
      * @return the saved page
      */
     public ThemePage save(ThemePage page);
+
+    /**
+     * Gets the default theme for the specified portal or null if one does not exist.
+     * @param portal the portal associated with the default theme to be retrieved.
+     * @return the default theme for the specified portal.
+     */
+    public Theme getDefaultTheme(Portal portal);
+
+    /**
+     * Gets a Theme with a given name for the specified portal.
+     * @param portal The portal to get the theme from
+     * @param name The name of the theme to get
+     * @return The theme with name name in portal portal
+     */
+    public Theme getTheme(Portal portal, String name);
+
+    /**
+     * Gets a theme element by theme id and key.
+     * @param themeId The id of the theme to get the element from
+     * @param key The key of the theme element
+     * @return The theme element matching the key for the theme with id themeId
+     */
+    public ThemeElement getThemeElement(int themeId, String key);
 }

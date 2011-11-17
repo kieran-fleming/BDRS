@@ -11,8 +11,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import au.com.gaiaresources.bdrs.db.FilterManager;
 import au.com.gaiaresources.bdrs.db.Persistent;
 import au.com.gaiaresources.bdrs.db.QueryCriteria;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 public abstract class AbstractDAOImpl {
 
@@ -153,6 +156,48 @@ public abstract class AbstractDAOImpl {
     {
         return find(sessionFactory.getCurrentSession(), hql, args);
     }
+        
+    /**
+     * Returns a unique result if one item is found, null if 0 items are found. Throws an exception
+     * if more than 1 item is found.
+     * 
+     * @param <T>
+     * @param hql for the query
+     * @param args - positional args for the hql query
+     * @return
+     */
+    protected <T extends Persistent> T findUnique(String hql, Object[] args) {
+        return findUnique(sessionFactory.getCurrentSession(), hql, args);
+    }
+    
+    /**
+     * Returns a unique result if one item is found, null if 0 items are found. Throws an exception
+     * if more than 1 item is found.
+     * 
+     * @param <T>
+     * @param sesh - session to execute the query
+     * @param hql for the query
+     * @param args - positional args for the hql query
+     * @return
+     */
+    protected <T extends Persistent> T findUnique(Session sesh, String hql, Object[] args) {
+        
+        if (sesh == null) {
+            throw new IllegalArgumentException("Session, sesh, cannot be null");
+        }
+        if (hql == null) {
+            throw new IllegalArgumentException("String, hql, cannot be null");
+        }
+        
+        List<T> list = find(sesh, hql, args);
+        if (list.size() > 1) {
+            throw new IllegalStateException("Unique result should be returned. Instead we have : " + list.size());
+        }
+        if (list.size() == 1) {
+            return list.get(0);
+        }
+        return null;
+    }
 
     protected <T extends Persistent> List<T> find(Session sesh, String hql, Object args)
     {
@@ -177,5 +222,17 @@ public abstract class AbstractDAOImpl {
     protected Session getSession()
     {
         return sessionFactory.getCurrentSession();
+    }
+    
+    protected void enablePortalFilter() {
+        Portal portal = RequestContextHolder.getContext().getPortal();
+        // portal can be null on root portal initialization
+        if (portal != null) {
+            FilterManager.setPortalFilter(getSession(), portal);
+        }
+    }
+    
+    protected void disablePortalFilter() {
+        getSession().disableFilter(PortalPersistentImpl.PORTAL_FILTER_NAME);
     }
 }

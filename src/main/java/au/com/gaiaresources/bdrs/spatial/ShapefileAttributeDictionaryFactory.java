@@ -72,6 +72,7 @@ public class ShapefileAttributeDictionaryFactory extends AbstractAttributeDictio
         }
         // Trim key to max length...
         baseKey = baseKey.length() > MAX_KEY_LENGTH ? baseKey.substring(0, MAX_KEY_LENGTH) : baseKey;
+        baseKey = baseKey.trim();
         // keep on renaming the key until we can add it to our set...
         
         String modifiedKey = baseKey;
@@ -106,7 +107,7 @@ public class ShapefileAttributeDictionaryFactory extends AbstractAttributeDictio
             throw new IllegalArgumentException("survey cannot be null");
         }
         if (censusMethodList == null) {
-            censusMethodList = Collections.EMPTY_LIST;
+            censusMethodList = Collections.emptyList();
         }
         
         // Use linked hash map to preserve order

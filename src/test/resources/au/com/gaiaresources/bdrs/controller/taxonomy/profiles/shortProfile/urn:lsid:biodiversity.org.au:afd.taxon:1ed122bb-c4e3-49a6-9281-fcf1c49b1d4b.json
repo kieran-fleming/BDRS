@@ -1,0 +1,14 @@
+{
+    "scientificName": "Pogona minor",
+    "family": "Agamidae",
+    "imageURL": "http://bie.ala.org.au/repo/1061/161/1613878/raw.jpg",
+    "commonName": "Dwarf Bearded Dragon",
+    "rankID": 7000,
+    "scientificNameAuthorship": "(Sternfeld, 1919)",
+    "author": "Sternfeld",
+    "kingdom": "Animalia",
+    "rank": "species",
+    "thumbnail": "http://bie.ala.org.au/repo/1061/161/1613878/thumbnail.jpg",
+    "year": null,
+    "commonNameGUID": "urn:lsid:biodiversity.org.au:afd.name:86774109-52bd-454a-a529-a0788cafb7e5"
+}

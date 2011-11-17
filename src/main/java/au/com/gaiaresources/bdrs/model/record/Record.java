@@ -29,6 +29,8 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Type;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.expert.ReviewRequest;
@@ -40,6 +42,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.util.DateFormatter;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -51,29 +54,14 @@ import com.vividsolutions.jts.geom.Point;
 @AttributeOverride(name = "id", column = @Column(name = "RECORD_ID"))
 public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attributable<AttributeValue> {
     
-    public static final String RECORD_PROPERTY_SPECIES = "species";
-    public static final String RECORD_PROPERTY_LOCATION = "location";
-    public static final String RECORD_PROPERTY_POINT = "point";
-    public static final String RECORD_PROPERTY_ACCURACY = "accuracyInMeters";
-    public static final String RECORD_PROPERTY_WHEN = "when";
-    public static final String RECORD_PROPERTY_TIME = "time";
-    public static final String RECORD_PROPERTY_NOTES = "notes";
-    public static final String RECORD_PROPERTY_NUMBER = "number";
-
-    // aka taxonomic record property names
-    public static final String[] RECORD_PROPERTY_NAMES = new String[] {
-            RECORD_PROPERTY_SPECIES, RECORD_PROPERTY_LOCATION,
-            RECORD_PROPERTY_POINT, RECORD_PROPERTY_ACCURACY, 
-            RECORD_PROPERTY_WHEN, RECORD_PROPERTY_TIME,
-            RECORD_PROPERTY_NOTES, RECORD_PROPERTY_NUMBER };
-    
     // no species and number seen
-    public static final String[] NON_TAXONOMIC_RECORD_PROPERTY_NAMES = new String[] {
-            RECORD_PROPERTY_LOCATION,
-            RECORD_PROPERTY_POINT,
-            RECORD_PROPERTY_ACCURACY, 
-            RECORD_PROPERTY_WHEN, RECORD_PROPERTY_TIME,
-            RECORD_PROPERTY_NOTES, };
+    public static final RecordPropertyType[] NON_TAXONOMIC_RECORD_PROPERTY_NAMES = new RecordPropertyType[] {
+    	RecordPropertyType.LOCATION,
+    	RecordPropertyType.POINT,
+    	RecordPropertyType.ACCURACY,
+    	RecordPropertyType.WHEN,
+    	RecordPropertyType.TIME,
+    	RecordPropertyType.NOTES};
 
     private Logger log = Logger.getLogger(getClass());
     
@@ -82,7 +70,7 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
     private User user;
     private Location location;
     private Geometry geometry;
-    private Double accuracyInMeters;
+    private Double AccuracyInMeters;
     private Boolean held;
     private RecordVisibility recordVisibility = RecordVisibility.OWNER_ONLY;
 
@@ -161,6 +149,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
         childRecords = value;
     }
 
+    /**
+     * Gets the survey that the record belongs to
+     * 
+     * Should this really be nullable ?
+     */
     @CompactAttribute
     @ManyToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "INDICATOR_SURVEY_ID", nullable = true)
@@ -258,11 +251,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
      * @return {@link Location}
      */
     public Double getAccuracyInMeters() {
-        return accuracyInMeters;
+        return AccuracyInMeters;
     }
 
     public void setAccuracyInMeters(Double accuracy) {
-        this.accuracyInMeters = accuracy;
+        this.AccuracyInMeters = accuracy;
     }
     
     @CompactAttribute
@@ -271,7 +264,8 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
      * Return whether the record is held or not.
      */
     public Boolean isHeld() {
-        return held;
+        // if held is null, this value is false
+        return held != null ? held : false;
     }
 
 
@@ -285,7 +279,7 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
     }
 
     @CompactAttribute
-    @Column(name = "WHEN_DATE", nullable = false)
+    @Column(name = "WHEN_DATE")
     /**
      * Get the date that the sighting occured.
      * @return {@link Date}
@@ -296,7 +290,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
 
     public void setWhen(Date when) {
         this.when = when;
-        this.time = when.getTime();
+        if (when == null) {
+        	this.time = null;
+        } else {
+        	this.time = when.getTime();
+        }
     }
 
     @CompactAttribute
@@ -313,14 +311,18 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
 
     public void setTime(Long time) {
         this.time = time;
-        this.when = new Date(time);
+        if (time == null) {
+        	this.when = null;
+        } else {
+        	this.when = new Date(time);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @CompactAttribute
-    @Column(name = "LAST_DATE", nullable = false)
+    @Column(name = "LAST_DATE")
     /**
      * Get the date that the sighting occured.
      * @return {@link Date}
@@ -331,7 +333,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
 
     public void setLastDate(Date when) {
         this.lastDate = when;
-        this.lastTime = when.getTime();
+        if (when == null) {
+        	this.lastTime = null;
+        } else {
+        	this.lastTime = when.getTime();
+        }
     }
 
     @CompactAttribute
@@ -348,7 +354,12 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
 
     public void setLastTime(Long time) {
         this.lastTime = time;
-        this.lastDate = new Date(time);
+        if  (time == null) {
+        	this.lastDate = null;
+        } else {
+        	this.lastDate = new Date(time);
+        }
+        
     }
 
     @Transient
@@ -594,13 +605,13 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
     public boolean hideDetails(User accessor) {
         boolean isPublic = this.getRecordVisibility() == RecordVisibility.PUBLIC;
         if (accessor == null) {
-            // ignore accessing user
-            return !isPublic;
+            // ignore accessing user and show only public records that aren't held
+            return !isPublic || isHeld();
         }
         if (accessor.getId() == null) {
             log.warn("Attempting to access record with a non null user with a null id. This _probably_ should not happen");
-            // ignore accessing user
-            return !isPublic;
+            // ignore accessing user and show only public records that aren't held
+            return !isPublic || isHeld();
         }
         if (this.getUser() == null || this.getUser().getId() == null) {
             // record is not yet properly created (user field cannot be null in database).
@@ -609,7 +620,8 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
         }
 
         boolean isOwner = accessor.getId().intValue() == this.getUser().getId().intValue();
-        return !isOwner && !isPublic && !accessor.isAdmin();
+        // if you aren't the owner or admin and the record isn't public or is held, hide the details
+        return !isOwner && (!isPublic || isHeld()) && !accessor.isAdmin();
     }
     
     /**

@@ -93,7 +93,11 @@ public class PreferenceControllerTest extends AbstractControllerTest {
         }
         for(Map.Entry<String, String> expectedDescEntry : expectedPrefDescMap.entrySet()) {
             Preference pref = prefDAO.getPreferenceByKey(expectedDescEntry.getKey());
-            Assert.assertEquals(expectedDescEntry.getValue(), pref.getDescription()); 
+            if (!pref.isLocked()) {
+                Assert.assertEquals(expectedDescEntry.getValue(), pref.getDescription());
+            } else {
+                Assert.assertFalse("description should not be edited", pref.getDescription().endsWith("edit"));
+            }
         }
         
         // Assert added prefs

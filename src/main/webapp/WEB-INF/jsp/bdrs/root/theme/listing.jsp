@@ -9,30 +9,39 @@
         <tr>
             <th>Name</th>
             <th>Is Active</th>
+            <th>Download</th>
+            <th>Edit</th>
         </tr>
     </thead> 
     <tbody>
         <c:forEach var="theme" items="${ themeList }">
             <tr>
                 <td>
-                    <a href="${pageContext.request.contextPath}/bdrs/root/theme/edit.htm?portalId=${ portalId }&themeId=${ theme.id }">
-                        <c:out value="${ theme.name }"/>
+                    <c:out value="${ theme.name }"/>
+                </td>
+                <td>
+                    <input type="radio" name="active" onclick="blur();" onchange="window.document.location='${pageContext.request.contextPath}/bdrs/admin/theme/refreshTheme.htm?themeId=${ theme.id }'"
+                        <c:if test="${ theme.active }">
+                            checked="checked"
+                        </c:if>
+                    />
+                </td>
+                <td>
+                    <a href="${pageContext.request.contextPath}/bdrs/admin/theme/downloadTheme.htm?themeId=${ theme.id }">
+                        Download
                     </a>
                 </td>
                 <td>
-                    <c:choose>
-                        <c:when test="${ theme.active }">
-                            Yes
-                        </c:when>
-                        <c:otherwise>
-                            &nbsp;
-                        </c:otherwise>
-                    </c:choose>
+                    <c:if test="${ not theme.default }">
+                        <a href="${pageContext.request.contextPath}/bdrs/<c:if test="${editAsRoot}">root</c:if><c:if test="${editAsAdmin}">admin</c:if>/theme/edit.htm?themeId=${ theme.id }&portalId=${ portalId }">
+                            Edit
+                        </a>
+                    </c:if>
                 </td>
             </tr>
         </c:forEach>
     </tbody>
 </table>
-<div class="textright">
-    <input class="form_action" type="button" value="Add Theme" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/root/theme/edit.htm?portalId=${ portalId }'"/>
+<div class="buttonpanel textright">
+    <input class="form_action" type="button" value="Add Theme" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/<c:if test="${editAsRoot}">root</c:if><c:if test="${editAsAdmin}">admin</c:if>/theme/edit.htm?portalId=${ portalId }'"/>
 </div>

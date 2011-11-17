@@ -77,50 +77,45 @@ public class FormFieldFactory {
     /**
      * Creates a new {@link FormField} for a record property.
      * 
-     * @param survey the survey containing the record
      * @param record the record to be updated
-     * @param propertyName the name of the bean property represented by this field.
+     * @param recordProperty the <code>RecordProperty</code> that is stored in the <code>RecordFormField</code>
      * @param species the indicator species to be represented by this field, or
      * null otherwise.
      * @param taxonomic determines if the species field is mandatory.
      * @param prefix the prefix to be prepended to input names.
      * @return a <code>RecordFormField</code>
      */
-    public FormField createRecordFormField(Survey survey,
-            Record record, String propertyName, IndicatorSpecies species,
+    public FormField createRecordFormField(Record record, RecordProperty recordProperty, IndicatorSpecies species,
             Taxonomic taxonomic, String prefix) {
-        return new RecordPropertyFormField(survey, record, propertyName,
-                species, taxonomic, prefix);
+        return new RecordPropertyFormField(record, recordProperty, species, taxonomic, prefix);
     }
 
     /**
      * Creates a new {@link FormField} for a record property.
      * 
-     * @param survey the survey containing the record
      * @param record the record to be updated
-     * @param propertyName the name of the bean property represented by this field.
+	 * @param recordProperty the <code>RecordProperty</code> that is stored in the <code>RecordFormField</code>
      * @param species the indicator species to be represented by this field, or
      * null otherwise.
      * @param taxonomic determines if the species field is mandatory.
      * @return a <code>RecordFormField</code>
      */
-    public FormField createRecordFormField(Survey survey,
-            Record record, String propertyName, IndicatorSpecies species, Taxonomic taxonomic) {
-        return new RecordPropertyFormField(survey, record, propertyName,
+    public FormField createRecordFormField(
+            Record record, RecordProperty recordProperty, IndicatorSpecies species, Taxonomic taxonomic) {
+        return new RecordPropertyFormField(record, recordProperty,
                 species, taxonomic, AttributeParser.DEFAULT_PREFIX);
     }
 
     /**
      * Creates a new {@link FormField} for a record property.
      * 
-     * @param survey the survey containing the record
      * @param record the record to be updated
-     * @param propertyName the name of the bean property represented by this field.
+	 * @param recordProperty the <code>RecordProperty</code> that is stored in the <code>RecordFormField</code>
      * @return a <code>RecordFormField</code>
      */
-    public FormField createRecordFormField(Survey survey, Record record,
-            String propertyName) {
-        return new RecordPropertyFormField(survey, record, propertyName, null, null,
+    public FormField createRecordFormField(Record record,
+            RecordProperty recordProperty) {
+        return new RecordPropertyFormField(record, recordProperty, null, null,
                 AttributeParser.DEFAULT_PREFIX);
     }
     

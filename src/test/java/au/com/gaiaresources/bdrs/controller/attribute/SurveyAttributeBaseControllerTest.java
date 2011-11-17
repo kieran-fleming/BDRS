@@ -16,6 +16,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertySetting;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -42,7 +45,6 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
     private MetadataDAO metadataDAO;
     @Autowired
     private AttributeDAO attributeDAO;
-    
     @Autowired
     private CensusMethodDAO cmDAO;
     @Autowired
@@ -119,19 +121,33 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
         metadataDAO.save(md);
         
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            md = new Metadata(String.format("property_weight_%s", propertyName),String.valueOf(PersistentImpl.DEFAULT_WEIGHT));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            md = new Metadata(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()),String.valueOf(PersistentImpl.DEFAULT_WEIGHT));
             md = metadataDAO.save(md);
             survey.getMetadata().add(md);
         }
-        //survey.setAttributes();
-        //survey.setSpecies(null);
         
         survey.getCensusMethods().add(m1);
         
         survey = surveyDAO.save(survey);
     }
+    
+    @Test
+    public void testNullSurvey() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
 
+        request.setMethod("GET");
+        request.setRequestURI("/bdrs/admin/survey/editAttributes.htm");
+        request.setParameter("surveyId", Integer.toString(0));
+
+        ModelAndView mv = handle(request, response);
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView view = (RedirectView)mv.getView();
+        Assert.assertEquals("redirect to listing page", SurveyBaseController.SURVEY_LISTING_URL, view.getUrl());
+        
+        assertRedirectAndErrorCode(mv, SurveyBaseController.SURVEY_LISTING_URL, SurveyBaseController.SURVEY_DOES_NOT_EXIST_ERROR_KEY);
+    }
+    
     @Test
     public void testEditSurveyAttributes() throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
@@ -148,7 +164,7 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         int curWeight = Integer.MIN_VALUE;
         Assert.assertEquals(survey, mv.getModelMap().get("survey"));
         List<AttributeFormField> formFieldList = (List<AttributeFormField>) mv.getModelMap().get("formFieldList");
-        Assert.assertEquals(Record.RECORD_PROPERTY_NAMES.length, formFieldList.size());
+        Assert.assertEquals(RecordPropertyType.values().length, formFieldList.size());
         for (AttributeFormField formField : formFieldList) {
             // Test attributes are sorted by weight
             Assert.assertTrue(formField.getWeight() >= curWeight);
@@ -210,7 +226,7 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         Assert.assertEquals(survey, mv.getModelMap().get("survey"));
         List<AttributeFormField> formFieldList = (List<AttributeFormField>) mv.getModelMap().get("formFieldList");
         // Test all attributes and properties are represented.
-        Assert.assertEquals(Record.RECORD_PROPERTY_NAMES.length
+        Assert.assertEquals(RecordPropertyType.values().length
                 + attributeList.size(), formFieldList.size());
         for (AttributeFormField formField : formFieldList) {
             // Test attributes are sorted by weight
@@ -261,8 +277,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             }
         }
         
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            params.put(String.format("property_weight_%s", propertyName), String.valueOf(curWeight));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            params.put(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()), String.valueOf(curWeight));
             curWeight = curWeight + 100;
         }
                 
@@ -365,8 +381,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         }
         
         curWeight = 0;
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            params.put(String.format("property_weight_%s", propertyName), String.valueOf(Integer.MAX_VALUE - curWeight));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            params.put(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()), String.valueOf(Integer.MAX_VALUE - curWeight));
             
             curWeight = curWeight + 1; 
         }
@@ -392,9 +408,9 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         }
         
         Metadata md;
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            md = actualSurvey.getMetadataByKey(String.format(Metadata.RECORD_PROPERTY_FIELD_METADATA_KEY_TEMPLATE, propertyName));
-            Assert.assertEquals(params.get(String.format("property_weight_%s", propertyName)), md.getValue());
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            md = actualSurvey.getMetadataByKey(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()));
+            Assert.assertEquals(params.get(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString())), md.getValue());
         }
         
         Assert.assertEquals(true, survey.isDefaultCensusMethodProvided());
@@ -407,8 +423,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/admin/survey/editAttributes.htm");
         request.setParameter("surveyId", survey.getId().toString());
         int curWeight = 0;
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            request.setParameter(String.format("property_weight_%s", propertyName), String.valueOf(curWeight));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            request.setParameter(String.format(RecordProperty.METADATA_KEY_TEMPLATE,type.getName(), RecordPropertySetting.WEIGHT.toString()), String.valueOf(curWeight));
             curWeight = curWeight + 100;
         }
         request.setParameter("saveAndContinue", "saveAndContinue");
@@ -426,8 +442,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/admin/survey/editAttributes.htm");
         request.setParameter("surveyId", survey.getId().toString());
         int curWeight = 0;
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            request.setParameter(String.format("property_weight_%s", propertyName), String.valueOf(curWeight));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+            request.setParameter(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()), String.valueOf(curWeight));
             curWeight = curWeight + 100;
         }
         request.setParameter("saveAndPreview", "saveAndPreview");

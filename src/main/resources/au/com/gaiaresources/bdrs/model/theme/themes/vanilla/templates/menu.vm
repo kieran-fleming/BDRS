@@ -1,0 +1,33 @@
+## Macro for adding a menu item
+#macro(addMenuItem $item)
+    <li>
+        <a 
+            ## The '://' check is for external URL menu items
+            #if(${item.path.startsWith('javascript')} || ${item.path.equals("#")} || ${item.path.contains("://")})
+                href="${item.path}">${item.name}
+            #else
+                href="${pageContext.request.contextPath}/${item.path}">${item.name}
+            #end
+        </a>
+        #if(not ${item.items.isEmpty()})
+            <ul id="${item.name.replaceAll(' ','_').toLowerCase()}Menu">
+                #foreach($subMenuItem in ${item.items})
+                    #addMenuItem(${subMenuItem})
+                #end
+            </ul>
+        #end
+    </li>
+#end
+## end addMenuItem macro
+
+<div id="horiz-menu" class="suckerfish">
+    <ul class="menutop" id="nav">
+        #foreach($rootItem in ${context.menu})
+            #addMenuItem(${rootItem})
+        #end
+    </ul>
+</div>
+
+<script type="text/javascript">
+    bdrs.menu.initHover();
+</script>

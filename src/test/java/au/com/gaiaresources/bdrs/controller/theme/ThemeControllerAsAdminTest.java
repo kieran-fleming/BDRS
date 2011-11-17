@@ -41,6 +41,7 @@ import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
 import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.theme.ThemeService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.util.ZipUtils;
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -51,18 +52,18 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
     
     private static final String TEST_CSS_FILE_PATH= "css/style.css";
     private static final String TEST_CSS_RAW_CONTENT = "#horiz-menu {background-image: url(${asset}../images/blockdefault.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: repeat-x;}";
-    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: no-repeat;}";
+    private static final String TEST_CSS_DEFAULT_CONTENT_TMPL = "#horiz-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_CUSTOM_CONTENT_TMPL = "#horiz-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/blockdefault.gif);background-repeat: no-repeat;}";
     
     private static final String TEST_CSS_MODIFIED_RAW_CONTENT = ".horizontal-menu {background-image: url(${asset}../images/default.gif);background-repeat: ${style.background.repeat};}";
-    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url(/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/default.gif);background-repeat: repeat-x;}";
+    private static final String TEST_CSS_MODIFIED_DEFAULT_CONTENT_TMPL = ".horizontal-menu {background-image: url("+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/../images/default.gif);background-repeat: repeat-x;}";
     
     private static final String TEST_TEMPLATE_FILE_PATH = "templates/template.vm"; 
     private static final String TEST_TEMPLATE_RAW_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"${asset}images/wild_backyards.jpg\" id=\"logo\"/></a>";
     // we now expect $asset to be overwritten at the unzipping/processing stage so the 2 strings below becomes...
     // note there is no context path. I assume this is because there is no context path when running these tests
-    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
-    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    private static final String TEST_TEMPLATE_DEFAULT_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\""+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
+    private static final String TEST_TEMPLATE_CUSTOM_CONTENT = "<a href=\"${pageContext.request.contextPath}/authenticated/redirect.htm\" class=\"nounder\"><img src=\""+REQUEST_CONTEXT_PATH+"/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=%d&fileName=processed/images/wild_backyards.jpg\" id=\"logo\"/></a>";
     
     private static final String TEST_JS_FILE_PATH = "js/javascript.js";
     private static final String TEST_JS_RAW_CONTENT = "function foobar(a){ var b=${js.foobar.b};var c=a+b;return c;}";
@@ -129,6 +130,12 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         
         portal = getRequestContext().getPortal();
         
+        // deactivate the default portal(s)
+        List<Theme> defaultThemes = themeDAO.getThemes(portal);
+        for (Theme theme : defaultThemes) {
+            theme.setActive(false);
+            themeDAO.save(theme);
+        }
         themeElementMap = new HashMap<String, ThemeElement>();
         List<ThemeElement> themeElements = new ArrayList<ThemeElement>(DEFAULT_CONFIG_VALUES.size());
         for(Map.Entry<String, String> entry : DEFAULT_CONFIG_VALUES.entrySet()) {
@@ -156,20 +163,29 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
     @Test
     public void testEdit() throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
-        Portal portal = getRequestContext().getPortal();
 
         request.setMethod("GET");
         request.setRequestURI(ThemeController.ADMIN_EDIT_URL);
-        request.setParameter("portalId", portal.getId().toString());
         
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertViewName(mv, "themeEdit");
-        ModelAndViewAssert.assertModelAttributeValue(mv, "portalId", portal.getId());
         Assert.assertEquals(0, ((List<ThemeFile>)mv.getModel().get("themeFileList")).size());
-        Assert.assertEquals(theme.getId(), ((Theme)mv.getModel().get("editTheme")).getId());
         Assert.assertTrue((Boolean)mv.getModel().get("editAsAdmin"));
     }
     
+    @Test
+    public void testEditWithTheme() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        request.setMethod("GET");
+        request.setRequestURI(ThemeController.ADMIN_EDIT_URL);
+        request.setParameter("themeId", theme.getId().toString());
+        
+        ModelAndView mv = handle(request, response);
+        ModelAndViewAssert.assertViewName(mv, "themeEdit");
+        Assert.assertEquals(theme.getId(), ((Theme)mv.getModel().get("editTheme")).getId());
+        Assert.assertTrue((Boolean)mv.getModel().get("editAsAdmin"));
+    }
 
     @Test
     public void testEditCustomSubmit() throws Exception {
@@ -180,7 +196,11 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
                 
         request.setMethod("POST");
         request.setRequestURI(ThemeController.ADMIN_EDIT_URL);
-        
+        request.setParameter("portalPk", portal.getId().toString());
+        request.setParameter("themePk", theme.getId().toString());
+        request.setParameter("name", theme.getName());
+        request.setParameter("themeFileUUID", theme.getThemeFileUUID());
+        request.setParameter("active", String.valueOf(theme.isActive()));
         
         for(Map.Entry<String, String> customEntry : CUSTOM_CONFIG_VALUES.entrySet()) {
             ThemeElement te = themeElementMap.get(customEntry.getKey());
@@ -256,6 +276,7 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         
         request.setMethod("POST");
         request.setRequestURI(ThemeController.ADMIN_EDIT_FILE_URL);
+        request.setParameter("themePk", theme.getId().toString());
         request.setParameter("themeFileName", TEST_CSS_FILE_PATH);
         request.setParameter("themeFileContent", TEST_CSS_MODIFIED_RAW_CONTENT);
         
@@ -300,6 +321,7 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         
         request.setMethod("POST");
         request.setRequestURI("/bdrs/admin/theme/editThemeFile.htm");
+        request.setParameter("themePk", theme.getId().toString());
         request.setParameter("themeFileName", TEST_CSS_FILE_PATH);
         request.setParameter("themeFileContent", TEST_CSS_MODIFIED_RAW_CONTENT);
         request.setParameter("revert", "Revert File");
@@ -339,6 +361,7 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
                 
         request.setMethod("POST");
         request.setRequestURI(ThemeController.ADMIN_EDIT_URL);
+        request.setParameter("themePk", String.valueOf(theme.getId()));
         request.setParameter("name", theme.getName());
         request.setParameter("themeFileUUID", theme.getThemeFileUUID());
         request.setParameter("active", String.valueOf(theme.isActive()));
@@ -348,7 +371,7 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
             request.setParameter(String.format(ThemeController.THEME_ELEMENT_CUSTOM_VALUE_TEMPLATE, te.getId()),
                                  customEntry.getValue());
         }
-        
+
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertModelAttributeValue(mv, "portalId", portal.getId());
         Assert.assertTrue(mv.getView() instanceof RedirectView);
@@ -387,46 +410,6 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         Assert.assertEquals(IMAGE_HEIGHT, processedImg.getHeight());
         
         assertThemePage(theme.getId().intValue());
-    }
-    
-    @Autowired
-    private RedirectionService redirService;
-    
-    @Test
-    public void testEditNoActiveThemeGet() throws Exception {
-        theme.setActive(false);
-        themeDAO.save(theme);
-        
-        login("admin", "password", new String[] { Role.ADMIN });
-
-        request.setMethod("GET");
-        request.setRequestURI(ThemeController.ADMIN_EDIT_URL);
-        
-        ModelAndView mv = handle(request, response);
-       
-        Assert.assertTrue(mv.getView() instanceof RedirectView);
-        RedirectView redirect = (RedirectView) mv.getView();
-        Assert.assertEquals(redirService.getAdminHomeUrl(), redirect.getUrl());
-    }
-    
-    @Test
-    public void testEditElementNoActiveThemeGet() throws Exception {
-        theme.setActive(false);
-        themeDAO.save(theme);
-        
-        login("admin", "password", new String[] { Role.ADMIN });
-
-        request.setMethod("GET");
-        request.setRequestURI(ThemeController.ADMIN_EDIT_FILE_URL);
-        
-        request.setParameter("themeFileName", TEST_CSS_FILE_PATH);
-        //request.setParameter("themeFileContent", TEST_CSS_MODIFIED_RAW_CONTENT);
-        
-        ModelAndView mv = handle(request, response);
-       
-        Assert.assertTrue(mv.getView() instanceof RedirectView);
-        RedirectView redirect = (RedirectView) mv.getView();
-        Assert.assertEquals(redirService.getAdminHomeUrl(), redirect.getUrl());
     }
     
     /**
@@ -469,7 +452,7 @@ public class ThemeControllerAsAdminTest  extends AbstractControllerTest {
         themePageList.add(TEST_THEME_PAGE_1);
         themePageList.add(TEST_THEME_PAGE_2);
         
-        files.put(ThemeController.THEME_CONFIG_FILENAME, createConfigFile(
+        files.put(ThemeService.THEME_CONFIG_FILENAME, createConfigFile(
                                                                           new String[]{TEST_CSS_FILE_PATH}, 
                                                                           new String[]{TEST_JS_FILE_PATH}, 
                                                                           configValues,

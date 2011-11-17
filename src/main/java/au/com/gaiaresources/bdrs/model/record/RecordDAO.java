@@ -7,24 +7,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
+import au.com.gaiaresources.bdrs.db.impl.SortingCriteria;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
-import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.record.impl.RecordFilter;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
-import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.util.Pair;
 
@@ -93,7 +92,13 @@ public interface RecordDAO extends TransactionDAO {
 
 	Record getLatestRecord();
 
-	Integer countRecords(User user);
+	/**
+	 * Counts all of the records owned by the given user.  If you want the count 
+	 * of records that the user has access to, use {@link #countAllRecords(User)} instead.
+	 * @param user The owner of the records
+	 * @return A count of all records owned by the user
+	 */
+	public Integer countRecords(User user);
 
 	Integer countRecordsForSpecies(IndicatorSpecies species);
 
@@ -123,18 +128,18 @@ public interface RecordDAO extends TransactionDAO {
 
 	void saveRecordList(List<Record> records);
 
-	List<Record> getRecord(int userId, int groupId, int surveyId,
+	List<Record> getRecord(User user, int groupId, int surveyId,
 			int taxonGroupId, Date startDate, Date endDate,
 			String speciesScientificNameSearch, int limit);
 
-	List<Record> getRecord(int userId, int groupId, int surveyId,
+	List<Record> getRecord(User user, int groupId, int surveyId,
 			int taxonGroupId, Date startDate, Date endDate,
 			String speciesScientificNameSearch, int limit, boolean fetch);
 	
-	ScrollableRecords getScrollableRecords(int userPk, int groupPk, int surveyPk,
+	ScrollableRecords getScrollableRecords(User user, int groupPk, int surveyPk,
 	            int taxonGroupPk, Date startDate, Date endDate, String species);
 	
-	ScrollableRecords getScrollableRecords(int userPk, int groupPk, int surveyPk,
+	ScrollableRecords getScrollableRecords(User user, int groupPk, int surveyPk,
                 int taxonGroupPk, Date startDate, Date endDate, String species,
                 int pageNumber, int entriesPerPage);
 	
@@ -146,6 +151,29 @@ public interface RecordDAO extends TransactionDAO {
 	 * @return
 	 */
 	ScrollableRecords getScrollableRecords(RecordFilter recFilter);
+	
+	/**
+         * Queries for Records based on the filter arguments applying the sort
+         * options specified by <code>sortCriteria</code>.
+         * 
+         * @param recFilter a scrollable list of records.
+         * @param sortCriteria a list of column name, order type 
+         * (ascending or descending) pairs to apply to the query.
+         * @return a scrollable list of records.
+         */
+	ScrollableRecords getScrollableRecords(RecordFilter recFilter,
+	            List<SortingCriteria> sortCriteria);
+	
+	/**
+	 * Returns the number of records that match the specified filter.
+	 * 
+	 * Note: if you don't use AdvancedRecordCountFilter as the concrete impl
+	 * of RecordFilter, this method will break in RecordDAOImpl
+	 * 
+	 * @param recFilter
+	 * @return the number of records that match the filter.
+	 */
+	int countRecords(RecordFilter recFilter);
 	
 	/**
 	 * Returns a list of dates when a record was made for the specified
@@ -260,43 +288,58 @@ public interface RecordDAO extends TransactionDAO {
 
     /**
      * Queries all records for a list of distinct taxon groups and the number of
-     * records associated with that taxon group.
+     * records associated with that taxon group filtered by user.
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the taxon groups 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct taxon groups and record counts.
      */
-    List<Pair<TaxonGroup, Long>> getDistinctTaxonGroups(Session sesh);
+    List<Pair<TaxonGroup, Long>> getDistinctTaxonGroups(Session sesh, User user);
 
     /**
      * Queries all records for a list of distinct surveys and the number of
-     * records associated with that survey.
+     * records associated with that survey filtered by user.
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the surveys 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct surveys and record counts.
      */
-    List<Pair<Survey, Long>> getDistinctSurveys(Session sesh);
+    List<Pair<Survey, Long>> getDistinctSurveys(Session sesh, User user);
 
     /**
      * Queries all records for a list of distinct months and the count of records
-     * for that month.
+     * for that month filtered by user.
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the months 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct months and the count of records that match.
      */
-    List<Pair<Long, Long>> getDistinctMonths(Session sesh);
+    List<Pair<Long, Long>> getDistinctMonths(Session sesh, User user);
 
     /**
      * Queries all records for a list of distinct years and the count of records
-     * for that month.
+     * for that month filtered by user.
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the years 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct months and the count of records that match.
      */
-    List<Pair<Long, Long>> getDistinctYears(Session sesh);
+    List<Pair<Long, Long>> getDistinctYears(Session sesh, User user);
     
     /**
      * Queries all records for a list of distinct census method types
-     * and the count of records for each type
+     * and the count of records for each type filtered by user
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the census method types 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct census methods and count of records that match.
      */
-    List<Pair<String, Long>> getDistinctCensusMethodTypes(Session sesh);
+    List<Pair<String, Long>> getDistinctCensusMethodTypes(Session sesh, User user);
 
     /**
      * Counts all Records which do not have a Census Method.
@@ -308,9 +351,12 @@ public interface RecordDAO extends TransactionDAO {
      * Queries all records for a list of distinct attribute types
      * and the count of records for each type
      * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the attributes 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
      * @return the list of distinct attribute types and count of records that match.
      */
-    List<Pair<String, Long>> getDistinctAttributeTypes(Session sesh,
+    List<Pair<String, Long>> getDistinctAttributeTypes(Session sesh, User user,
             AttributeType[] attributeTypes);
             
 
@@ -342,4 +388,11 @@ public interface RecordDAO extends TransactionDAO {
      * @return the record associated with the specified client ID.
      */
     public Record getRecordByClientID(String clientID);
+
+    /**
+     * Counts all of the records that this user has access to view.
+     * @param accessor the account that is accessing the records
+     * @return A count of all records that the user has access to.
+     */
+    public Integer countAllRecords(User accessor);
 }

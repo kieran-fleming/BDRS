@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <jsp:useBean id="metaList" type="java.util.List" scope="request"/>
 
@@ -14,7 +15,7 @@
 <input value="${USER_ID}" type="hidden" />
 <div class="input_container">
 
-<p>You can change your details through the form below.  If you leave the password field blank it will not be changed.</p>
+    <cw:getContent key="user/profile/editProfile" />
           
     <c:if test="${editAs == 'admin'}">
     <jsp:useBean id="assignedRoles" type="java.util.ArrayList" scope="request"/>
@@ -82,6 +83,7 @@
 
 <div class="buttonpanel textright">
 	<input name="submit" type="submit" value="Submit" class="form_action" />
+	<input name="cancel" type="submit" value="Cancel" class="form_action" />
 </div>
 </div>
 

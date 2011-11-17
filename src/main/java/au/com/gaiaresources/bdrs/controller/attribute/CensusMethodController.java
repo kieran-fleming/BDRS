@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,7 +32,9 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
+@RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
 public class CensusMethodController extends AbstractController {
     
@@ -202,7 +205,7 @@ public class CensusMethodController extends AbstractController {
          // cover the default case...
             CensusMethod defaultCensusMethod = new CensusMethod();
             defaultCensusMethod.setId(0);
-            defaultCensusMethod.setName("Standard Taxonomic (Default)");
+            defaultCensusMethod.setName(CensusMethod.DEFAULT_NAME);
             array.add(defaultCensusMethod.flatten());
         }
         if (censusMethodList != null) {

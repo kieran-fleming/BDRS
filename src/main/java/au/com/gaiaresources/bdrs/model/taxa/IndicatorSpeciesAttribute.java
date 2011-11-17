@@ -135,13 +135,17 @@ public class IndicatorSpeciesAttribute extends PortalPersistentImpl implements T
      * @return
      */
     public Date getDateValue() {
-        return dateValue;
+        return dateValue != null ? new Date(dateValue.getTime()) : null;
     }
     /* (non-Javadoc)
 	 * @see au.com.gaiaresources.bdrs.model.taxa.AttributeValue#setDateValue(java.util.Date)
 	 */
     public void setDateValue(Date dateValue) {
-        this.dateValue = dateValue;
+        if (dateValue != null) {
+            this.dateValue = new Date(dateValue.getTime());
+        } else {
+            this.dateValue = null;
+        }
     }
     
     @Transient

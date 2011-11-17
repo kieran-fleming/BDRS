@@ -27,7 +27,7 @@ public class Portal extends PersistentImpl {
         super();
     }
 
-    @Column(name = "NAME", nullable = false)
+    @Column(name = "NAME", nullable = false, unique = true)
     public String getName() {
         return name;
     }

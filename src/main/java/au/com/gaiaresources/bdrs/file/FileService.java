@@ -34,6 +34,8 @@ import au.com.gaiaresources.bdrs.db.Persistent;
 @Component
 public class FileService {
         public static final String FILE_URL_TMPL = "className=%s&id=%d&fileName=%s";
+        
+        public static final String FILE_STORE_LOCATION_PREFERENCE_KEY = "file.store.location";
     
 	private File storageDirectory;
 	private Map<Class<? extends Persistent>, File> persistentFolders;
@@ -49,18 +51,18 @@ public class FileService {
 		logger.info("Initialising FileService");
 		Properties p = new Properties();
 		p.load(getClass().getResource("file.properties").openStream());
-		if (p.containsKey("file.store.location")) {
-			String path = p.getProperty("file.store.location");
+		if (p.containsKey(FILE_STORE_LOCATION_PREFERENCE_KEY)) {
+			String path = p.getProperty(FILE_STORE_LOCATION_PREFERENCE_KEY);
 			this.storageDirectory = new File(path);
 			if (!this.storageDirectory.exists()
 					|| !this.storageDirectory.isDirectory()) {
 				throw new IllegalStateException(
-						"Property file.store.location has an invalid value: "
+						"Property " + FILE_STORE_LOCATION_PREFERENCE_KEY+ " has an invalid value: "
 								+ path);
 			}
 		} else {
 			throw new IllegalStateException(
-					"Property file.store.location is not set.");
+					"Property " + FILE_STORE_LOCATION_PREFERENCE_KEY + " is not set.");
 		}
 		this.persistentFolders = new HashMap<Class<? extends Persistent>, File>();
 		logger.info("FileService content directory set to: "
@@ -186,7 +188,7 @@ public class FileService {
 	    if (writeToFile.createNewFile()) {
 	        return writeToFile;
 	    } else {
-	        logger.error("File already exists");
+	        logger.error("File already exists : " + writeToFile.getAbsolutePath());
 	    }
             return writeToFile;	
 	}

@@ -22,7 +22,7 @@ if (window.console.log === undefined) {
 }
 
 bdrs.underDev = function() {
-	alert('This is still under development');
+    alert('This is still under development');
 };
 
 /**
@@ -53,23 +53,49 @@ if (bdrs.map === undefined) {
 bdrs.map.SHADOW_Z_INDEX = 10;
 bdrs.map.MARKER_Z_INDEX = 11;
 
+// Selected features are those that get highlighted when the map is rendered
+// For example, the newly added record.
+bdrs.map.SELECTED_FEATURE_STROKE_COLOR = '#FF0000';
+bdrs.map.SELECTED_FEATURE_FILL_COLOR = '#FF0000';
+
+// This is the style of every non-special record.
+bdrs.map.NORMAL_FEATURE_STROKE_COLOR = '#EE9900';
+bdrs.map.NORMAL_FEATURE_FILL_COLOR = '#EE9900';
+
+// Picked features are those that the user has clicked on with the mouse.
+bdrs.map.PICKED_FEATURE_STROKE_COLOR = '#66ccff';
+bdrs.map.PICKED_FEATURE_FILL_COLOR = '#3399ff';
+
+// Used by the enlarge map and shrink map functionality.
+bdrs.map.ENLARGE_MAP_LABEL = 'Enlarge Map';
+bdrs.map.SHRINK_MAP_LABEL = 'Shrink Map (esc)';
+bdrs.map.ENLARGE_MAP_CLASS = 'review_map_fullscreen';
+bdrs.map.SHRINK_MAP_CLASS = 'review_map';
+
+// Scroll Zooming
+bdrs.map.SCROLL_ZOOM_COOKIE = 'cookie.map.zoomscroll';
+bdrs.map.SCROLL_ZOOM_DEFAULT = 'true';
+bdrs.map.SCROLL_ZOOM_ENABLED_VALUE = 'true';
 
 bdrs.isIE7 = function() {
     return ($.browser.msie  && parseInt($.browser.version) == 7);
-}
+};
+
+// Change jqGrid defaults
+jQuery.extend(jQuery.jgrid.defaults,{emptyrecords: "Nothing to display"});
 
 // This can be set in the theme custom javascript in which 
 // case we don't want to override it.
 if (bdrs.MODAL_DIALOG_Z_INDEX === undefined) {
-	bdrs.MODAL_DIALOG_Z_INDEX = 4001;
+    bdrs.MODAL_DIALOG_Z_INDEX = 4001;
 }
 
 if (bdrs.map.DEFAULT_OPACITY === undefined) {
-	bdrs.map.DEFAULT_OPACITY = 0.5;
+    bdrs.map.DEFAULT_OPACITY = 0.5;
 }
 
 if (bdrs.map.DEFAULT_HIGHLIGHT_COLOR === undefined) {
-	bdrs.map.DEFAULT_HIGHLIGHT_COLOR = "#FF0000";
+    bdrs.map.DEFAULT_HIGHLIGHT_COLOR = "#FF0000";
 }
 
 // Dynamic post helper
@@ -188,13 +214,15 @@ bdrs.map.selectedRecord = null;
 bdrs.map.initBaseMap = function(mapId, options){
     var mapOptions = {
         isPublic: true,
+        enlargeMapLink: true,
+        zoomLock: true,
         ajaxFeatureLookup: false
     };
     jQuery.extend(mapOptions, options);
     
     bdrs.map.initOpenLayers();
     
-	var map;
+    var map;
     if (bdrs.map.createCustomMap) {
         map = bdrs.map.createCustomMap(mapId, mapOptions);
     }
@@ -211,33 +239,40 @@ bdrs.map.initBaseMap = function(mapId, options){
         bdrs.map.initPointSelectClickHandler(map);
     }
     
-	// set the global cos we have to....
-	bdrs.map.baseMap = map;
-	
-	return map;
+    // set the global cos we have to....
+    bdrs.map.baseMap = map;
+    
+    return map;
 }; // End initBaseMap
 bdrs.map.createDefaultMap = function(mapId, mapOptions){
     /*
      var mapOptions = {
-     // the initial center point of the map
-     mapCenter : new OpenLayers.LonLat(...)
-     
-     // the initial zoom level of the map
-     // if the zoom level is < 0, zoom the map to its maximum level
-     mapZoom : int
-     
-     // Geocode Options
-     geocode : {
-     // jQuery selector of the container for the geocode input.
-     selector: string
-     
-     // zoom level to use when centering on a geocode location. default 10.
-     // if the zoom level is < 0, zoom the map to its maximum level
-     zoom: int
-     
-     // true if the map center occurs on key down, false otherwise. default true.
-     useKeyHandler : boolean
-     }
+	     // the initial center point of the map
+	     mapCenter : new OpenLayers.LonLat(...)
+	     
+	     // the initial zoom level of the map
+	     // if the zoom level is < 0, zoom the map to its maximum level
+	     mapZoom : int,
+	     
+	     // true if the enlarge/shrink links at the top of the map is available
+         enlargeMapLink: true,
+         
+         // true if the checkbox to toggle the ability of the
+         // scroll wheel to zoom the map is available.
+         zoomLock: true,
+	     
+	     // Geocode Options
+	     geocode : {
+		     // jQuery selector of the container for the geocode input.
+		     selector: string
+		     
+		     // zoom level to use when centering on a geocode location. default 10.
+		     // if the zoom level is < 0, zoom the map to its maximum level
+		     zoom: int
+		     
+		     // true if the map center occurs on key down, false otherwise. default true.
+		     useKeyHandler : boolean
+	     }
      }
      */
     var options = {
@@ -266,27 +301,57 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
     map.persistentLayers = new Array();
     
     if (mapOptions.isPublic === true) {
-        var gphy = new OpenLayers.Layer.Google('Google Physical', {
-            type: G_PHYSICAL_MAP,
-            sphericalMercator: true
-        });
-        var gmap = new OpenLayers.Layer.Google('Google Streets', // the default
-        {
-            numZoomLevels: 20,
-            sphericalMercator: true
-        });
-        var ghyb = new OpenLayers.Layer.Google('Google Hybrid', {
-            type: G_HYBRID_MAP,
-            numZoomLevels: 20,
-            sphericalMercator: true
-        });
-        var gsat = new OpenLayers.Layer.Google('Google Satellite', {
-            type: G_SATELLITE_MAP,
-            numZoomLevels: 22,
-            sphericalMercator: true
-        });
-        map.addLayers([gphy, gmap, ghyb, gsat]);
-        map.setBaseLayer(ghyb);
+        var layers =  [];
+        if(window.G_PHYSICAL_MAP !== undefined && window.G_PHYSICAL_MAP !== null) {
+	        var gphy = new OpenLayers.Layer.Google('Google Physical', {
+	            type: G_PHYSICAL_MAP,
+	            sphericalMercator: true
+	        });
+	        layers.push(gphy);
+        }
+
+        if(window.G_NORMAL_MAP !== undefined && window.G_NORMAL_MAP !== null) {
+	        var gmap = new OpenLayers.Layer.Google('Google Streets', // the default
+	        {
+	            type: G_NORMAL_MAP,
+	            numZoomLevels: 20,
+	            sphericalMercator: true
+	        });
+	        layers.push(gmap);
+        }
+        
+        var ghyb = null;
+        if(window.G_HYBRID_MAP !== undefined && window.G_HYBRID_MAP !== null) {
+	        ghyb = new OpenLayers.Layer.Google('Google Hybrid', {
+	            type: G_HYBRID_MAP,
+	            numZoomLevels: 20,
+	            sphericalMercator: true
+	        });
+	        layers.push(ghyb);
+        }
+        
+        if(window.G_SATELLITE_MAP !== undefined && window.G_SATELLITE_MAP !== null) {
+	        var gsat = new OpenLayers.Layer.Google('Google Satellite', {
+	            type: G_SATELLITE_MAP,
+	            numZoomLevels: 22,
+	            sphericalMercator: true
+	        });
+	        layers.push(gsat);
+        }
+        
+        if(layers.length === 0) {
+            var nobase = new OpenLayers.Layer("No Basemap",{isBaseLayer: true, 'displayInLayerSwitcher': true});
+            layers.push(nobase);
+        }
+        
+        map.addLayers(layers);
+        if(ghyb !== null) {
+            map.setBaseLayer(ghyb);
+        } else {
+            if(layers.length > 0) {
+                map.setBaseLayer(layers[0]);
+            }
+        }
     }
     else {
         // add some OSM layers...This works well.
@@ -300,6 +365,10 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
     if (mapOptions.geocode !== undefined && mapOptions.geocode !== null) {
         bdrs.map.addGeocodeControl(mapOptions.geocode);
     }
+    
+    // Create the enlarge/collapse map and zoom lock elements if required.
+    bdrs.map.addControlPanel(map, mapOptions.enlargeMapLink, mapOptions.zoomLock);
+    
     if (jQuery('#OpenLayers_Control_MaximizeDiv_innerImage')) {
         jQuery('#OpenLayers_Control_MaximizeDiv_innerImage').attr("title", "Change the baselayer and turn map layers on or off");
     }
@@ -335,39 +404,301 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
 };
 
 /**
+ * Creates a 'control panel' above the map a places the appropriate controls in the
+ * element if the map supports either enlarge map capabilities or zoom lock capabilities. 
+ *
+ * @param map [object] the open layers map instance
+ * @param enlargeMapAvailable [boolean] true if the user can enlarge/collapse the map, false otherwise.
+ * @param zoomLockAvailable [boolean]  true if the zoom lock control is available, false otherwise.
+ */
+bdrs.map.addControlPanel = function(map, enlargeMapAvailable, zoomLockAvailable) {
+    if(!enlargeMapAvailable && !zoomLockAvailable) {
+        return;
+    }
+    
+    // Create the control panel that will house these options
+    var controlPanel = jQuery("<div></div>");
+    controlPanel.css({
+        "text-align" : "right",
+        "padding-top" : "0.5em"
+    });
+    
+    // Create each control
+    var controlArray = [];
+
+    // Enlarge Map
+    controlArray.push(bdrs.map.getEnlargeMapControl(controlPanel, enlargeMapAvailable, map));
+
+    // Zoom Lock
+    controlArray.push(bdrs.map.getZoomLockControl(controlPanel, zoomLockAvailable));
+    
+    var control;
+    var sep;
+    for(var i=controlArray.length-1; i>-1; i--) {
+        control = controlArray[i];
+        if(control !== undefined && control !== null) {
+            // if the first, then we don't need to start with a separator
+            if(i < (controlArray.length-1)) {
+                sep = bdrs.map.getControlSeparator();
+                sep.css("float", "right");
+                controlPanel.append(sep);
+            } 
+            control.css("float", "right");
+            controlPanel.append(control);
+        }
+    }
+    
+    var clear = jQuery("<div></div>").css({"clear":"both"});
+    controlPanel.append(clear);
+    
+    jQuery(map.div).parent().before(controlPanel);
+};
+
+/**
+ * Retrieve the element used to separate the widgets on the control panel.
+ */
+bdrs.map.getControlSeparator = function() {
+    return jQuery("<span></span>").html("&nbsp;|&nbsp;");
+};
+
+/**
+ * Creates the widget to enlarge/collapse the map.
  * 
+ * @param controlPanel [jQuery element] the control panel where the widget will be inserted.
+ * @param available [boolean] true if this widget is required, false otherwise. 
+ * @param map [object] the openlayers map instance.
+ */
+bdrs.map.getEnlargeMapControl = function(controlPanel, available, map) {
+    if(!available) {
+        return;
+    }
+    
+    var control = jQuery("<a></a>");
+    
+    control.attr({"id": "maximiseMapLink", "href": "javascript:void(0);"});
+    control.text(bdrs.map.ENLARGE_MAP_LABEL);
+    control.click(function(event) {
+        var trigger = jQuery(event.currentTarget);
+        bdrs.map.maximiseMap(map, trigger, 
+                            bdrs.map.ENLARGE_MAP_LABEL, bdrs.map.SHRINK_MAP_LABEL,
+                            bdrs.map.ENLARGE_MAP_CLASS, bdrs.map.SHRINK_MAP_CLASS);
+    });
+    return control;
+};
+
+/**
+ * Creates the widget to allow/disallow scroll zooming on the map.
+ *
+ * @param controlPanel [jQuery element] the control panel where the widget will be inserted.
+ * @param available [boolean] true if this widget is required, false otherwise. 
+ */
+bdrs.map.getZoomLockControl = function(controlPanel, available) {
+    if(!available) {
+        return;
+    }
+    
+    var control = jQuery("<span></span>");
+    
+    var checkbox = jQuery("<input></input>");
+    checkbox.attr({
+        "type": "checkbox", 
+        "id":"scroll_zoom_cb",
+        "checked": bdrs.map.isScrollZoomEnabled()
+    });
+    checkbox.css({"vertical-align": "text-bottom"});
+    
+    checkbox.change(function(event) {
+        var scrollZoomEnabled = jQuery(event.currentTarget).prop("checked");
+        bdrs.map.scrollZoom(scrollZoomEnabled, bdrs.map.baseMap, false);
+    });
+    
+    var label = jQuery("<label></label>");
+    label.attr({
+        "for": checkbox.attr("id"),
+        "title": "Uncheck this box to prevent the mouse wheel from zooming the map"
+    });
+    label.text("Zoom Scroll");
+    
+    
+    control.append(checkbox).append(label);
+    return control;
+};
+
+/**
+ * Maximise or minimise the specified map.
+ * @param map [object] the Open Layers map instance
+ * @param trigger [jQuery element] The element containing the text to indicate if clicking it will enlarge or shrink the map.
+ * @param enlargeMapLabel [string] The lable used to indicate that the map will be enlarged if the element is clicked.
+ * @param shrinkMapLabel [string] The label used to indicate that the map will be shrunk if the element is clicked.
+ * @param enlargeMapClass [string] The class that is attached to the element containing the map if it is enlarged.
+ * @param shrinkMapClass [string] The class that is attached to the element containing the map if it is shrunk.
+ */
+bdrs.map.maximiseMap = function(map, trigger, enlargeMapLabel, shrinkMapLabel, enlargeMapClass, shrinkMapClass) {
+    var mapDiv = jQuery(map.div);
+    var mapContainer = mapDiv.parent();
+    var isShrinking = mapDiv.hasClass(enlargeMapClass);
+    
+    if(isShrinking) {
+        // Minimise the currently maximised map
+        mapContainer.unwrap().css({'width':'inherit', 'height':'inherit'});
+        // The following only needed for IE7, but does not harm other browsers
+        mapDiv.css({
+	        position: "relative",
+	        top: null,
+	        bottom: null,
+	        left: null,
+	        right: null
+        });
+        mapDiv.removeAttr("style");
+        mapDiv.removeClass(enlargeMapClass).addClass(shrinkMapClass);
+        
+        // Update the enlarge/shrink label
+        trigger.removeClass("shrinkMapLink");
+        trigger.text(enlargeMapLabel);
+        
+        // Restore scroll zooming based on cookie.
+        bdrs.map.restoreScrollZoomState(map);
+        
+        // Restore the scrollbar to the original position
+        if(map.scrollMemory !== undefined) {
+            jQuery(window).scrollTop(map.scrollMemory.scrollTop).scrollLeft(map.scrollMemory.scrollLeft);
+            delete map.scrollMemory;    
+        }
+        
+    } else {
+        // Fix the scrollbar issue where the scrolling is not at the extreme top and left
+        var win = jQuery(window);
+        map.scrollMemory = {
+            scrollLeft: win.scrollLeft(),
+            scrollTop: win.scrollTop()
+        };
+        win.scrollTop(0).scrollLeft(0);
+    
+        // Maximise the currently minimised map
+        var wrapper = jQuery("<div></div>");
+        wrapper.css({
+            position: 'fixed',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'transparent',
+            zIndex: 3000
+        });
+        mapContainer.wrap(wrapper).css({'width':'100%', 'height':'100%'});
+        mapDiv.css({
+            'width':'100%', 
+            'height':'100%',
+            // The following only needed for IE7, but does not harm other browsers
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0
+        });
+        mapDiv.removeClass(shrinkMapClass).addClass(enlargeMapClass);
+        
+        // Update the enlarge/shrink label
+        trigger.addClass("shrinkMapLink");
+        trigger.text(shrinkMapLabel);
+        
+        // Attach the esc key listener
+        var keyHandler = function(event) {
+            if(event.keyCode === 27) {
+                jQuery(event.currentTarget).unbind(event);
+                bdrs.map.maximiseMap(map, trigger, enlargeMapLabel, shrinkMapLabel, enlargeMapClass, shrinkMapClass);                
+            }
+        }; 
+        jQuery(document).keyup(keyHandler);
+        
+        // Special case where we enable scroll zooming no matter what.
+        bdrs.map.scrollZoom(true, map, true);
+    }
+    bdrs.map.updateMapLogo();
+    map.updateSize();
+};
+
+bdrs.map.updateMapLogo = function() {
+    var mapLogoMax = jQuery(".mapLogoMax");
+       
+    if(mapLogoMax.length === 0) {
+        jQuery(".mapLogoMin").removeClass("mapLogoMin").addClass("mapLogoMax");
+    } else {
+        mapLogoMax = mapLogoMax.removeClass("mapLogoMax").addClass("mapLogoMin");
+    }
+};
+
+/**
+ * Enables or disables the ability of the scroll wheel to zoom in and out of the map.
+ * @param scrollZoomEnabled [boolean] true if the user can scroll to zoom, false otherwise.
+ * @param map [object] the Open Layers map instance
+ * @param noCookie [boolean] true if a cookie should NOT be created storing the state, false otherwise. 
  */
 bdrs.map.scrollZoom = function(scrollZoomEnabled, map, noCookie) {
-		var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
+	var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
+	
+	if(controls.length > 0) {
 		if (scrollZoomEnabled) {
 			controls[0].enableZoomWheel();
 		} else {
 			controls[0].disableZoomWheel();
 		}
+		
 		if (!noCookie) {
-			bdrs.util.cookie.create('cookie.map.zoomscroll', scrollZoomEnabled, 1000);
-		}
-		return scrollZoomEnabled;
+            // The false value doesn't matter. Its only enabled when the value
+            // is equal to the enabled value.
+		    var cookieVal = scrollZoomEnabled ? bdrs.map.SCROLL_ZOOM_ENABLED_VALUE : 'false';
+            bdrs.util.cookie.create(bdrs.map.SCROLL_ZOOM_COOKIE, cookieVal, 1000);
+        }
+	}
+};
+
+/**
+ * Updates the state of the scroll zooming based on the current value of the cookie
+ * @param map [object] the Open Layers map instance
+ */
+bdrs.map.restoreScrollZoomState = function(map) {
+    var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
+    
+    if(controls.length > 0) {
+	    if (bdrs.map.isScrollZoomEnabled()) {
+	        controls[0].enableZoomWheel();
+	    } else {
+	        controls[0].disableZoomWheel();
+	    }
+    }
+};
+
+/**
+ * Returns true if scroll zooming is enabled according to the cookie, false otherwise.
+ */
+bdrs.map.isScrollZoomEnabled = function() {
+    var cookieVal = bdrs.util.cookie.read(bdrs.map.SCROLL_ZOOM_COOKIE);
+    if(cookieVal === null || cookieVal === undefined) {
+        cookieVal = bdrs.map.SCROLL_ZOOM_DEFAULT;
+    }
+    
+    return cookieVal === bdrs.map.SCROLL_ZOOM_ENABLED_VALUE;
 };
 
 /**
  * Toggles map zoom scroll
  * 
- * @param	toggleSelector
- * 				The selector of the element that triggers the toggle.
- * @param	spanCheckSelector
- * 				The selector that for visualizing the state of the toggle.
- * @param	map
- * 				The map that needs to be zoom scroll toggled.
+ * @param    toggleSelector
+ *                 The selector of the element that triggers the toggle.
+ * @param    spanCheckSelector
+ *                 The selector that for visualizing the state of the toggle.
+ * @param    map
+ *                 The map that needs to be zoom scroll toggled.
  */
 bdrs.map.scrollToggle = function(toggleSelector, spanCheckSelector, map) {
-	jQuery(toggleSelector).toggle(function(){
-    	jQuery(spanCheckSelector).text(' ');
-    	bdrs.map.scrollZoom(false, map);
+    jQuery(toggleSelector).toggle(function(){
+        jQuery(spanCheckSelector).text(' ');
+        bdrs.map.scrollZoom(false, map);
     },
     function(){
-    	jQuery(spanCheckSelector).text('x');
-    	bdrs.map.scrollZoom(true, map);
+        jQuery(spanCheckSelector).text('x');
+        bdrs.map.scrollZoom(true, map);
     });
 };
 
@@ -412,7 +743,7 @@ bdrs.map.addRecordLayerHandler = function(formIdSelector, mapLayersSelectSelecto
     
     //set styleMap from themeOverride if one exists
     if (params.styleMaps) {
-    	recordLayer.styleMap = new OpenLayers.StyleMap(params.styleMaps[recordLayer.name]);
+        recordLayer.styleMap = new OpenLayers.StyleMap(params.styleMaps[recordLayer.name]);
     }
     
     recordLayer.events.register('loadend', recordLayer, function(event){
@@ -436,6 +767,53 @@ bdrs.map.addRecordLayerHandler = function(formIdSelector, mapLayersSelectSelecto
         layerOptionElem.data('kmlRequest', kmlURL);
         jQuery(mapLayersSelectSelector).append(layerOptionElem);
     }
+};
+
+/**
+ * Creates a style map that supports a different style for selected features,
+ * picked features and normal features.
+ * 
+ * @param selectedId [string] is the id of the feature. This is typically
+ * the same as the id of the record. The feature sporting this id will be
+ * styled using the 'SELECTED_FEATURE' styling.
+ */
+bdrs.map.createOpenlayersStyleMap = function(selectedId) {
+    
+    var getColor = function(feature) {
+        if (feature.fid === selectedId) {
+            return bdrs.map.SELECTED_FEATURE_STROKE_COLOR;
+        } else {
+            return bdrs.map.NORMAL_FEATURE_STROKE_COLOR;
+        }
+    };
+
+    // Since the stroke and fill color is exactly the same, delegate to the
+    // same function.
+    var context = {
+        getStrokeColor: getColor,
+        getFillColor: getColor
+    };
+    
+    var defaultOLStyle = new OpenLayers.Style({
+		'strokeWidth': 2,
+		'strokeOpacity': 1,
+		'strokeColor': '${getStrokeColor}',
+		'fillColor': '${getFillColor}',
+		'fillOpacity': 0.8,
+		'pointRadius': 5
+    }, {context:context});
+    
+    var pickedOLStyle = new OpenLayers.Style({
+           strokeColor: bdrs.map.PICKED_FEATURE_STROKE_COLOR,
+           fillColor: bdrs.map.PICKED_FEATURE_FILL_COLOR
+    }); 
+    
+	var styles = {
+	   "default": defaultOLStyle,
+       "select": pickedOLStyle
+    };
+	
+	return new OpenLayers.StyleMap(styles);
 };
 
 bdrs.map.addKmlLayer = function(map, layerName, kmlURL, options, ignoreId){
@@ -528,8 +906,8 @@ bdrs.map.addWMSLayer = function(map, layerName, url, options){
         opacity: 1,
         tileSize: new OpenLayers.Size(512, 512),
         buffer: 0,
-		userId: bdrs.authenticatedUserId ? bdrs.authenticatedUserId : 0,
-		isAdmin: bdrs.isAdmin ? 'true' : 'false'
+        userId: bdrs.authenticatedUserId ? bdrs.authenticatedUserId : 0,
+        isAdmin: bdrs.isAdmin ? 'true' : 'false'
     };
     options = jQuery.extend(defaultOptions, options);
     var sld = bdrs.map.generateLayerSLD(options);
@@ -538,8 +916,8 @@ bdrs.map.addWMSLayer = function(map, layerName, url, options){
         'layers': options.wmsLayer,
         'transparent': 'true',
         'geo_map_layer_id': options.bdrsLayerId,
-		'user_id': options.userId,
-		'is_admin': options.isAdmin
+        'user_id': options.userId,
+        'is_admin': options.isAdmin
     }, {
         isBaseLayer: false,
         visibility: options.visible,
@@ -680,91 +1058,6 @@ bdrs.map.addSelectHandler = function(map, layers){
     select.activate();
 };
 
-// trigger selector - the selector for the dom element that triggers the expansion / shrinking. e.g. an anchor
-// contentSelector - the selector for the dom element that contains your map
-// maximiseLabel - the string to show when the next operation is maximise
-// minimiseLabel - the string to show when the next operation is minimise
-// maxClass - the class to apply when the map is maximised
-// minClass - the class to apply when the map is minimised
-// mapSelector - the selector of the actual map div - not the wrapper
-// map - the map javascript object
-bdrs.map.maximiseMap = function(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map){	
-    var content = jQuery(contentSelector);
-    var trigger = jQuery(triggerSelector + " span");
-    if (content.hasClass("maximise")) {
-        // maximise the map!
-        content.unwrap();
-        content.removeClass("maximise");
-        jQuery(mapSelector).removeClass(maxClass).addClass(minClass);
-        map.updateSize();
-        trigger.text(maximiseLabel);
-        trigger.css("position", "static");
-        jQuery(".mapLogoMax").removeClass("mapLogoMax").addClass("mapLogoMin");
-		
-		if (bdrs.isIE7()) {
-			jQuery(mapSelector).css({
-	            position: "relative",
-	            top: null,
-	            bottom: null,
-	            left: null,
-	            right: null
-	        });	
-		}
-		
-		jQuery(document).unbind('keyup');
-		jQuery(trigger).removeClass("maximimizedMapLink");
-		// Set zoom scroll based on cookie
-		if (bdrs.util.cookie.read('cookie.map.zoomscroll') === "false") {
-			bdrs.map.scrollZoom(false, map);
-		} else {
-			bdrs.map.scrollZoom(true, map);
-		}
-    }
-    else {
-        // minimise the map!
-        var wrapper = content.wrap('<div></div>').parent();
-        wrapper.css({
-            position: 'fixed',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: 'transparent',
-            zIndex: 3000
-        });
-        content.addClass("maximise");
-        jQuery(mapSelector).removeClass(minClass).addClass(maxClass);
-        map.updateSize();
-        trigger.text(minimiseLabel);
-        trigger.css("position", "fixed");
-        trigger.css("top", "1px");
-        trigger.css("right", "3px");
-        trigger.css("zIndex", "3100");
-        jQuery(trigger).addClass("maximimizedMapLink");
-        jQuery(".mapLogoMin").removeClass("mapLogoMin").addClass("mapLogoMax");
-		
-		if (bdrs.isIE7()) {
-			jQuery(mapSelector).css({
-	            position: "fixed",
-	            top: 0,
-	            bottom: 0,
-	            left: 0,
-	            right: 0
-	        });
-		}
-		
-		//add escape listener
-		jQuery(document).keyup(function(key){
-			console.log(key.keyCode);
-			if (key.keyCode === 27) {
-				bdrs.map.maximiseMap(triggerSelector, contentSelector, maximiseLabel, minimiseLabel, maxClass, minClass, mapSelector, map);
-			}
-		});
-
-		bdrs.map.scrollZoom(true, map, true);
-    }
-};
-
 bdrs.map.addMapLogo = function(map, imgUrl, containerNodeSelector){
     var img = jQuery('<img class="mapLogoMin" src="' + imgUrl + '" />');
     jQuery(containerNodeSelector).append(img);
@@ -811,7 +1104,7 @@ bdrs.map.collapseMap = function(mapWrapper, mapToggle) {
         if(canSee) {
             jQuery('.hideMapHide').hide();
         } else {
-        	jQuery('.hideMapHide').show();
+            jQuery('.hideMapHide').show();
         }
     });
 };
@@ -867,43 +1160,43 @@ bdrs.map.downloadKML = function(formIdSelector, mapLayersSelectSelector){
 
 // For downloading records from the mysightings page
 bdrs.map.downloadMapData = function(formSelector, format, userId) {
-	var formatParam = "&downloadFormat=";
-	if (format === 'SHAPEFILE') {
-		formatParam += "SHAPEFILE";
-	} else {
-		// default is KML
-		formatParam += "KML";
-	}
-	var userParam = "";
-	if (userId !== undefined && userId !== null) {
-		userParam = "&user=" + userId;
-	}
-	var form = jQuery(formSelector);
-	window.document.location = form.attr("action") + '?' + form.serialize() + userParam + formatParam;
+    var formatParam = "&downloadFormat=";
+    if (format === 'SHAPEFILE') {
+        formatParam += "SHAPEFILE";
+    } else {
+        // default is KML
+        formatParam += "KML";
+    }
+    var userParam = "";
+    if (userId !== undefined && userId !== null) {
+        userParam = "&user=" + userId;
+    }
+    var form = jQuery(formSelector);
+    window.document.location = form.attr("action") + '?' + form.serialize() + userParam + formatParam;
 };
 
 // For downloading records from the 'view map' page
 bdrs.map.downloadRecordsForActiveLayers = function(map, format) {
-	
-	bdrs.message.clear();
-	var mapLayerIds = bdrs.map.getSelectedBdrsLayerIds(map);
-	
-	if (mapLayerIds.length == 0) {
-		bdrs.message.set("There are no map layers enabled to download records for.");
-	} else {
-		var params = {};
-		if (format === 'SHAPEFILE') {
-			params.downloadFormat = "SHAPEFILE";
-		} else if (format === 'KML') {
-			params.downloadFormat = "KML";
-		} else {
-			throw 'invalid record download format';
-		}
-		params.mapLayerId = mapLayerIds;
-		var url = bdrs.contextPath + "/bdrs/map/downloadRecords.htm?" + jQuery.param(params, true);
-		console.log(url);
-		window.document.location = url;
-	}
+    
+    bdrs.message.clear();
+    var mapLayerIds = bdrs.map.getSelectedBdrsLayerIds(map);
+    
+    if (mapLayerIds.length == 0) {
+        bdrs.message.set("There are no map layers enabled to download records for.");
+    } else {
+        var params = {};
+        if (format === 'SHAPEFILE') {
+            params.downloadFormat = "SHAPEFILE";
+        } else if (format === 'KML') {
+            params.downloadFormat = "KML";
+        } else {
+            throw 'invalid record download format';
+        }
+        params.mapLayerId = mapLayerIds;
+        var url = bdrs.contextPath + "/bdrs/map/downloadRecords.htm?" + jQuery.param(params, true);
+        console.log(url);
+        window.document.location = url;
+    }
 };
 
 if (bdrs.openlayers === undefined){
@@ -915,7 +1208,7 @@ bdrs.openlayers.positionlayer = {};
 }
 
 bdrs.openlayers.positionlayer.stylemap = {
-	'strokeWidth': 2,
+    'strokeWidth': 2,
     'strokeOpacity': 1,
     'strokeColor': '#EE9900',
     'fillColor': '#EE9900',
@@ -935,17 +1228,17 @@ bdrs.map.addPositionLayer = function(layerName){
 };
 
 if (bdrs.openlayers.locationlayer === undefined){
-	bdrs.openlayers.locationlayer = {};
-	}
+    bdrs.openlayers.locationlayer = {};
+    }
 
 bdrs.openlayers.locationlayer.stylemap = {
-		'strokeWidth': 2,
+        'strokeWidth': 2,
         'strokeOpacity': 1,
         'strokeColor': '#669900',
         'fillColor': '#669900',
         'fillOpacity': 0.2,
         'pointRadius': 4
-	};
+    };
 
 bdrs.map.addLocationLayer = function(map, layerName){
     var layer = new OpenLayers.Layer.Vector(layerName, {
@@ -1003,8 +1296,8 @@ bdrs.map.addSingleClickPositionLayer = function(map, layerName, latitudeInputSel
 };
 
 if (bdrs.openlayers.multiclickpositionlayer === undefined){
-	bdrs.openlayers.multiclickpositionlayer = {};
-	}
+    bdrs.openlayers.multiclickpositionlayer = {};
+    }
 
 bdrs.openlayers.multiclickpositionlayer.stylemap = {
         'strokeWidth': 2,
@@ -1013,7 +1306,7 @@ bdrs.openlayers.multiclickpositionlayer.stylemap = {
         'fillColor': '#EE9900',
         'fillOpacity': 0.6,
         'pointRadius': 4
-	};
+    };
 
 
 bdrs.map.addMultiClickPositionLayer = function(layerName, featureAddedHandler, featureMovedHandler){
@@ -1065,9 +1358,9 @@ bdrs.map.addMultiClickPositionLayer = function(layerName, featureAddedHandler, f
 bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
 
     var defaultOptions = {
-		drawPoint: true,
-		drawLine: false,
-		drawPolygon: false,
+        drawPoint: true,
+        drawLine: false,
+        drawPolygon: false,
         latSelector: "",
         longSelector: "",
         wktSelector: "",
@@ -1172,7 +1465,8 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
         featureAddedHandler: featureAddedHandler,
         featureMovedHandler: featureMovedHandler,
         featureMoveCompleteHandler: featureMoveCompleteHandler,
-        featureModifiedHandler: featureModifiedHandler
+        featureModifiedHandler: featureModifiedHandler,
+		dragStartHandler: options.dragStartHandler
     };
     
     return bdrs.map.addPolygonDrawLayer(map, layerName, drawOptions);
@@ -1189,7 +1483,10 @@ bdrs.map.addPolygonDrawLayer = function(map, layerName, options){
         },
         // called on move complete vs on drag
         featureMoveCompleteHandler: function(){
-        }
+        },
+		// called on mouse down when dragging an item
+		dragStartHandler: function() {
+		}
     };
     options = jQuery.extend(defaultOptions, options);
     
@@ -1215,7 +1512,8 @@ bdrs.map.addPolygonDrawLayer = function(map, layerName, options){
     // Add a drag feature control to move features around.
     var dragFeature = new OpenLayers.Control.DragFeature(layer, {
         onDrag: options.featureMovedHandler,
-        onComplete: options.featureMoveCompleteHandler
+        onComplete: options.featureMoveCompleteHandler,
+		onStart: options.dragStartHandler
     });
     map.addControl(dragFeature);
     dragFeature.activate();
@@ -1294,7 +1592,7 @@ bdrs.map.addEditingToolbar = function(map, layer, dragFeature, featureMovedHandl
         displayClass: 'olControlNavigation',
         autoActivate: true,
         defaultControl: true,
-        title: "Drag feature"
+        title: "Select/Drag feature"
     });
     navControl.events.register("activate", navControl, getToolActivatedFunc(bdrs.map.control.DRAG_FEATURE));
     toolbar.addControls([navControl]);
@@ -1352,16 +1650,16 @@ bdrs.map.addEditingToolbar = function(map, layer, dragFeature, featureMovedHandl
     if (options.initialDrawTool === bdrs.map.control.DRAW_POINT) {
         if (drawPointControl) {
             drawPointControl.activate();
-			// if we were asked to select a drawing tool but point isn't there, make it a line
+            // if we were asked to select a drawing tool but point isn't there, make it a line
         } else if (drawLineControl) {
-			drawLineControl.activate();
-			// if we were asked to select a drawing tool but line isn't there, make it a poly.
-		} else if (drawPolygonControl) {
-			drawPolygonControl.activate();
-		} else {
-			// for some reason we have no drawing controls. select the nav tool
+            drawLineControl.activate();
+            // if we were asked to select a drawing tool but line isn't there, make it a poly.
+        } else if (drawPolygonControl) {
+            drawPolygonControl.activate();
+        } else {
+            // for some reason we have no drawing controls. select the nav tool
             navControl.activate();
-		}
+        }
     }
     else {
         // activate the first control to render the "navigation icon"
@@ -1402,11 +1700,11 @@ bdrs.map.addFeatureClickPopup = function(layer){
         bdrs.map.createFeaturePopup(bdrs.map.baseMap, feature.geometry.getBounds().getCenterLonLat(), descObjArray, popupOptions);
     };
     var onFeatureUnselect = function(feature){
-    	if (feature.popup) {
+        if (feature.popup) {
             bdrs.map.baseMap.removePopup(feature.popup);
             feature.popup.destroy();
             feature.popup = null;
-    	}
+        }
     };
     
     var selectControl = new OpenLayers.Control.SelectFeature(layer, {
@@ -1432,17 +1730,17 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
             var recordAttrKeys = ["owner", "census_method", "species", "common_name", "number", "notes", "habitat", "when", "behaviour"];
             
             if (bdrs.authenticated) {
-				var recordId = item["recordId"];
-				var ownerId = item["ownerId"];
-				if (bdrs.authenticatedUserId === ownerId || bdrs.isAdmin) {
-					var editRecordRow = jQuery("<tr></tr>");
-		            editRecordRow.attr('colspan', '2');
-		            var surveyId = item["surveyId"];
-		            var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
-		            jQuery("<a>Edit&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow);
-		            tbody.append(editRecordRow);
-				}
-				
+                var recordId = item["recordId"];
+                var ownerId = item["ownerId"];
+                if (bdrs.authenticatedUserId === ownerId || bdrs.isAdmin) {
+                    var editRecordRow = jQuery("<tr></tr>");
+                    editRecordRow.attr('colspan', '2');
+                    var surveyId = item["surveyId"];
+                    var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
+                    jQuery("<a>Edit&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow);
+                    tbody.append(editRecordRow);
+                }
+                
                 var requestRecordInfoRow = jQuery("<tr></tr>");
                 requestRecordInfoRow.attr('colspan', '2');
                 var requestRecordInfoUrl = bdrs.contextPath + "/bdrs/user/contactRecordOwner.htm?recordId=" + recordId;
@@ -1480,27 +1778,27 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
                 tbody.append(mapFeatureTitle);
         }
 
-		if (item.attributes && jQuery.isArray(item.attributes)) {
-			var attrArray = item.attributes;
-	        for (var j = 0; j < attrArray.length; j++) {
-	            var tuple = attrArray[j];
-	            for (var k in tuple) {
-	                if (tuple.hasOwnProperty(k)) {
-	                    var v = tuple[k];
-	                    // if v is a number, change it to a string..
-	                    if (v.toString) {
-	                        v = v.toString();
-	                    }
-	                    if (v !== null && v.length > 0 && v !== '-1') {
-	                        var r = jQuery("<tr></tr>");
-	                        r.append(jQuery("<th></th>").css('whiteSpace', 'nowrap').append(k + ":"));
-	                        r.append(jQuery("<td></td>").css('whiteSpace', 'nowrap').append(v));
-	                        tbody.append(r);
-	                    }
-	                }
-	            }
-	        }	
-		}
+        if (item.attributes && jQuery.isArray(item.attributes)) {
+            var attrArray = item.attributes;
+            for (var j = 0; j < attrArray.length; j++) {
+                var tuple = attrArray[j];
+                for (var k in tuple) {
+                    if (tuple.hasOwnProperty(k)) {
+                        var v = tuple[k];
+                        // if v is a number, change it to a string..
+                        if (v.toString) {
+                            v = v.toString();
+                        }
+                        if (v !== null && v.length > 0 && v !== '-1') {
+                            var r = jQuery("<tr></tr>");
+                            r.append(jQuery("<th></th>").css('whiteSpace', 'nowrap').append(k + ":"));
+                            r.append(jQuery("<td></td>").css('whiteSpace', 'nowrap').append(v));
+                            tbody.append(r);
+                        }
+                    }
+                }
+            }    
+        }
         
         var table = jQuery("<table></table>").width('100%').append(tbody);
         table.addClass("kmlDescriptionTable");
@@ -1551,20 +1849,20 @@ bdrs.map.displayPopupPage = function(contentState){
     jQuery(".popupPage" + contentState.currentPage).show();
     if (contentState.currentPage == contentState.itemArray.length - 1) {
         // hide the right arrow
-		jQuery(".shiftContentRight").hide();
+        jQuery(".shiftContentRight").hide();
     }
     else {
         // show the right arrow
-		jQuery(".shiftContentRight").show();
+        jQuery(".shiftContentRight").show();
     }
     
     if (contentState.currentPage === 0) {
         // hide the left arrow
-		jQuery(".shiftContentLeft").hide();
+        jQuery(".shiftContentLeft").hide();
     }
     else {
         // show the left arrow
-		jQuery(".shiftContentLeft").show();
+        jQuery(".shiftContentLeft").show();
     }
     
     contentState.popup.updateSize();
@@ -1642,7 +1940,7 @@ bdrs.map.addGeocodeControl = function(geocodeOptions){
 
 //Takes a text string, sets map view to point with no return
 bdrs.map.geocode = function(options, address, doAfter){
-    if (address.length > 3) {
+    if (address.length > 3 && window.GClientGeocoder !== undefined) {
         address = address + ', Australia';
         var geocoder = new GClientGeocoder();
         if (geocoder) {
@@ -1778,9 +2076,9 @@ bdrs.map.zoomToFeatures = function(feature){
 };
 
 bdrs.map.setDefaultCenter = function(map){
-	var latitude = bdrs.map.defaultCenterLat ? bdrs.map.defaultCenterLat : -28.5;
-	var longitude = bdrs.map.defaultCenterLong ?  bdrs.map.defaultCenterLong : 136.5;
-	var zoom = bdrs.map.defaultCenterZoom ? bdrs.map.defaultCenterZoom : 3;
+    var latitude = bdrs.map.defaultCenterLat ? bdrs.map.defaultCenterLat : -28.5;
+    var longitude = bdrs.map.defaultCenterLong ?  bdrs.map.defaultCenterLong : 136.5;
+    var zoom = bdrs.map.defaultCenterZoom ? bdrs.map.defaultCenterZoom : 3;
     map.setCenter(new OpenLayers.LonLat(longitude, latitude).transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION), zoom);
 };
 
@@ -1986,17 +2284,17 @@ bdrs.map.initAjaxFeatureLookupClickHandler = function(map, options){
 // returns an array of selected layer Ids.
 // will only return layers that are part of the BDRS
 bdrs.map.getSelectedBdrsLayerIds = function(map) {
-	var mapLayerIds = new Array();
+    var mapLayerIds = new Array();
     var visibleLayers = map.getLayersBy("visibility", true);
     for (var i = 0; i < visibleLayers.length; ++i) {
-		// check the duck punched property which indicates
-		// whether the layer is a bdrs layer.
-		// the layer also needs to be in zoom limit range
+        // check the duck punched property which indicates
+        // whether the layer is a bdrs layer.
+        // the layer also needs to be in zoom limit range
         if (visibleLayers[i].bdrsLayerId && visibleLayers[i].calculateInRange()) {
             mapLayerIds.push(visibleLayers[i].bdrsLayerId);
         }
     }
-	return mapLayerIds;
+    return mapLayerIds;
 };
 
 bdrs.map.clearPopups = function(map){
@@ -2122,15 +2420,33 @@ bdrs.survey.location.updateLocation = function(pk, options) {
     }
 };
 
-bdrs.initDatePicker = function(){
+bdrs.getDatePickerParams = function() {
     // This blur prevents the ketchup validator from indicating the
     // field is required when it is already filled in
     var onSelectHandler = function(dateText, datepickerInstance){
         jQuery(this).trigger('blur');
     };
-    var keyDown = function(){
-        return false;
+    
+    var onCloseHandler = function(dateText, datepickerInstance) {
+        // when you select a date, the cursor is still on the 
+        // date picker input field
+        jQuery(this).focus();
     };
+    
+    var params = {
+        showAnim: '',
+		changeMonth: true,
+		changeYear: true,
+        dateFormat: bdrs.dateFormat,
+        onSelect: onSelectHandler,
+        onClose: onCloseHandler
+    };
+    
+    return params;
+};
+
+bdrs.initDatePicker = function(){
+
     // this function prevents the from date from being after the to date
     // and vice versa in the date picker
     var onSelectDateRangeHandler = function(selectedDate){
@@ -2140,16 +2456,18 @@ bdrs.initDatePicker = function(){
         jQuery(this).trigger('blur');
     };
     
-    jQuery(".datepicker").not(".hasDatepicker").datepicker({
-        dateFormat: bdrs.dateFormat,
-        onSelect: onSelectHandler
-    }).keydown(keyDown);
+    var standardDpParams = bdrs.getDatePickerParams();
     
-    jQuery(".datepicker_historical").not(".hasDatepicker").datepicker({
-        dateFormat: bdrs.dateFormat,
-        onSelect: onSelectHandler,
-        maxDate: new Date() // Cannot pick a date in the future
-    }).keydown(keyDown);
+    jQuery(".datepicker").not(".hasDatepicker").datepicker(standardDpParams);
+
+    var historicalDpParams = bdrs.getDatePickerParams();
+    historicalDpParams.maxDate = new Date(); // Cannot pick a date in the future,
+    historicalDpParams.beforeShow = function(){
+		// only way to change z-index of datepicker
+    	setTimeout(function() {jQuery('#ui-datepicker-div').css('z-index',800);},  50);
+    	};
+
+    jQuery(".datepicker_historical").not(".hasDatepicker").datepicker(historicalDpParams);
     
     var dates = jQuery(".datepicker_range").not(".hasDatepicker").datepicker({
         dateFormat: bdrs.dateFormat,
@@ -2158,22 +2476,36 @@ bdrs.initDatePicker = function(){
 };
 
 bdrs.initColorPicker = function(){
-    jQuery(".COLOR").ColorPicker({
-        onSubmit: function(hsb, hex, rgb, el){
-            jQuery(el).val("#" + hex.toUpperCase());
-            jQuery(el).ColorPickerHide();
-        },
-        onBeforeShow: function(){
-            jQuery(this).ColorPickerSetColor(this.value);
-        }
-    }).bind('keyup', function(){
-        jQuery(this).ColorPickerSetColor(this.value);
+    jQuery(".COLOR").each(function() {
+        bdrs.util.createColorPicker(jQuery(this));
     });
+};
+
+//disable form submit button on click to prevent double-click dual submission
+bdrs.initSubmitDisabler = function() {
+    var disabledClickHandler = function() {
+        return false;
+    };
+    jQuery("form").submit(function() {
+        jQuery('input[type=submit]', this).bind('click.disable', disabledClickHandler);
+    });
+    
+    // get form containing the input
+    var form = jQuery('input[type=submit]').parents('form');
+    // remove the disabled attribute when any input on the form is changed
+    // to allow a form with invalid entries to be submitted once values are changed
+    var unbindDisableHandler = function() {
+        jQuery('input[type=submit]', form).unbind('click.disable');
+    };
+    
+    jQuery(form).delegate("input", "focus", unbindDisableHandler);
+    jQuery(form).delegate("input", "change", unbindDisableHandler);
 };
 
 bdrs.init = function(){
     bdrs.initDatePicker();
     bdrs.initColorPicker();
+    bdrs.initSubmitDisabler();
     
     // Deferred_ketchup may be used if the form contains many inputs
     // such that using normal ketchup causes a large initial overhead
@@ -2322,3 +2654,5 @@ bdrs.require("bdrs/location.js");
 bdrs.require("bdrs/attribute.js");
 bdrs.require("bdrs/dnd.js");
 bdrs.require("bdrs/map.js");
+bdrs.require("bdrs/model/attribute_type.js");
+bdrs.require("bdrs/url/urls.js");

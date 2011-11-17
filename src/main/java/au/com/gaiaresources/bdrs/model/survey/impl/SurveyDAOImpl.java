@@ -306,20 +306,22 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
 	        builder.append(" from Survey s left join s.species as t");
 	        builder.append(" where s.id = :surveyPk");
 	        builder.append("  and (");
-	        builder.append("        UPPER(t.commonName) like UPPER('" + query.toString() + "') ");
-	        builder.append("        or UPPER(t.scientificName) like UPPER ('" + query.toString() + "')");
+	        builder.append("        UPPER(t.commonName) like UPPER(:speciesSearch) ");
+	        builder.append("        or UPPER(t.scientificName) like UPPER (:speciesSearch)");
 	        builder.append("      )");
 	        builder.append(" order by t.scientificName");
 	        q = getSession().createQuery(builder.toString());
 	        q.setParameter("surveyPk", surveyPk);
+	        q.setParameter("speciesSearch", query.toString());
 	        
 	    } else {
 	    	builder.append("select distinct t from IndicatorSpecies t where ");
-	        builder.append("        UPPER(t.commonName) like UPPER('" + query.toString() + "') ");
-	        builder.append("        or UPPER(t.scientificName) like UPPER ('" + query.toString() + "')");
+	        builder.append("        UPPER(t.commonName) like UPPER(:speciesSearch) ");
+	        builder.append("        or UPPER(t.scientificName) like UPPER (:speciesSearch)");
 	        builder.append("      )");
 	        builder.append(" order by t.scientificName");
-	        q = getSession().createQuery(builder.toString());    
+	        q = getSession().createQuery(builder.toString());
+	        q.setParameter("speciesSearch", query.toString());
 	    }
 	    
 	    return q.list();

@@ -216,6 +216,8 @@ public class TaxonGroupManagementControllerTest extends AbstractControllerTest {
     @Test
     public void testEditTaxonGroupSubmit() throws Exception {
         
+        login("admin", "password", new String[] { Role.ADMIN });
+        
         TaxonGroup group = new TaxonGroup();
         group.setName("Test Taxon Group");
         group.setBehaviourIncluded(true);
@@ -333,6 +335,6 @@ public class TaxonGroupManagementControllerTest extends AbstractControllerTest {
 
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

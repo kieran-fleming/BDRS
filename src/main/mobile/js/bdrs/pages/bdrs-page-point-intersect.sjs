@@ -413,6 +413,9 @@ exports._insertObservationRow = function(obsRecord, species) {
 	    },
 	    change: function(event, ui) {
         },
+        open: function(event, ui){
+        	jQuery('.ui-autocomplete').css('z-index',100);
+        },
 	    html: true
     });
     
@@ -551,8 +554,8 @@ exports._savePoint = function() {
         			persistence.add(tg);
         		}
         		
-        		survey.species().add(sp);
         		tg.species().add(sp);
+        		survey.species().add(sp);
         		updatedSpecies = sp;
         		waitfor() {
         			persistence.flush(resume);
@@ -679,6 +682,7 @@ exports._savePoint = function() {
         		}
 				persistence.add(sp);
 				tg.species().add(sp);
+				survey.species().add(sp);
 				species = sp;
 				waitfor() {
 					persistence.flush(resume);

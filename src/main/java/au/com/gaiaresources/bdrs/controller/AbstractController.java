@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
 import au.com.gaiaresources.bdrs.servlet.Interceptor;
@@ -104,10 +106,17 @@ public abstract class AbstractController {
      */
     @SuppressWarnings("unchecked")
     protected Map<String, String[]> getModifiableParameterMap(HttpServletRequest request) {
-        Map<String, String[]> result = new HashMap<String, String[]>();
-        for (java.util.Map.Entry<String, String[]> entry : ((Map<String, String[]>)request.getParameterMap()).entrySet()) {
-            result.put(entry.getKey(), entry.getValue());
-        }
+        Map<String, String[]> result = new HashMap<String, String[]>(request.getParameterMap());
         return result;
+    }
+    
+    /**
+     * helper method for redirecting
+     * 
+     * @param url
+     * @return
+     */
+    protected ModelAndView redirect(String url) {
+        return new ModelAndView(new RedirectView(url, true));
     }
 }

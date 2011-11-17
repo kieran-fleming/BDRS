@@ -12,6 +12,7 @@ import org.displaytag.util.Href;
 import org.displaytag.util.RequestHelper;
 
 public class BdrsRequestHelper implements RequestHelper {
+    @SuppressWarnings("unused")
     private HttpServletRequest request;
     private HttpServletResponse response;
 

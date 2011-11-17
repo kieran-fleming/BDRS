@@ -86,7 +86,7 @@
            </tr>
 	   </tbody>
 	</table>
-	<div class="textright">
+	<div class="buttonpanel textright">
 	    <input class="form_action" type="submit" value="Save"/>
     </div>
 </form>

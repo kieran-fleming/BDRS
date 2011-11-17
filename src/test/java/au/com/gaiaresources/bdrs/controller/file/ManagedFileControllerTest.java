@@ -274,6 +274,6 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

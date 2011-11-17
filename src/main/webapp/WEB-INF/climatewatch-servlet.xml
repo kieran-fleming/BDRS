@@ -76,7 +76,18 @@
         </property>
         <property name="order" value="1" />
     </bean>
+	
+	<!-- authentication entry point -->
+	<bean id="bdrsAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+		<property name="loginFormUrl" value="/home.htm?signin=true" />
+		<property name="useForward" value="true" />
+	</bean>
 
-    <!--bean id="validator" class="org.springframework.validation.Validator"/-->
-
+    <!-- authentication filter -->
+    <bean id="bdrsAuthenticationFilter" class=
+        "au.com.gaiaresources.bdrs.servlet.filter.BdrsAuthenticationFilter">
+        <property name="authenticationManager" ref="authenticationManager"/>
+        <property name="filterProcessesUrl" value="/j_spring_security_check"/>
+		<property name="postOnly" value="true" />
+    </bean>
 </beans>

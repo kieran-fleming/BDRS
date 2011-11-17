@@ -158,7 +158,7 @@
         <div class="float_divider"></div>
 
     </div>
-    <div class="page_action_button_panel">
+    <div class="buttonpanel">
         <input class="form_action" type="submit" value="Add Layer"/>
     </div>
 </form>

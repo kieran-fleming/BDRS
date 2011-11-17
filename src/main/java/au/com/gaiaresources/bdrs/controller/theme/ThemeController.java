@@ -2,38 +2,21 @@ package au.com.gaiaresources.bdrs.controller.theme;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
-import javax.activation.FileDataSource;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
-
 import org.apache.log4j.Logger;
-import org.codehaus.plexus.util.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,8 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.controller.admin.AdminHomePageController;
+import au.com.gaiaresources.bdrs.controller.file.AbstractDownloadFileController;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
@@ -52,27 +34,19 @@ import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
-import au.com.gaiaresources.bdrs.model.theme.ThemeElementType;
-import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.web.RedirectionService;
+import au.com.gaiaresources.bdrs.service.theme.ThemeService;
+import au.com.gaiaresources.bdrs.servlet.Interceptor;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
-import au.com.gaiaresources.bdrs.util.ZipUtils;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Allows the creation, update and deletion of Themes and ThemeElements. 
  */
 @SuppressWarnings("unchecked")
 @Controller
-public class ThemeController extends AbstractController {
-    /**
-     * The name of the configuration file that is expected inside all theme zips.
-     */
-    public static final String THEME_CONFIG_FILENAME = "config.json";
-    
+public class ThemeController extends AbstractDownloadFileController {
+
     public static final String THEME_ELEMENT_CUSTOM_VALUE_TEMPLATE = "theme_element_%d_customValue";
-    public static final String KEY_REPLACE_REGEX_TEMPLATE = "\\$\\{(\\s*)%s(\\s*)\\}";
     public static final String CSS_CONTENT_TYPE = "text/css";
     public static final String CSS_EXTENSION = "css";
     
@@ -80,21 +54,7 @@ public class ThemeController extends AbstractController {
     public static final String ADMIN_EDIT_URL = "/bdrs/admin/theme/edit.htm";
     public static final String ADMIN_EDIT_FILE_URL = "/bdrs/admin/theme/editThemeFile.htm";
     
-    private static final String JSON_KEY_THEME_PAGES = "theme_pages";
-    
-    /**
-     * The set of content types that should be passed through the search and 
-     * replace process but do not start with the word 'text'.
-     */
-    public static final Set<String> PATTERN_REPLACE_CONTENT_TYPES;
-    static {
-        Set<String> tempSet = new HashSet<String>();
-        tempSet.add("application/json");
-        tempSet.add("application/javascript");
-        tempSet.add("application/xml");
-        
-        PATTERN_REPLACE_CONTENT_TYPES = Collections.unmodifiableSet(tempSet);
-    }
+    public static final String REVERT_DEFAULT_THEME_URL = "/bdrs/theme/revertDefault.htm";
     
     private Logger log = Logger.getLogger(getClass());
     
@@ -107,18 +67,7 @@ public class ThemeController extends AbstractController {
     @Autowired
     private FileService fileService;
     @Autowired
-    private RedirectionService redirService;
-
-    /**
-     * Returns true if the specified content type starts with text or
-     * is listed in the set of content types that should be processed as a 
-     * text file.
-     * @param contentType the content type string to be tested.
-     * @return
-     */
-    public static boolean isTextContent(String contentType) {
-        return contentType.startsWith("text") || PATTERN_REPLACE_CONTENT_TYPES.contains(contentType);
-    }
+    private ThemeService themeService;
     
     /**
      * Lists all themes for the portal specified the the portal id.
@@ -133,7 +82,23 @@ public class ThemeController extends AbstractController {
         ModelAndView mv = new ModelAndView("themeListing");
         mv.addObject("themeList", themeDAO.getThemes(portal));
         mv.addObject("portalId", portalId);
-        
+        mv.addObject("editAsRoot", true);
+        return mv;
+    }
+    
+    /**
+     * Lists all themes for the current portal.
+     * @param portalId the primary key of the portal associated with the themes to be returned.
+     */
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = "/bdrs/admin/theme/listing.htm", method = RequestMethod.GET)
+    public ModelAndView listing(HttpServletRequest request,
+                                HttpServletResponse response) {
+        Portal portal = getRequestContext().getPortal();
+        ModelAndView mv = new ModelAndView("themeListing");
+        mv.addObject("themeList", themeDAO.getThemes(portal));
+        mv.addObject("portalId", portal.getId());
+        mv.addObject("editAsAdmin", true);
         return mv;
     }
     
@@ -153,20 +118,75 @@ public class ThemeController extends AbstractController {
                              @RequestParam(value="themeFileName", required=true) String themeFileName) throws IOException {
         
         Theme theme = themeDAO.getTheme(themeId);
-        return editThemeFile(request, response, theme, themeFileName);
+        ModelAndView mv = editThemeFile(request, response, theme, themeFileName);
+        mv.addObject("editAsRoot", true);
+        return mv;
     }
     
     @RolesAllowed({ Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.GET)
     public ModelAndView admin_editThemeFile(HttpServletRequest request,
                              HttpServletResponse response,
+                             @RequestParam(value="themeId", required=true) int themeId,
                              @RequestParam(value="themeFileName", required=true) String themeFileName) throws IOException {
-        Theme theme = themeDAO.getActiveTheme(getRequestContext().getPortal());
+        Portal portal = getRequestContext().getPortal();
+        Theme theme = themeDAO.getTheme(themeId);
         if (theme == null) {
-            getRequestContext().addMessage("No active theme to edit.");
-            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+            // return an error that you are trying to edit a theme that does not exist or you do not have permission to edit
+            getRequestContext().addMessage("bdrs.theme.nonexistant", new String[]{});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsAdmin", true);
+            return mv;
         }
-        return editThemeFile(request, response, theme, themeFileName);
+        
+        if (!theme.getPortal().equals(portal)) {
+            // return an error that you are trying to edit a theme you don't have access to
+            getRequestContext().addMessage("bdrs.theme.accessDenied", new String[]{theme.getName()});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsAdmin", true);
+            return mv;
+        }
+        ModelAndView mv = editThemeFile(request, response, theme, themeFileName);
+        mv.addObject("editAsAdmin", true);
+        return mv;
+    }
+    
+    @RolesAllowed({ Role.ADMIN, Role.ROOT })
+    @RequestMapping(value = "/bdrs/admin/theme/refreshTheme.htm", method = RequestMethod.GET)
+    public ModelAndView refreshThemes(HttpServletRequest request,
+                             HttpServletResponse response,
+                             @RequestParam(value="themeId", required=true) int themeId) throws IOException {
+        Portal portal = getRequestContext().getPortal();
+        
+        Theme activeTheme = themeDAO.getTheme(themeId);
+        if (activeTheme == null) {
+            // return an error that you are trying to edit a theme that does not exist or you do not have permission to edit
+            getRequestContext().addMessage("bdrs.theme.nonexistant", new String[]{});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsRoot", true);
+            return mv;
+        }
+        
+        portal = activeTheme.getPortal();
+        for (Theme theme : themeDAO.getThemes(portal)) {
+            theme.setActive(theme.getId() == themeId);
+            themeDAO.save(theme);
+            if (theme.getId() == themeId) {
+                // add the active theme to the request context
+                getRequestContext().setTheme(theme);
+            }
+        }
+        ModelAndView mv = new ModelAndView("themeListing");
+        mv.addObject("themeList", themeDAO.getThemes(portal));
+        mv.addObject("portalId", portal.getId());
+        mv.addObject("editAsAdmin", true);
+        return mv;
     }
     
     private ModelAndView editThemeFile(HttpServletRequest request,
@@ -218,6 +238,16 @@ public class ThemeController extends AbstractController {
                              @RequestParam(value="revert", required=false) String revert) {
         
         Theme theme = themeDAO.getTheme(themeId);
+        Portal portal = getRequestContext().getPortal();
+        if (theme == null) {
+            // return an error that you are trying to edit a theme that does not exist or you do not have permission to edit
+            getRequestContext().addMessage("bdrs.theme.nonexistant", new String[]{});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsRoot", true);
+            return mv;
+        }
         return editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ROOT_EDIT_URL);
     }
     
@@ -225,15 +255,34 @@ public class ThemeController extends AbstractController {
     @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.POST)
     public ModelAndView admin_editThemeFileSubmit(HttpServletRequest request,
                              HttpServletResponse response,
+                             @RequestParam(value="themePk", required=true) int themeId,
                              @RequestParam(value="themeFileName", required=true) String themeFileName,
                              @RequestParam(value="themeFileContent", required=true) String themeFileContent,
                              @RequestParam(value="revert", required=false) String revert) {
-        Theme theme = themeDAO.getActiveTheme(getRequestContext().getPortal());
+        Theme theme = themeDAO.getTheme(themeId);
+        Portal portal = getRequestContext().getPortal();
         if (theme == null) {
-            getRequestContext().addMessage("No active theme to edit.");
-            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+            // return an error that you are trying to edit a theme that does not exist or you do not have permission to edit
+            getRequestContext().addMessage("bdrs.theme.nonexistant", new String[]{});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsAdmin", true);
+            return mv;
         }
-        return editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ADMIN_EDIT_URL);
+        
+        if (!theme.getPortal().equals(portal)) {
+            // return an error that you are trying to edit a theme you don't have access to
+            getRequestContext().addMessage("bdrs.theme.accessDenied", new String[]{theme.getName()});
+            ModelAndView mv = new ModelAndView("themeListing");
+            mv.addObject("themeList", themeDAO.getThemes(portal));
+            mv.addObject("portalId", portal.getId());
+            mv.addObject("editAsAdmin", true);
+            return mv;
+        }
+        ModelAndView mv = editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ADMIN_EDIT_URL);
+        mv.addObject("editAsAdmin", true);
+        return mv;
     }
     
     private ModelAndView editThemeFileSubmit(HttpServletRequest request,
@@ -258,17 +307,7 @@ public class ThemeController extends AbstractController {
                 writer.flush();
                 writer.close();
             } else {
-                // Extract from zip file and place it in the raw dir
-                ManagedFile managedFile = managedFileDAO.getManagedFile(theme.getThemeFileUUID());
-                FileDataSource fileDataSource = fileService.getFile(managedFile, managedFile.getFilename());
-                ZipFile zipFile = new ZipFile(fileDataSource.getFile());
-                ZipEntry zipEntry = zipFile.getEntry(themeFileName);
-                
-                is = zipFile.getInputStream(zipEntry);
-                byte[] buffer = new byte[4096];
-                for(int read = is.read(buffer); read > -1; read = is.read(buffer)) {
-                    fos.write(buffer, 0, read);
-                }
+                themeService.revertThemeFile(theme, themeFileName);
             }
             
             fos.flush();
@@ -276,15 +315,15 @@ public class ThemeController extends AbstractController {
             // Process the raw file (perform the necessary search and replace)
             File processedTargetDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, false);
             String assetContext = String.format(Theme.ASSET_DOWNLOAD_URL_TMPL, request.getContextPath(), 
-                                                theme.getClass().getName(), theme.getId(), Theme.THEME_DIR_PROCESSED); 
-            processThemeData(theme, rawTargetDir, processedTargetDir, assetContext, processedTargetDir);
+                                                theme.getClass().getName(), theme.getId(), Theme.THEME_DIR_PROCESSED);
+            themeService.processThemeData(theme, rawTargetDir, processedTargetDir, assetContext);
             getRequestContext().addMessage("bdrs.theme.save.success", new Object[]{theme.getName()});
         
         } catch(Exception e) {
             log.error(e.getMessage(), e);
             
             getRequestContext().addMessage(e.getMessage());
-            getRequestContext().addMessage(theme.getName() + " has not been updated.");
+            getRequestContext().addMessage("bdrs.theme.update.fail", new Object[]{theme.getName()});
         } finally {
             try {
                 if(fos != null) {
@@ -317,9 +356,9 @@ public class ThemeController extends AbstractController {
     @RequestMapping(value = ROOT_EDIT_URL, method = RequestMethod.GET)
     public ModelAndView root_edit(HttpServletRequest request,
                              HttpServletResponse response,
-                             @RequestParam(value="portalId", required=true) int portalId,
+                             @RequestParam(value="portalId", required=false, defaultValue="0") int portalId,
                              @RequestParam(value="themeId", required=false, defaultValue="0") int themeId) throws IOException {
-        Portal portal = portalDAO.getPortal(portalId);
+        Portal portal = portalId == 0 ? getRequestContext().getPortal() : portalDAO.getPortal(portalId);
         Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
         if(theme.getPortal() == null) {
             theme.setPortal(portal);
@@ -329,16 +368,16 @@ public class ThemeController extends AbstractController {
         return mv;
     }
     
-    // The admin can only edit the active theme for the portal.
+    // The admin can only edit the themes for the current portal
     @RolesAllowed({ Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.GET)
     public ModelAndView admin_edit(HttpServletRequest request,
-                             HttpServletResponse response) throws Exception {
+                             HttpServletResponse response,
+                             @RequestParam(value="themeId", required=false, defaultValue="0") int themeId) throws Exception {
         Portal portal = getRequestContext().getPortal();
-        Theme theme = themeDAO.getActiveTheme(portal);
-        if (theme == null) {
-            getRequestContext().addMessage("No active theme to edit.");
-            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
+        Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
+        if(theme.getPortal() == null) {
+            theme.setPortal(portal);
         }
         ModelAndView mv =  edit(request, response, portal, theme);
         mv.addObject("editAsAdmin", true);
@@ -428,17 +467,14 @@ public class ThemeController extends AbstractController {
     @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.POST)
     public ModelAndView admin_editSubmit(HttpServletRequest request,
                                    HttpServletResponse response,
-                                   //@RequestParam(value="name", required=true) String name,
-                                   //@RequestParam(value="themeFileUUID", required=true) String themeFileUUID,
+                                   @RequestParam(value="themePk", required=false, defaultValue="0") int themeId,
+                                   @RequestParam(value="name", required=true) String name,
+                                   @RequestParam(value="themeFileUUID", required=true) String themeFileUUID,
+                                   @RequestParam(value="active", required=false, defaultValue="false") boolean active,
                                    @RequestParam(value="revert", required=false) String revert){
         Portal portal = getRequestContext().getPortal();
-        Theme theme = themeDAO.getActiveTheme(portal);
-        if (theme == null) {
-            getRequestContext().addMessage("No active theme to edit.");
-            return new ModelAndView(new RedirectView(redirService.getAdminHomeUrl(), true));
-        }
-        // the theme is already active
-        return editSubmit(request, response, portal, theme, theme.getName(), theme.getThemeFileUUID(), true, revert, ADMIN_EDIT_URL);
+        Theme theme = themeId == 0 ? new Theme() : themeDAO.getTheme(themeId);
+        return editSubmit(request, response, portal, theme, name, themeFileUUID, active, revert, ADMIN_EDIT_URL);
     }
     
     private ModelAndView editSubmit(HttpServletRequest request,
@@ -457,6 +493,11 @@ public class ThemeController extends AbstractController {
                 t.setActive(false);
                 themeDAO.save(t);
             }
+        } else {
+            // we are deactivating the current theme, must revert back to the default
+            Theme defaultTheme = themeDAO.getDefaultTheme(portal);
+            defaultTheme.setActive(true);
+            themeDAO.save(defaultTheme);
         }
         
         boolean revertRequired = revert != null || (!themeFileUUID.equals(theme.getThemeFileUUID()));
@@ -473,61 +514,47 @@ public class ThemeController extends AbstractController {
         String inputName;
         for(ThemeElement te : theme.getThemeElements()) {
             inputName = String.format(THEME_ELEMENT_CUSTOM_VALUE_TEMPLATE, te.getId());
-            te.setCustomValue(request.getParameter(inputName));
-            themeDAO.save(te);
+            String value = request.getParameter(inputName);
+            if (value != null) {
+                te.setCustomValue(value);
+                themeDAO.save(te);
+            } else {
+                log.error("Cannot set custom value to null");
+            }
         }
         
         try {
-            // Get the theme file and create or update theme elements
-            ManagedFile managedFile = managedFileDAO.getManagedFile(themeFileUUID);
-            if(managedFile == null) {
-                throw new NullPointerException("Cannot find managed file with UUID: "+themeFileUUID);
-            }
-
             File rawTargetDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_RAW, true);
+            File processedTargetDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, true);
             
             // If adding or reverting a theme.
             if(revertRequired) {
-                FileDataSource fileDataSource = fileService.getFile(managedFile, managedFile.getFilename());
-                ZipFile zipFile = new ZipFile(fileDataSource.getFile());
-                loadThemeConfig(theme, zipFile);
-                
-                // Unzip and store raw files.
-                if(rawTargetDir.exists()) {
-                    FileUtils.deleteDirectory(rawTargetDir); 
+                ManagedFile managedFile = managedFileDAO.getManagedFile(themeFileUUID, portal);
+                if(managedFile != null) {
+                    themeService.revertTheme(theme, request.getContextPath(), request.getParameterMap());
+                } else {
+                    getRequestContext().addMessage("bdrs.managedFile.missing", new Object[]{themeFileUUID});
+                    getRequestContext().addMessage("bdrs.theme.revert.fail", new Object[]{theme.getName()});
                 }
-                if(!rawTargetDir.exists()) {
-                    boolean dirCreateSuccess = rawTargetDir.mkdirs();
-                    if(!dirCreateSuccess) {
-                        throw new IOException("Unable to create directory (including parents): "+rawTargetDir.getAbsolutePath());
-                    }
-                }
-                ZipUtils.decompressToDir(zipFile, rawTargetDir);
+            } else {
+                // update the raw config file with any changes
+                themeService.updateRawConfigFile(theme, rawTargetDir);
             }
-            
-            File processedTargetDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, true);
-            
-            // If the processed file directory exists, delete it first before
-            // we process the raw files.
-            if(processedTargetDir.exists()) {
-                FileUtils.deleteDirectory(processedTargetDir); 
+            // copy and process files
+            themeService.processFiles(theme, request.getContextPath(), rawTargetDir, processedTargetDir);
+            if (!getRequestContext().getMessageCodes().contains("bdrs.managedFile.missing")) {
+                getRequestContext().addMessage("bdrs.theme.save.success", new Object[]{theme.getName()});
             }
-            
-            String assetContext = String.format(Theme.ASSET_DOWNLOAD_URL_TMPL, request.getContextPath(), 
-                                                theme.getClass().getName(), theme.getId(), Theme.THEME_DIR_PROCESSED); 
-            processThemeData(theme, rawTargetDir, processedTargetDir, assetContext, processedTargetDir);
-            getRequestContext().addMessage("bdrs.theme.save.success", new Object[]{theme.getName()});
-            
         } catch(Exception e) {
             log.error(e.getMessage(), e);
             
             RequestContext requestContext = getRequestContext();
-            requestContext.getHibernate().getTransaction().rollback();
-            
-            getRequestContext().addMessage(e.getMessage());
-            getRequestContext().addMessage(theme.getName() + " has not been updated.");
+            requestContext.addMessage(Interceptor.REQUEST_ROLLBACK);
+
+            getRequestContext().addMessage("bdrs.managedFile.missing", new Object[]{themeFileUUID});
+            getRequestContext().addMessage("bdrs.theme.update.fail", new Object[]{theme.getName(), e.getMessage()});
         }
-        
+
         ModelAndView mv = new ModelAndView(new RedirectView(redirectUrl, true));
         mv.addObject("portalId", portal.getId().intValue());
         mv.addObject("themeId", theme.getId());
@@ -535,205 +562,62 @@ public class ThemeController extends AbstractController {
         return mv;
     }
     
-    private void processThemeData(Theme theme, File srcDir, File destDir, String assetContext, File baseTargetDir) throws IOException {
-        
-        byte[] buffer = new byte[4096];
-        FileInputStream fis;
-        FileOutputStream fos;
-        File target;
-        
-        for(File f : srcDir.listFiles()) {
-            String absPath = f.getAbsolutePath();
-            String relativePath = absPath.substring(srcDir.getAbsolutePath().length(), absPath.length());
-            target = new File(destDir.getAbsolutePath() + relativePath);
-            
-            if(f.isDirectory()) {
-                if(!target.exists()) {
-                    boolean dirCreateSuccess = target.mkdirs();
-                    if(!dirCreateSuccess) {
-                        throw new IOException("Unable to create directory (including parents): "+target.getAbsolutePath());
-                    }
-                }
-                //log.debug("Make Dir: "+target.getAbsolutePath());
-                processThemeData(theme, f, target, assetContext, baseTargetDir);
-            } else {
-                
-                File parentFile = target.getParentFile();
-                if(!parentFile.exists()) {
-                    boolean dirCreateSuccess = parentFile.mkdirs();
-                    if(!dirCreateSuccess) {
-                        throw new IOException("Unable to create directory path: "+parentFile.getAbsolutePath());
-                    }
-                }
-                
-                fis = new FileInputStream(f);
-                fos = new FileOutputStream(target);
-                try {
-                    // Make sure that the file will have a directory to go into.
-                    if(!target.getParentFile().exists()) {
-                        boolean dirCreateSuccess = target.getParentFile().mkdirs();
-                        if(!dirCreateSuccess) {
-                            throw new IOException("Unable to create directory path: "+target.getParentFile().getAbsolutePath());
-                        }
-                    }
-                    String contentType = au.com.gaiaresources.bdrs.util.FileUtils.getContentType(f);
-                    
-                    if(ThemeController.isTextContent(contentType)) {
-                        // Read the file into memory
-                        //log.debug("Process: "+target.getAbsolutePath());
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-                        StringBuilder builder = new StringBuilder();
-                        for(String line = reader.readLine(); line != null; line = reader.readLine()) {
-                            builder.append(line);
-                            builder.append("\n");
-                        }
-                        reader.close();
-                        
-                        // Search and Replace
-                        String regex;
-                        String content = builder.toString();
-                        for(ThemeElement themeElement : theme.getThemeElements()) {
-                            regex = String.format(KEY_REPLACE_REGEX_TEMPLATE, Pattern.quote(themeElement.getKey()));
-                            content = content.replaceAll(regex, Matcher.quoteReplacement(themeElement.getCustomValue()));
-                        }
-                                            
-                        // Now for the assets
-                        regex = String.format(KEY_REPLACE_REGEX_TEMPLATE, Pattern.quote(Theme.ASSET_KEY));
-                        content = content.replaceAll(regex, Matcher.quoteReplacement(assetContext));
-                        
-                        // Write the file to disk
-                        Writer writer = new OutputStreamWriter(fos);
-                        writer.write(content);
-                        writer.flush();
-                        writer.close();
-                        
-                    } else {
-                        //log.debug("File Copy: "+target.getAbsolutePath());
-                        fis = new FileInputStream(f);
-                        for(int read = fis.read(buffer); read > -1; read = fis.read(buffer)) {
-                            fos.write(buffer, 0, read);
-                        }
-                    }
-                    fos.flush();
-                    
-                } catch(IOException ioe) {
-                    log.error(ioe.getMessage(), ioe);
-                    throw ioe;
-                } finally {
-                    try{
-                        fis.close();
-                        fos.close();
-                    } catch(IOException e) {
-                        log.error(e.getMessage(), e);
-                        throw e;
-                    }
-                }
-            }
-        }
-    }
-    
-    private void loadThemeConfig(Theme theme, ZipFile themeZip) throws ZipException, IOException {
-        
-        ZipEntry configEntry = themeZip.getEntry(THEME_CONFIG_FILENAME);
-        InputStream configInputStream = themeZip.getInputStream(configEntry);
-        
-        BufferedReader reader = new BufferedReader(new InputStreamReader(configInputStream));
-        StringBuilder configJsonStr = new StringBuilder();
-        for(String line = reader.readLine(); line != null; line = reader.readLine()) {
-            configJsonStr.append(line);
-        }
-        reader.close();
-        
-        // What about malformatted json or valid json that is not what we want?
-        JSONObject config;
+    /**
+     * Downloads a theme zip file by zipping the contents of the theme raw 
+     * directory.
+     * @param themeId The unique id of the theme.
+     * @return
+     */
+    @RolesAllowed({ Role.ADMIN })
+    @RequestMapping(value = "/bdrs/admin/theme/downloadTheme.htm", method = RequestMethod.GET)
+    public ModelAndView download(HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestParam("themeId") Integer themeId) {
         try {
-             config = (JSONObject)JSONSerializer.toJSON(configJsonStr.toString());
-        } catch(JSONException je) {
-            throw new JSONException("Error parsing configuration file. There is a syntax error in the configuration file.", je);
-        }
-        try {
-            JSONArray cssArray = config.getJSONArray("css_files");
-            String[] css = new String[cssArray.size()];
-            for(int i=0; i<cssArray.size(); i++) {
-                css[i] = cssArray.getString(i);
-            }
-            theme.setCssFiles(css);
-            
-            JSONArray jsArray = config.getJSONArray("js_files");
-            String[] js = new String[jsArray.size()];
-            for(int i=0; i<jsArray.size(); i++) {
-                js[i] = jsArray.getString(i);
-            }
-            theme.setJsFiles(js);
-            
-            Map<String, ThemeElement> themeElemMap = new HashMap<String, ThemeElement>();
-            for(ThemeElement te : theme.getThemeElements()) {
-                themeElemMap.put(te.getKey(), te);
-            }
-            
-            JSONObject elem;
-            String key;
-            ThemeElement themeElement;
-            JSONArray themeElemArray = config.getJSONArray("theme_elements");
-            List<ThemeElement> themeElementList = new ArrayList<ThemeElement>(themeElemArray.size());
-            for(int i=0; i<themeElemArray.size(); i++) {
-                elem = themeElemArray.getJSONObject(i);
-                key = elem.getString("key");
-                
-                themeElement = themeElemMap.containsKey(key) ? themeElemMap.remove(key) : new ThemeElement();
-                themeElement.setKey(key);
-                themeElement.setType(ThemeElementType.valueOf(elem.getString("type")));
-                themeElement.setDefaultValue(elem.getString("value"));
-                themeElement.setCustomValue(themeElement.getDefaultValue());
-                
-                themeElement = themeDAO.save(themeElement);
-                themeElementList.add(themeElement);
-            }
-            
-            // delete all of the old theme pages...
-            List<ThemePage> pagesToDelete = themeDAO.getThemePages(theme.getId().intValue());
-            for (ThemePage delPage : pagesToDelete) {
-                themeDAO.delete(delPage);
-            }
-            
-            // check for the existance of the key first or we break old theme config files
-            if (config.containsKey(JSON_KEY_THEME_PAGES)) {
-                JSONArray themePageArray = config.getJSONArray(JSON_KEY_THEME_PAGES);
-    
-                for (int i=0; i<themePageArray.size(); ++i) {
-                    JSONObject jsonPage = themePageArray.getJSONObject(i);
-                    ThemePage page = new ThemePage();
-                    page.setKey(jsonPage.getString("key"));
-                    page.setTitle(getJsonString(jsonPage, "title"));
-                    page.setDescription(getJsonString(jsonPage, "description"));
-                    page.setTheme(theme);
-                    themeDAO.save(page);
-                }
-            }
-            
-            theme.setThemeElements(themeElementList);
-            themeDAO.save(theme);
-            
-            for(ThemeElement te : themeElemMap.values()) {
-                themeDAO.delete(te);
-            }
-        } catch(JSONException je) {
-            throw new JSONException("Error parsing configuration file. There is a format error in the configuration file.", je);
-        }
+            Theme theme = themeDAO.getTheme(themeId);
+            File rawTargetDir = themeService.getThemeRawDirectory(theme);
+            downloadFilesAsZip(rawTargetDir.listFiles(), response, theme.getName());
+        } catch (IOException e) {
+            log.error("Error downloading theme file: ", e);
+            getRequestContext().addMessage("bdrs.theme.download.fail", new Object[]{});
+        } 
+        return null;
     }
     
     /**
-     * JSONObject will throw an exception if the key does not exist. This
-     * returns gracefully with null
-     * 
-     * @param obj the json object
-     * @param key the key of the property you want to retrieve
-     * @return
+     * Dev helper mapping to make editing the default theme easier.
+     * @throws IOException 
      */
-    private String getJsonString(JSONObject obj, String key) {
-        if (obj.containsKey(key)) {
-            return obj.getString(key);
+    // public so no login required
+    @RequestMapping(value = REVERT_DEFAULT_THEME_URL, method = RequestMethod.GET)
+    public void revertDefaultTheme(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String contextPath = request.getContextPath();
+        Portal portal = getRequestContext().getPortal();
+        // if no portal in the request context, use the default portal.
+        if (portal == null) {
+            portal = portalDAO.getPortal(true);
+			if (portal == null) {
+	            response.getWriter().write("Error reverting default theme : no portal specified and no default portal found!");
+	            return;
+	        }
         }
-        return null;
+        
+        try {
+            themeService.createDefaultThemes(portal, contextPath);
+            
+            response.getWriter().write("Successfully reverted default theme of portal.");
+            response.getWriter().write("\n");
+            response.getWriter().write("portal id : ");
+            response.getWriter().write(portal.getId().toString());
+            response.getWriter().write("\n");
+            response.getWriter().write("portal name : ");
+            response.getWriter().write(portal.getName());
+            response.getWriter().write("\n\n");
+        } catch (IOException ioe) {
+            response.getWriter().write("IOException reverting default theme : \n");
+            response.getWriter().write(ioe.getMessage());
+            response.getWriter().write("\n");
+            ioe.printStackTrace(new PrintStream(response.getOutputStream()));
+        }
     }
 }

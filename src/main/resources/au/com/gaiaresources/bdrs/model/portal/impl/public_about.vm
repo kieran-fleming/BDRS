@@ -1,4 +1,4 @@
-<h1>Public About for ${portalName}</h1>
+<h1>Public About for ${portal.getName()}</h1>
 
 <p>
 This text is the default text on the About page.  In order to change it, 

@@ -1,0 +1,14 @@
+{
+    "scientificName": "Pogona henrylawsoni",
+    "family": "Agamidae",
+    "imageURL": "http://bie.ala.org.au/repo/1036/23/239944/raw.jpg",
+    "commonName": "Downs Bearded Dragon",
+    "rankID": 7000,
+    "scientificNameAuthorship": "Wells & Wellington, 1985",
+    "author": "Wells & Wellington",
+    "kingdom": "Animalia",
+    "rank": "species",
+    "thumbnail": "http://bie.ala.org.au/repo/1036/23/239944/thumbnail.jpg",
+    "year": null,
+    "commonNameGUID": "urn:lsid:biodiversity.org.au:afd.name:01f36874-b0d7-4122-9245-1c3a1d59cdc9"
+}

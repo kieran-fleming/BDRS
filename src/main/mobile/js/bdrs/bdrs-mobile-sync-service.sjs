@@ -2,12 +2,13 @@
 exports.UPLOAD_TIMEOUT = 30000;
 exports._syncListeners = [];
 exports._lastSync = null;
+exports._syncing = false;
 
 exports.init = function() {
     // Add a connectivity listener. Synchronize with the server when a 
     // connection is present.
     bdrs.mobile.connectivity.addConnectivityListener(function(event) {
-        if(event.textStatus === 'success') {
+        if(event.textStatus === 'success' && (!bdrs.mobile.survey.removingInProgress)) {
             bdrs.mobile.syncService.synchronize();
         }
     });
@@ -62,6 +63,7 @@ exports._get_modified_records = function() {
 };
 
 exports.synchronize  = function() {
+	bdrs.mobile.syncService._syncing = true;
     var modifiedRecords = exports._get_modified_records();
     bdrs.mobile.Debug("Modified Record Count: " + modifiedRecords.length);
 
@@ -142,6 +144,7 @@ exports.synchronize  = function() {
     
     if(uploadData.length < 1) {
         // No data to upload
+		bdrs.mobile.syncService._syncing = false;
         return;
     }
     
@@ -167,6 +170,7 @@ exports.synchronize  = function() {
         } or {
             hold(exports.UPLOAD_TIMEOUT);
             bdrs.mobile.Error("Upload Timed Out. No response after "+exports.UPLOAD_TIMEOUT+" ms");
+            bdrs.mobile.syncService._syncing = false;
         }
     } else {
     
@@ -208,6 +212,7 @@ exports.synchronize  = function() {
         } or {
             hold(exports.UPLOAD_TIMEOUT);
             bdrs.mobile.Error("Upload Timed Out. No response after "+exports.UPLOAD_TIMEOUT+" ms");
+            bdrs.mobile.syncService._syncing = false;
         } finally {
             // Clean up the event listener
             window.removeEventListener('message', tempEventListener, false);
@@ -239,7 +244,9 @@ exports._processSyncResponse = function(response, idLookup) {
             }
         }
         
-        persistence.flush();
+        persistence.flush(function(){
+			bdrs.mobile.syncService._syncing = false;
+		});
 
         bdrs.mobile.syncService._lastSync = uploadTime;
         bdrs.mobile.syncService._fireSyncEvent({_type: 'sync'});
@@ -255,6 +262,7 @@ exports._processSyncResponse = function(response, idLookup) {
         } else {
             bdrs.mobile.Error([type, message].join(" - "));
         }
+		bdrs.mobile.syncService._syncing = false;
     }
 };
 

@@ -1,6 +1,5 @@
 package au.com.gaiaresources.bdrs.servlet;
 
-import org.apache.log4j.Logger;
 
 
 public class RequestContextHolder {

@@ -31,6 +31,9 @@ import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
+import au.com.gaiaresources.bdrs.model.record.impl.AdvancedCountRecordFilter;
+import au.com.gaiaresources.bdrs.model.record.impl.AdvancedRecordFilter;
+import au.com.gaiaresources.bdrs.model.record.impl.RecordFilter;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
@@ -46,10 +49,6 @@ public class DarwinCoreArchiveServiceTest extends AbstractDwcaTest {
 
     @Test
     public void testDownloadArchive() throws Exception {
-        request.setScheme(REQUEST_SCHEME);
-        request.setServerName(REQUEST_SERVER_NAME);
-        request.setContextPath(REQUEST_CONTEXT_PATH);
-        request.setServerPort(REQUEST_SERVER_PORT);
         request.setRequestURI(DarwinCoreArchiveService.DOWNLOAD_ARCHIVE_URL);
         request.setMethod("GET");
         
@@ -84,6 +83,9 @@ public class DarwinCoreArchiveServiceTest extends AbstractDwcaTest {
             ++count;
         }
         
-        Assert.assertEquals("incorrect record count", countArchivedRecords(allRecordList), count);
+        RecordFilter recFilter = new AdvancedCountRecordFilter();
+        recFilter.setRecordVisibility(RecordVisibility.PUBLIC);
+        
+        Assert.assertEquals("incorrect record count", recordDAO.countRecords(recFilter), count);
     }
 }

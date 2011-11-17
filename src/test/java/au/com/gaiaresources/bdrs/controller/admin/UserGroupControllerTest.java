@@ -110,9 +110,9 @@ public class UserGroupControllerTest extends AbstractControllerTest {
         request.setParameter(UserGroupController.GROUP_NAME, "new name");
         request.setParameter(UserGroupController.GROUP_DESC, "new desc");
         
-        ModelAndView mav = this.handle(request, response);
+        handle(request, response);
         
-        Group g = (Group)mav.getModel().get(UserGroupController.GROUP_TO_EDIT);
+        Group g = groupDAO.get(one.getId());
         Assert.assertEquals(one.getId(), g.getId());
         Assert.assertEquals("new name", g.getName());
         Assert.assertEquals("new desc", g.getDescription());

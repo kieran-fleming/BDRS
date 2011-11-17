@@ -96,8 +96,6 @@ public class UserMessageController extends AbstractController {
         emailParams.put("userLastName", rec.getUser().getLastName());
         emailParams.put("viewRecordUrl", redirService.getViewRecordUrl(rec));
         emailParams.put("contactText", text);
-        emailParams.put("portal", getRequestContext().getPortal());
-        emailParams.put("contextPath", ContentService.getRequestURL(request));
         
         emailService.sendTemplateMessage(rec.getUser().getEmailAddress(), 
                                           replyEmail,

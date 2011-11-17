@@ -8,9 +8,11 @@ exports.Create = function() {
 };
     
 exports.Show = function() {
+	
+	var survey = bdrs.mobile.survey.getDefault();
     var speciesCountList;
     waitfor(speciesCountList) {
-        SpeciesCount.all().prefetch('species').order('userCount', false).list(resume);
+        SpeciesCount.all().filter('survey','=',survey.id).prefetch('species').order('userCount', false).list(resume);
     }
 
     // Populate the list view

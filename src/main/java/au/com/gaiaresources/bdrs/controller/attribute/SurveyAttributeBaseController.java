@@ -29,14 +29,16 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
 import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
+import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
-import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
@@ -47,6 +49,7 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
+@RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
 public class SurveyAttributeBaseController extends AbstractController {
     
@@ -76,6 +79,7 @@ public class SurveyAttributeBaseController extends AbstractController {
     // will there be a 'standard taxonomic' (i.e. no census method) census method
     // provided in the contribute menu.
     public static final String PARAM_DEFAULT_CENSUS_METHOD_PROVIDED = "defaultCensusMethodProvided";
+    
 
     /**
      * Creates a surveyEditAttributes view.
@@ -83,10 +87,13 @@ public class SurveyAttributeBaseController extends AbstractController {
      * @param response <code>HttpServletResponse</code> 
      * @return <code>ModelAndView</code> that contains a <code>Survey</code> and a List of type <code>AttributeFormField</code>.
      */
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyAttributes(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
+        
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         
         // get the modified/newly create attributes that are in error
         List<Attribute> attributeList = new ArrayList<Attribute>();
@@ -110,8 +117,9 @@ public class SurveyAttributeBaseController extends AbstractController {
             formFieldList.add(formFieldFactory.createAttributeFormField(attributeDAO, attr));
         }
         
-        for(String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            formFieldList.add(formFieldFactory.createAttributeFormField(metadataDAO, survey, propertyName));
+        for(RecordPropertyType type : RecordPropertyType.values()) {
+        	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+        	formFieldList.add(formFieldFactory.createAttributeFormField(recordProperty));
         }
         
         Collections.sort(formFieldList);
@@ -129,17 +137,22 @@ public class SurveyAttributeBaseController extends AbstractController {
      * @param childCensusMethodList that gets populated by the <code>HttpServletRequest</code>.
      * @return <code>ModelAndView</code> with a <code>RedirectView</code>
      */
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyAttributes(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList,
             @RequestParam(value = PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, defaultValue="false") boolean defaultCensusMethodProvided) {
         
         Survey survey = getSurvey(request.getParameter("surveyId"));
-        Map<String, String[]> parameterMap = request.getParameterMap();
-        for (String propertyName : Record.RECORD_PROPERTY_NAMES) {
-            AttributeFormField formField = formFieldFactory.createAttributeFormField(metadataDAO, survey, propertyName, parameterMap);
-            formField.save();
+
+		if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
+		
+		 Map<String, String[]> parameterMap = request.getParameterMap();
+        for (RecordPropertyType type : RecordPropertyType.values()) {
+        	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+			formFieldFactory.createAttributeFormField(recordProperty, parameterMap);
         }
         
         survey.setDefaultCensusMethodProvided(defaultCensusMethodProvided, metadataDAO);
@@ -238,7 +251,8 @@ public class SurveyAttributeBaseController extends AbstractController {
         
         return returnAtts;
     }
-
+    
+    @SuppressWarnings("unchecked")
     private Map<String, String> getAndSaveAttributes(HttpServletRequest request,
             List<Attribute> attributeList, List<Attribute> failAttributeList) {
         // First look for any Attributes that may have been updated

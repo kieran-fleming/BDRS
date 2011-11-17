@@ -254,6 +254,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case STRING_WITH_VALID_VALUES:
                         recAttr.setStringValue(attr.getOptions().iterator().next().getValue());
                         break;
+                    case REGEX:
                     case BARCODE:
                         recAttr.setStringValue("#343434");
                         break;
@@ -433,6 +434,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case STRING_WITH_VALID_VALUES:
                         value = attr.getOptions().iterator().next().getValue();
                         break;
+                    case REGEX:
                     case BARCODE:
                         value ="#343434";
                         break;
@@ -524,6 +526,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case STRING_AUTOCOMPLETE:
                     case STRING:
                     case TEXT:
+                    case REGEX:
                     case BARCODE:
                     case TIME:
                     case HTML:
@@ -600,6 +603,6 @@ public class YearlySightingsControllerTest extends RecordFormTest {
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
-        return new MockMultipartHttpServletRequest();
+        return super.createUploadRequest();
     }
 }

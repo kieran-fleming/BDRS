@@ -1,6 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/markitup/jquery.markitup.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/admin.js"></script>
@@ -11,7 +12,9 @@
 
 <div class="input_container">
 <div>
-	<p>This page is where you can edit a range of pages throughout the web site.  To do this, you select the area you want to change, and then you can modify the text using the editor that is present in the page below.  These changes will be reflected immediately across the web site when you save them.</p>
+	
+	<cw:getContent key="admin/content/edit" />
+	
 	<label>Select the area of the content you would like to edit: </label>
 	<select id="selectContentToEdit" onchange="bdrs.admin.onSelectContentEditorChange()">
 	<c:forEach items="${keys}" var="k">

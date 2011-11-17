@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.security.sasl.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +37,7 @@ import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.BulkDataService;
 import au.com.gaiaresources.bdrs.service.bulkdata.BulkUpload;
 import au.com.gaiaresources.bdrs.service.bulkdata.DataReferenceException;
@@ -49,12 +51,14 @@ import au.com.gaiaresources.bdrs.spatial.ShapefileRecordKeyLookup;
 import au.com.gaiaresources.bdrs.spatial.ShapefileToRecordEntryTransformer;
 import au.com.gaiaresources.bdrs.spatial.ShapefileType;
 
+@RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
 public class BulkDataController extends AbstractController {
 
     public static final String CONTENT_TYPE_XLS = "application/vnd.ms-excel";
     public static final String SHAPEFILE_UPLOAD_URL = "/bulkdata/uploadShapefile.htm";
     public static final String SHAPEFILE_TEMPLATE_URL = "/bulkdata/shapefileTemplate.htm";
+    public static final String SPREADSHEET_TEMPLATE_URL = "/bulkdata/spreadsheetTemplate.htm";
     
     public static final String SHAPEFILE_IMPORT_SUMMARY_VIEW = "shapefileImportSummary";
     public static final String PARAM_SHAPEFILE_FILE = "shapefile";
@@ -84,7 +88,7 @@ public class BulkDataController extends AbstractController {
         return mv;
     }
 
-    @RequestMapping(value = "/bulkdata/spreadsheetTemplate.htm", method = RequestMethod.GET)
+    @RequestMapping(value = SPREADSHEET_TEMPLATE_URL, method = RequestMethod.GET)
     public void spreadsheetTemplate(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -138,6 +142,7 @@ public class BulkDataController extends AbstractController {
                     InputStream inp = uploadedFile.getInputStream();
                     boolean createMissing = req.getParameter("createMissing") != null;
                     BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inp);
+                    log.debug("1103 BulkDataControler[/bulkdata/upload.htm, POST]: Received Bulkupload");
 
                     view.addObject("bulkUpload", bulkUpload);
 

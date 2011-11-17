@@ -1,6 +1,8 @@
 package au.com.gaiaresources.bdrs.grid.impl;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import org.junit.Ignore;
@@ -84,7 +86,8 @@ public class TestGridImageGenerator {
         }
         
         @Ignore
-        protected OutputStream createOutputStream(File targetFile) {
+        protected OutputStream createOutputStream(File targetFile) throws FileNotFoundException {
+            output = new FileOutputStream(targetFile);
             return output;
         }
     }

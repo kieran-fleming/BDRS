@@ -13,7 +13,7 @@
 
 <cw:getContent key="root/portalEdit" />
 
-<form action="" method="post" onKeyPress="return bdrs.util.preventReturnKeySubmit();">
+<form id="portal_form" action="" method="post" onKeyPress="return bdrs.util.preventReturnKeySubmit();">
 	<c:if test="${ portal.id != null }">
 	    <input type="hidden" name="portalId" value="${ portal.id }"/>
 	</c:if>
@@ -67,10 +67,15 @@
 	       </tr>
 	   </thead>
 	   <tbody>
+	       <c:set var="entryPointIndex" value="0"></c:set>
 	       <c:forEach var="portalEntryPoint" items="${ portalEntryPointList }">
 	           <tiles:insertDefinition name="portalEntryPointRow">
                     <tiles:putAttribute name="portalEntryPoint" value="${ portalEntryPoint }"/>
+                    <tiles:putAttribute name="index" value="${ entryPointIndex }"/>
                 </tiles:insertDefinition>
+                <c:if test="${ portalEntryPoint.id == null }">
+                    <c:set var="entryPointIndex" value="${ entryPointIndex + 1 }"></c:set>
+                </c:if>
 	       </c:forEach>
 	   </tbody>
 	</table>
@@ -94,9 +99,8 @@
     <div id="urlTestResult"></div>
     
     <div class="textright buttonpanel">
-        <input class="form_action" type="submit" value="Save Portal"/>
+        <input class="form_action" type="submit" value="Save Portal" id="save_portal"/>
     </div>
 	
 </form>
-
 

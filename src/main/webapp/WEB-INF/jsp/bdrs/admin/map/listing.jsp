@@ -8,7 +8,8 @@
 <p>
 	Create, edit and delete maps from this interface. You will have previously needed 
     to create map layers to assign to maps using the the 
-    <a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">map layer interface</a>
+    <a href="${pageContext.request.contextPath}/bdrs/admin/mapLayer/listing.htm">map layer interface.</a>
+    Note that the map will not be visible until Publish is set to 'Yes'.
 </p>
 
 <tiles:insertDefinition name="geoMapGrid">

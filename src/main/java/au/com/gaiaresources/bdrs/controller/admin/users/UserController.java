@@ -22,6 +22,8 @@ import au.com.gaiaresources.bdrs.security.Role;
 
 /* UNUSED 2011-09-22 */
 
+// admin/registerUser.htm may be used by an outside entity.
+
 @Controller
 public class UserController extends AbstractController {
     private Logger log = Logger.getLogger(getClass());

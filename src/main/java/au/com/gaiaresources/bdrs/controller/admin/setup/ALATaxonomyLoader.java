@@ -648,7 +648,7 @@ public class ALATaxonomyLoader {
         }
     }
 
-    private class CommonNameRow {
+    private static class CommonNameRow {
         @SuppressWarnings("unused")
         String COMMON_NAME_CONCEPT_LSID;
         String COMMON_NAME_NAME_LSID;

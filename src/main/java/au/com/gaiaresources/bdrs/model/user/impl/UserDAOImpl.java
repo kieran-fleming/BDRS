@@ -242,13 +242,13 @@ public class UserDAOImpl extends AbstractDAOImpl implements UserDAO {
     @Override
     public PagedQueryResult<User> search(String username, String email,
             String name, PaginationFilter filter, String[] roles, String[] excludeRoles) {
-        return search(username, email, name, filter, roles, excludeRoles, null);
+        return search(username, email, name, filter, roles, excludeRoles, null, null);
     }
     
     
     @Override
     public PagedQueryResult<User> search(String username, String email, String name, PaginationFilter 
-                                         filter, String[] roles, String[] excludeRoles, Integer groupId) {
+                                         filter, String[] roles, String[] excludeRoles, Integer groupId, Boolean active) {
         HqlQuery q;
         String sortTargetAlias = "u";
         if (groupId == null) {
@@ -259,15 +259,28 @@ public class UserDAOImpl extends AbstractDAOImpl implements UserDAO {
             q.and(Predicate.eq("g.id", groupId));
         }
 
+        if (active != null) {
+            q.and(Predicate.eq("u.active", active));
+        }
+        
+        // build it up, butter cup
+        // return the user even if the requested string does NOT exist in a certain field e.g. username.
+        // The intention of this is to allow us to pass in the same parameter to username, name and email
+        // and to still get back results.
+        Predicate containsSection = null;
         if (StringUtils.hasLength(username)) {
-            q.and(Predicate.ilike("u.name", username + "%"));
+            containsSection = buildOrSection(containsSection, Predicate.ilike("u.name", "%" + username + "%"));
         }
         if (StringUtils.hasLength(email)) {
-            q.and(Predicate.ilike("u.emailAddress", email + "%"));
+            containsSection = buildOrSection(containsSection, Predicate.ilike("u.emailAddress", "%" + email + "%"));
         }
         if (StringUtils.hasLength(name)) {
-            q.and(Predicate.ilike("u.lastName", name + "%").or(Predicate.ilike("u.firstName", name
-                    + "%")));
+            containsSection = buildOrSection(containsSection, Predicate.ilike("u.lastName", "%" + name + "%"));
+            containsSection = buildOrSection(containsSection, Predicate.ilike("u.firstName", "%" + name + "%"));
+        }
+        // add it to the existing query
+        if (containsSection != null) {
+            q.and(containsSection);
         }
 
         // long winded but it works...
@@ -301,5 +314,13 @@ public class UserDAOImpl extends AbstractDAOImpl implements UserDAO {
         }
         
         return new QueryPaginator<User>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter, sortTargetAlias);
+    }
+    
+    private Predicate buildOrSection(Predicate left, Predicate right) {
+        if (left == null) {
+            return right;
+        } else {
+            return left.or(right);
+        }
     }
 }

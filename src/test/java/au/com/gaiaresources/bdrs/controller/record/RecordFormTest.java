@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.test.web.ModelAndViewAssert;
@@ -154,5 +155,10 @@ public abstract class RecordFormTest extends AbstractControllerTest {
                 Assert.isTrue(locCollection.contains(userLoc));   
             }
         }
+    }
+    
+    @Override
+    protected MockHttpServletRequest createMockHttpServletRequest() {
+        return super.createUploadRequest();
     }
 }

@@ -1,9 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.survey;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.FileImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
@@ -48,9 +42,15 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.servlet.RequestContext;
+import au.com.gaiaresources.bdrs.util.ImageUtil;
 
+@RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
 public class SurveyBaseController extends AbstractController {
+    
+    public static final String SURVEY_DOES_NOT_EXIST_ERROR_KEY = "bdrs.survey.doesNotExist";
+    
     private Logger log = Logger.getLogger(getClass());
 
     @Autowired
@@ -79,9 +79,11 @@ public class SurveyBaseController extends AbstractController {
     // is the record visibility modifiable to standard users.
     // admins can always alter the record visibility
     public static final String PARAM_RECORD_VISIBILITY_MODIFIABLE = "recordVisModifiable";
+    
+    public static final String SURVEY_LISTING_URL = "/bdrs/admin/survey/listing.htm";
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
-    @RequestMapping(value = "/bdrs/admin/survey/listing.htm", method = RequestMethod.GET)
+    @RequestMapping(value = SURVEY_LISTING_URL, method = RequestMethod.GET)
     public ModelAndView listSurveys(HttpServletRequest request, HttpServletResponse response) {
 
         ModelAndView mv = new ModelAndView("surveyListing");
@@ -89,7 +91,6 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/edit.htm", method = RequestMethod.GET)
     public ModelAndView editSurvey(
             HttpServletRequest request,
@@ -102,6 +103,9 @@ public class SurveyBaseController extends AbstractController {
             survey = new Survey();
         } else {
             survey = surveyDAO.getSurvey(surveyId);
+            if (survey == null) {
+                return nullSurveyRedirect(getRequestContext());
+            }
         }
 
         boolean toPublish = publish != null;
@@ -115,7 +119,6 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/edit.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyEdit(
             MultipartHttpServletRequest request,
@@ -138,6 +141,9 @@ public class SurveyBaseController extends AbstractController {
             create = true;
         } else {
             survey = surveyDAO.getSurvey(surveyId);
+            if (survey == null) {
+                return nullSurveyRedirect(getRequestContext());
+            }
             create = false;
         }
 
@@ -169,6 +175,7 @@ public class SurveyBaseController extends AbstractController {
         // Survey Logo
         String logoFileStr = request.getParameter(Metadata.SURVEY_LOGO);
         MultipartFile logoFile = request.getFile(Metadata.SURVEY_LOGO+"_file");
+        
         // logoFile will always have size zero unless the file
         // is changed. If there is already a file, but the
         // record is updated, without changing the file input,
@@ -177,7 +184,6 @@ public class SurveyBaseController extends AbstractController {
         Metadata logo = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         if(logoFileStr.isEmpty() && logo != null) {
             // The file was intentionally cleared.
-            //survey.getMetadata().remove(logo);
             Set<Metadata> surveyMetadata = new HashSet(survey.getMetadata());
             surveyMetadata.remove(logo);
             survey.setMetadata(surveyMetadata);
@@ -185,7 +191,7 @@ public class SurveyBaseController extends AbstractController {
             metadataToDelete.add(logo);
         }
         else if(!logoFileStr.isEmpty() && logoFile != null && logoFile.getSize() > 0) {
-            if(ImageIO.getImageReadersByMIMEType(logoFile.getContentType()).hasNext()) {
+            if (ImageUtil.isMimetypeSupported(logoFile.getContentType())) {
                 if(logo == null) {
                     logo = new Metadata();
                     logo.setKey(Metadata.SURVEY_LOGO);
@@ -194,42 +200,11 @@ public class SurveyBaseController extends AbstractController {
                 metadataDAO.save(logo);
                 survey.getMetadata().add(logo);
                 
-                // Resize the image as required to fit the space
-                BufferedImage sourceImage = ImageIO.read(logoFile.getInputStream());
-
-                BufferedImage scaledImage = new BufferedImage(TARGET_LOGO_DIMENSION.width, TARGET_LOGO_DIMENSION.height, BufferedImage.TYPE_INT_RGB);
-                Graphics2D g2_scaled = scaledImage.createGraphics();
-                // Better scaling
-                g2_scaled.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-
-                //g2_scaled.setBackground(new Color(0,0,0,255));
-                g2_scaled.setBackground(Color.WHITE);
-                g2_scaled.clearRect(0,0,TARGET_LOGO_DIMENSION.width,TARGET_LOGO_DIMENSION.height);
-
-                int width = sourceImage.getWidth();
-                int height = sourceImage.getHeight();
-
-                double widthRatio = TARGET_LOGO_DIMENSION.getWidth()
-                        / (double) width;
-                double heightRatio = TARGET_LOGO_DIMENSION.getHeight()
-                        / (double) height;
-                if (heightRatio > widthRatio) {
-                    int scaledHeight = (int) Math.round(widthRatio * height);
-                    g2_scaled.drawImage(sourceImage, 0, (scaledImage.getHeight() - scaledHeight) / 2, scaledImage.getWidth(), scaledHeight, g2_scaled.getBackground(), null);
-                } else {
-                    int scaledWidth = (int) Math.round(heightRatio * width);
-                    g2_scaled.drawImage(sourceImage, (scaledImage.getWidth() - scaledWidth) / 2, 0, scaledWidth, scaledImage.getHeight(), new Color(
-                            0, 0, 0, 255), null);
-                }
+                BufferedImage scaledImage = ImageUtil.resizeImage(logoFile.getInputStream(), TARGET_LOGO_DIMENSION.width, TARGET_LOGO_DIMENSION.height);
 
                 File targetFile = fileService.createTargetFile(logo.getClass(), logo.getId(), logoFile.getOriginalFilename());
-                //ImageIO.write(scaledImage, TARGET_LOGO_IMAGE_FORMAT, targetFile);
-                FileImageOutputStream out = new FileImageOutputStream(targetFile);
-                ImageWriter writer = ImageIO.getImageWritersByMIMEType(logoFile.getContentType()).next();
-                writer.setOutput(out);
-                writer.write(scaledImage);
-                out.flush();
-                out.close();
+                
+                ImageUtil.saveImage(targetFile, scaledImage, logoFile.getContentType(), 100);
             }
             else {
                 log.warn("Unable to resize logo image with content type "+logoFile.getContentType());
@@ -266,7 +241,7 @@ public class SurveyBaseController extends AbstractController {
             mv.addObject("surveyId", survey.getId());
         } else {
             mv = new ModelAndView(new RedirectView(
-                    "/bdrs/admin/survey/listing.htm", true));
+                    SURVEY_LISTING_URL, true));
         }
         return mv;
     }
@@ -275,22 +250,25 @@ public class SurveyBaseController extends AbstractController {
     //  Users
     // -------------------------------
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editUsers.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyUsers(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         ModelAndView mv = new ModelAndView("surveyEditUsers");
         mv.addObject("listType", survey.isPublic() ? UserSelectionType.ALL_USERS : UserSelectionType.SELECTED_USERS);
         mv.addObject("survey", survey);
         return mv;
     }
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editUsers.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyUsers(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
 
-        //List<User> userList = request.getParameter("users");
         UserSelectionType selectionType =
             UserSelectionType.valueOf(request.getParameter("userSelectionType"));
 
@@ -342,7 +320,7 @@ public class SurveyBaseController extends AbstractController {
             mv.addObject("publish", "publish");
         }
         else {
-            mv = new ModelAndView(new RedirectView("/bdrs/admin/survey/listing.htm", true));
+            mv = new ModelAndView(new RedirectView(SURVEY_LISTING_URL, true));
         }
         return mv;
     }
@@ -351,11 +329,12 @@ public class SurveyBaseController extends AbstractController {
     //  Taxonomy
     // --------------------------------------
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = "/bdrs/admin/survey/editTaxonomy.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyTaxonomy(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
-
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         Set<IndicatorSpecies> speciesSet = survey.getSpecies();
         SpeciesListType listType = null;
         Set<TaxonGroup> taxonGroupSet = new HashSet<TaxonGroup>();
@@ -392,11 +371,13 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    
     @RequestMapping(value = "/bdrs/admin/survey/editTaxonomy.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyTaxonomy(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
-
+        if (survey == null) {
+            return SurveyBaseController.nullSurveyRedirect(getRequestContext());
+        }
         Set<IndicatorSpecies> speciesSet = new HashSet<IndicatorSpecies>();
 
         SpeciesListType listType = SpeciesListType.valueOf(request.getParameter("speciesListType"));
@@ -458,7 +439,7 @@ public class SurveyBaseController extends AbstractController {
             mv.addObject("surveyId", survey.getId());
         }
         else {
-            mv = new ModelAndView(new RedirectView("/bdrs/admin/survey/listing.htm", true));
+            mv = new ModelAndView(new RedirectView(SURVEY_LISTING_URL, true));
         }
         return mv;
     }
@@ -469,5 +450,10 @@ public class SurveyBaseController extends AbstractController {
             throw new HTTPException(HttpServletResponse.SC_NOT_FOUND);
         }
         return surveyDAO.getSurvey(Integer.parseInt(rawSurveyId));
+    }
+    
+    public static ModelAndView nullSurveyRedirect(RequestContext requestContext) {
+        requestContext.addMessage(SurveyBaseController.SURVEY_DOES_NOT_EXIST_ERROR_KEY);
+        return new ModelAndView(new RedirectView(SurveyBaseController.SURVEY_LISTING_URL, true));
     }
 }

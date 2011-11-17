@@ -23,6 +23,8 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
+import au.com.gaiaresources.bdrs.model.theme.Theme;
+import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
@@ -31,6 +33,8 @@ public class PortalControllerTest extends AbstractControllerTest {
     
     @Autowired
     PreferenceDAO prefDAO;
+    @Autowired
+    ThemeDAO themeDAO;
     
     private Logger log = Logger.getLogger(this.getClass()); 
     
@@ -201,8 +205,22 @@ public class PortalControllerTest extends AbstractControllerTest {
             Assert.assertEquals(request.getParameter(String.format(PortalController.PORTAL_ENTRY_POINT_ADD_REDIRECT_TMPL, index)), 
                                 actualEntry.getRedirect());
         }
+        
+        testForDefaultTheme(actual);
     }
     
+    private void testForDefaultTheme(Portal actual) {
+        // check that the portal has the default theme
+        Assert.assertNotNull(themeDAO.getThemes(actual));
+        Assert.assertTrue(themeDAO.getThemes(actual).size() > 0);
+        Theme vanilla = themeDAO.getDefaultTheme(actual);
+        Assert.assertNotNull(vanilla);
+        // this assumes that there is only one default theme and that it is 
+        // called "vanilla", this will need to be changed if more default themes
+        // are added
+        Assert.assertEquals(String.format(Theme.DEFAULT_THEME_NAME, "vanilla"), vanilla.getName());
+    }
+
     @Test
     public void testAjaxAddPortalEntryPoint() throws Exception {
         
@@ -233,6 +251,9 @@ public class PortalControllerTest extends AbstractControllerTest {
         portal.setDefault(false);
         
         portal = portalDAO.save(portal);
+        
+        // test that the new portal has the default theme
+        testForDefaultTheme(portal);
     }
     
     @Test
@@ -252,13 +273,16 @@ public class PortalControllerTest extends AbstractControllerTest {
         
         // save the portal which has the init inside of it
         portalDAO.save(defaultPortal);
-
+        
         Map<String, Preference> prefmap2 = prefDAO.getPreferences();
         
-        Assert.assertEquals(origCount, prefmap2.size());      
+        Assert.assertEquals(origCount, prefmap2.size());
         for (String key : origKeys) {
             Assert.assertTrue(prefmap2.containsKey(key + "hello"));
         }
+        
+        // test that the new portal has the default theme
+        testForDefaultTheme(defaultPortal);
     }
     
 
@@ -268,6 +292,8 @@ public class PortalControllerTest extends AbstractControllerTest {
         for (Portal p : portalDAO.getPortals(null)) {
             p.setDefault(false);
             portalDAO.save(p);
+            // test that the new portal has the default theme
+            testForDefaultTheme(p);
         }
 
         boolean isDefault = includeDefault;
@@ -282,6 +308,9 @@ public class PortalControllerTest extends AbstractControllerTest {
             decoyPortal.setName(name);
             decoyPortal = portalDAO.save(decoyPortal);
 
+            // test that the new portal has the default theme
+            testForDefaultTheme(decoyPortal);
+            
             if (decoyPortal.isDefault()) {
                 RequestContextHolder.getContext().setPortal(decoyPortal);
                 request.setAttribute(PortalSelectionFilter.PORTAL_ID_KEY, decoyPortal.getId());

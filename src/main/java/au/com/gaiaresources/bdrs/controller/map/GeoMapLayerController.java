@@ -1,7 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.map;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.activation.FileDataSource;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
@@ -37,7 +37,7 @@ import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataRow;
 import au.com.gaiaresources.bdrs.db.SessionFactory;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.db.impl.PaginationFilter.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.geometry.GeometryBuilder;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
@@ -58,9 +58,9 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.JsonService;
 import au.com.gaiaresources.bdrs.spatial.ShapeFileReader;
-import au.com.gaiaresources.bdrs.spatial.ShapeFileWriter;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -149,12 +149,14 @@ public class GeoMapLayerController extends AbstractController {
     
     private Logger log = Logger.getLogger(getClass());
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = LISTING_URL, method = RequestMethod.GET)
     public ModelAndView list(HttpServletRequest request, HttpServletResponse response) throws Exception { 
         ModelAndView mv = new ModelAndView("geoMapLayerListing");
         return mv;
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView view(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_LAYER_PK_VIEW, defaultValue="0", required=false) int mapLayerPk) {
@@ -170,6 +172,7 @@ public class GeoMapLayerController extends AbstractController {
     
     private static final int BATCH_SIZE = 20;
     
+    @RolesAllowed( {Role.ADMIN} )
     @SuppressWarnings("unchecked")
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response,
@@ -321,6 +324,7 @@ public class GeoMapLayerController extends AbstractController {
         return count+1;
     }
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value = LIST_SERVICE_URL, method = RequestMethod.GET)
     public void listService(
             @RequestParam(value = "name", defaultValue = "") String name,
@@ -347,6 +351,7 @@ public class GeoMapLayerController extends AbstractController {
         response.getWriter().write(builder.toJson());
     }
 
+    // public
     @RequestMapping(value = GET_LAYER_URL, method = RequestMethod.GET)
     public void getLayer(
             @RequestParam(value = PARAM_LAYER_ID, required=true) int layerPk,
@@ -411,6 +416,7 @@ public class GeoMapLayerController extends AbstractController {
         }
     }
     
+    // public
     @RequestMapping(value = DOWNLOAD_RECORDS_URL, method = RequestMethod.GET) 
     public void downloadRecords(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = PARAM_MAP_LAYER_ID, required=true) Integer[] mapLayerIds,
@@ -428,11 +434,12 @@ public class GeoMapLayerController extends AbstractController {
     /**
      * Get the KML for a single record
      * 
-     * @param layerPk
+     * @param layerPk 
      * @param request
      * @param response
      * @throws Exception
      */
+    // public
     @RequestMapping(value = GET_RECORD_URL, method = RequestMethod.GET)
     public void getRecordKml(
             @RequestParam(value = PARAM_RECORD_ID, required=true) int recordPk,
@@ -459,6 +466,7 @@ public class GeoMapLayerController extends AbstractController {
         }
     }
     
+    // public
     @RequestMapping(value=GET_FEATURE_SERVICE_URL, method=RequestMethod.GET) 
     public void getFeatureInfo(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_LATITUDE_Y, required = true) double latitude_y,
@@ -533,6 +541,7 @@ public class GeoMapLayerController extends AbstractController {
     public static final String JSON_STATUS_WARN = "warn";
     public static final String JSON_STATUS_OK = "ok";
     
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value=CHECK_SHAPEFILE_SERVICE_URL, method=RequestMethod.GET) 
     public void checkShapefile(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_MANAGED_FILE_UUID, required=true) String uuid) throws IOException {
@@ -625,6 +634,7 @@ public class GeoMapLayerController extends AbstractController {
      * @param layerPk
      * @return
      */
+    @RolesAllowed( {Role.ADMIN} )
     @RequestMapping(value=DELETE_LAYER_URL, method=RequestMethod.POST)
     public ModelAndView deleteLayer(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GEO_MAP_LAYER_PK_SAVE, required=true) int layerPk) {

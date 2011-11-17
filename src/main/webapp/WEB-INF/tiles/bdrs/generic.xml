@@ -9,9 +9,6 @@
         <!-- JSP -->
         <put-attribute name="title" value="BDRS"/>
         <put-attribute name="siteName"  value="BDRS"/>
-        <put-attribute name="header" value="/WEB-INF/jsp/template/vanilla/header.jsp"/>
-        <put-attribute name="content" value="/WEB-INF/jsp/template/vanilla/emptyContent.jsp"/>
-        <put-attribute name="footer" value="/WEB-INF/jsp/template/vanilla/footer.jsp"/>
         <put-attribute name="metaKeywords" value="BDRS Community Science"/>
         <put-attribute name="metaDescription" value="BDRS Community Science Portal"/>
         

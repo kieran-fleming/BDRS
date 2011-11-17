@@ -9,7 +9,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
  */
 public abstract class AbstractRecordFormField extends AbstractFormField {
     
-    private Survey survey;
+    protected Survey survey;
     private Record record;
     /**
      * Creates a new <code>AbstractRecordFormField</code>.
