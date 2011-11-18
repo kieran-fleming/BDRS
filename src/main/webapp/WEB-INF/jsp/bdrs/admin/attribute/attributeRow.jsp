@@ -230,8 +230,7 @@
 	        </td>
             <td>DwC</td>
             <td class="textcenter"> 
-            		<input id="RECORD.${formField.propertyName}.REQUIRED" type="checkbox" name="RECORD.${formField.propertyName}.REQUIRED"  value="true" <c:if test="${formField.required}"> checked="checked"</c:if><c:if test="${formField.propertyName == 'when'}
-            		">
+            		<input id="RECORD.${formField.propertyName}.REQUIRED" type="checkbox" name="RECORD.${formField.propertyName}.REQUIRED"  value="true" <c:if test="${formField.required}"> checked="checked"</c:if><c:if test="${formField.propertyName == 'when'}">
             		disabled="disabled"
             		</c:if> />
             </td>

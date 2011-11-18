@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
@@ -59,6 +60,12 @@ public class AtlasService {
     public static final String SPECIES_PROFILE_IDENTIFIER = "Identifier";
     public static final String SPECIES_PROFILE_IMPORT_LIFE = "Life";
     
+    public static final String KEY_GROUP_IMPORT_TYPE = "ala.species.group.by";
+    public static final String KEY_ALA_SPECIES_LONG_URL = "ala.species.url";
+    public static final String KEY_ALA_SPECIES_SHORT_URL = "ala.species.short.url";
+    public static final String PREF_FAMILY = "family";
+    public static final String PREF_KINGDOM = "kingdom";
+    
     Logger log = Logger.getLogger(getClass());
     @Autowired
     TaxaDAO taxaDAO;
@@ -79,18 +86,18 @@ public class AtlasService {
      * @param guid GUID identifier for Atlas
      * @param shortProfile Flag to indicate whether to import the full profile or the short one
      * @param errorMap
+     * @param group the Taxon Group that the species should be imported into.
      * @return the IndicatorSpecies object resulting from the import
      */
-    public IndicatorSpecies importSpecies(String guid, boolean shortProfile, Map<String, String> errorMap) {
+    public IndicatorSpecies importSpecies(String guid, boolean shortProfile, Map<String, String> errorMap, String group) {
         // see if the species already exists
         IndicatorSpecies species = taxaDAO.getIndicatorSpeciesByGuid(guid);
-        
         if (species == null) {
             species = new IndicatorSpecies();
         } else {
             log.warn("Species profile for guid (" + guid + ") already exists, overwriting.");
         }
-        return importSpecies(species, guid, shortProfile, errorMap);
+        return importSpecies(species, guid, shortProfile, errorMap, group);
     }
     
     /**
@@ -98,10 +105,11 @@ public class AtlasService {
      * @param species An existing taxonomy to add the import to
      * @param shortProfile Flag to indicate whether to import the full profile or the short one
      * @param errorMap
+     * @param group the taxon group that the species should be imported into
      * @return the IndicatorSpecies object resulting from the import
      */
-    public IndicatorSpecies importSpecies(IndicatorSpecies species, boolean shortProfile, Map<String, String> errorMap) {
-        return importSpecies(species, species.getGuid(), shortProfile, errorMap);
+    public IndicatorSpecies importSpecies(IndicatorSpecies species, boolean shortProfile, Map<String, String> errorMap, String group) {
+        return importSpecies(species, species.getGuid(), shortProfile, errorMap, group);
     }
     
     /**
@@ -110,9 +118,10 @@ public class AtlasService {
      * @param guid GUID identifier for Atlas
      * @param shortProfile Flag to indicate whether to import the full profile or the short one
      * @param errorMap
+     * @param group The group that the species should be imported into.
      * @return the IndicatorSpecies object resulting from the import
      */
-    public IndicatorSpecies importSpecies(IndicatorSpecies species, String guid, boolean shortProfile, Map<String, String> errorMap) {
+    public IndicatorSpecies importSpecies(IndicatorSpecies species, String guid, boolean shortProfile, Map<String, String> errorMap, String group) {
         try {
             if (species == null) {
                 species = new IndicatorSpecies();
@@ -125,9 +134,9 @@ public class AtlasService {
             JSONObject ob = getJSONObject(guid, shortProfile);
             
             if (shortProfile) {
-                species = createShortProfile(species, ob, guid);
+                species = createShortProfile(species, ob, guid, group);
             } else {
-                species = createFullProfile(species, ob, guid);
+                species = createFullProfile(species, ob, guid, group);
             }
             
             species = createTaxonMetadata(species, Metadata.TAXON_SOURCE, SPECIES_PROFILE_SOURCE);
@@ -166,17 +175,17 @@ public class AtlasService {
             // try to set the url by preference first
             Preference preference = null;
             if (shortProfile) {
-                preference = preferenceDAO.getPreferenceByKey("ala.species.short.url");
+                preference = preferenceDAO.getPreferenceByKey(KEY_ALA_SPECIES_SHORT_URL);
                 // if it is a short profile, but there is no short.url, try to get the
                 // .url preference instead
                 if (preference == null) {
-                    preference = preferenceDAO.getPreferenceByKey("ala.species.url");
+                    preference = preferenceDAO.getPreferenceByKey(KEY_ALA_SPECIES_LONG_URL);
                     if (preference != null) {
                         url = new URL(preference.getValue() + "shortProfile/" + guid + ".json");
                     }
                 }
             } else {
-                preference = preferenceDAO.getPreferenceByKey("ala.species.url");
+                preference = preferenceDAO.getPreferenceByKey(KEY_ALA_SPECIES_LONG_URL);
             }
             
             if (preference != null && url == null) {
@@ -199,7 +208,12 @@ public class AtlasService {
             while ((c = reader.read()) != -1) {
                     buff.append((char)c);
             }
-            JSONObject ob = JSONObject.fromObject(buff.toString());
+            JSONObject ob = null;
+            try {
+            	 ob = JSONObject.fromObject(buff.toString());
+            } catch (JSONException jse) {
+            	log.warn("Unable to pull out JSON profile for ALA taxa : " + guid);
+            }
             return ob;
         } finally {
             if (reader != null) {
@@ -219,11 +233,12 @@ public class AtlasService {
      * @param taxon The existing taxon to modify
      * @param ob The json object representing the IndicatorSpecies
      * @param guid The guid descriptor for the species
+     * @param group the Taxon Group that the species should be imported into
      * @return A newly created/modified IndicatorSpecies representing the json object passed.
      * @throws MalformedURLException
      * @throws IOException
      */
-    public IndicatorSpecies createFullProfile(IndicatorSpecies taxon, JSONObject ob, String guid) throws MalformedURLException, IOException {
+    public IndicatorSpecies createFullProfile(IndicatorSpecies taxon, JSONObject ob, String guid, String group) throws MalformedURLException, IOException {
         JSONObject taxonObj = ob.getJSONObject("taxonConcept");
         List<SpeciesProfile> infoItems = taxon.getInfoItems();
         // remove any previous ALA import items
@@ -298,14 +313,14 @@ public class AtlasService {
             }
         }
         
-        taxon = setClassification(taxon, family, kingdom);
+        taxon = setClassification(taxon, family, kingdom, group);
         
         // Images.
         if (ob.containsKey("images")) {
             JSONArray imgArr = ob.getJSONArray("images");
             ListIterator imgIter = imgArr.listIterator();
-            // find the common name with a guid or preferred value true
-            while (imgIter.hasNext()) {
+            // Check to see if there's any images, if so, use the first.
+            if (imgIter.hasNext()) {
                 // just use the first image as there is no preferred/default setting
                 // stating which image to use
                 JSONObject imageObj = (JSONObject) imgIter.next();
@@ -333,6 +348,19 @@ public class AtlasService {
                                !StringUtils.nullOrEmpty(imageObj.getString("documentId")) && 
                                !"null".equals(imageObj.getString("documentId")) ?
                                        imageObj.getString("documentId") : "" : "";
+                // Main Image
+                if (imageObj.containsKey("repoLocation")) {
+                    filename = imageObj.getString("repoLocation");
+                    type = SpeciesProfile.SPECIES_PROFILE_IMAGE;
+                    header = SPECIES_PROFILE_IMAGE;
+                    profileItemDescription = SPECIES_PROFILE_IMAGE + " for " + taxon.getScientificName();
+                    managedFileDescription = SPECIES_PROFILE_IMAGE + 
+                        (!StringUtils.nullOrEmpty(docId) ? (" " + docId) : "") + 
+                        " for " + taxon.getScientificName();
+                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, 
+                                                       profileItemDescription, imageDescription, downloadFile(new URL(filename)));
+                    createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
+                }
                 
                 // Thumbnail
                 if (imageObj.containsKey("thumbnail")) {
@@ -366,20 +394,6 @@ public class AtlasService {
                     profileItemDescription = SPECIES_PROFILE_THUMB_40 + " for " + taxon.getScientificName();
                     mf = createManagedFile(".png", contentType, credit, license, managedFileDescription, imageDescription, data);
                     
-                    createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
-                }
-                
-                // Main Image
-                if (imageObj.containsKey("repoLocation")) {
-                    filename = imageObj.getString("repoLocation");
-                    type = SpeciesProfile.SPECIES_PROFILE_IMAGE;
-                    header = SPECIES_PROFILE_IMAGE;
-                    profileItemDescription = SPECIES_PROFILE_IMAGE + " for " + taxon.getScientificName();
-                    managedFileDescription = SPECIES_PROFILE_IMAGE + 
-                        (!StringUtils.nullOrEmpty(docId) ? (" " + docId) : "") + 
-                        " for " + taxon.getScientificName();
-                    ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, 
-                                                       profileItemDescription, imageDescription, downloadFile(new URL(filename)));
                     createTaxonImage(infoItems, type, header, profileItemDescription, mf, imageSource);
                 }
             }
@@ -625,17 +639,16 @@ public class AtlasService {
      * @return The modified IndicatorSpecies object.
      */
     private IndicatorSpecies setClassification(IndicatorSpecies taxon,
-            String family, String kingdom) {
-        
+            String family, String kingdom, String group) {
         String groupName = SPECIES_PROFILE_IMPORT_LIFE;
-        Preference preference = preferenceDAO.getPreferenceByKey("ala.species.group.by");
+        Preference preference = preferenceDAO.getPreferenceByKey(KEY_GROUP_IMPORT_TYPE);
         if (preference != null && preference.getValue() != null) {
-            if (preference.getValue().equalsIgnoreCase("kingdom") && 
+            if (preference.getValue().equalsIgnoreCase(PREF_KINGDOM) && 
                 kingdom != null && 
                 !kingdom.isEmpty() &&
                 !kingdom.equalsIgnoreCase("null")) {
                    groupName = kingdom;
-            } else if (preference.getValue().equalsIgnoreCase("family") && 
+            } else if (preference.getValue().equalsIgnoreCase(PREF_FAMILY) && 
                 family != null && 
                 !family.isEmpty() &&
                 !family.equalsIgnoreCase("null")) {
@@ -651,9 +664,15 @@ public class AtlasService {
         }
         
         if (taxon.getTaxonGroup() == null) {
-            TaxonGroup g = taxaDAO.getTaxonGroup(trimString(groupName));
-            if (g == null) {
-                g = taxaDAO.createTaxonGroup(trimString(groupName), false, false, false, false, false, true);
+        	String groupToUse = null;
+        	if (group != null && !group.trim().isEmpty()) {
+        		groupToUse = group.trim();
+        	} else {
+        		groupToUse = groupName.trim();
+        	}
+        	TaxonGroup g = taxaDAO.getTaxonGroup(groupToUse);
+    		if (g == null) {
+                g = taxaDAO.createTaxonGroup(groupToUse, false, false, false, false, false, true);
             }
             taxon.setTaxonGroup(g);
         }
@@ -768,7 +787,7 @@ public class AtlasService {
      * @return A modified IndicatorSpecies representing the json object passed.
      * @throws IOException
      */
-    public IndicatorSpecies createShortProfile(IndicatorSpecies taxon, JSONObject ob, String guid) throws IOException {
+    public IndicatorSpecies createShortProfile(IndicatorSpecies taxon, JSONObject ob, String guid, String group) throws IOException {
         // Scientific Name
         taxon = setScientificName(taxon, guid, ob.getString("scientificName"), 
                                   ob.getString("author"), ob.getString("year"), 
@@ -798,12 +817,26 @@ public class AtlasService {
             kingdom = ob.getString("kingdom");
         }
         
-        taxon = setClassification(taxon, family, kingdom);
+        taxon = setClassification(taxon, family, kingdom, group);
         
         List<SpeciesProfile> infoItems = taxon.getInfoItems();
         // remove ALA info items before importing new ones
         removeALAInfoItems(infoItems);
         // Images.
+        // Main Image
+        if (ob.containsKey("imageURL")) {
+            String filename = ob.getString("imageURL"), 
+                   type = SpeciesProfile.SPECIES_PROFILE_IMAGE,
+                   header = SPECIES_PROFILE_IMAGE, 
+                   thumbnailDescription = SPECIES_PROFILE_IMAGE + " for " + taxon.getScientificName(), 
+                   fileDescription = taxon.getScientificName() + " - " + taxon.getCommonName(), 
+                   contentType = "",
+                   credit = "", 
+                   license = "";
+            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, thumbnailDescription, fileDescription, downloadFile(new URL(filename)));
+            createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
+        }
+        
         // Thumbnail
         if (ob.containsKey("thumbnail")) {
             
@@ -833,20 +866,6 @@ public class AtlasService {
             
             mf = createManagedFile(".png", contentType, credit, license, thumbnailDescription, fileDescription, data);
             
-            createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
-        }
-        
-        // Main Image
-        if (ob.containsKey("imageURL")) {
-            String filename = ob.getString("imageURL"), 
-                   type = SpeciesProfile.SPECIES_PROFILE_IMAGE,
-                   header = SPECIES_PROFILE_IMAGE, 
-                   thumbnailDescription = SPECIES_PROFILE_IMAGE + " for " + taxon.getScientificName(), 
-                   fileDescription = taxon.getScientificName() + " - " + taxon.getCommonName(), 
-                   contentType = "",
-                   credit = "", 
-                   license = "";
-            ManagedFile mf = createManagedFile(getExtension(filename), contentType, credit, license, thumbnailDescription, fileDescription, downloadFile(new URL(filename)));
             createTaxonImage(infoItems, type, header, thumbnailDescription, mf, null);
         }
         

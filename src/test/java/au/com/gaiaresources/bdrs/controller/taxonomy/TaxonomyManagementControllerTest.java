@@ -927,9 +927,9 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         JSONObject ob = getJSONObject(guid, shortProfile);
         IndicatorSpecies expectedTaxon = new IndicatorSpecies();
         if (!shortProfile) {
-            expectedTaxon = atlasService.createFullProfile(expectedTaxon, ob, guid);
+            expectedTaxon = atlasService.createFullProfile(expectedTaxon, ob, guid, null);
         } else {
-            expectedTaxon = atlasService.createShortProfile(expectedTaxon, ob, guid);
+            expectedTaxon = atlasService.createShortProfile(expectedTaxon, ob, guid, null);
         }
         IndicatorSpecies actualTaxon = taxaDAO.getIndicatorSpeciesByGuid(guid);
         Assert.assertEquals(guid, actualTaxon.getGuid());

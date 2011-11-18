@@ -16,11 +16,17 @@ bdrs.taxonomy.handlers = {};
  * element where properties of the taxon shall be inserted.
  * @param editTaxonSelector the selector to the element to be enabled when a 
  * taxon is selected.
+ * @param groupAutocompleteSelector the selector of the element that to have
+ * the taxon group autocomplete attached
+ * @param groupPkSelector the selector of the element to put the taxon group
+ * primary key when one has been selected from the autocomplete.
  */
 bdrs.taxonomy.initListing = function(taxonAutocompleteSelector,
                                      selectedTaxonPkSelector,
                                      taxonPropertiesContainerSelector,
-                                     editTaxonSelector) {
+                                     editTaxonSelector,
+                                     groupAutocompleteSelector,
+                                     groupPkSelector) {
 
     jQuery(taxonAutocompleteSelector).autocomplete({
         source: function(request, callback) {
@@ -63,6 +69,38 @@ bdrs.taxonomy.initListing = function(taxonAutocompleteSelector,
                                                  selectedTaxonPkSelector,
                                                  taxonPropertiesContainerSelector,
                                                  editTaxonSelector);
+        },
+        html: true,
+        minLength: 2,
+        delay: 300
+    });
+    
+    // Taxon Group autocomplete.
+    jQuery(groupAutocompleteSelector).autocomplete({
+        source: function(request, callback) {
+            var params = {};
+            params.q = request.term;
+
+            jQuery.getJSON(bdrs.contextPath+'/webservice/taxon/searchTaxonGroup.htm', params, function(data, textStatus) {
+                var label;
+                var result;
+                var taxonGroup;
+                var resultsArray = [];
+                for(var i=0; i<data.length; i++) {
+                    taxonGroup = data[i];
+                    resultsArray.push({
+                        label: taxonGroup.name,
+                        value: taxonGroup.name,
+                        data: taxonGroup
+                    });
+                }
+
+                callback(resultsArray);
+            });
+        },
+        select: function(event, ui) {
+            var taxonGroup = ui.item.data;
+            jQuery(groupPkSelector).val(taxonGroup.id);
         },
         html: true,
         minLength: 2,
@@ -263,7 +301,6 @@ bdrs.taxonomy.displayTaxonProperties = function(taxon,
  * primary key of the current taxon. Note that this selector may return
  * zero elements if the taxon is new and hence does not have a primary key.
  * @param taxonAttributeWrapperSelector the jQuery selector for the element 
- * containing taxon attribute values.
  */
 bdrs.taxonomy.initEditTaxon = function(parentAutocompleteSelector, parentPkSelector,
                                        groupAutocompleteSelector, groupPkSelector,

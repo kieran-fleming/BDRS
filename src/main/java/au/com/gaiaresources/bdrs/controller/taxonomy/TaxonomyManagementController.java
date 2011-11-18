@@ -442,7 +442,7 @@ public class TaxonomyManagementController extends AbstractController {
         
         // import the profile from the atlas service
         Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
-        IndicatorSpecies importTaxon = atlasService.importSpecies(taxon, guid, false, errorMap);
+        IndicatorSpecies importTaxon = atlasService.importSpecies(taxon, guid, false, errorMap, null);
         if (importTaxon == null) {
             // return the error that caused the import to fail
             String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
@@ -537,11 +537,12 @@ public class TaxonomyManagementController extends AbstractController {
     }
     
     @RolesAllowed( { Role.ADMIN })
-    @RequestMapping(value = "/bdrs/admin/taxonomy/importNewProfiles.htm", method = RequestMethod.GET)
+    @RequestMapping(value = "/bdrs/admin/taxonomy/importNewProfiles.htm", method = RequestMethod.POST)
     public ModelAndView edit(HttpServletRequest request,
                              HttpServletResponse response,
                              @RequestParam(required=true, value="guids") String guids,
-                             @RequestParam(required=false, value="shortProfile") String importShortProfile) throws IOException {
+                             @RequestParam(required=false, value="shortProfile") String importShortProfile,
+                             @RequestParam(required=false, value="taxonGroup") String taxonGroup) throws IOException {
         Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute(MV_ERROR_MAP);
         getRequestContext().removeSessionAttribute(MV_ERROR_MAP);
         String[] ids = guids.split(",");
@@ -554,7 +555,7 @@ public class TaxonomyManagementController extends AbstractController {
             IndicatorSpecies sp = null;
             boolean successfulImport = false;
             try {
-            	sp = atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap);
+            	sp = atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap, taxonGroup);
             	if (sp != null) {
             		successfulImport = true;
             	}

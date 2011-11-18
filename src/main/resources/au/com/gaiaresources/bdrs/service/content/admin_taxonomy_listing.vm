@@ -1,0 +1,7 @@
+<p>
+      To import a species or group of species from the ALA, enter a single lsid
+      or list of lsids, separated by commas, in the text area below. You can also
+      assign a group for the species to be imported into. If you leave the group 
+      blank, species will be imported into family or kingdom groups. If you enter
+      a group that does not exist, it will be created.
+</p>

@@ -126,7 +126,7 @@ public class AtlasController extends AbstractController {
         if(species == null) {
             Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
             if (guid != null && !guid.isEmpty()) {
-                species = atlasService.importSpecies(guid, true, errorMap);
+                species = atlasService.importSpecies(guid, true, errorMap, null);
             } 
         }
         

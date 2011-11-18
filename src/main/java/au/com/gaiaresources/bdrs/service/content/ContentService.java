@@ -86,6 +86,7 @@ public class ContentService {
         tmp.put("admin/editPreferences", CONTENT_PACKAGE + "admin_editPreferences.vm");
         tmp.put("admin/taxonomy/editTaxonomy", CONTENT_PACKAGE + "admin_taxonomy_editTaxonomy.vm");
         tmp.put("admin/taxonomy/editTaxonomicGroups", CONTENT_PACKAGE + "admin_taxonomy_editTaxonomicGroups.vm");
+        tmp.put("admin/taxonomy/listing", CONTENT_PACKAGE + "admin_taxonomy_listing.vm");
         tmp.put("admin/map/editMapLayer", CONTENT_PACKAGE + "admin_map_editMapLayer.vm");
         tmp.put("admin/manageFiles/editFile", CONTENT_PACKAGE + "admin_managedFiles_editFile.vm");
         tmp.put("admin/gallery/editGallery", CONTENT_PACKAGE + "admin_gallery_editGallery.vm");

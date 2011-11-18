@@ -207,15 +207,20 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
     			return new ArrayList<IndicatorSpecies>();
     		}
     	}
+    	String query2;
+    	Query q;
     	if (thisSurvey.getSpecies().size() == 0) {
-    		return find("from IndicatorSpecies");
+    		query2 = "select i from IndicatorSpecies i where i not in (select b1 from Survey b join b.species b1 where b in (:notIds))";
+    		q = getSession().createQuery(query2);
+     	    q.setParameterList("notIds", notTheseSurveys);
+     	    
+    	} else {
+    		query2 = "select a1 from Survey a join a.species a1 where a1 not in (select b1 from Survey b join b.species b1 where b in (:notIds)) and a.id = :id";    	 
+    		q = getSession().createQuery(query2);
+     	    q.setParameter("id", thisSurvey.getId());
+     	    q.setParameterList("notIds", notTheseSurveys);
     	}
-    	
-    	String query2 = "select a1 from Survey a join a.species a1 where a1 not in (select b1 from Survey b join b.species b1 where b in (:notIds)) and a.id = :id";    	 
- 	    Query q = getSession().createQuery(query2);
- 	    q.setParameter("id", thisSurvey.getId());
- 	    q.setParameterList("notIds", notTheseSurveys);
- 	    return q.list();
+    	return q.list();
     }
     
     @Override
