@@ -502,7 +502,13 @@
             <version>1.8</version>
             <scope>compile</scope>
         </dependency>
-
+        <!-- JTidy for HTML validation -->
+        <dependency>
+            <groupId>net.sf.jtidy</groupId>
+            <artifactId>jtidy</artifactId>
+            <version>r938</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>bdrs-core</finalName>
@@ -572,6 +578,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+				<!-- allows running of single test using -Dtest=TestClass#TestMethod syntax -->
+				<version>2.10</version>
                 <configuration>
                 	<encoding>UTF-8</encoding>
                     <nonFilteredFileExtensions>
