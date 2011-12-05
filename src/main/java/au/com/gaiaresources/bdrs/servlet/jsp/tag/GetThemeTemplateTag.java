@@ -10,6 +10,7 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -73,9 +74,9 @@ public class GetThemeTemplateTag extends TagSupport {
             Portal portal = RequestContextHolder.getContext().getPortal();
             User currentUser = RequestContextHolder.getContext().getUser();
             String requestUrl = RequestContextHolder.getContext().getRequestPath();
-            
+            Session session = RequestContextHolder.getContext().getHibernate();
             // Access the bdrs api through 'bdrs' in velocity
-            templateParams.put("bdrs", new BdrsPluginFacade(portal, requestUrl, currentUser));
+            templateParams.put("bdrs", new BdrsPluginFacade(session, portal, requestUrl, currentUser));
             
             File templateFile = new File(ThemeService.getThemeDirectory(theme), themeElemVal);
             String path = templateFile.getPath();

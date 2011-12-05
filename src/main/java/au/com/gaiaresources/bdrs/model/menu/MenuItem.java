@@ -20,9 +20,9 @@ public class MenuItem {
     private String name;
     
     /**
-     * The path to the page to link to on selection.  By default this is '#'.
+     * The path to the page to link to on selection.  By default this is null.
      */
-    private String path = "#";
+    private String path = null;
     
     /**
      * The description of the menu item.

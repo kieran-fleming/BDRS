@@ -395,4 +395,42 @@ public interface RecordDAO extends TransactionDAO {
      * @return A count of all records that the user has access to.
      */
     public Integer countAllRecords(User accessor);
+
+    /**
+     * Queries all records for a list of distinct locations and the count of records
+     * for each location filtered by user.
+     * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the locations 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
+     * @param limit an optional limit to the number of results that are returned,
+     *              ignored if it is less than 0
+     * @return the list of distinct months and the count of records that match.
+     */
+    public List<Pair<Location, Long>> getDistinctLocations(Session sesh, User user,
+            int limit);
+
+    /**
+     * Queries all records for a list of distinct users and the count of records
+     * for each user.
+     * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the user records 
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
+     * @return the list of distinct users and the count of records that match.
+     */
+    public List<Pair<User, Long>> getDistinctUsers(Session sesh, User user);
+
+    /**
+     * Queries all records for an attribute with the given attributeName.
+     * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the records
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
+     * @param attributeName the name of the attribute for the query
+     * @param limit the number of results to return
+     * @return a list of distinct attribute value names and the count of records that match each one.
+     */
+    public List<Pair<String, Long>> getDistinctAttributeValues(Session sesh,
+            User user, String attributeName, int limit);
 }

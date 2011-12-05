@@ -132,6 +132,10 @@ public class AtlasService {
             }
             
             JSONObject ob = getJSONObject(guid, shortProfile);
+            if (ob == null) {
+            	errorMap.put("", "Could not retrieve species profile from the Atlas for guid " + guid);
+            	return null;
+            }
             
             if (shortProfile) {
                 species = createShortProfile(species, ob, guid, group);
@@ -143,10 +147,21 @@ public class AtlasService {
             species = createTaxonMetadata(species, Metadata.TAXON_SOURCE_DATA_ID, guid);
             
             if (species != null) {
-            	if ((species.getScientificName() != null) && 
-            		(species.getCommonName() != null) &&
-            		(species.getScientificNameAndAuthor() != null)) {
-            		species = taxaDAO.save(species);
+            	if (species.getScientificName() != null) {
+            		// viable species, make sure the common name and sci/author are set.
+            		if (species.getCommonName() == null) {
+            			species.setCommonName(species.getScientificName());
+            		}
+            		if (species.getScientificNameAndAuthor() == null) {
+            			species.setScientificNameAndAuthor(species.getScientificName());
+            		}
+            		taxaDAO.save(species);
+            	} else {
+            		log.error("Species did not have a name.");
+                    if (errorMap != null) {
+                        errorMap.put("", "Could not retrieve species profile from the Atlas for guid " + guid);
+                    }
+                    species = null;
             	}
             }
             

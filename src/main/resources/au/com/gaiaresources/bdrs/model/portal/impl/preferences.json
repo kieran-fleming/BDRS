@@ -74,5 +74,15 @@
         name: "category.facets",
         displayName: "Facets",
         description: "Configuration options for facets available on the Advanced Review screen." 
-    }
+    },
+	{
+        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
+	    key: "taxon.showScientificName",
+        value: "true",
+        locked: true,
+        description: "When 'true' will show the scientific names of taxon. Otherwise will show common names of taxon.",
+        preferenceCategoryName: "category.taxonomy",
+        portalName: null,
+        isRequired: true
+	}
 ]

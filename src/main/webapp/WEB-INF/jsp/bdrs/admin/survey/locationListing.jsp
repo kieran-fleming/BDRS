@@ -10,7 +10,8 @@
 <cw:getContent key="admin/editProject/editLocations" />
 
 <div class="textright buttonpanel">
-    <input class="form_action" type="button" value="Add Location" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editLocation.htm?surveyId=${ survey.id }';"/>
+	<input title="Add a location from another project." id="addExistingLocationButton" class="form_action" type="button" value="Add Existing Location" />
+    <input title="Create a new location for this project." class="form_action" type="button" value="Create Location" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editLocation.htm?surveyId=${ survey.id }';"/>
 </div>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm">
 <input type="hidden" name="surveyId" value="${ survey.id }"/>
@@ -56,3 +57,24 @@
         <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
     </div>
 </form>
+
+<%-- divs used to instantitate grid and dialog --%>
+<div id="surveyLocationListingDialog">
+<table id="surveyLocationListingGrid"></table>
+<div id="surveyLocationListingPager"></div>
+</div>
+
+<%-- files included in bdrs.js using bdrs.require --%>
+<script type="text/javascript">
+
+jQuery(function() {
+    bdrs.location.createGetSurveyLocationsForUserDialogGrid('#surveyLocationListingGrid', 
+															'#surveyLocationListingPager',
+															'#surveyLocationListingDialog',
+															'#addExistingLocationButton',
+															'#location_listing tbody',
+															${survey.id});
+	
+});
+
+</script>

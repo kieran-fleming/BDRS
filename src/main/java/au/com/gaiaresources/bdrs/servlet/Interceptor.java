@@ -222,6 +222,10 @@ public class Interceptor implements HandlerInterceptor {
                 
                 modelAndView.getModel().put("context", requestContext);
                 
+                // Add the plugin facade to the model.
+                BdrsPluginFacade facade = new BdrsPluginFacade(requestContext.getHibernate(), requestContext.getPortal(), request.getRequestURI(), requestContext.getUser());
+                modelAndView.getModel().put("bdrsPluginFacade", facade);
+                
                 if(theme != null) {
                     sessionFactory.getCurrentSession().update(theme);
                     modelAndView.getModel().put("theme", theme);

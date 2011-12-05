@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -96,6 +97,8 @@ public class ContentService {
         tmp.put("user/profile/editProfile", CONTENT_PACKAGE + "user_profile_editProfile.vm");
         tmp.put("user/locations/edit.vm", CONTENT_PACKAGE + "user_locations_edit.vm");
         
+        tmp.put("user/report/listing", CONTENT_PACKAGE + "user_report_listing.vm");
+        
         /* In email package resources */
         tmp.put("email/ExpertConfirmation", "/au/com/gaiaresources/bdrs/email/ExpertConfirmation.vm");
         tmp.put("email/PasswordReminder", "/au/com/gaiaresources/bdrs/email/PasswordReminder.vm");
@@ -108,7 +111,9 @@ public class ContentService {
         tmp.put("email/UserSignUpApproved", "/au/com/gaiaresources/bdrs/email/UserSignUpApproved.vm");
         tmp.put("email/UserSignUpWait", "/au/com/gaiaresources/bdrs/email/UserSignUpWait.vm");
         tmp.put("email/ContactRecordOwner", "/au/com/gaiaresources/bdrs/email/ContactRecordOwner.vm");
-        tmp.put("email/ContactRecordOwnerToSelf", "/au/com/gaiaresources/bdrs/email/ContactRecordOwnerSendToSelf.vm");
+        tmp.put("email/ContactRecordOwnerSendToSelf", "/au/com/gaiaresources/bdrs/email/ContactRecordOwnerSendToSelf.vm");
+        tmp.put("email/ModerationPerformed", "/au/com/gaiaresources/bdrs/email/ModerationPerformed.vm");
+        tmp.put("email/ModerationRequired", "/au/com/gaiaresources/bdrs/email/ModerationRequired.vm");
         
         CONTENT = Collections.unmodifiableMap(tmp);
     }
@@ -121,15 +126,15 @@ public class ContentService {
      * @param portal
      * @throws IOException
      */
-    public void initContent(Portal portal) throws IOException {
+    public void initContent(Session sesh, Portal portal) throws IOException {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("portal", portal);
 
         for (Entry<String, String> entry : CONTENT.entrySet()) {
-            initContent(portal, entry.getKey(), entry.getValue());
+            initContent(sesh, portal, entry.getKey(), entry.getValue());
         }
     }
-
+    
     /**
      * Initialize the content of the given key to the default value.
      * @param portal
@@ -137,10 +142,12 @@ public class ContentService {
      * @param applicationUrl - the domain + context path of the application
      * @throws IOException
      */
-    public Content initContent(Portal portal, String key, String value) throws IOException {
-        if (value == null)
+    public Content initContent(Session sesh, Portal portal, String key, String value) throws IOException {
+        if (value == null) {
             value = CONTENT.get(key);
+        }
         InputStream stream = PortalInitialiser.class.getResourceAsStream(value);
+
         if (stream == null) {
             log.debug("Error getting content stream for : "+value);
         }
@@ -148,11 +155,11 @@ public class ContentService {
             String text = readStream(stream);
             
             // we might be reinitializing content, so check first if it exists
-            Content content = contentDAO.getContent(key);
+            Content content = contentDAO.getContent(sesh, key);
             if (content == null) {
-                content = contentDAO.saveNewContent(key, text);
+                content = contentDAO.saveNewContent(sesh, key, text);
             } else {
-                content = contentDAO.saveContent(key, text);
+                content = contentDAO.saveContent(sesh, key, text);
             }
             if (portal != null) {
                 content.setPortal(portal);
@@ -168,13 +175,24 @@ public class ContentService {
     }
     
     /**
+     * Gets the content for the key and creates it if it doesn't exist.
+     * Assumes that the content is for the current portal.
+     * @param sesh
+     * @param key
+     * @return
+     */
+    public String getContent(Session sesh, String key) {
+        return getContent(sesh, RequestContextHolder.getContext().getPortal(), key);
+    }
+
+    /**
      * 
      * @param currentPortal
      * @param key - the key of the content to retrieve
      * @param applicationUrl - the domain + context path of the application
      */
-    public String getContent(Portal currentPortal, String key) {
-        Content item = contentDAO.getContent(key);
+    public String getContent(Session sesh, Portal currentPortal, String key) {
+        Content item = contentDAO.getContent(sesh, key);
         if (item == null) {
             log.warn("Didn't find content \"" + key + "\" in the DAO, " +
                     "loading default value.");
@@ -185,7 +203,7 @@ public class ContentService {
             }
             
             try {
-                item = initContent(currentPortal, key, null);
+                item = initContent(sesh, currentPortal, key, null);
                 if (item == null) {
                     log.warn("Couldn't load default for content \"" + key + "\".");
                     return "";
@@ -197,13 +215,13 @@ public class ContentService {
         }
         return item.getValue();
     }
-    
+
     /**
      * Saves content. Could make it only save content keys that exist in the static map?
      * 
      */
-    public void saveContent(Portal currentPortal, String key, String value) {
-        contentDAO.saveContent(key, value);
+    public void saveContent(Session sesh, Portal currentPortal, String key, String value) {
+        contentDAO.saveContent(sesh, key, value);
     }
 
     private static String readStream(InputStream inStream) throws IOException {
@@ -246,7 +264,8 @@ public class ContentService {
             // group 1 is the context path
             return m.group(1);
         }
-        throw new IllegalArgumentException("No request url detected : " + url);
+        log.warn("url does not have context path : " + url);
+        return null;
     }
 
     public static Map<String, Object> getContentParams() {

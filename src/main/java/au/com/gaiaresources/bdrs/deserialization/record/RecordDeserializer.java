@@ -36,6 +36,8 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -348,8 +350,11 @@ public class RecordDeserializer {
 
             for(Attribute attr : survey.getAttributes()) {
                 if(attrDictFact.getDictionaryAttributeScope().contains(attr.getScope())) {
-                    isValid = isValid & attributeParser.validate(validator, attrNameMap.get(attr), attrFilenameMap.get(attr), attr, params, entry.getFileMap());
-                } 
+                    // only validate moderation attributes if the user is a moderator
+                    if (AttributeUtil.isModifiableByScopeAndUser(attr, currentUser)) {
+                        isValid = isValid & attributeParser.validate(validator, attrNameMap.get(attr), attrFilenameMap.get(attr), attr, params, entry.getFileMap());
+                    }
+                }
             }
             if(species != null) {
                 for(Attribute attr : species.getTaxonGroup().getAttributes()) {
@@ -378,7 +383,7 @@ public class RecordDeserializer {
             
             Integer number = null;
             if (isTaxonomicRecord) {
-                    if(species != null) {
+                    if(species != null && !StringUtils.nullOrEmpty(numberString)) {
                             number = new Integer(numberString);
                     }
                     else if(!StringUtils.nullOrEmpty(speciesSearch) && !StringUtils.nullOrEmpty(numberString)) {
@@ -405,7 +410,6 @@ public class RecordDeserializer {
             if (!recordProperty.isHidden()) {
             	record.setNotes(entry.getValue(klu.getNotesKey()));
             }
-            record.setHeld(false);
             record.setFirstAppearance(false);
             record.setLastAppearance(false);
             // is possible to set this to null
@@ -515,15 +519,17 @@ public class RecordDeserializer {
                 if (attrDictFact.getDictionaryAttributeScope().contains(attribute.getScope())) {
                     recAttr = attributeParser.parse(attrNameMap.get(attribute), attrFilenameMap.get(attribute), 
                                                     attribute, record, entry.getDataMap(), entry.getFileMap());
-                    if (attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = attributeDAO.save(recAttr);
-                        if (attributeParser.getAttrFile() != null) {
-                            fileService.createFile(recAttr, attributeParser.getAttrFile());
+                    if (AttributeUtil.isModifiableByScopeAndUser(attribute, currentUser)) {
+                        if (attributeParser.isAddOrUpdateAttribute()) {
+                            recAttr = attributeDAO.save(recAttr);
+                            if (attributeParser.getAttrFile() != null) {
+                                fileService.createFile(recAttr, attributeParser.getAttrFile());
+                            }
+                            recAtts.add(recAttr);
+                        } else {
+                            recAtts.remove(recAttr);
+                            attrValuesToDelete.add(recAttr);
                         }
-                        recAtts.add(recAttr);
-                    } else {
-                        recAtts.remove(recAttr);
-                        attrValuesToDelete.add(recAttr);
                     }
                 }
             }

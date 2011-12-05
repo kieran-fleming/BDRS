@@ -151,7 +151,7 @@ public interface RecordFilter {
      * 'select x, y, z' and must not contain a from clause.
      * @return A String representing the select part of a query
      */
-    String getQueryPredicate();
+    public String getQueryPredicate();
 
     /**
      * Get the ordering clause for the query.  This string must be of the form 
@@ -160,7 +160,7 @@ public interface RecordFilter {
      * @param sortCriteria A {@link List} of {@link SortingCriteria} to order the query by
      * @return
      */
-    String getOrderingClause(List<SortingCriteria> sortCriteria);
+    public String getOrderingClause(List<SortingCriteria> sortCriteria);
 
     /**
      * Get joined table clauses.  This string must be of the form 
@@ -169,12 +169,18 @@ public interface RecordFilter {
      * @return A String representing the criteria for the query that pertains to 
      *         any tables joined in {@link #createTableJoin()}.
      */
-    String getJoinedClauses(Map<String, Object> paramMap);
+    public String getJoinedClauses(Map<String, Object> paramMap);
 
     /**
      * Get the joined tables.  This string must be of the form 
      * '([inner|outer|left|right]+ join x)*'.
      * @return A String representing the tables to join for the query.
      */
-    String createTableJoin();
+    public String createTableJoin();
+
+    /**
+     * Setter for the {@link #held} property.  Will only return records that match the {@link #held} property.
+     * @param held Boolean indicating whether to return held (true) records or unheld (false) records.
+     */
+    public void setHeld(Boolean held);
 }

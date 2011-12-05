@@ -145,6 +145,11 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
         this.active = active;
     }
 
+    @Transient
+    public Boolean getActive() {
+        return isActive();
+    }
+    
     /**
      * Get the registration key for this user.
      * 
@@ -324,5 +329,10 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
         } else {
             return this.getName();
         }
+    }
+
+    @Transient
+    public boolean isModerator() {
+        return isSupervisor() || isAdmin() || isRoot();
     }
 }

@@ -64,4 +64,13 @@ public class CSVUtils {
         return stringValue;
     }
     
+    public static boolean hasValue(String[] csvValues, String strToFind) {
+        Arrays.sort(csvValues);
+        return Arrays.binarySearch(csvValues, strToFind) >= 0;
+    }
+    
+    public static boolean hasValue(String csv, String strToFind) {
+        String[] strArray = fromCSVString(csv);
+        return hasValue(strArray, strToFind);
+    }
 }

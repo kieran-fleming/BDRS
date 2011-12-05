@@ -79,6 +79,7 @@
 	    <table id="actionTable" class="datatable">
 	        <thead>
 	            <tr>
+	                <th>Event</th>
 	                <th>Action</th>
 	                <th>Input</th>
 	                <th>Delete</th>

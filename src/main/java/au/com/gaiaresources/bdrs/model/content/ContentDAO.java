@@ -2,6 +2,8 @@ package au.com.gaiaresources.bdrs.model.content;
 
 import java.util.List;
 
+import org.hibernate.Session;
+
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 
@@ -12,10 +14,9 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
  * 
  */
 public interface ContentDAO extends TransactionDAO {
-    public String getContentValue(String key);
-
     /**
      * Creates or updates a help item in the system.
+     * @param sesh 
      * 
      * @param key
      *            The key for the help item
@@ -23,10 +24,11 @@ public interface ContentDAO extends TransactionDAO {
      *            The value returned
      * @return returns the saved help item object
      */
-    public Content saveContent(String key, String value);
+    public Content saveContent(Session sesh, String key, String value);
 
     /**
      * Creates a help item in the system.
+     * @param sesh 
      * 
      * @param key
      *            The key for the help item
@@ -34,19 +36,19 @@ public interface ContentDAO extends TransactionDAO {
      *            The value returned
      * @return returns the saved help item object
      */
-    public Content saveNewContent(String key, String value);
-
-    /**
-     * Get a HelpItem
-     * 
-     * @param key
-     * @return HelpItem matching the requested key
-     */
-    public Content getContent(String key);
+    public Content saveNewContent(Session sesh, String key, String value);
     
     public List<String> getAllKeys();
 
     public List<String> getKeysLike(String string);
 
-    public String getContentValue(String key, Portal portal);
+    public String getContentValue(Session sesh, String key, Portal portal);
+
+    /**
+     * Gets the content for the key.
+     * @param sesh
+     * @param key
+     * @return
+     */
+    public Content getContent(Session sesh, String key);
 }

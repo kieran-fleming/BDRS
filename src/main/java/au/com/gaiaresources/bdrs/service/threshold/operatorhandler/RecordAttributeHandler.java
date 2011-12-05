@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.service.threshold.operatorhandler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -30,62 +31,70 @@ public class RecordAttributeHandler implements OperatorHandler {
             ClassNotFoundException {
         
         @SuppressWarnings("unchecked")
-        Iterable<AttributeValue> attributes = (Iterable<AttributeValue>) condition.getPropertyForPath(entity);
-        if (attributes == null) {
+        List<Object> properties = condition.getPropertiesForPath(entity);
+        if (properties == null || properties.isEmpty()) {
             return false;
         }
         
         String expectedKey = condition.getKey();
         boolean returnValue = false;
-        for (TypedAttributeValue recAttr : attributes) {
-            String actualKey = recAttr.getAttribute().getName();
-            boolean match = false;
-            
-            boolean isKeyMatch = conditionOperatorHandler.match(condition.getKeyOperator(), actualKey, expectedKey); 
-            // If we have not previously found a match and 
-            // this is an attribute that matches our key, check out the value.
-            if (!returnValue && isKeyMatch) {
-                switch (recAttr.getAttribute().getType()) {
-                case STRING:
-                case STRING_AUTOCOMPLETE:
-                case TEXT:
-                case STRING_WITH_VALID_VALUES:
-                case IMAGE:
-                case FILE:
-                case BARCODE:
-                case REGEX:
-                case TIME:
-                case HTML:
-                case HTML_COMMENT:
-                case HTML_HORIZONTAL_RULE:
-                    match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getStringValue(), condition.stringValue());
-                    break;
-                case INTEGER:
-                case INTEGER_WITH_RANGE:
-                    match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().intValue(), condition.intValue());
-                    break;
-                case SINGLE_CHECKBOX:
-                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getBooleanValue(), condition.booleanValue());
-                	break;
-                case MULTI_CHECKBOX:
-                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiCheckboxValue(), condition.stringArrayValue());
-                	break;
-                case MULTI_SELECT:
-                	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiSelectValue(), condition.stringArrayValue());
-                	break;
-                case DECIMAL:
-                    match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().doubleValue(), condition.doubleValue());
-                    break;
-                case DATE:
-                    match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getDateValue(), condition.dateValue());
-                    break;
-                default:
-                    log.warn(String.format("Unknown attribute type found %s Match is false.", recAttr.getAttribute().getType().toString()));
-                    match = false;
-                    break;
-                }
+        for (Object property : properties) {
+            Iterable<AttributeValue> attributes = (Iterable<AttributeValue>) property;
+            if (attributes == null) {
+                return false;
             }
-            returnValue = returnValue || match;
+            
+            for (TypedAttributeValue recAttr : attributes) {
+            
+                String actualKey = recAttr.getAttribute().getName();
+                boolean match = false;
+                
+                boolean isKeyMatch = conditionOperatorHandler.match(condition.getKeyOperator(), actualKey, expectedKey); 
+                // If we have not previously found a match and 
+                // this is an attribute that matches our key, check out the value.
+                if (!returnValue && isKeyMatch) {
+                    switch (recAttr.getAttribute().getType()) {
+                    case STRING:
+                    case STRING_AUTOCOMPLETE:
+                    case TEXT:
+                    case STRING_WITH_VALID_VALUES:
+                    case IMAGE:
+                    case FILE:
+                    case BARCODE:
+                    case REGEX:
+                    case TIME:
+                    case HTML:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getStringValue(), condition.stringValue());
+                        break;
+                    case INTEGER:
+                    case INTEGER_WITH_RANGE:
+                        match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().intValue(), condition.intValue());
+                        break;
+                    case SINGLE_CHECKBOX:
+                    	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getBooleanValue(), condition.booleanValue());
+                    	break;
+                    case MULTI_CHECKBOX:
+                    	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiCheckboxValue(), condition.stringArrayValue());
+                    	break;
+                    case MULTI_SELECT:
+                    	match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getMultiSelectValue(), condition.stringArrayValue());
+                    	break;
+                    case DECIMAL:
+                        match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getNumericValue().doubleValue(), condition.doubleValue());
+                        break;
+                    case DATE:
+                        match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getDateValue(), condition.dateValue());
+                        break;
+                    default:
+                        log.warn(String.format("Unknown attribute type found %s Match is false.", recAttr.getAttribute().getType().toString()));
+                        match = false;
+                        break;
+                    }
+                }
+                returnValue = returnValue || match;
+            }
         }
         return returnValue;
     }

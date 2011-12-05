@@ -1,7 +1,6 @@
 package au.com.gaiaresources.bdrs.db.impl;
 
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -70,11 +69,11 @@ public abstract class PersistentImpl implements Persistent,
     @Column(name = "CREATED_AT")
     @Override
     public Date getCreatedAt() {
-        return createdAt;
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     protected void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     /**

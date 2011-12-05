@@ -1,0 +1,8 @@
+<html>
+    <body>
+        <p>Hi ${userFirstName} ${userLastName},</p>
+        
+        <p>Someone has moderated a <a href="${bdrsApplicationUrl}${viewRecordUrl}">record you have created</a>.</p>
+        
+    </body>
+</html>

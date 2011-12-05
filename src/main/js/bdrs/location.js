@@ -652,3 +652,107 @@ bdrs.location.SelectionManager = function() {
 
 // instantiate global selection manager
 bdrs.location.selectionManager = new bdrs.location.SelectionManager();
+
+// note: this is a duplicate of the row template in locationListing.jsp
+bdrs.location.LOCATION_LISTING_ROW_TMPL = '\
+<tr>\
+    <td class="name">\
+        <input type="hidden" name="location" value="${ id }"/>\
+        <a href="${contextPath}/bdrs/admin/survey/editLocation.htm?surveyId=${ surveyId }&locationId=${ id }">${ name }</a>\
+    </td>\
+    <td class="textcenter">\
+        <a id="delete_${location.id}" href="javascript: void(0);" onclick="jQuery(this).parents(\'tr\').hide().find(\'select, input, textarea\').attr(\'disabled\', \'disabled\'); return false;">\
+            <img src="${contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>\
+        </a>\
+    </td>\
+</tr>';
+
+
+/**
+ * initialises the locations selecting dialog and the grid inside of it.
+ * The locations displayed will be the survey locations for all of the
+ * surveys that the accessing user has access to. The survey locations
+ * for the current survey (i.e. the one you are looking at right now)
+ * will not be seen.
+ * 
+ * @param {Object} gridSelector - selector for the grid table element
+ * @param {Object} pagerSelector - selector for the pager div element
+ * @param {Object} dialogSelector - selector for the dialog div element
+ * @param {Object} openDialogButtonSelector - selector for the button that opens the dialog
+ * @param {Object} tableBodySelector - selector for the table body to append locations onto
+ * @param {Object} surveyId - the survey ID that we are viewing in this page.
+ */
+bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector, 
+																	pagerSelector, 
+																	dialogSelector, 
+																	openDialogButtonSelector,
+																	tableBodySelector,
+																	surveyId) {
+																		
+    var compiledRowTemplate = jQuery.template(bdrs.location.LOCATION_LISTING_ROW_TMPL);																	
+																		
+	jQuery(gridSelector).jqGrid({
+            url: bdrs.contextPath + '/bdrs/location/getSurveyLocationsForUser.htm?surveyId=' + surveyId,
+            datatype: "json",
+            mtype: "GET",
+            colNames:['Name','Description'],
+            colModel:[
+                {name:'name',index:'name'},
+                {name:'description', index:'description'}
+            ],
+            autowidth: true,
+            jsonReader : { repeatitems: false },
+            rowNum:10,
+            rowList:[10,20,30],
+            pager: pagerSelector,
+            sortname: 'name',
+            viewrecords: true,
+            sortorder: "asc",
+            multiselect: true,
+            caption:"Locations Listing"
+    });
+    
+    jQuery(pagerSelector).jqGrid('navGrid',pagerSelector,{edit:false,add:false,del:false});
+	
+	
+	var tbodyNode = jQuery(tableBodySelector);
+	
+	jQuery(dialogSelector).dialog({
+        width: 'auto',   // doesn't work properly in IE7 - needs an explicit width
+        modal: true,
+        autoOpen: false,
+        zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
+		resizable: false,
+		width: '857px',
+        buttons: {
+            "Ok": function() {
+				
+				var grid = jQuery(gridSelector);
+				var selected = grid.getGridParam('selarrrow');
+				
+				var rowId;
+				for (var selIdx=0; selIdx < selected.length; ++selIdx) {
+					rowId = selected[selIdx];
+					var rowData = grid.jqGrid('getRowData', rowId);
+					var data = {
+						"id": rowId,
+						"name": rowData.name,
+						"surveyId": surveyId,
+						"contextPath": bdrs.contextPath
+					};
+					var processedRow = jQuery.tmpl(compiledRowTemplate, data);
+                    tbodyNode.append(processedRow);
+				}                
+                $( this ).dialog( "close" );
+            },
+            Cancel: function() {
+                $( this ).dialog( "close" );
+            }
+        },
+        title: "Add Existing Location"
+    });
+        
+    jQuery(openDialogButtonSelector).click(function() {
+        jQuery(dialogSelector).dialog( "open" );
+    });
+}

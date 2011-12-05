@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
@@ -76,6 +77,21 @@ public class ThresholdDAOImpl extends AbstractDAOImpl implements ThresholdDAO {
      * {@inheritDoc}
      */
     @Override
+    public Condition save(Session sesh, Condition condition) {
+        return super.save(sesh, condition);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Action save(Session sesh, Action action) {
+        return super.save(sesh, action);
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void delete(Threshold t) {
         if(t != null) {
             super.delete(t);
@@ -124,5 +140,15 @@ public class ThresholdDAOImpl extends AbstractDAOImpl implements ThresholdDAO {
     @Override
     public List<Threshold> getEnabledThresholdByClassName(String className) {
         return this.getEnabledThresholdByClassName(getSession(), className);
+    }
+
+    @Override
+    public List<Threshold> getThresholdsByName(String name, Portal portal) {
+        return this.getThresholdsByName(getSession(), name, portal);
+    }
+
+    @Override 
+    public List<Threshold> getThresholdsByName(Session sesh, String name, Portal portal) {
+        return find(sesh, "from Threshold where name = ? and portal = ?", new Object[]{name, portal});
     }
 }

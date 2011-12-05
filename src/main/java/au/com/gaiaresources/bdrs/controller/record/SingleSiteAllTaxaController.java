@@ -31,7 +31,7 @@ import au.com.gaiaresources.bdrs.security.Role;
  * 
  * @author stephanie
  */
-@RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
+
 @Controller
 public class SingleSiteAllTaxaController extends SingleSiteController {
     
@@ -39,6 +39,7 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
     private TaxaDAO taxaDAO;
     
     public static final String SINGLE_SITE_ALL_TAXA_URL = "/bdrs/user/singleSiteAllTaxa.htm";
+    public static final String SINGLE_SITE_ALL_TAXA_VIEW_NAME = "singleSiteAllTaxa";
     
     /**
      * Provides a the attributes for a single row representing a sighting which 
@@ -52,6 +53,7 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
      * @param sightingIndex the row index where 0 is the first row.
      * @return 
      */    
+    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     @RequestMapping(value = "/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm", method = RequestMethod.GET)
     public ModelAndView ajaxGetSightingsTable(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -75,7 +77,7 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
                                     HttpServletResponse response,
                                     @RequestParam(value="surveyId", required=true) int surveyId,
                                     @RequestParam(value = "censusMethodId", required = false, defaultValue = "0") Integer censusMethodId) {
-        return addRecord(request, response, surveyId, "singleSiteAllTaxa", censusMethodId);
+        return addRecord(request, response, surveyId, SINGLE_SITE_ALL_TAXA_VIEW_NAME, censusMethodId);
     }
     
     /**
@@ -97,6 +99,7 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
      * @throws ParseException throws if the date cannot be parsed
      * @throws IOException thrown if uploaded files cannot be saved
      */
+    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     @RequestMapping(value = SINGLE_SITE_ALL_TAXA_URL, method = RequestMethod.POST)
     public ModelAndView saveRecord(MultipartHttpServletRequest request,
                                     HttpServletResponse response,

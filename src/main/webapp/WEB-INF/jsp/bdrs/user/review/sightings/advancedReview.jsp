@@ -34,10 +34,6 @@
                        </c:otherwise>
                    </c:choose>
                </span>
-               <c:if test="${ surveyId != null }">
-                   <a id="recordDownload" class="right" href="javascript:void(0);">Download</a>
-                   <input type="hidden" name="surveyId" value="${ surveyId }"/>
-               </c:if>
 	        </div>
 	        
 	        <div class="tabPane">
@@ -50,16 +46,22 @@
 	                    </span>
 		                <input type="hidden" name="viewType"
 		                    <c:choose>
-		                       <c:when test="${ mapViewSelected }">
-		                           value="map"
-		                       </c:when>
-		                       <c:otherwise>
-		                           value="table"
-	                           </c:otherwise>
+							   <c:when test="${ tableViewSelected }">
+			                       value="table"
+			                   </c:when>
+			                   <c:when test="${ downloadViewSelected }">
+			                       value="download"
+			                   </c:when>
+			                    <c:otherwise>
+			                       value="map"
+			                   </c:otherwise>
 		                    </c:choose> 
 	                    />
+						<a id="downloadViewTab" href="javascript: void(0);">
+                            <div id="downloadViewTab" class="displayTab right <c:if test="${ downloadViewSelected }">displayTabSelected</c:if>">Download</div>
+                        </a>
 		                <a id="listViewTab" href="javascript: void(0);">
-	                       <div class="displayTab right <c:if test="${ !mapViewSelected }">displayTabSelected</c:if>">List</div>
+	                       <div class="displayTab right <c:if test="${ tableViewSelected }">displayTabSelected</c:if>">List</div>
 	                    </a>
 		                <a href="javascript: void(0);">
 		                   <div id="mapViewTab" class="displayTab right <c:if test="${ mapViewSelected }">displayTabSelected</c:if>">Map</div>
@@ -69,15 +71,19 @@
 		        </div>
 		        
 		        <c:choose>
-		           <c:when test="${ mapViewSelected }">
-	                    <tiles:insertDefinition name="advancedReviewMapView">
-		                    <tiles:putAttribute name="recordId" value="${ recordId }"/>
-	                    </tiles:insertDefinition>
-		           </c:when>
-		           <c:otherwise>
+		           
+		           <c:when test="${ tableViewSelected }">
 		               <tiles:insertDefinition name="advancedReviewTableView">
 	                    </tiles:insertDefinition>
-		           </c:otherwise>
+                   </c:when>
+				   <c:when test="${ downloadViewSelected }">
+				   	    <tiles:insertDefinition name="downloadSightingsWidget" />
+				   </c:when>
+                    <c:otherwise>
+                        <tiles:insertDefinition name="advancedReviewMapView">
+                            <tiles:putAttribute name="recordId" value="${ recordId }"/>
+                        </tiles:insertDefinition>
+                   </c:otherwise>
 		        </c:choose>
 	        </div> 
 	    </div>
@@ -104,7 +110,10 @@
       
       bdrs.advancedReview.initFacets('#facetForm', '.facet');
       bdrs.advancedReview.initTabHandlers();
-      bdrs.advancedReview.initRecordDownload("#facetForm", "#recordDownload");
+	  
+	  <c:if test="${ downloadViewSelected }">
+            bdrs.review.downloadSightingsWidget.init("#facetForm", "/review/sightings/advancedReviewDownload.htm");
+       </c:if>
    });
 
    jQuery(window).load(function() {

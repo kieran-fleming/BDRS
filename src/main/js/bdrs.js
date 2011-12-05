@@ -25,6 +25,50 @@ bdrs.underDev = function() {
     alert('This is still under development');
 };
 
+// OpenLayers customizations
+// *********************************************************************
+// if open layers is loaded in the javascript vm...
+if (window.OpenLayers !== undefined) {
+	// We had a problem where for a dataset with > 10000 points, the map was centering
+	// on a single point after the KML was loaded.
+	// The problem was caused by clustering. The data set had about 10000 points in a small area. 
+	// The default map zoom combined caused all of these 10000 points to be placed into a single clustered point. 
+	// Thus when zooming to the layer extents, we zoomed in on a single point.
+	// Change the Vector layer prototype so we calculate the data
+	// extent by taking into account the content of clustered features.
+	OpenLayers.Layer.Vector.prototype.getDataExtent = function () {
+		
+        var maxExtent = null;
+        var features = this.features;
+        if(features && (features.length > 0)) {
+            maxExtent = new OpenLayers.Bounds();
+            var geometry = null;
+            for(var i=0, len=features.length; i<len; i++) {
+                geometry = features[i].geometry;
+                if (geometry) {
+                    maxExtent.extend(geometry.getBounds());
+                }
+				// begin cluster loop:
+				// calculate the extent of the layer in non clustered features...
+				// the rest of this js function is the same as the original
+				if (features[i].cluster && (features[i].cluster.length > 0)) {
+					for (var clusterIdx=0; clusterIdx<features[i].cluster.length; ++clusterIdx) {
+					   geometry = features[i].cluster[clusterIdx].geometry;
+					   if (geometry) {
+		                  maxExtent.extend(geometry.getBounds());
+		               }
+					}
+                }
+				// end of cluster loop - the rest of this js function is the same as
+				// the original
+            }
+        }
+        return maxExtent;
+    };
+}
+// OpenLayers customizations end
+// *********************************************************************
+
 /**
  * Gets query parameter from the url
  * @param parameter name
@@ -104,10 +148,20 @@ bdrs.postWith = function(to, p){
     myForm.method = "post";
     myForm.action = to;
     for (var k in p) {
-        var myInput = document.createElement("input");
-        myInput.setAttribute("name", k);
-        myInput.setAttribute("value", p[k]);
-        myForm.appendChild(myInput);
+		if (jQuery.isArray(p[k])) {
+			var myArray = p[k];
+			for (var index=0; index<myArray.length; ++index) {
+				var myInput = document.createElement("input");
+	            myInput.setAttribute("name", k);
+	            myInput.setAttribute("value", myArray[index]);
+	            myForm.appendChild(myInput);
+			}
+		} else {
+			var myInput = document.createElement("input");
+	        myInput.setAttribute("name", k);
+	        myInput.setAttribute("value", p[k]);
+	        myForm.appendChild(myInput);
+		}
     }
     document.body.appendChild(myForm);
     myForm.submit();
@@ -1194,7 +1248,6 @@ bdrs.map.downloadRecordsForActiveLayers = function(map, format) {
         }
         params.mapLayerId = mapLayerIds;
         var url = bdrs.contextPath + "/bdrs/map/downloadRecords.htm?" + jQuery.param(params, true);
-        console.log(url);
         window.document.location = url;
     }
 };
@@ -1737,7 +1790,7 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
                     editRecordRow.attr('colspan', '2');
                     var surveyId = item["surveyId"];
                     var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
-                    jQuery("<a>Edit&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow);
+                    jQuery("<a>View&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow);
                     tbody.append(editRecordRow);
                 }
                 
@@ -1786,7 +1839,7 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
                     if (tuple.hasOwnProperty(k)) {
                         var v = tuple[k];
                         // if v is a number, change it to a string..
-                        if (v.toString) {
+                        if (v !== null && v.toString) {
                             v = v.toString();
                         }
                         if (v !== null && v.length > 0 && v !== '-1') {
@@ -2465,14 +2518,34 @@ bdrs.initDatePicker = function(){
     historicalDpParams.beforeShow = function(){
 		// only way to change z-index of datepicker
     	setTimeout(function() {jQuery('#ui-datepicker-div').css('z-index',800);},  50);
-    	};
+    };
 
     jQuery(".datepicker_historical").not(".hasDatepicker").datepicker(historicalDpParams);
     
-    var dates = jQuery(".datepicker_range").not(".hasDatepicker").datepicker({
-        dateFormat: bdrs.dateFormat,
-        onSelect: onSelectDateRangeHandler
+	var rangeDpParams = bdrs.getDatePickerParams();
+	rangeDpParams.onSelect = onSelectDateRangeHandler;
+    jQuery(".datepicker_range").not(".hasDatepicker").datepicker(rangeDpParams);
+	
+	// this handler is used when the user is typing in their date. Date.parse
+	// will handle most funky inputs. We will attempt to parse the date and 
+	// fill out the date input in our expected format.
+	jQuery(".datepicker, .datepicker_historical, .datepicker_range").bind("keydown", function(event) {
+		// i.e. if 'enter' is pressed
+		if (event.keyCode === 13) {
+			try {
+				var dateInput = jQuery(this);
+				var parsedDate = Date.parse(dateInput.val());
+				if (parsedDate) {
+				    dateInput.val(bdrs.util.formatDate(parsedDate));	
+				}
+			} catch (ex) {
+				// catch exception quietly...
+			}
+		}
     });
+	
+	// initialise timepicker inputs
+	jQuery('.timepicker').timepicker({});
 };
 
 bdrs.initColorPicker = function(){
@@ -2500,7 +2573,50 @@ bdrs.initSubmitDisabler = function() {
     
     jQuery(form).delegate("input", "focus", unbindDisableHandler);
     jQuery(form).delegate("input", "change", unbindDisableHandler);
+    jQuery(form).delegate("textarea", "focus", unbindDisableHandler);
+    jQuery(form).delegate("textarea", "change", unbindDisableHandler);
 };
+
+/**
+ * 
+ * @param {Object} paramName the name to search for e.g. class="sortBy(hello)" would use 'sortBy' for the paramName
+ * @param {Object} paramFoundHandler the function to call when there is a node found with a non null parameter.
+ * signature of the function is function(node, value). 'node' is the dom node found, value is the value of the parameter
+ * found, i.e., the contents of the rounded brackets.
+ */
+bdrs.handleClassParamNodes = function(paramName, paramFoundHandler) {
+	jQuery("[class^='" + paramName + "']").each(function(index, node) {
+		var getClassParamValue = bdrs.getClassParamValue(node, paramName);
+        if (getClassParamValue !== null && getClassParamValue !== undefined) {
+            paramFoundHandler(node, getClassParamValue);
+        }
+    });
+};
+
+/**
+ * Get the class parameter from a node using the regex specified
+ * 
+ * @param {Object} node the node to search in
+ * @param {Object} paramName the param name to search for.
+ */
+bdrs.getClassParamValue = function(node, paramName) {
+	var regex = paramName + "\\(([\\w\\.]+)\\)$";
+	var classAttr = jQuery(node).attr('class');
+    if (classAttr != null && classAttr != undefined) {
+		var classList = classAttr.split(/\s+/);
+		for (var i=0; i<classList.length; ++i) {
+            var match = classList[i].match(regex);
+            if (match && match.length === 2) {
+                return match[1];
+            }
+        }
+        // not found return null
+        return null;
+	} else {
+        return null;
+	}
+};
+
 
 bdrs.init = function(){
     bdrs.initDatePicker();

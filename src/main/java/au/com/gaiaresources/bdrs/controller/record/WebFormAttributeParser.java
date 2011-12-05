@@ -36,43 +36,16 @@ public class WebFormAttributeParser extends AttributeParser {
     }
     
     @Override
-    protected void duckPunchTimeParameter(String prefix, Attribute attribute,
-            Map<String, String[]> parameterMap) {
-
-        if (attribute.getType() != AttributeType.TIME) {
-            throw new IllegalArgumentException(
-                    "The attribute passed in must be of type TIME but was: "
-                            + attribute.getType());
-        }
-        String timeKey = getParamKey(prefix, attribute);
-        if (parameterMap.containsKey(timeKey)) {
-            // don't overwrite the existing key
-            return;
-        }
-
-        String hourKey = String.format(AttributeParser.ATTRIBUTE_TIME_HOUR_TEMPLATE, prefix, attribute.getId());
-        String minuteKey = String.format(AttributeParser.ATTRIBUTE_TIME_MINUTE_TEMPLATE, prefix, attribute.getId());
-
-        String timeValue = formatTime(hourKey, minuteKey, parameterMap);
-
-        parameterMap.put(timeKey, new String[] { timeValue });
-    }
-
-    @Override
-    public String getTimeValue(String timeKey, String timeHourKey, String timeMinuteKey, Map<String, String[]> parameterMap) {
+    public String getTimeValue(String timeKey, String timeHourKey,
+            String timeMinuteKey, Map<String, String[]> parameterMap) {
         
-        if (timeHourKey == null) {
-            throw new IllegalArgumentException("arg timeHourKey cannot be null");
-        }
-        if (timeMinuteKey == null) {
-            throw new IllegalArgumentException(
-                    "arg timeMinuteKey cannot be null");
+        if (timeKey == null) {
+            throw new IllegalArgumentException("arg timeKey cannot be null");
         }
         if (parameterMap == null) {
             throw new IllegalArgumentException("arg parmeterMap cannot be null");
         }
-
-        return formatTime(timeHourKey, timeMinuteKey, parameterMap);
+        return getParameter(parameterMap, timeKey);
     }
 
     private String formatTime(String timeHourKey, String timeMinuteKey,

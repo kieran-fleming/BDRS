@@ -28,7 +28,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
@@ -147,16 +147,16 @@ public abstract class AbstractBulkDataService {
 
     private PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
 
-    public void exportSurveyTemplate(Survey survey, OutputStream outputStream)
+    public void exportSurveyTemplate(Session sesh, Survey survey, OutputStream outputStream)
             throws IOException {
-        this.exportSurveyRecords(survey, new EmptyScrollableRecords(), outputStream);
+        this.exportSurveyRecords(sesh, survey, new EmptyScrollableRecords(), outputStream);
     }
     
-    public void exportSurveyRecords(Survey survey, ScrollableRecords scrollableRecords, OutputStream outputStream) throws IOException {
-        this.exportSurveyRecords(survey, scrollableRecords, Long.MAX_VALUE, outputStream);
+    public void exportSurveyRecords(Session sesh, Survey survey, ScrollableRecords scrollableRecords, OutputStream outputStream) throws IOException {
+        this.exportSurveyRecords(sesh, survey, scrollableRecords, Long.MAX_VALUE, outputStream);
     }
 
-    public void exportSurveyRecords(Survey survey, ScrollableRecords scrollableRecords, long limit,
+    public void exportSurveyRecords(Session sesh, Survey survey, ScrollableRecords scrollableRecords, long limit,
             OutputStream outputStream) throws IOException {
         if(limit < 0) {
             limit = Long.MAX_VALUE;
@@ -205,21 +205,27 @@ public abstract class AbstractBulkDataService {
 
             Record r;
             int recordCount = 0;
-            Session sesh = sessionFactory.getCurrentSession();
+            
             while(scrollableRecords.hasMoreElements() && recordCount < limit) {
                 r = scrollableRecords.nextElement();
-                
-                if(r.getLocation() != null && !survey.getLocations().contains(r.getLocation())) {
-                    locationRow.writeUserLocation(wb, r.getLocation());
-                }
-                // only write the row if the record is visible
-                if (!r.hideDetails(accessor)) {
-                    rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
-                    
-                    if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
-                        sesh.clear();
+                // it's not guaranteed that the scrollable records will only contain records for the
+                // requested survey.
+                if (r.getSurvey() == survey) {
+                    if(r.getLocation() != null && !survey.getLocations().contains(r.getLocation())) {
+                        locationRow.writeUserLocation(wb, r.getLocation());
+                    }
+                    // only write the row if the record is visible
+                    if (!r.hideDetails(accessor)) {
+                        rowPrinter.writeRow(lsidService, observationSheet.createRow(rowIndex++), r);
+                        ++recordCount;
                     }
                 }
+
+                // evict records as we use them. Possibly as an optimization we could batch evict
+                // items. We don't evict (aka clear) the entire session
+                // as we need some of the collections internal to the requested survey
+                // to stay in the cache
+                sesh.evict(r);
             }
 
             writeTaxonomySheet(survey, wb, rowPrinter);

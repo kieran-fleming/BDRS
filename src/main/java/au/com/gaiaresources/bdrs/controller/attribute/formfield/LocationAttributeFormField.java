@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import org.apache.log4j.Logger;
 
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
@@ -14,6 +15,7 @@ import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
  */
 public class LocationAttributeFormField extends AbstractFormField implements TypedAttributeValueFormField {
 
+    @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
 
     private TypedAttributeValue locationAttribute;
@@ -100,5 +102,15 @@ public class LocationAttributeFormField extends AbstractFormField implements Typ
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+    
+    
+    /*
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractFormField#isModerationFormField()
+     */
+    @Override
+    public boolean isModerationFormField() {
+        return AttributeScope.isModerationScope(attribute.getScope());
     }
 }

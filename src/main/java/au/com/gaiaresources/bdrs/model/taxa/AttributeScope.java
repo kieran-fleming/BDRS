@@ -12,7 +12,9 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 public enum AttributeScope {
     SURVEY("Survey"),
     RECORD("Record"),
-    LOCATION("Location");
+    LOCATION("Location"),
+    SURVEY_MODERATION("Survey Moderation"),
+    RECORD_MODERATION("Record Moderation");
     
     private String name;
     
@@ -22,5 +24,9 @@ public enum AttributeScope {
 
     public String getName() {
         return name;
+    }
+    
+    public static boolean isModerationScope(AttributeScope scope) {
+        return scope == SURVEY_MODERATION || scope == RECORD_MODERATION;
     }
 }

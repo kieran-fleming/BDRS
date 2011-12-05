@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import org.apache.log4j.Logger;
 
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 
@@ -90,5 +91,13 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
     public int compareTo(FormField other) {
         return Integer.valueOf(this.getWeight()).compareTo(other.getWeight());
     }
-
+    
+    /*
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractFormField#isModerationFormField()
+     */
+    @Override
+    public boolean isModerationFormField() {
+        return AttributeScope.isModerationScope(attribute.getScope());
+    }
 }

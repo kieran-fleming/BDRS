@@ -20,6 +20,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernatespatial.GeometryUserType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,6 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
-import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
@@ -786,6 +786,101 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
 
     @Override
+    public List<Pair<Location, Long>> getDistinctLocations(Session sesh, User user, int limit) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select l, count(r)");
+        b.append(" from Record as r join r.location as l");
+        // add user visibility parameters here
+        if (user != null) {
+            if (!user.isAdmin()) {
+                b.append(" where r.user.id = "+user.getId());
+            }
+        } else {
+            b.append(" where r.recordVisibility = :vis and r.held = :held");
+        }
+        b.append(" group by l.id");
+        for(PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(Location.class)) {
+            if(!"class".equals(pd.getName()) && 
+                !"id".equals(pd.getName()) && 
+                (pd.getReadMethod().getAnnotation(Transient.class) == null) &&
+                !(Iterable.class.isAssignableFrom((pd.getReadMethod().getReturnType())))) {
+                b.append(", l."+pd.getName());
+            }
+        }
+        b.append(" order by 2 desc, l.weight asc, l.name asc");
+
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+        if (user == null) {
+            q.setParameter("vis", RecordVisibility.PUBLIC);
+            q.setParameter("held", false);
+        }
+        if(limit > 0) {
+            q.setMaxResults(limit);
+        }
+        
+        // Should get back a list of Object[]
+        // Each Object[] has 2 items. Object[0] == location, Object[1] == record count
+        List<Pair<Location, Long>> results = 
+            new ArrayList<Pair<Location, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<Location, Long>((Location)row[0], (Long)row[1]));
+        }
+        return results;
+    }
+    
+    @Override
+    public List<Pair<User, Long>> getDistinctUsers(Session sesh, User user) {
+        StringBuilder b = new StringBuilder();
+        b.append(" select u, count(r)");
+        b.append(" from Record as r join r.user as u");
+        // add user visibility parameters here
+        if (user != null) {
+            if (!user.isAdmin()) {
+                b.append(" where r.user.id = "+user.getId()+" or (r.recordVisibility = :vis and r.held = :held)");
+            }
+        } else {
+            b.append(" where r.recordVisibility = :vis and r.held = :held");
+        }
+        b.append(" group by u.id");
+        for(PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(User.class)) {
+            if(!"class".equals(pd.getName()) && 
+                !"id".equals(pd.getName()) && 
+                (pd.getReadMethod().getAnnotation(ForeignKey.class) == null) && // ignore other table joins
+                (pd.getReadMethod().getAnnotation(Transient.class) == null || // ignore transients 
+                        "active".equals(pd.getName())) &&                     // except active
+                !(Iterable.class.isAssignableFrom((pd.getReadMethod().getReturnType())))) 
+            {
+                b.append(", u."+pd.getName());
+            }
+        }
+        b.append(" order by 2 desc, u.name asc");
+
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        Query q = sesh.createQuery(b.toString());
+        if (user == null || !user.isAdmin()) {
+            q.setParameter("vis", RecordVisibility.PUBLIC);
+            q.setParameter("held", false);
+        }
+        // Should get back a list of Object[]
+        // Each Object[] has 2 items. Object[0] == location, Object[1] == record count
+        List<Pair<User, Long>> results = 
+            new ArrayList<Pair<User, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<User, Long>((User)row[0], (Long)row[1]));
+        }
+        return results;
+    }
+    
+    @Override
     public List<Pair<Survey, Long>> getDistinctSurveys(Session sesh, User user) {
         StringBuilder b = new StringBuilder();
         b.append(" select s, count(r)");
@@ -864,6 +959,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         }
         return results;
     }
+    
     
     @Override
     public List<Pair<Long, Long>> getDistinctYears(Session sesh, User user) {
@@ -979,6 +1075,50 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         return results;
     }
 
+    @Override
+    public List<Pair<String, Long>> getDistinctAttributeValues(Session sesh, User user,
+            String attributeName, int limit) {
+        
+        StringBuilder b = new StringBuilder();
+        b.append(" select distinct ra.stringValue, count(distinct r)");
+        b.append(" from Record as r join r.attributes as ra join ra.attribute as a");
+        b.append(" where ");
+        b.append(String.format(" a.description = '%s'", attributeName));
+        // ignore empty string values
+        b.append(" and ra.stringValue is not null and ra.stringValue != ''");
+        
+        // add user visibility parameters here
+        if (user != null) {
+            if (!user.isAdmin()) {
+                b.append(" and r.user.id = "+user.getId());
+            }
+        } else {
+            b.append(" and r.recordVisibility = :vis and r.held = :held");
+        }
+        b.append(" group by ra.stringValue");
+        b.append(" order by 2 desc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        
+        Query q = sesh.createQuery(b.toString());
+        if (user == null) {
+            q.setParameter("vis", RecordVisibility.PUBLIC);
+            q.setParameter("held", false);
+        }
+        if (limit > 0) {
+            q.setMaxResults(limit);
+        }
+        
+        List<Pair<String, Long>> results =  new ArrayList<Pair<String, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            results.add(new Pair<String, Long>(row[0].toString(), (Long)row[1]));
+        }
+        return results;
+    }
+    
     @Override
     public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom, Boolean isPrivate, Integer userId) {
         // To avoid having an empty array which will cause an exception during the query.

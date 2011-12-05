@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.location;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +55,8 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
     private Survey simpleSurvey;
     private Survey locAttSurvey;
     private List<Attribute> locationAttributes = new ArrayList<Attribute>();
+    
+    private Logger log = Logger.getLogger(getClass());
     
     @Before
     public void setUp() throws Exception {
@@ -176,6 +180,11 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/admin/survey/editLocation.htm");
         request.setParameter("surveyId", String.valueOf(locAttSurvey.getId()));
         
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(2000, 1, 1);
+        Date testDate = cal.getTime();
+        
         Map<String, String> params = new HashMap<String, String>();
         params.put("survey", String.valueOf(locAttSurvey.getId()));
         params.put("locationName", "Test Location 1234");
@@ -183,7 +192,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
         params.put("location_WKT", "POINT(115.77240371813 -31.945572001881)");
         params.put("latitude", "-31.945572001881");
         params.put("longitude", "115.77240371813");
-        params.putAll(createAttributes(locAttSurvey));
+        params.putAll(createAttributes(locAttSurvey, testDate));
         
         request.setParameters(params);
         
@@ -217,10 +226,10 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
                 Assert.assertEquals(Integer.parseInt(params.get(key)), recAttr.getNumericValue().intValue());
                 break;
             case DECIMAL:
-                Assert.assertEquals(Double.parseDouble(params.get(key)), recAttr.getNumericValue().doubleValue());
+                Assert.assertEquals(Double.parseDouble(params.get(key)), recAttr.getNumericValue().doubleValue(), 0.01);
                 break;
             case DATE:
-                Assert.assertEquals(new Date(), recAttr.getDateValue());
+                Assert.assertEquals(testDate, recAttr.getDateValue());
                 break;
             case STRING:
             case STRING_AUTOCOMPLETE:
@@ -292,7 +301,9 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
                 attr.setScope(scope);
                 attr.setTag(false);
 
-                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)) {
+                if (AttributeType.STRING_WITH_VALID_VALUES.equals(attrType)
+                        || AttributeType.MULTI_CHECKBOX.equals(attrType)
+                        || AttributeType.MULTI_SELECT.equals(attrType)) {
                     List<AttributeOption> optionList = new ArrayList<AttributeOption>();
                     for (int i = 0; i < 4; i++) {
                         AttributeOption opt = new AttributeOption();
@@ -310,16 +321,16 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
         return locationAttributes;
     }
     
-    private Map<String, String> createAttributes(Survey survey) {
-        return createLocationAttributeValues(survey, "123", new SimpleDateFormat("dd MMM yyyy"), new Date());
+    private Map<String, String> createAttributes(Survey survey, Date testDate) {
+        return createLocationAttributeValues(survey, "123", new SimpleDateFormat("dd MMM yyyy"), testDate);
     }
     
-    private Map<String, String> createLocationAttributeValues(Survey survey, String intWithRangeValue, DateFormat dateFormat, Date today) {
+    private Map<String, String> createLocationAttributeValues(Survey survey, String intWithRangeValue, DateFormat dateFormat, Date testDate) {
         Map<String, String> params = new HashMap<String,String>();
         String key;
         String value;
         for (Attribute attr : survey.getAttributes()) {
-            if(!AttributeScope.LOCATION.equals(attr.getScope())) {
+            if(AttributeScope.LOCATION.equals(attr.getScope())) {
                 key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
                 value = "";
                 switch (attr.getType()) {
@@ -333,7 +344,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
                     value = "456.7";
                     break;
                 case DATE:
-                    value = dateFormat.format(today);
+                    value = dateFormat.format(testDate);
                     break;
                 case STRING_AUTOCOMPLETE:
                 case STRING:

@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.hibernate.Session;
 
+import au.com.gaiaresources.bdrs.model.portal.Portal;
+
 public interface ThresholdDAO {
     /**
      * Returns the requested threshold
@@ -72,6 +74,29 @@ public interface ThresholdDAO {
     Threshold save(Session sesh, Threshold t);
 
     /**
+     * Creates or updates the specified condition instance using the provided 
+     * session.
+     * 
+     * @param sesh
+     *            the session to use when persistenting.
+     * @param condition
+     *            the instance to be persisted
+     * @return the saved condition instance.
+     */
+    public Condition save(Session sesh, Condition condition);
+    
+    /**
+     * Creates or updates the specified action instance using the provided session.
+     * 
+     * @param sesh
+     *            the session to use when persistenting.
+     * @param action
+     *            the instance to be persisted
+     * @return the saved action instance.
+     */
+    public Action save(Session sesh, Action action);
+    
+    /**
      * Deletes the specified threshold from the database.
      * 
      * @param t
@@ -114,4 +139,21 @@ public interface ThresholdDAO {
      * @return all thresholds that are enabled and have the specified class name.
      */
     List<Threshold> getEnabledThresholdByClassName(String className);
+
+    /**
+     * Gets a {@link List} of {@link Threshold} with the given name and portal.
+     * @param name the name of the {@link Threshold} to find.
+     * @param portal the portal of the {@link Threshold} to find.
+     * @return The {@link List} of {@link Threshold} with the name or and empty {@link List} if no matches are found.
+     */
+    public List<Threshold> getThresholdsByName(String name, Portal portal);
+
+    /**
+     * Gets a {@link List} of {@link Threshold} with the given name and portal.
+     * @param session the session that will be used to execute the query.
+     * @param name the name of the {@link Threshold} to find.
+     * @param portal the portal of the {@link Threshold} to find.
+     * @return The {@link List} of {@link Threshold} with the name or and empty {@link List} if no matches are found.
+     */
+    public List<Threshold> getThresholdsByName(Session session, String name, Portal portal);
 }

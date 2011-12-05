@@ -13,15 +13,19 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
@@ -38,12 +42,16 @@ import au.com.gaiaresources.bdrs.model.threshold.Operator;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.threshold.ActionHandler;
 import au.com.gaiaresources.bdrs.service.threshold.ComplexTypeOperator;
 import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
 import au.com.gaiaresources.bdrs.service.threshold.actionhandler.EmailActionHandler;
 import au.com.gaiaresources.bdrs.service.threshold.actionhandler.HoldRecordHandler;
+import au.com.gaiaresources.bdrs.service.threshold.actionhandler.ModerationEmailActionHandler;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 public class ThresholdServiceTest extends AbstractControllerTest {
 
@@ -57,6 +65,12 @@ public class ThresholdServiceTest extends AbstractControllerTest {
     private UserDAO userDAO;
 
     @Autowired
+    private SurveyDAO surveyDAO;
+    
+    @Autowired
+    private MetadataDAO metadataDAO;
+    
+    @Autowired
     private ThresholdService thresholdService;
 
     @Autowired
@@ -65,6 +79,12 @@ public class ThresholdServiceTest extends AbstractControllerTest {
     @Autowired
     private PropertyService propertyService;
 
+    @Autowired
+    private ContentService contentService;
+    
+    @Autowired
+    private RedirectionService redirService;
+    
     @Test
     public void testEqualsStringCondition() throws Exception {
 
@@ -280,7 +300,8 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         Attribute attr;
         for (AttributeType attrType : AttributeType.values()) {
             for (AttributeScope scope : new AttributeScope[] {
-                    AttributeScope.RECORD, AttributeScope.SURVEY }) {
+                    AttributeScope.RECORD, AttributeScope.SURVEY,
+                    AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION }) {
 
                 attr = new Attribute();
                 attr.setRequired(true);
@@ -414,7 +435,8 @@ public class ThresholdServiceTest extends AbstractControllerTest {
             for (Operator valueOperator : operator.getValueOperators()) {
                 for (AttributeType attrType : AttributeType.values()) {
                     for (AttributeScope scope : new AttributeScope[] {
-                            AttributeScope.RECORD, AttributeScope.SURVEY }) {
+                            AttributeScope.RECORD, AttributeScope.SURVEY,
+                            AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION }) {
 
                         condition.setKeyOperator(keyOperator);
                         condition.setKey(String.format("%s_%s", attrType.toString(), scope.getName()));
@@ -477,7 +499,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         Assert.assertFalse(condition.isSimplePropertyType());
 
                         boolean result = condition.applyCondition(getRequestContext().getHibernate(), rec, thresholdService);
-                        Assert.assertTrue(result);
+                        Assert.assertTrue("Expected true but was "+result, result);
 
                         condition.setValue(falseValue);
                         result = condition.applyCondition(getRequestContext().getHibernate(), rec, thresholdService);
@@ -579,6 +601,95 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         Assert.assertEquals(action.getValue(), message.to);
     }
 
+    @Test
+    public void testModerationEmailActionHandler() throws Exception {
+        String email = "user@gaiabdrs.com";
+        PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
+        String encodedPassword = passwordEncoder.encodePassword("password", null);
+        String registrationKey = passwordEncoder.encodePassword(au.com.gaiaresources.bdrs.util.StringUtils.generateRandomString(10, 50), email);
+
+        User user = userDAO.createUser("user", "Abigail", "Ambrose", email, encodedPassword, registrationKey, new String[] { Role.USER });
+        login("user", "password", new String[]{Role.USER});
+        
+        TaxonGroup taxonGroup = new TaxonGroup();
+        taxonGroup.setName("Birds");
+        taxonGroup = taxaDAO.save(taxonGroup);
+
+        IndicatorSpecies speciesA = new IndicatorSpecies();
+        speciesA.setCommonName("Indicator Species A");
+        speciesA.setScientificName("Indicator Species A");
+        speciesA.setTaxonGroup(taxonGroup);
+        speciesA = taxaDAO.save(speciesA);
+
+        User admin = userDAO.getUser("admin");
+        
+        Survey survey = new Survey();
+        survey.setName("Test Moderation Survey");
+        survey.setActive(true);
+        survey.setStartDate(new Date());
+        survey.setDescription("Single Site Multi Taxa Survey Description");
+        Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
+        metadataDAO.save(md);
+        
+        List<Attribute> attributeList = new ArrayList<Attribute>();
+        Attribute a = new Attribute();
+        a.setName("survey_moderation");
+        a.setScope(AttributeScope.SURVEY_MODERATION);
+        a.setDescription("desc");
+        a.setRequired(false);
+        a.setTag(false);
+        a.setTypeCode(AttributeType.TEXT.toString());
+        
+        survey.setAttributes(attributeList);
+        survey = surveyDAO.save(survey);
+        
+        Record record = new Record();
+        record.setNumber(1);
+        record.setLastDate(new Date());
+        record.setWhen(new Date());
+        record.setHeld(false);
+        record.setSpecies(speciesA);
+        record.setUser(user);
+        record.setPoint(locationService.createPoint(-32.58, 154.2));
+        record.setSurvey(survey);
+        record = recordDAO.saveRecord(record);
+
+        Action action = new Action();
+        action.setActionType(ActionType.MODERATION_EMAIL_NOTIFICATION);
+        
+        Threshold threshold = new Threshold();
+        threshold.getActions().add(action);
+
+        // test user creation of a new record causes an email to be sent to the admin
+        MockEmailService emailService = new MockEmailService();
+        ActionHandler handler = new ModerationEmailActionHandler(emailService,
+                propertyService, contentService, redirService, userDAO);
+        handler.executeAction(getRequestContext().getHibernate(), threshold, record, action);
+        
+        List<MockEmailMessage> messageQueue = emailService.getMessageQueue();
+        Assert.assertTrue("At least one message should have been sent", messageQueue.size() > 0);
+        
+        for (MockEmailMessage message : messageQueue) {
+            Assert.assertEquals(user.getEmailAddress(), message.from);
+        }
+        
+        messageQueue.clear();
+        
+        // save the record as the admin user and test that the user gets an email that their record was modified
+        login("admin", "password", new String[]{Role.ADMIN});
+        record = recordDAO.saveRecord(record);
+        
+        handler.executeAction(getRequestContext().getHibernate(), threshold, record, action);
+        // test that it sends a message to the record owner that their record has been moderated
+        messageQueue = emailService.getMessageQueue();
+        Assert.assertTrue("At least one message should have been sent", messageQueue.size() > 0);
+        
+        for (MockEmailMessage message : messageQueue) {
+            Assert.assertEquals(admin.getEmailAddress(), message.from);
+            Assert.assertEquals(user.getEmailAddress(), message.to);
+        }
+    }
+    
     private class MockEmailService implements EmailService {
 
         private List<MockEmailMessage> messageQueue = new ArrayList<MockEmailMessage>();

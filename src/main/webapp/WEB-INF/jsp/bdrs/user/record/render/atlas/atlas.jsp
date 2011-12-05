@@ -13,6 +13,7 @@
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
 <jsp:useBean id="formFieldMap" scope="request" type="java.util.HashMap" />
 
+
 <span class="atlasSighting">
 	<div class="sepBottom">
 	    <h1>
@@ -37,6 +38,7 @@
                 <tiles:putAttribute name="formField" value="${ formField }"/>
                 <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                 <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+				<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
             </tiles:insertDefinition>
         </span>
     </c:if>
@@ -64,8 +66,7 @@
 			        </c:choose>
 			    </c:if>
 			</c:forEach>
-		    
-
+		
         <table class="form_table">
             <tbody>
 				<c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.WHEN) %>"/>
@@ -73,6 +74,7 @@
 				    <tiles:putAttribute name="formField" value="${ formField }"/>
 				    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
 				    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
 				</tiles:insertDefinition>
 				
 				<c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.TIME) %>"/>
@@ -80,6 +82,7 @@
 				    <tiles:putAttribute name="formField" value="${ formField }"/>
 				    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
 				    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
 				</tiles:insertDefinition>
 				
                 <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.NUMBER) %>"/>
@@ -87,34 +90,49 @@
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
-                
+
 	            <tr>
 	                <th>
 	                    <label for="locationName">Location</label>
                     </th>
                     <td>
-                        <textarea name="locationName" id="locationName" class="locationTextArea"><c:if test="${ record != null && record.location != null }">${ record.location.name }</c:if></textarea>
-                        &nbsp;
-                        <!-- 
-                        <a href="javascript: bdrs.survey.location.updateLocation(-1)">Clear</a>
-                        -->
+                    	<c:choose>
+						    <c:when test="${recordWebFormContext.editable}">
+						        
+						        <textarea name="locationName" id="locationName" class="locationTextArea"><c:if test="${ record != null && record.location != null }">${ record.location.name }</c:if></textarea>
+		                        &nbsp;
+		                        <!-- 
+		                        <a href="javascript: bdrs.survey.location.updateLocation(-1)">Clear</a>
+		                        -->
+						
+						    </c:when>
+						    <c:otherwise>
+						    	<c:if test="${ record != null && record.location != null }">
+						    		<span><c:out value="${ record.location.name }"/></span>
+							    </c:if>
+								
+						    </c:otherwise>
+						</c:choose>
                     </td>
 	            </tr>
-	            
+
                 <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.POINT) %>"/>
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
 
                 <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.ACCURACY) %>"/>
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
-                    <tiles:putAttribute name="label" value="Coordinate ncertainty"/>
+                    <tiles:putAttribute name="label" value="Coordinate Uncertainty"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
 
                 <c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.NOTES) %>"/>
@@ -123,14 +141,17 @@
 		            <tiles:putAttribute name="sublabel" value="(weather conditions, observed behaviour, etc.)"/>
 		            <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
 		            <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
 		        </tiles:insertDefinition>
 		        
-		        <tiles:insertDefinition name="formFieldRenderer">
-		            <tiles:putAttribute name="formField" value="${ fileFormField }"/>
-		            <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
-		            <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
-		        </tiles:insertDefinition>
-
+		        <c:forEach items="${moderationFormFields}" var="formField">
+                <tiles:insertDefinition name="formFieldRenderer">
+                    <tiles:putAttribute name="formField" value="${ formField }"/>
+                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
+                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
+                </tiles:insertDefinition>
+            </c:forEach>
 			</tbody>
 		</table>
 
@@ -144,15 +165,24 @@
 		                <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
 		            </div>
 		        </c:when>
-		        <c:otherwise>
+		        <c:when test="${not preview and recordWebFormContext.editable}">
 		                <div class="buttonpanel textright">
 		                    <!-- only show the delete button if it is an existing record -->
+							<%-- This is not a typo, the delete link has been removed as of r380 --%>
 		                    <c:if test="${record.id != null} & false">
                                 <input class="form_action" type="button" name="submitDelete" value="Delete Record" onclick="bdrs.survey.deleteRecord()" />
                             </c:if>
                             <input class="form_action" type="submit" name="submit" value="Save Changes"/>
 		                </div>
-		        </c:otherwise>
+		        </c:when>
+				<c:when test="${not recordWebFormContext.editable and recordWebFormContext.existingRecord}">
+					<div class="buttonpanel textright">
+						<tiles:insertDefinition name="unlockRecordWidget">
+	                        <tiles:putAttribute name="surveyId" value="${record.survey.id}" />
+	                        <tiles:putAttribute name="recordId" value="${record.id}" />
+                        </tiles:insertDefinition>
+					</div>
+		        </c:when>
 		    </c:choose>
 	    </div>
 	</div>
@@ -164,21 +194,28 @@
             <tiles:insertDefinition name="propertyRenderer">
                <tiles:putAttribute name="formField" value="${ formField }"/>
                <tiles:putAttribute name="locations" value="${ locations }"/>
+			   <tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
             </tiles:insertDefinition>
         </div>
-        <div id="geocode" class="geocode atlasgeocode"></div>
-        <div class="buttonpanel">
-            <input id="bookmarkLocation" class="form_action" type="button" value="Bookmark location"/>
-               <input type="checkbox" name="defaultLocation" id="defaultLocation"/>
-               <label for="defaultLocation">Set as default</label>
-        </div>
+		<c:if test="${recordWebFormContext.editable}">
+		    <div id="geocode" class="geocode atlasgeocode"></div>
+	        <div class="buttonpanel">
+	            <input id="bookmarkLocation" class="form_action" type="button" value="Bookmark location"/>
+	               <input type="checkbox" name="defaultLocation" id="defaultLocation"/>
+	               <label for="defaultLocation">Set as default</label>
+	        </div>	
+		</c:if>
+        
         <div class="map_wrapper" id="map_wrapper">
             <div id="base_map" class="defaultmap atlasmap left"></div>
         </div>
-        <p class="mapHints clear">
-            <span class="boldtext">Hints:</span> click and drag the marker 
-            to fine-tune the location coordinates.
-        </p>
+		
+		<c:if test="${recordWebFormContext.editable}">
+	        <p class="mapHints clear">
+	            <span class="boldtext">Hints:</span> click and drag the marker 
+	            to fine-tune the location coordinates.
+	        </p>
+		</c:if>
 	</div>
 	
 	<div class="clear"></div>
@@ -305,7 +342,8 @@
         
         var jLoc = jQuery("#location");
         // Set the initial state of the bookmarks button
-        if((jLoc.val() > 0) || (lat.val().length === 0 && lon.val().length === 0)) {
+		// protect from non existant inputs - occurs in read only mode
+        if((jLoc.val() > 0) || lat.val() && lon.val() && (lat.val().length === 0 && lon.val().length === 0)) {
             // Location already bookmarked or there is no lat and lon
             bookmarkLocation.attr("disabled", "disabled");
         } else {
@@ -322,66 +360,19 @@
             jLoc.val(bdrs.survey.location.DEFAULT_LOCATION_ID).trigger("change");
         }
             
+			
         // Species Autocomplete
-        jQuery("#survey_species_search").autocomplete({
-            source: function(request, callback) {
-                var params = {};
-                params.q = request.term;
-                params.surveyId = ${survey.id};
-
-                jQuery.getJSON('${pageContext.request.contextPath}/webservice/survey/speciesForSurvey.htm', params, function(data, textStatus) {
-                    var label;
-                    var result;
-                    var taxon;
-                    var resultsArray = [];
-                    for(var i=0; i<data.length; i++) {
-                        taxon = data[i];
-
-                        label = [];
-                        if(taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
-                            label.push("<b><i>"+taxon.scientificName+"</b></i>");
-                        }
-                        if(taxon.commonName !== undefined && taxon.commonName.length > 0) {
-                            label.push(taxon.commonName);
-                        }
-
-                        label = label.join(' ');
-
-                        resultsArray.push({
-                            label: label,
-                            value: taxon.scientificName,
-                            data: taxon
-                        });
-                    }
-
-                    callback(resultsArray);
-                });
-            },
-            select: function(event, ui) {
-                var taxon = ui.item.data;
-                jQuery("[name=species]").val(taxon.id);
-                
-                // Load Taxon Group Attributes
-                // Clear the group attribute rows
-                jQuery("[name^=taxonGroupAttr_]").parents("tr").remove();
-                
-                // Build GET request parameters
-                var params = {};
-                params.surveyId = jQuery("[name=surveyId]").val();
-                params.taxonId = taxon.id;
-                var recordIdElem = jQuery("[name=recordId]");
-                if(recordIdElem.length > 0 && recordIdElem.val().length > 0) {
-                    params.recordId = recordIdElem.val();
-                }
-                // Issue Request
-                jQuery.get("${pageContext.request.contextPath}/bdrs/user/ajaxTrackerTaxonAttributeTable.htm", params, function(data) {
-                    jQuery(".form_table").find("tbody").append(data);
-                });
-            },
-            minLength: 2,
-            delay: 300,
-            html: true
-        });
+		var recordIdElem = jQuery("[name=recordId]");
+        var speciesAutocompleteArgs = {
+            surveySpeciesSearchSelector: "#survey_species_search",
+            speciesIdSelector: "[name=species]",
+            taxonAttrRowSelector:"[name^=taxonGroupAttr_]",
+            surveyId: jQuery("[name=surveyId]").val(),
+            recordId: (recordIdElem.length > 0 && recordIdElem.val().length > 0) ? recordIdElem.val() : undefined,
+            editable: "${recordWebFormContext.editable}",
+            attributeTbodySelector: ".form_table tbody"
+        };
+        bdrs.contribute.initSpeciesAutocomplete(speciesAutocompleteArgs);
     
         jQuery(".acomplete").autocomplete({
             source: function(request, callback) {
@@ -432,7 +423,8 @@
         var lon = jQuery('input[name=longitude]');
     
         var olLonLat = null;
-        if(lat.val().length > 0 && lon.val().length > 0) {
+		// protect from non existant inputs - occurs in read only mode
+        if(lat.val() && lon.val() && lat.val().length > 0 && lon.val().length > 0) {
             olLonLat = new OpenLayers.LonLat(
                     parseFloat(lon.val()), parseFloat(lat.val()));
         }
@@ -458,8 +450,9 @@
 //        bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
         bdrs.map.centerMap(bdrs.map.baseMap, olLonLat, -1);
         
+		<%-- when we cant edit, dont allow the user to drag the location point around --%>
         <c:choose>
-            <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
+			<c:when test="${survey.predefinedLocationsOnly || not recordWebFormContext.editable}">
                 var layer = bdrs.map.addPositionLayer(layerName);
             </c:when>
             <c:otherwise>

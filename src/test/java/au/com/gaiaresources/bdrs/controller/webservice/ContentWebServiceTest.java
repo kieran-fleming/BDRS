@@ -88,7 +88,7 @@ public class ContentWebServiceTest extends AbstractControllerTest {
     }
 
     private String getContent(String key) {
-        Content item = contentDAO.getContent(key);
+        Content item = contentDAO.getContent(sesh, key);
         if (item == null) {
             return "";
         }
@@ -97,6 +97,6 @@ public class ContentWebServiceTest extends AbstractControllerTest {
 
     private void saveContent(String key, String value) {
         // the DAO does the 'does exist' checking for us...
-        contentDAO.saveContent(key, value);
+        contentDAO.saveContent(sesh, key, value);
     }
 }

@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,10 +55,11 @@ public class AdminEditContentController extends AbstractController {
             // something has gone seriously wrong for this to happen...
             throw new Exception("The portal cannot be null");
         }
+        Session sesh = getRequestContext().getHibernate();
         if (key == null) {
-            contentService.initContent(currentPortal);
+            contentService.initContent(sesh, currentPortal);
         } else {
-            contentService.initContent(currentPortal, key, null);
+            contentService.initContent(sesh, currentPortal, key, null);
         }
         return "redirect:/admin/editContent.htm";
     }

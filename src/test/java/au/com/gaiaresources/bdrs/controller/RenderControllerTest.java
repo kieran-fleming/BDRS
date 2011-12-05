@@ -26,7 +26,7 @@ public class RenderControllerTest extends AbstractGridControllerTest {
     
     @Test
     public void redirectToSingleSiteMultiTaxa() throws Exception {
-        request.setParameter(RenderController.PARAM_X_SURVEY_ID, this.singleSiteMultiTaxaSurvey.getId().toString());
+        request.setParameter(RenderController.PARAM_SURVEY_ID, this.singleSiteMultiTaxaSurvey.getId().toString());
         
         ModelAndView mv = handle(request, response);
         
@@ -35,7 +35,7 @@ public class RenderControllerTest extends AbstractGridControllerTest {
     
     @Test
     public void redirectToSingleSiteAllTaxa() throws Exception {
-        request.setParameter(RenderController.PARAM_X_SURVEY_ID, this.singleSiteAllTaxaSurvey.getId().toString());
+        request.setParameter(RenderController.PARAM_SURVEY_ID, this.singleSiteAllTaxaSurvey.getId().toString());
         
         ModelAndView mv = handle(request, response);
         
@@ -44,7 +44,7 @@ public class RenderControllerTest extends AbstractGridControllerTest {
     
     @Test
     public void redirectToAtlas() throws Exception {
-        request.setParameter(RenderController.PARAM_X_SURVEY_ID, this.atlasSurvey.getId().toString());
+        request.setParameter(RenderController.PARAM_SURVEY_ID, this.atlasSurvey.getId().toString());
         
         ModelAndView mv = handle(request, response);
         
@@ -53,7 +53,7 @@ public class RenderControllerTest extends AbstractGridControllerTest {
     
     @Test
     public void redirectToTracker() throws Exception {
-        request.setParameter(RenderController.PARAM_X_SURVEY_ID, this.survey1.getId().toString());
+        request.setParameter(RenderController.PARAM_SURVEY_ID, this.survey1.getId().toString());
         
         ModelAndView mv = handle(request, response);
         
@@ -62,7 +62,7 @@ public class RenderControllerTest extends AbstractGridControllerTest {
     
     @Test
     public void redirectToYearlySightings() throws Exception {
-        request.setParameter(RenderController.PARAM_X_SURVEY_ID, this.yearlySightingSurvey.getId().toString());
+        request.setParameter(RenderController.PARAM_SURVEY_ID, this.yearlySightingSurvey.getId().toString());
         
         ModelAndView mv = handle(request, response);
         

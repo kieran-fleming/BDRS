@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.attribute.formfield;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
@@ -91,5 +92,10 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
                (AttributeType.HTML.equals(attribute.getType()) || 
                 AttributeType.HTML_COMMENT.equals(attribute.getType()) || 
                 AttributeType.HTML_HORIZONTAL_RULE.equals(attribute.getType()));
+    }
+    
+    @Override
+    public boolean isModerationFormField() {
+        return AttributeScope.isModerationScope(attribute.getScope());
     }
 }

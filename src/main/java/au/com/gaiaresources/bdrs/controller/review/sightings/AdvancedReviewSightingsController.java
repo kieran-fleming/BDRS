@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
@@ -33,9 +32,8 @@ import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
-import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
+import au.com.gaiaresources.bdrs.service.facet.AttributeFacet;
 import au.com.gaiaresources.bdrs.service.facet.Facet;
 import au.com.gaiaresources.bdrs.service.facet.FacetOption;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
@@ -51,9 +49,14 @@ import edu.emory.mathcs.backport.java.util.Collections;
  */
 @SuppressWarnings("unchecked")
 @Controller
-public class AdvancedReviewSightingsController extends AbstractController{
+public class AdvancedReviewSightingsController extends SightingsController{
     
     public static final String VIEW_TYPE_TABLE = "table";
+    public static final String VIEW_TYPE_MAP = "map";
+    public static final String VIEW_TYPE_DOWNLOAD = "download";
+    
+    public static final String PARAM_VIEW_TYPE = "viewType";
+    
     public static final Set<String> VALID_SORT_PROPERTIES;
     
     
@@ -66,6 +69,10 @@ public class AdvancedReviewSightingsController extends AbstractController{
     
     public static final String DEFAULT_RESULTS_PER_PAGE = "20";
     public static final String DEFAULT_PAGE_NUMBER = "1";
+    
+    public static final String MODEL_DOWNLOAD_VIEW_SELECTED = "downloadViewSelected";
+    public static final String MODEL_TABLE_VIEW_SELECTED = "tableViewSelected";
+    public static final String MODEL_MAP_VIEW_SELECTED = "mapViewSelected";
     
     static {
         Set<String> temp = new HashSet<String>();
@@ -80,10 +87,6 @@ public class AdvancedReviewSightingsController extends AbstractController{
     
     private Logger log = Logger.getLogger(getClass());
     
-    @Autowired
-    private SurveyDAO surveyDAO;
-    @Autowired
-    private AbstractBulkDataService bulkDataService;
     @Autowired
     private FacetService facetService;
     
@@ -120,11 +123,27 @@ public class AdvancedReviewSightingsController extends AbstractController{
         }
         
         ModelAndView mv = new ModelAndView("advancedReview");
-        mv.addObject("mapViewSelected", !VIEW_TYPE_TABLE.equals(request.getParameter("viewType")));
+        
+        // map view is the default
+        if (VIEW_TYPE_DOWNLOAD.equals(request.getParameter(PARAM_VIEW_TYPE))) {
+            mv.addObject("downloadViewSelected", true);    
+        } else if (VIEW_TYPE_TABLE.equals(request.getParameter(PARAM_VIEW_TYPE))) {
+            mv.addObject("tableViewSelected", true);    
+        } else {
+            mv.addObject("mapViewSelected", true);    
+        }
+        
+        String sortBy = request.getParameter(SORT_BY_QUERY_PARAM_NAME);
+        String sortOrder = request.getParameter(SORT_ORDER_QUERY_PARAM_NAME);
+
         mv.addObject("facetList", facetList);
         mv.addObject("surveyId", request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
-        mv.addObject("sortBy", request.getParameter(SORT_BY_QUERY_PARAM_NAME));
-        mv.addObject("sortOrder", request.getParameter(SORT_ORDER_QUERY_PARAM_NAME));
+        
+        // set sortBy or use default if none requested.
+        mv.addObject("sortBy", sortBy != null ? sortBy : "record.when");
+        // set sortOrder or use default if none requested.
+        mv.addObject("sortOrder", sortOrder != null ? sortOrder : "DESC");
+        
         mv.addObject("searchText", request.getParameter(SEARCH_QUERY_PARAM_NAME));
         mv.addObject("recordCount", recordCount);
         mv.addObject("resultsPerPage", resultsPerPage);
@@ -247,34 +266,33 @@ public class AdvancedReviewSightingsController extends AbstractController{
      * Returns an XLS representation of representation of records matching the
      * {@link Facet} criteria. This function should only be used if the records
      * are part of a single survey.
+     * @throws Exception 
      */
     @RequestMapping(value = "/review/sightings/advancedReviewDownload.htm", method = RequestMethod.GET)
     public void advancedReviewDownload(HttpServletRequest request, 
                                        HttpServletResponse response,
-                                       @RequestParam(value=SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, required=true) int surveyId) throws IOException {
+                                       @RequestParam(value=SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, required=false) Integer surveyId,
+                                       @RequestParam(value=QUERY_PARAM_DOWNLOAD_FORMAT, required=true) String[] downloadFormat) throws Exception {
         RequestContext requestContext = getRequestContext();
         requestContext.getHibernate().setFlushMode(FlushMode.MANUAL);
         User user = requestContext.getUser();
         
         List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
+        
         ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
                                                      surveyId,
                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
                                                      request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
                                                      request.getParameter(SEARCH_QUERY_PARAM_NAME));
         
-        response.setContentType("application/vnd.ms-excel");
-        response.setHeader("Content-Disposition",
-                        "attachment;filename=records_"
-                                        + String.valueOf(System.currentTimeMillis()) + ".xls");
-        bulkDataService.exportSurveyRecords(surveyDAO.getSurvey(surveyId), 
-                                            sc, response.getOutputStream());
+        // using 0 as the survey id parameter in the case of a null survey id
+        downloadSightings(request, response, downloadFormat, sc, surveyId != null ? surveyId.intValue() : 0);
     }
 
     long countMatchingRecords(List<Facet> facetList, Integer surveyId, String searchText) {
         HqlQuery hqlQuery = new HqlQuery("select count(distinct record) from Record record");
         applyFacetsToQuery(hqlQuery, facetList, surveyId, searchText);
-        
+
         Query query = toHibernateQuery(hqlQuery);
         Object result = query.uniqueResult();
         return Long.parseLong(result.toString(), 10);
@@ -282,7 +300,7 @@ public class AdvancedReviewSightingsController extends AbstractController{
 
     private void applyFacetsToQuery(HqlQuery hqlQuery, List<Facet> facetList,
             Integer surveyId, String searchText) {
-        
+
         hqlQuery.leftJoin("record.location", "location");
         hqlQuery.leftJoin("record.species", "species");
         hqlQuery.leftJoin("record.censusMethod", "censusMethod");
@@ -290,7 +308,18 @@ public class AdvancedReviewSightingsController extends AbstractController{
         hqlQuery.leftJoin("recordAttribute.attribute", "attribute");
         
         for(Facet f : facetList) {
-            f.applyPredicate(hqlQuery);
+            Predicate p = f.getPredicate();
+            if (f instanceof AttributeFacet && p != null) {
+                // attribute facet predicates create an additional join to the attributes/attribute 
+                // tables to accomodate multiple attribute values
+                int attributesIndex = ((AttributeFacet)f).getFacetIndex();
+                hqlQuery.leftJoin("record.attributes", "recordAttribute" + attributesIndex);
+                hqlQuery.leftJoin("recordAttribute" + attributesIndex + ".attribute", "attribute" + attributesIndex);
+            } 
+            
+            if (p != null){
+                hqlQuery.and(p);
+            }
         }
         
         if(searchText != null && !searchText.isEmpty()) {

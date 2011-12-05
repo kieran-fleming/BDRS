@@ -344,3 +344,17 @@ $.fn.ketchup.validation('regExpOrBlank', function(element, value, regExp, origRe
 		return pattern.test(value);
 	}
 });
+
+// 24 hour time
+var timeRegex = new RegExp('[012]?\\d:\\d\\d$');
+
+$.fn.ketchup.validation('time', function(element, value) {
+	return timeRegex.test(value);
+});
+
+$.fn.ketchup.validation('timeOrBlank', function(element, value) {
+	if (element.val().length === 0) {
+		return true;
+	}
+	return timeRegex.test(value); 
+});

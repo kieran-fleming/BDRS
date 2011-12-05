@@ -1,5 +1,9 @@
 <h1>Select a Taxonomic Group</h1>
 
+<p>
+Click on the group name or thumbnail below to get a list of species for that group.
+</p>
+
 #foreach ($taxonGroup in ${taxonGroups})
     <div class="left field_guide_group">
         #if(${taxonGroup.thumbNail})

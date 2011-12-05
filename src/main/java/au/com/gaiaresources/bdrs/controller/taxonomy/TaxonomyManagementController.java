@@ -544,6 +544,11 @@ public class TaxonomyManagementController extends AbstractController {
                              @RequestParam(required=false, value="shortProfile") String importShortProfile,
                              @RequestParam(required=false, value="taxonGroup") String taxonGroup) throws IOException {
         Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute(MV_ERROR_MAP);
+        if (errorMap == null) {
+        	// it might not actually exist yet, if this is the first URL that is hit.
+        	errorMap = new HashMap<String, String>();
+        }
+        
         getRequestContext().removeSessionAttribute(MV_ERROR_MAP);
         String[] ids = guids.split(",");
         int speciesCount = 0;
@@ -557,12 +562,14 @@ public class TaxonomyManagementController extends AbstractController {
             try {
             	sp = atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap, taxonGroup);
             	if (sp != null) {
+            		log.debug("Successfully imported : " + sp.getScientificName() + ", " + sp.getCommonName());
             		successfulImport = true;
             	}
             } catch (JSONException jse) {
             	successfulImport = false;
             }
             if (successfulImport) {
+            	log.debug("Current import count : " + speciesCount);
             	speciesCount++;
             } else {
             	String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");

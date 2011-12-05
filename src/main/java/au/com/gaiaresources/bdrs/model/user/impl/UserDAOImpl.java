@@ -285,16 +285,7 @@ public class UserDAOImpl extends AbstractDAOImpl implements UserDAO {
 
         // long winded but it works...
         if (roles != null && roles.length > 0) {
-            Predicate rolePredicate = new Predicate();
-            int count = 0;
-            for (String r : roles) {
-                if (count == 0) {
-                    rolePredicate = Predicate.inElements("elements(u.roles)", r);
-                } else {
-                    rolePredicate = rolePredicate.or(Predicate.inElements("elements(u.roles)", r));
-                }
-                ++count;
-            }
+            Predicate rolePredicate = createRolePredicate(roles);
             q.and(rolePredicate);
         }
         
@@ -316,11 +307,41 @@ public class UserDAOImpl extends AbstractDAOImpl implements UserDAO {
         return new QueryPaginator<User>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter, sortTargetAlias);
     }
     
+    /**
+     * Creates a {@link Predicate} for finding users with any of the given roles.
+     * @param roles an array of roles to find
+     * @return A predicate for finding users with the given roles
+     */
+    private Predicate createRolePredicate(String[] roles) {
+        Predicate rolePredicate = new Predicate();
+        int count = 0;
+        for (String r : roles) {
+            if (count == 0) {
+                rolePredicate = Predicate.inElements("elements(u.roles)", r);
+            } else {
+                rolePredicate = rolePredicate.or(Predicate.inElements("elements(u.roles)", r));
+            }
+            ++count;
+        }
+        return rolePredicate;
+    }
+
     private Predicate buildOrSection(Predicate left, Predicate right) {
         if (left == null) {
             return right;
         } else {
             return left.or(right);
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.model.user.UserDAO#getUsersByRoles(org.hibernate.Session, java.lang.String[])
+     */
+    @Override
+    public List<User> getUsersByRoles(Session sesh, String[] roles) {
+        HqlQuery q = new HqlQuery("from User u ");
+        q.and(createRolePredicate(roles));
+        return find(sesh, q.getQueryString(), roles);
     }
 }

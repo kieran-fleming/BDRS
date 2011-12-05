@@ -9,4 +9,9 @@ import java.util.Enumeration;
  */
 public interface ScrollableRecords extends Enumeration<Record> {
     public static final int RECORD_BATCH_SIZE = 500;
+    
+    /**
+     * Rewinds the underlying iterator
+     */
+    public void rewind();
 }

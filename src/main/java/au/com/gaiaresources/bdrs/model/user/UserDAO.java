@@ -7,7 +7,6 @@ import org.hibernate.Session;
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
-import au.com.gaiaresources.bdrs.model.group.Group;
 
 
 public interface UserDAO extends TransactionDAO {
@@ -53,4 +52,12 @@ public interface UserDAO extends TransactionDAO {
     PagedQueryResult<User> search(String username, String email, String name, PaginationFilter filter, String[] roles, String[] excludeRoles, Integer groupId, Boolean active);
     
     void delete(User u);
+
+    /**
+     * Gets all of the users that have the given roles.
+     * @param sesh 
+     * @param strings an array of user roles to search for
+     * @return A set of users that have the roles
+     */
+    public List<User> getUsersByRoles(Session sesh, String[] roles);
 }

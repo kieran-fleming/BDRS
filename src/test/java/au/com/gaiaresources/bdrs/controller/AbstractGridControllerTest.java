@@ -84,6 +84,10 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
      */
     protected User currentUser;
     protected User user;
+    protected User poweruser;
+    
+    // a user of Role.USER with no access to any surveys
+    protected User foreverAlone;
     
     protected Survey survey1;
     protected Survey survey2;
@@ -150,6 +154,12 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
     protected List<IndicatorSpecies> speciesList;
     
     protected List<Location> locationList;
+    
+    /**
+     * A list of all survey locations added in the setup
+     * If you add a new survey location, you MUST add it to this list
+     */
+    protected List<Location> allSurveyLocationList = new ArrayList<Location>();
         
     protected Date now;
     
@@ -189,6 +199,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         String registrationKey = passwordEncoder.encodePassword(au.com.gaiaresources.bdrs.util.StringUtils.generateRandomString(10, 50), emailAddr);
 
         user = userDAO.createUser("user", "Abigail", "Ambrose", emailAddr, encodedPassword, registrationKey, new String[] { Role.USER });
+        poweruser = userDAO.createUser("poweruser", "Peter", "Pumpkin", "pp@peterpumpkin.com.au", encodedPassword, registrationKey, new String[] { Role.POWERUSER });
         
         g1 = new TaxonGroup();
         g1.setName("fictionus animus");
@@ -218,6 +229,14 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         survey1_cmList.add(optTaxaCm);
         survey1 = createSurvey("Fictionay Animal Survey", "A survey of fictionary animals for testing", 
                                now, null, true, survey1_cmList, SurveyFormRendererType.DEFAULT);
+        // give survey 1 some locations !
+        List<Location> survey1LocList = new ArrayList<Location>();
+        survey1LocList.add(createLocationPoint("survey 1 loc 1", currentUser, -20, -20));
+        survey1LocList.add(createLocationPoint("survey 1 loc 2", currentUser, -21, -21));
+        survey1LocList.add(createLocationPoint("survey 1 loc 3", currentUser, -22, -22));
+        survey1LocList.add(createLocationPoint("survey 1 loc 4", currentUser, -23, -23));
+        survey1.setLocations(survey1LocList);
+        allSurveyLocationList.addAll(survey1LocList);
         
         List<CensusMethod> emptyCensusMethodList = Collections.emptyList();
         survey2 = createSurvey("Generic Survey, no CM", "A survey with no census methods for testing", 
@@ -246,12 +265,13 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         singleSiteMultiTaxaSurvey = createScopedSurvey("single site multi taxa survey", "uses the single site multi taxa form", 
                                     getDate(1980, 1, 1), getDate(2000, 1, 1), false, emptyCensusMethodList, 
                                     SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA,
-                                    new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY });
+                                    new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY, 
+                                                           AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION});
         
         recordScopedSurvey = createScopedSurvey("single site multi taxa survey", "uses the single site multi taxa form", 
                                      getDate(1980, 1, 1), getDate(2000, 1, 1), false, emptyCensusMethodList, 
                                      SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA,
-                                     new AttributeScope[] { AttributeScope.RECORD });
+                                     new AttributeScope[] { AttributeScope.RECORD, AttributeScope.RECORD_MODERATION });
         for (RecordPropertyType rpType : RecordPropertyType.values()) {
             RecordProperty rp = new RecordProperty(recordScopedSurvey, rpType, metaDAO);
             if (AttributeScope.SURVEY.equals(rp.getScope())) {
@@ -262,7 +282,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         surveyScopedSurvey = createScopedSurvey("single site multi taxa survey", "uses the single site multi taxa form", 
                                     getDate(1980, 1, 1), getDate(2000, 1, 1), false, emptyCensusMethodList, 
                                     SurveyFormRendererType.SINGLE_SITE_MULTI_TAXA,
-                                    new AttributeScope[] { AttributeScope.SURVEY });
+                                    new AttributeScope[] { AttributeScope.SURVEY, AttributeScope.SURVEY_MODERATION });
         for (RecordPropertyType rpType : RecordPropertyType.values()) {
             RecordProperty rp = new RecordProperty(surveyScopedSurvey, rpType, metaDAO);
             if (AttributeScope.RECORD.equals(rp.getScope())) {
@@ -274,7 +294,8 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         singleSiteAllTaxaSurvey = createScopedSurvey("single site all taxa survey", "uses the single site all taxa form", 
                                                  getDate(1980, 1, 1), getDate(2000, 1, 1), false, emptyCensusMethodList, 
                                                  SurveyFormRendererType.SINGLE_SITE_ALL_TAXA,
-                                                 new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY });
+                                                 new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY, 
+                                                                        AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION });
         
         atlasSurvey = createSurvey("atlas survey", "uses the atlas form", 
                                     getDate(1980, 1, 1), getDate(2000, 1, 1), false, emptyCensusMethodList, 
@@ -315,10 +336,35 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         recordListMap.put(singleSiteMultiTaxaSurvey, createRecordSet(singleSiteMultiTaxaSurvey, RecordVisibility.PUBLIC));
         recordListMap.put(surveyScopedSurvey, createRecordSet(surveyScopedSurvey, RecordVisibility.PUBLIC));
         recordListMap.put(recordScopedSurvey, createRecordSet(recordScopedSurvey, RecordVisibility.PUBLIC));
+        recordListMap.put(survey1, survey1RecordsList);
+        recordListMap.put(survey2, survey2RecordsList);
         
         allRecordList = new ArrayList<Record>();
         allRecordList.addAll(survey1RecordsList);
         allRecordList.addAll(survey2RecordsList);
+        
+        
+        // a user who is segregated. and lives alone in the private survey
+        foreverAlone = userDAO.createUser("foreverAlone", "faFirst", "faLast", "fa@foreveralone.com.au", "password", "regkey", Role.USER);
+        
+        // create a private survey
+        Survey privateSurvey = new Survey();
+        Set<User> privateSurveyUsers = new HashSet<User>();
+        privateSurveyUsers.add(user);
+        privateSurvey.setUsers(privateSurveyUsers);
+        privateSurvey.setPublic(false);
+        privateSurvey.setActive(true);
+        privateSurvey.setName("Private Survey");
+        privateSurvey.setDescription("Private survey description wooo");
+        
+        Location privSurveyLocation = createLocationPoint("private survey location", user, 80, 80);
+        
+        List<Location> privateSurveyLocations = new ArrayList<Location>();
+        privateSurveyLocations.add(privSurveyLocation);
+        privateSurvey.setLocations(privateSurveyLocations);
+        allSurveyLocationList.addAll(privateSurveyLocations);
+        
+        surveyDAO.save(privateSurvey);
     }
     
     protected List<Record> getInitialRecordList(Survey survey) {
@@ -475,6 +521,8 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         surv.setName(name);
         surv.setDescription(desc);
         surv.setStartDate(now);
+        surv.setActive(true);
+        surv.setPublic(true);
         
         List<Attribute> attrList = createAttrList("sattr", attrRequired, AttributeScope.RECORD);
         surv.setAttributes(attrList);
@@ -506,6 +554,8 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         surv.setName(name);
         surv.setDescription(desc);
         surv.setStartDate(now);
+        surv.setActive(true);
+        surv.setPublic(true);
         
         List<Attribute> attrList = new ArrayList<Attribute>();
         

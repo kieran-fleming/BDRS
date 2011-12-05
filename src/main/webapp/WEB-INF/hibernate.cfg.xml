@@ -66,6 +66,8 @@
         
         <mapping class="au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability"/>
         <mapping class="au.com.gaiaresources.bdrs.model.detect.BDRSWurflDevice"/>
+        
+        <mapping class="au.com.gaiaresources.bdrs.model.report.Report"/>
 
         <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.region.Region"/>
         <class-cache usage="read-write" class="au.com.gaiaresources.bdrs.model.taxa.TaxonGroup"/>

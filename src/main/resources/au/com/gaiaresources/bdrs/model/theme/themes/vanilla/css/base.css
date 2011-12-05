@@ -14,11 +14,15 @@ body {
     font-family: ${style.content.font};
     line-height: ${style.content.line-height};
     color: ${style.content.text.color};
+    background-color: ${style.body.background.color};
     margin: 0px;
     padding: 0px;
     display: block;
 }
 
+.wrapper {
+    width: ${style.content.width};
+}
 /************************************/
 /* Button Styling                   */
 /************************************/
@@ -373,6 +377,7 @@ ul.menu ul ul ul ul li a{
     line-height: 0;
     background-color: ${style.header.background.color};
     
+	border-top: 1px solid transparent;
     margin-top: 12px;
     margin-bottom: 2px;
     
@@ -389,19 +394,35 @@ ul.menu ul ul ul ul li a{
 }
 
 #portalName {
+	float: left;
     color: ${style.header.text.color};
     font-weight: bold;
     font-size: 200%;
     line-height: 48px;
-    margin-top: 12px;
+    margin-top: 0px;
     margin-left: 12px;
 }
 
+/* hide the foundation.jsp signout link */
 #signOut {
-    float: right;
-    color: ${style.header.text.color};
-    margin-right: 12px;
-    margin-top: 10px;
+    display:none;
+}
+
+#welcomeText {
+	line-height: 1.5em;
+	float: right;
+	text-align:right;
+	color: ${style.header.text.color};
+	margin-right: 12px;
+    margin-top: 6px;
+}
+
+#welcomeText a {
+	color: ${style.header.text.color};
+}
+
+#welcomeText a:hover {
+	text-decoration: underline;
 }
 
 /************************************/
@@ -496,6 +517,10 @@ a:link {
 a:visited {
     color:${style.anchor.visited.color};
     text-decoration: ${style.anchor.visited.decoration};
+}
+
+a:hover {
+    color: ${style.anchor.hover.color};
 }
 
 a:link.delete {

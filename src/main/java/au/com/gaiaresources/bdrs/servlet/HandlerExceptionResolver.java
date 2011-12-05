@@ -17,6 +17,10 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
+/**
+ * Whenever an unhandled exception occurs during controller handling we end up here.
+ * 
+ */
 public class HandlerExceptionResolver implements org.springframework.web.servlet.HandlerExceptionResolver {
     @Autowired
     private EmailService emailService;
@@ -26,6 +30,17 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
     public ModelAndView resolveException(HttpServletRequest request,
                                          HttpServletResponse response, Object handler, Exception ex) {
         ModelAndView mv;
+        
+        // If the exception is of type 'AccessDeniedException', if the user is not already logged in
+        // give them the option to login in.
+        // Else, send them back to their home page and display the reason for the access denial if
+        // one was provided during the throwing of the exception.
+        //
+        // Also note we will end up here if the user attempts to access a controller handler
+        // which has a @RolesAllowed list set, but the accessing user does not meet the requirements
+        //
+        // feel free to add an error code (or a text message but this is not recommended)
+        // and it shall be added into the RequestContext's message list for display to the user.
         if(ex instanceof AccessDeniedException) {
 
             if(request.getRemoteUser() == null) {
@@ -35,6 +50,8 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
             } else {
                 // Go to the home page
                 mv = new ModelAndView(new RedirectView("/authenticated/redirect.htm", true));
+                // add the message
+                RequestContextHolder.getContext().addMessage(ex.getMessage());
             }
 
         } else {

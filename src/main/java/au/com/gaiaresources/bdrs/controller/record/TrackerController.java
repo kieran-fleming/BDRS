@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,13 +52,20 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeUtil;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
+/**
+ * Controller for the default 'tracker' form.
+ * 
+ */
 @Controller
 public class TrackerController extends AbstractController {
 
@@ -94,6 +102,8 @@ public class TrackerController extends AbstractController {
     public static final String MV_ERROR_MAP = "errorMap";
     
     public static final String NO_SURVEY_ERROR_KEY = "bdrs.record.noSurveyError";
+    
+    public static final String TRACKER_VIEW_NAME = "tracker";
 
     @Autowired
     private RecordDAO recordDAO;
@@ -117,8 +127,21 @@ public class TrackerController extends AbstractController {
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
+    /**
+     * Handler to get the tracker form. Will populate the form with values if an existing
+     * record ID is passed.
+     * 
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyId - the ID for the survey to create a new record for. Is still required when requesting
+     * an existing record
+     * @param taxonSearch - a taxon scientific name to search for to populate the species field of a record
+     * @param recordId - the ID for the record to retrieve and populate form values with
+     * @param guid - a guid for a species to search for to populate the species field of a record
+     * @param censusMethodId - the census method id to use when creating a new record
+     * @return a ModelAndView for rendering the tracker form
+     */
     @SuppressWarnings("unchecked")
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,
@@ -127,7 +150,8 @@ public class TrackerController extends AbstractController {
             @RequestParam(value = "taxonSearch", required = false) String taxonSearch,
             @RequestParam(value = PARAM_RECORD_ID, required = false, defaultValue = "0") int recordId,
             @RequestParam(value = "guid", required = false) String guid,
-            @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId) {
+            @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId,
+            @RequestParam(value = "speciesId", required = false, defaultValue="0") Integer speciesId) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         if (survey == null) {
             return nullSurveyError();
@@ -138,13 +162,8 @@ public class TrackerController extends AbstractController {
         
         record = record == null ? new Record() : record;
         
-        if (!record.canWrite(getRequestContext().getUser())) {
-            // return forbidden as the only way a user could get to this is by playing
-            // around in firebug or attempting to manipulate the query string to try
-            // and edit a record they are not meant to.
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return null;
-        }
+        User loggedInUser = getRequestContext().getUser();
+        RecordWebFormContext context = new RecordWebFormContext(request, record, loggedInUser, survey);
         
         // if this is a new record...
         if (record.getId() == null) {
@@ -154,7 +173,12 @@ public class TrackerController extends AbstractController {
         
         IndicatorSpecies species = null;
         
-        if (guid != null && !guid.isEmpty()) {
+        // check for the speciesId first
+        if (speciesId > 0) {
+            species = taxaDAO.getIndicatorSpecies(speciesId);
+        }
+        // first attempt to assign to the species from the form fields....
+        if (species == null && guid != null && !guid.isEmpty()) {
             species = taxaDAO.getIndicatorSpeciesByGuid(guid);
         } 
         if (species == null && taxonSearch != null && !taxonSearch.isEmpty()) {
@@ -170,6 +194,9 @@ public class TrackerController extends AbstractController {
                 species = speciesList.get(0);
             }
         }
+        // if the species is still null, use the species from the record.
+        species = species != null ? species : record.getSpecies();
+        
 
         // Add all attribute form fields
         FormField formField;
@@ -181,9 +208,8 @@ public class TrackerController extends AbstractController {
         List<Attribute> taxonGroupAttributeList = new ArrayList<Attribute>();
         List<Attribute> censusMethodAttributeList = censusMethod != null ? new ArrayList<Attribute>(censusMethod.getAttributes()) : new ArrayList<Attribute>();
         
-        IndicatorSpecies sp = species != null ? species : record.getSpecies();
-        if(sp != null) {
-            for(Attribute taxonGroupAttribute : sp.getTaxonGroup().getAttributes()) {
+        if(species != null) {
+            for(Attribute taxonGroupAttribute : species.getTaxonGroup().getAttributes()) {
                 if(!taxonGroupAttribute.isTag()) {
                     taxonGroupAttributeList.add(taxonGroupAttribute);
                 }
@@ -197,8 +223,12 @@ public class TrackerController extends AbstractController {
             // group form fields are sorted separately with survey form fields
             // displayed above group form fields.
             if(surveyAttributeList.remove(attr)) {
-                formField = formFieldFactory.createRecordFormField(survey, record, attr, recAttr);
-                surveyFormFieldList.add(formField);
+                // only add moderation attributes if the user is a moderator
+                if (AttributeUtil.isVisibleByScopeAndUser(attr, loggedInUser, recAttr) ||
+                        !AttributeScope.isModerationScope(attr.getScope())) {
+                    formField = formFieldFactory.createRecordFormField(survey, record, attr, recAttr);
+                    surveyFormFieldList.add(formField);
+                }
             } else if(taxonGroupAttributeList.remove(attr)) {
                 formField = formFieldFactory.createRecordFormField(survey, record, attr, recAttr, TAXON_GROUP_ATTRIBUTE_PREFIX);
                 taxonGroupFormFieldList.add(formField);
@@ -211,7 +241,12 @@ public class TrackerController extends AbstractController {
         // the blank fields now.
         for (Attribute surveyAttr : surveyAttributeList) {
             if(!AttributeScope.LOCATION.equals(surveyAttr.getScope())) {
-                surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, surveyAttr));
+                AttributeValue attrVal = AttributeValueUtil.getAttributeValue(surveyAttr, record);
+                // only add moderation attributes if the user is a moderator
+                if (AttributeUtil.isVisibleByScopeAndUser(surveyAttr, loggedInUser, attrVal) ||
+                        !AttributeScope.isModerationScope(surveyAttr.getScope())) {
+                    surveyFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, surveyAttr));
+                }
             }
         }
         for (Attribute taxonGroupAttr : taxonGroupAttributeList) {
@@ -232,13 +267,13 @@ public class TrackerController extends AbstractController {
     	
     	RecordPropertyType[] recordProperties;
         if(Taxonomic.OPTIONALLYTAXONOMIC.equals(taxonomic) || Taxonomic.TAXONOMIC.equals(taxonomic)) {
-        	recordProperties = RecordPropertyType.values();
+            recordProperties = RecordPropertyType.values();
         } else {
-        	recordProperties = Record.NON_TAXONOMIC_RECORD_PROPERTY_NAMES;
+            recordProperties = Record.NON_TAXONOMIC_RECORD_PROPERTY_NAMES;
         }
         // Add all property form fields
         for (RecordPropertyType type : recordProperties) {
-        	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+            RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
             surveyFormFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty, species, taxonomic));
         }
         
@@ -263,7 +298,7 @@ public class TrackerController extends AbstractController {
             locations.addAll(locationDAO.getUserLocations(getRequestContext().getUser()));
         }
         
-        ModelAndView mv = new ModelAndView("tracker");
+        ModelAndView mv = new ModelAndView(TRACKER_VIEW_NAME);
         mv.addObject("censusMethod", censusMethod);
         mv.addObject("record", record);
         mv.addObject("recordId", record.getId());
@@ -274,6 +309,7 @@ public class TrackerController extends AbstractController {
         mv.addObject("censusMethodFormFieldList", censusMethodFormFieldList);
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("taxonomic", taxonomic);
+        mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
         
         if (StringUtils.hasLength(wktString)) {
             mv.addObject(MV_WKT, wktString);
@@ -287,6 +323,17 @@ public class TrackerController extends AbstractController {
         return mv;
     }
 
+    /**
+     * The POST handler for saving tracker forms
+     * 
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyPk - the survey to create  a new record for (if not editing an existing record)
+     * @param censusMethodId - the census method to create a new record for (if not editing an existing record)
+     * @return - A RedirectView
+     * @throws ParseException
+     * @throws IOException
+     */
     @SuppressWarnings("unchecked")
     @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
@@ -318,15 +365,10 @@ public class TrackerController extends AbstractController {
         RecordDeserializerResult res = results.get(0);
         
         if (!res.isAuthorizedAccess()) {
-            // shouldn't be needed since we RecordDeserializer won't have saved/updated anything yet
-            // but that is with whitebox knowledge so...
+            // Required since there will be an auto commit otherwise at the end of controller handling.
             requestRollback(request);
             
-            // return forbidden as the only way a user could get to this is by playing
-            // around in firebug or attempting to manipulate the query string to try
-            // and edit a record they are not meant to.
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return null;
+            throw new AccessDeniedException(RecordWebFormContext.MSG_CODE_EDIT_AUTHFAIL);
         }
         
         if (!res.getErrorMap().isEmpty()) {
@@ -414,6 +456,18 @@ public class TrackerController extends AbstractController {
         return mv;
     }
     
+    /**
+     * Ajax handler for returning the taxon attribute table, a dynamic set of fields
+     * for displaying taxon group attributes when the species field on the form is
+     * changed
+     * 
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyPk - the survey id to create form fields with
+     * @param taxonPk - the taxon id for the species to retrieve the taxon group from
+     * @param recordPk - the record id to create form fields with
+     * @return ModelAndView used to render the table
+     */
     @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = "/bdrs/user/ajaxTrackerTaxonAttributeTable.htm", method = RequestMethod.GET)
     public ModelAndView ajaxTaxonAttributeTable(HttpServletRequest request,
@@ -425,6 +479,9 @@ public class TrackerController extends AbstractController {
         Survey survey = surveyDAO.getSurvey(surveyPk);
         IndicatorSpecies taxon = taxaDAO.getIndicatorSpecies(taxonPk);
         Record record = recordPk > 0 ? recordDAO.getRecord(recordPk) : new Record();
+        
+        User loggedInUser = getRequestContext().getUser();
+        RecordWebFormContext context = new RecordWebFormContext(request, record, loggedInUser, survey);
         
         List<FormField> formFieldList = new ArrayList<FormField>();
         List<Attribute> taxonGroupAttributeList = new ArrayList<Attribute>();
@@ -456,6 +513,8 @@ public class TrackerController extends AbstractController {
         
         ModelAndView mv = new ModelAndView("formFieldListRenderer");
         mv.addObject("formFieldList", formFieldList);
+        // this isn't an entire web form so it doesn't need the complete web form context
+        mv.addObject(RecordWebFormContext.MODEL_EDIT, context.isEditable());
         return mv;
     }
     

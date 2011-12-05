@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.security;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.HashMap;
@@ -33,13 +34,21 @@ public class RecaptchaService {
     private RecaptchaService() throws Exception {
         recaptchas = new HashMap<String, ReCaptcha>();
         Properties p = new Properties();
-        p.load(getClass().getResourceAsStream("recaptcha.properties"));
-        if (!p.containsKey(PUBLIC_KEY_PROPERTY) || !p.containsKey(PRIVATE_KEY_PROPERTY)) {
-            throw new IllegalArgumentException("recaptcha.properties must contain " + PUBLIC_KEY_PROPERTY
-                                             + " and " + PRIVATE_KEY_PROPERTY);
+        InputStream is = null;
+        try {
+            is = getClass().getResourceAsStream("recaptcha.properties");
+            p.load(is);
+            if (!p.containsKey(PUBLIC_KEY_PROPERTY) || !p.containsKey(PRIVATE_KEY_PROPERTY)) {
+                throw new IllegalArgumentException("recaptcha.properties must contain " + PUBLIC_KEY_PROPERTY
+                                                 + " and " + PRIVATE_KEY_PROPERTY);
+            }
+            this.publicKey = p.getProperty(PUBLIC_KEY_PROPERTY);
+            this.privateKey = p.getProperty(PRIVATE_KEY_PROPERTY);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
         }
-        this.publicKey = p.getProperty(PUBLIC_KEY_PROPERTY);
-        this.privateKey = p.getProperty(PRIVATE_KEY_PROPERTY);
     }
     
     public void start(String id) {

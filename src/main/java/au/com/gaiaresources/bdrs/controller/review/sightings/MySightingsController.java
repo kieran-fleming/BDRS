@@ -60,7 +60,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
  * This controller provides a more simplistic view of the records in a survey.
  */
 @Controller
-public class MySightingsController extends AbstractController {
+public class MySightingsController extends SightingsController {
     private static final String JSON_CONTENT_TYPE = "application/json";
 
     public static final String DEFAULT_MAX_PAGES = "20";
@@ -104,14 +104,7 @@ public class MySightingsController extends AbstractController {
     public static final String QUERY_PARAM_RECORD_ID = "record_id";
     public static final String QUERY_PARAM_SORT_BY = "sort_by";
     public static final String QUERY_PARAM_SORT_ORDER = "sort_order";
-    public static final String QUERY_PARAM_DOWNLOAD_FORMAT = "download_format";
     public static final String QUERY_PARAM_PAGE_NUMBER = "page_number";
-
-    private static final String KML_FILENAME = "Records.kml";
-
-    private static final String SHAPEFILE_ZIP_ENTRY_FORMAT = "shp/Survey%d.zip";
-
-    private static final String XLS_ZIP_ENTRY_FORMAT = "xls/Survey%d.xls";
 
     private Logger log = Logger.getLogger(getClass());
     
@@ -121,8 +114,6 @@ public class MySightingsController extends AbstractController {
     private SurveyDAO surveyDAO;
     @Autowired
     private TaxaDAO taxaDAO;
-    @Autowired
-    private BulkDataService bulkDataService;
     
     /**
      * Displays a tabbed view of a selected set of records.
@@ -444,108 +435,15 @@ public class MySightingsController extends AbstractController {
                                     @RequestParam(value = QUERY_PARAM_SORT_BY, required = true) String sortBy,
                                     @RequestParam(value = QUERY_PARAM_SORT_ORDER, required = true) String sortOrderStr, 
                                     @RequestParam(value = QUERY_PARAM_DOWNLOAD_FORMAT, required = false) String[] downloadFormat) throws Exception {
+        
         User user = getRequestContext().getUser();
+        SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);       
 
-        SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);
-        List<Survey> surveyList;
-        if(surveyId == 0) {
-            surveyList = surveyDAO.getActiveSurveysForUser(user);
-        } else {
-            surveyList = new ArrayList<Survey>();
-            surveyList.add(surveyDAO.get(surveyId));
-        }
-
-        if(response.isCommitted()) {
-            return;
-        }
-        
-        response.setContentType("application/zip");
-        response.setHeader("Content-Disposition", "attachment;filename=sightings_"+System.currentTimeMillis()+".zip");
-        ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
-        try {
-        
-            if(downloadFormat != null) {
-                Session sesh = getRequestContext().getHibernate();
-                String contextPath = request.getContextPath();
-                
-                
-                for(String format : downloadFormat) {
-                    RecordDownloadFormat rdf = RecordDownloadFormat.valueOf(format);
-                    switch(rdf) {
-                        case KML:
-                        {
-                            ZipEntry kmlEntry = new ZipEntry(KML_FILENAME);
-                            zos.putNextEntry(kmlEntry);
-                            RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
-                            ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
-                            writeKML(zos, sesh, contextPath, user, sr);
-                            zos.closeEntry();
-                            break;
-                        }
-                        case SHAPEFILE:
-                        {
-                            for(Survey survey : surveyList) {
-                                ZipEntry shpEntry = new ZipEntry(String.format(SHAPEFILE_ZIP_ENTRY_FORMAT, survey.getId()));
-                                zos.putNextEntry(shpEntry);
-                                
-                                // The writer impl will flush the session and disconnect the survey.
-                                survey = (Survey)sesh.merge(survey);
-                                RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
-                                ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
-                                RecordDownloadWriter.write(bulkDataService, rdf, zos, sesh, contextPath, survey, user, sr);
-                                zos.closeEntry();
-                            }
-                            break;
-                        }
-                        case XLS:
-                        {
-                            for(Survey survey : surveyList) {
-                                ZipEntry shpEntry = new ZipEntry(String.format(XLS_ZIP_ENTRY_FORMAT, survey.getId()));
-                                zos.putNextEntry(shpEntry);
-                                
-                                // The writer impl will flush the session and disconnect the survey.
-                                survey = (Survey)sesh.merge(survey);
-                                RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
-                                ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
-                                RecordDownloadWriter.write(bulkDataService, rdf, zos, sesh, contextPath, survey, user, sr);
-                                zos.closeEntry();
-                            }
-                            break;
-                        }
-                        default: 
-                            // Do Nothing
-                            break;
-                    }
-                }
-            }
-            
-        } finally {
-            zos.flush();
-            zos.close();
-        }
+        RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
+        ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
+        this.downloadSightings(request, response, downloadFormat, sr, surveyId);
     }
     
-    private void writeKML(ZipOutputStream zos, Session sesh, String contextPath, User user, ScrollableRecords sr) throws JAXBException {
-        int recordCount = 0;
-        List<Record> rList = new ArrayList<Record>(ScrollableRecords.RECORD_BATCH_SIZE);
-        KMLWriter writer = KMLUtils.createKMLWriter(contextPath, null);
-        while (sr.hasMoreElements()) {
-            rList.add(sr.nextElement());
-            
-            // evict to ensure garbage collection
-            if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
-                
-                KMLUtils.writeRecords(writer, user, contextPath, rList);
-                rList.clear();
-                sesh.clear();
-            }
-        }
-        // Flush the remainder out of the list.
-        KMLUtils.writeRecords(writer, user, contextPath, rList);
-        sesh.clear();
-        
-        writer.write(false, zos);
-    }
 
     
     private ScrollableRecords getScrollableRecords(RecordFilter filter,
@@ -558,7 +456,7 @@ public class MySightingsController extends AbstractController {
     }
 
     private RecordFilter getRecordFilter(int surveyId, int taxonGroupId,
-            String taxonSearch, Date startDate, Date endDate, User owner,
+            String taxonSearch, Date startDate, Date endDate, User accessor,
             boolean userRecordsOnly, int limit, boolean count) {
         RecordFilter filter = null;
         if (count) {
@@ -577,10 +475,10 @@ public class MySightingsController extends AbstractController {
             filter.setSpeciesSearch(taxonSearch);
         }
         
-        if(owner != null && userRecordsOnly) {
-            filter.setUser(owner);
+        if(accessor != null && userRecordsOnly) {
+            filter.setUser(accessor);
         } else {
-            filter.setAccessor(owner);
+            filter.setAccessor(accessor);
         }
 
         if(limit > 0) {

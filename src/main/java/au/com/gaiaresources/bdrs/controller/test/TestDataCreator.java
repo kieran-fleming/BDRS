@@ -138,7 +138,9 @@ public class TestDataCreator implements TestDataConstants {
             attributeList = new ArrayList<Attribute>();
             Attribute attr;
             for(AttributeType attrType : AttributeType.values()) {
-                for(AttributeScope scope : new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY, AttributeScope.LOCATION, null }) {
+                for(AttributeScope scope : new AttributeScope[] { 
+                        AttributeScope.RECORD, AttributeScope.SURVEY, AttributeScope.LOCATION,
+                        AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, null }) {
                     
                     attr = new Attribute();
                     attr.setRequired(false);

@@ -172,7 +172,9 @@ public class TrackerControllerTest extends RecordFormTest {
         Attribute attr;
         for (AttributeType attrType : AttributeType.values()) {
             for (AttributeScope scope : new AttributeScope[] {
-                    AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+                    AttributeScope.RECORD, AttributeScope.SURVEY, 
+                    AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, 
+                    null }) {
 
                 attr = new Attribute();
                 attr.setRequired(true);
@@ -267,6 +269,9 @@ public class TrackerControllerTest extends RecordFormTest {
         locationPoly.setName("Location Poly");
         locationPoly.setUser(admin);
         locationPoly = locationDAO.save(locationPoly);
+        
+		// all tests in this class are attempting to edit a record
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, "true");
     }
     
     @Test
@@ -726,8 +731,7 @@ public class TrackerControllerTest extends RecordFormTest {
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
         params.put("date", dateFormat.format(today));
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put("time", "15:48");
         params.put("number", "29");
         params.put("notes", "This is a test record");
 
@@ -1009,7 +1013,7 @@ public class TrackerControllerTest extends RecordFormTest {
         return params;
     }
 
-  /*  @Test
+    @Test
     public void testSaveRecordInvalidEarlyDateNoEnd() throws Exception {
         testSaveRecordWithDateRange("04 Jul 2011 12:45", "05 Jul 2011 00:00", null, false);
     }
@@ -1059,8 +1063,7 @@ public class TrackerControllerTest extends RecordFormTest {
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
         params.put("date", date);
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put("time", "15:48");
         params.put("number", "29");
         params.put("notes", "This is a test record");
  
@@ -1112,7 +1115,7 @@ public class TrackerControllerTest extends RecordFormTest {
                                          locationA.getLocation().getCentroid().getY(), 
                                          locationPoly, true, false);
     }
-    */
+    
     public void testSaveRecordWithLonLatLocation(double lon, double lat, Location loc, boolean passExpected, boolean geometriesMatch) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
  
@@ -1131,12 +1134,9 @@ public class TrackerControllerTest extends RecordFormTest {
         params.put("longitude", String.valueOf(lon));
         params.put("location", String.valueOf(loc.getId()));
         params.put("date", dateFormat.format(new Date()));
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put("time", "15:48");
         params.put("number", "");
         params.put("notes", "This is a test record");
-
-        //params.putAll(createAttributes());
         
         request.setParameters(params);
         ModelAndView mv = handle(request, response);
@@ -1175,7 +1175,7 @@ public class TrackerControllerTest extends RecordFormTest {
         }
     }
     
-   /* @Test
+    @Test
     public void testRecordFormPredefinedLocationsAsSurveyOwner()
             throws Exception {
         super.testRecordLocations("/bdrs/user/tracker.htm", true, SurveyFormRendererType.DEFAULT, true);
@@ -1195,7 +1195,7 @@ public class TrackerControllerTest extends RecordFormTest {
     public void testRecordFormLocations() throws Exception {
         super.testRecordLocations("/bdrs/user/tracker.htm", false, SurveyFormRendererType.DEFAULT, false);
     }
-    */
+    
     /**
      * Helper method that sets the Darwin Core Fields to be required or not required.
      * @param req	
@@ -1221,5 +1221,4 @@ public class TrackerControllerTest extends RecordFormTest {
 			 recordProperty.setHidden(hidden);
 		}
     }
-    
 }

@@ -46,7 +46,9 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         List<Facet> facetList = facetService.getFacetList(user, EMPTY_PARAMETER_MAP);
         
         // We have the right number of facets
-        Assert.assertEquals(FacetService.FACET_BUILDER_REGISTRY.size(), facetList.size());
+        // remove one from the facet builder registry list because attributes facet
+        // only exists if a preference is set for the class
+        Assert.assertEquals(FacetService.FACET_BUILDER_REGISTRY.size()-1, facetList.size());
         
         // Facets are correctly initialised with the default values.
         for(Facet facet : facetList) {
@@ -60,7 +62,11 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         for(FacetBuilder bob : FacetService.FACET_BUILDER_REGISTRY) {
             Preference pref = bob.getDefaultPreference(defaultPortal, category);
             JSONArray userConfig = JSONArray.fromObject(pref.getValue());
-            Assert.assertEquals(userConfig.size(), facetTypes.get(bob.getFacetClass()).size());
+            // config for AttributeFacet will be null and so will facet types for 
+            // that class so skip them
+            if (userConfig != null && facetTypes.get(bob.getFacetClass()) != null) {
+                Assert.assertEquals(userConfig.size(), facetTypes.get(bob.getFacetClass()).size());
+            }
         }
     }
     

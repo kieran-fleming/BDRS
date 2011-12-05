@@ -6,6 +6,8 @@ import java.util.List;
 import org.hibernate.classic.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
@@ -149,4 +151,15 @@ public interface LocationDAO extends TransactionDAO {
     List<Location> getLocation(Survey survey, User user);
 
 
+    /**
+     * Returns survey locations (user locations are not included), from all
+     * the surveys that 'user' has access to.
+     * 
+     * @param filter contains the pagination details
+     * @param user who is requesting the locations
+     * @param surveyIdToExclude the id of the current survey we are attempting
+     * to assign locations to. since we don't want to double assign, ignore this survey id
+     * @return
+     */
+    PagedQueryResult<Location> getSurveylocations(PaginationFilter filter, User user, int surveyIdToExclude);
 }

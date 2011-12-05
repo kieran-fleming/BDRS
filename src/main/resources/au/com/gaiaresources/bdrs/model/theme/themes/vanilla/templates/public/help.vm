@@ -1,4 +1,3 @@
-<h1>Help</h1>
 <div class="pageContent">
 
 ${bdrs.getContent("public/help")}

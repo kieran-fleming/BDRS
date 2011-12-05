@@ -81,7 +81,9 @@ public class TrackerController_Wkt_Test extends AbstractControllerTest {
         surveyDAO.save(survey);
         
         login("admin", "password", new String[] { Role.ADMIN });
-        
+     
+        // all tests in this class are attempting to edit a record
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.TRUE.toString());
     }
     
     @Test

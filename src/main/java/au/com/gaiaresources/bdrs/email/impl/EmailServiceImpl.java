@@ -14,10 +14,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 
 import au.com.gaiaresources.bdrs.email.EmailService;
-import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 public class EmailServiceImpl implements EmailService {
@@ -75,7 +75,7 @@ public class EmailServiceImpl implements EmailService {
         // if it is not found, use the file system template        
         String contentKey = "email/"+templateName.substring(0, templateName.indexOf("."));
         // although the param name is 'contextPath' it's actually the application url
-        String templateString = contentService.getContent(portal, contentKey);
+        String templateString = contentService.getContent(RequestContextHolder.getContext().getHibernate(), portal, contentKey);
         
         String text = "";
         // this is probably unnecessary now as the contentDAO should handle loading 

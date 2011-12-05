@@ -92,11 +92,10 @@ public class ShapeFileWriter {
             if (r.getCensusMethod() != null) {
                 cmSet.add(r.getCensusMethod());
             }
-            try {
-                shapefileTypeSet.add(getShapefileTypefromGeometry(r.getGeometry()));    
-            } catch (IllegalStateException ise) {
-                // ignore the error
-                log.error("Error collecting shapefile types in record list", ise);
+            
+            ShapefileType recordShpType = getShapefileTypefromGeometry(r.getGeometry());
+            if (recordShpType != null) {
+                shapefileTypeSet.add(recordShpType);
             }
         }
         
@@ -272,9 +271,9 @@ public class ShapeFileWriter {
         // write records, build up write maps
         for (Record rec : recList) {
             // will throw an exception if we find a geometry we do not expect...
-            try {
-                ShapefileType recordShpType = getShapefileTypefromGeometry(rec.getGeometry());
-                // only process the record if it is one of the requested geometry types.
+            ShapefileType recordShpType = getShapefileTypefromGeometry(rec.getGeometry());
+            if (recordShpType != null) {
+             // only process the record if it is one of the requested geometry types.
                 if (shapefileTypeSet.contains(recordShpType)) {
                     Map<String, Object> featureAttr = new LinkedHashMap<String, Object>();
                     
@@ -313,9 +312,6 @@ public class ShapeFileWriter {
                     ShapefileFeature feature = new ShapefileFeature(recAdapter.getGeometry(), featureAttr);
                     writeFeatureMap.get(recordShpType).add(feature);
                 }
-            } catch (IllegalStateException ise) {
-                // ignore the record, log the error.
-                log.error("Error processing a record for export to shape file.", ise);
             }
         }
         
@@ -513,15 +509,19 @@ public class ShapeFileWriter {
     }
     
     private ShapefileType getShapefileTypefromGeometry(Geometry geom) {
-        if (geom instanceof Point) {
-            return ShapefileType.POINT;
-        } else if (geom instanceof MultiLineString) {
-            return ShapefileType.MULTI_LINE;
-        } else if (geom instanceof MultiPolygon) {
-            return ShapefileType.MULTI_POLYGON;
+        if (geom != null) {
+            if (geom instanceof Point) {
+                return ShapefileType.POINT;
+            } else if (geom instanceof MultiLineString) {
+                return ShapefileType.MULTI_LINE;
+            } else if (geom instanceof MultiPolygon) {
+                return ShapefileType.MULTI_POLYGON;
+            } else {
+                return null;
+            }    
         } else {
-            throw new IllegalStateException("Cannot handle geometry of type : " + geom.getClass().getName());
-        }   
+            return null;
+        }
     }
     
     private void writeFeatures(ShapefileDataStore ds, List<ShapefileFeature> featureList) throws IOException {

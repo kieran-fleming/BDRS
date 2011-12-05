@@ -6,6 +6,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -36,8 +37,9 @@ public class GetContentTag extends TagSupport {
         ContentService contentService = ac.getBean(ContentService.class);
         
         Portal portal = RequestContextHolder.getContext().getPortal();
-
-        String value = contentService.getContent(portal, key);
+        Session sesh = RequestContextHolder.getContext().getHibernate();
+        
+        String value = contentService.getContent(sesh, portal, key);
        
         if (value == null) {
             value = "Error: Could not fetch content for key: " + key + ". Inform the webmaster";

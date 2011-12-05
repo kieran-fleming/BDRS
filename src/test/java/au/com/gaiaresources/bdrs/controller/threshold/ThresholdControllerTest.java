@@ -1,13 +1,21 @@
 package au.com.gaiaresources.bdrs.controller.threshold;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
@@ -15,14 +23,18 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.record.Record;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
+import au.com.gaiaresources.bdrs.model.threshold.ActionEvent;
 import au.com.gaiaresources.bdrs.model.threshold.ActionType;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.model.threshold.Operator;
+import au.com.gaiaresources.bdrs.model.threshold.PathDescriptor;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
 import au.com.gaiaresources.bdrs.model.threshold.ThresholdDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
+import au.com.gaiaresources.bdrs.util.ModerationUtil;
 
 /**
  * Tests all aspects of the <code>ThresholdController</code>.
@@ -32,6 +44,11 @@ public class ThresholdControllerTest extends AbstractControllerTest {
     @Autowired
     private ThresholdDAO thresholdDAO;
 
+    @Autowired
+    private ThresholdService thresholdService;
+    
+    private final Date now = new Date();
+    
     @Test
     public void testListThreshold() throws Exception {
 
@@ -54,7 +71,8 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         @SuppressWarnings("unchecked")
         Map<Threshold, String> thresholdDisplayNameMap = (Map<Threshold, String>) mv.getModel().get("displayNameThresholdMap");
 
-        Assert.assertEquals(ThresholdService.THRESHOLD_CLASSES.length, thresholdDisplayNameMap.size());
+        // add one to account for the default threshold created on portal initialization
+        Assert.assertEquals(ThresholdService.THRESHOLD_CLASSES.length+1, thresholdDisplayNameMap.size());
     }
 
     @Test
@@ -108,12 +126,18 @@ public class ThresholdControllerTest extends AbstractControllerTest {
 
         //params.put("new_action",  "0");
         params.put("add_action_actiontype_0", "EMAIL_NOTIFICATION");
+        params.put("add_action_actionevent_0", ActionEvent.CREATE_AND_UPDATE.toString());
         params.put("add_action_value_0", "person@fakeemail.com");
 
         //params.put("new_action",  "1");
         params.put("add_action_actiontype_1", "HOLD_RECORD");
+        params.put("add_action_actionevent_1", ActionEvent.CREATE_AND_UPDATE.toString());
         params.put("add_action_value_1", "");
-
+      
+        //params.put("new_action",  "2");
+        params.put("add_action_actiontype_2", ActionType.MODERATION_EMAIL_NOTIFICATION.toString());
+        params.put("add_action_actionevent_2", ActionEvent.CREATE_AND_UPDATE.toString());
+        params.put("add_action_value_2", "");
         params.put("enabled", "true");
         
         params.put(ThresholdController.PARAM_NAME, "test thresh name");
@@ -129,10 +153,13 @@ public class ThresholdControllerTest extends AbstractControllerTest {
         Assert.assertEquals("/bdrs/admin/threshold/listing.htm", redirect.getUrl());
 
         List<Threshold> thresholdList = thresholdDAO.getEnabledThresholdByClassName(params.get("class_name"));
-        Assert.assertEquals(1, thresholdList.size());
+        // add one for the default moderation threshold created on portal init
+        Assert.assertEquals(2, thresholdList.size());
 
         Threshold threshold = thresholdList.get(0);
-        
+        if (threshold.getName().equals(ModerationUtil.MODERATION_THRESHOLD_NAME)) {
+            threshold = thresholdList.get(1);
+        }
         Assert.assertEquals(params.get(ThresholdController.PARAM_NAME), threshold.getName());
         Assert.assertEquals(params.get(ThresholdController.PARAM_DESCRIPTION), threshold.getDescription());
         
@@ -147,21 +174,21 @@ public class ThresholdControllerTest extends AbstractControllerTest {
                 Assert.assertEquals(Operator.EQUALS, condition.getKeyOperator());
                 Assert.assertEquals(params.get("add_key_value_0"), condition.getKey());
                 Assert.assertEquals(Operator.CONTAINS, condition.getValueOperator());
-                Assert.assertEquals(params.get("add_value_value_0"), condition.getValue());
+                Assert.assertEquals(params.get("add_value_value_0"), condition.stringArrayValue()[0]);
 
             } else if (params.get("add_property_path_1").equals(condition.getPropertyPath())) {
 
                 Assert.assertEquals(null, condition.getKeyOperator());
                 Assert.assertEquals(null, condition.getKey());
                 Assert.assertEquals(Operator.EQUALS, condition.getValueOperator());
-                Assert.assertEquals(params.get("add_value_value_1"), condition.getValue());
+                Assert.assertEquals(params.get("add_value_value_1"), condition.stringArrayValue()[0]);
 
             } else if (params.get("add_property_path_2").equals(condition.getPropertyPath())) {
 
                 Assert.assertEquals(null, condition.getKeyOperator());
                 Assert.assertEquals(null, condition.getKey());
                 Assert.assertEquals(Operator.EQUALS, condition.getValueOperator());
-                Assert.assertEquals(params.get("add_value_value_2"), condition.getValue());
+                Assert.assertEquals(params.get("add_value_value_2"), condition.stringArrayValue()[0]);
 
             } else {
                 Assert.assertFalse(true);
@@ -178,9 +205,222 @@ public class ThresholdControllerTest extends AbstractControllerTest {
 
                 Assert.assertEquals(params.get("add_action_value_1"), action.getValue());
 
+            } else if (ActionType.MODERATION_EMAIL_NOTIFICATION.equals(action.getActionType())) {
+
+                Assert.assertEquals(params.get("add_action_value_2"), action.getValue());
+
             } else {
                 Assert.assertFalse(true);
             }
+        }
+    }
+
+    /*
+     * This test is not yet complete.
+     */
+    @Test
+    public void testAddAllThresholdConditionsSubmit() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+
+        Map<String, String> params = new HashMap<String, String>();
+        Map<Class<?>, Threshold> expectedThresholdMap = new HashMap<Class<?>, Threshold>(ThresholdService.THRESHOLD_CLASSES.length);
+        for (Class<?> klass : ThresholdService.THRESHOLD_CLASSES) {
+            List<Threshold> existingThresholdList = thresholdDAO.getEnabledThresholdByClassName(klass.getCanonicalName());
+            // delete any existing thresholds
+            for (Threshold threshold : existingThresholdList) {
+                thresholdDAO.delete(threshold);
+            }
+            
+            Threshold t = new Threshold();
+            t.setClassName(klass.getCanonicalName());
+            t.setEnabled(true);
+            t.setName("test thresh name");
+            t.setDescription("test threshold description");
+            params.put(ThresholdController.PARAM_NAME, "test thresh name");
+            params.put(ThresholdController.PARAM_DESCRIPTION, "test threshold description");
+            
+            params.put("class_name", klass.getCanonicalName());
+            int conditionCount = 0;
+            // add a condition for every property of the threshold class
+            List<Condition> conditions = new ArrayList<Condition>();
+            conditionCount = addPropertyConditions(params, conditions, klass, null, conditionCount);
+        
+            List<Action> actions = new ArrayList<Action>();
+            int index = 0;
+            for (ActionEvent actionEvent : ActionEvent.values()) {
+                for (ActionType actionType : ActionType.values()) {
+                    params.put("add_action", String.valueOf(index));
+                    params.put("add_action_actiontype_"+index, actionType.toString());
+                    params.put("add_action_actionevent_"+index, actionEvent.toString());
+                    params.put("add_action_value_"+index, "person@fakeemail.com");
+                    
+                    Action action = new Action();
+                    action.setActionEvent(actionEvent);
+                    action.setActionType(actionType);
+                    action.setValue("person@fakeemail.com");
+                    actions.add(action);
+                    index++;
+                }
+            }
+            t.setConditions(conditions);
+            t.setActions(actions);
+            expectedThresholdMap.put(klass, t);
+
+            String[] conds_ints = new String[conditions.size()];
+            for (int i = 0; i < conditions.size(); i++) {
+                conds_ints[i] = String.valueOf(i);
+            }
+            request.setParameter("new_condition", conds_ints);
+            String[] acts_ints = new String[actions.size()];
+            for (int i = 0; i < actions.size(); i++) {
+                acts_ints[i] = String.valueOf(i);
+            }
+            request.addParameter("new_action", acts_ints);
+            
+            params.put("enabled", "true");
+            request.setMethod("POST");
+            request.setRequestURI("/bdrs/admin/threshold/edit.htm");
+
+            request.setParameters(params);
+            ModelAndView mv = handle(request, response);
+            Assert.assertTrue(mv.getView() instanceof RedirectView);
+            RedirectView redirect = (RedirectView) mv.getView();
+            Assert.assertEquals("/bdrs/admin/threshold/listing.htm", redirect.getUrl());
+            params.clear();
+            request.removeAllParameters();
+        }
+        
+        for (Entry<Class<?>, Threshold> entry : expectedThresholdMap.entrySet()) {
+            List<Threshold> actualThresholdList = thresholdDAO.getEnabledThresholdByClassName(entry.getKey().getCanonicalName());
+            // add one for the default moderation threshold created on portal init
+            Assert.assertEquals("Incorrect number of thresholds created for class "+entry.getKey().getCanonicalName(), 
+                                1, actualThresholdList.size());
+
+            Threshold actualThreshold = actualThresholdList.get(0);
+            Threshold expectedThreshold = entry.getValue();
+            if (actualThreshold.getName().equals(ModerationUtil.MODERATION_THRESHOLD_NAME)) {
+                actualThreshold = actualThresholdList.get(1);
+            }
+            Assert.assertEquals(expectedThreshold.getName(), actualThreshold.getName());
+            Assert.assertEquals(expectedThreshold.getClassName(), actualThreshold.getClassName());
+            Assert.assertEquals(expectedThreshold.getDescription(), actualThreshold.getDescription());
+            Assert.assertEquals(expectedThreshold.getConditions().size(), actualThreshold.getConditions().size());
+            Assert.assertEquals(expectedThreshold.getActions().size(), actualThreshold.getActions().size());
+            
+            // Test Conditions
+            for (int i = 0; i < actualThreshold.getConditions().size(); i++) {
+                Condition actualCondition = actualThreshold.getConditions().get(i);
+                Condition expectedCondition = expectedThreshold.getConditions().get(i);
+                Assert.assertEquals(expectedCondition, actualCondition);
+                
+                Object trueValue = createValue(actualThreshold.getClassName(), actualCondition, true);
+                
+                // test applying the condition
+                boolean result = actualCondition.applyCondition(getRequestContext().getHibernate(), trueValue, thresholdService);
+                Assert.assertTrue("Expected true but was "+result, result);
+
+                Object falseValue = createValue(actualThreshold.getClassName(), actualCondition, false);
+                result = actualCondition.applyCondition(getRequestContext().getHibernate(), falseValue, thresholdService);
+                Assert.assertFalse(result);
+            }
+
+            // Test Actions
+            for (int i = 0; i < actualThreshold.getActions().size(); i++) {
+                Action actualAction = actualThreshold.getActions().get(i);
+                Action expectedAction = expectedThreshold.getActions().get(i);
+                Assert.assertEquals(expectedAction.getActionEvent(), actualAction.getActionEvent());
+                Assert.assertEquals(expectedAction.getActionType(), actualAction.getActionType());
+                Assert.assertEquals(expectedAction.getValue(), actualAction.getValue());
+                // applying actions is tested in ThresholdServiceTest
+            }
+        }
+    }
+    
+    private Object createValue(String className, Condition actualCondition, boolean trueValue) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Class klass = Class.forName(className);
+        Object object = klass.newInstance();
+        
+        String propertyPath = actualCondition.getPropertyPath();
+        Class target = klass;
+        for (String propName : propertyPath.split("\\.")) {
+            PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(target, propName);
+            Method method = pd.getWriteMethod();
+            Object value = getValueForType(target, trueValue);
+            method.invoke(klass, value);
+            target = value.getClass();
+        }
+        
+        return object;
+    }
+
+    private int addPropertyConditions(Map<String, String> params, List<Condition> conditions, 
+            Class<?> klass, String propertyPath, int conditionCount) throws InstantiationException, IllegalAccessException {
+        for (PropertyDescriptor property : BeanUtils.getPropertyDescriptors(klass)) {
+            Condition cond = new Condition();
+            if (ThresholdService.SIMPLE_TYPE_TO_OPERATOR_MAP.containsKey(property)) {
+                params.put("add_condition", String.valueOf(conditionCount));
+                params.put("add_property_path_"+conditionCount, property.getName());
+                params.put("add_value_operator_"+conditionCount, "EQUALS");
+                params.put("add_value_value_"+conditionCount, String.valueOf(getValueForType(property.getClass(), true)));
+                cond = buildCondition(property, propertyPath);
+                conditions.add(cond);
+                conditionCount++;
+            } else if (Iterable.class.isAssignableFrom(property.getClass())) {
+                conditionCount = addPropertyConditions(params, conditions, 
+                                 cond.extractIterableType(property.getClass()), 
+                                 (propertyPath != null ? propertyPath + "." : "") + property.getClass().getSimpleName(), 
+                                 conditionCount);
+            }
+        }
+        
+        return conditionCount;
+    }
+
+    private Condition buildCondition(PropertyDescriptor property, String propertyPath) throws InstantiationException, IllegalAccessException {
+        Condition cond = new Condition();
+        cond.setPropertyPath((propertyPath != null ? propertyPath + "." : "") + property.getName());
+        if (property.getClass().equals(AttributeScope.class)) {
+            cond.setValueOperator(Operator.CONTAINS);
+        } else {
+            cond.setValueOperator(Operator.EQUALS);
+        }
+        Class klass = property.getClass();
+        Object value = getValueForType(property.getClass(), true);
+        if (klass.equals(String.class)) {
+            cond.setValue((String) value);
+        } else if (klass.equals(Integer.class)) {
+            cond.setValue((Integer) value);
+        } else if (klass.equals(Date.class)) {
+            cond.setValue((Date) value);
+        } else if (klass.equals(Boolean.class)) {
+            cond.setValue((Boolean) value);
+        } else if (klass.equals(Long.class)) {
+            cond.setValue((Long) value);
+        } else if (klass.equals(AttributeScope.class)) {
+            cond.setValue((String[]) value);
+        } else {
+            Assert.assertTrue(false);
+            return null;
+        }
+        return cond;
+    }
+
+    private Object getValueForType(Class klass, boolean trueValue) throws InstantiationException, IllegalAccessException {
+        if (klass.equals(String.class)) {
+            return trueValue ? "True Test" : "False Test";
+        } else if (klass.equals(Integer.class)) {
+            return trueValue ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        } else if (klass.equals(Date.class)) {
+            return trueValue ? now : new Date();
+        } else if (klass.equals(Boolean.class)) {
+            return trueValue;
+        } else if (klass.equals(Long.class)) {
+            return trueValue ? Long.MIN_VALUE : Long.MAX_VALUE;
+        } else if (klass.equals(AttributeScope.class)) {
+            return trueValue ? AttributeScope.LOCATION : AttributeScope.RECORD;
+        } else {
+            // create a new instance of the class
+            return klass.newInstance();
         }
     }
 
@@ -264,10 +504,12 @@ public class ThresholdControllerTest extends AbstractControllerTest {
 
         //params.put("action_pk", actionA.getId().toString());
         params.put(String.format("action_actiontype_%d", actionA.getId()), "EMAIL_NOTIFICATION");
+        params.put(String.format("action_actionevent_%d", actionA.getId()), ActionEvent.CREATE_AND_UPDATE.toString());
         params.put(String.format("action_value_%d", actionA.getId()), "person@fakeemail.com");
 
         //params.put("action_pk", actionB.getId().toString());
         params.put(String.format("action_actiontype_%d", actionB.getId()), "HOLD_RECORD");
+        params.put(String.format("action_actionevent_%d", actionB.getId()), ActionEvent.CREATE_AND_UPDATE.toString());
         params.put(String.format("action_value_%d", actionB.getId()), "");
 
         params.put("enabled", "false");
@@ -308,7 +550,7 @@ public class ThresholdControllerTest extends AbstractControllerTest {
 
                 Assert.assertEquals(params.get(String.format("property_path_%d", conditionB.getId())), testCondition.getPropertyPath());
                 Assert.assertEquals(Operator.CONTAINS, testCondition.getValueOperator());
-                Assert.assertEquals(params.get(String.format("value_value_%d", conditionB.getId())), testCondition.stringValue());
+                Assert.assertEquals(params.get(String.format("value_value_%d", conditionB.getId())), testCondition.stringArrayValue()[0]);
 
             } else if (conditionC.getId().equals(testCondition.getId())) {
 
@@ -316,7 +558,7 @@ public class ThresholdControllerTest extends AbstractControllerTest {
                 Assert.assertEquals(Operator.CONTAINS, testCondition.getKeyOperator());
                 Assert.assertEquals(params.get(String.format("key_value_%d", conditionC.getId())), testCondition.stringKey());
                 Assert.assertEquals(Operator.CONTAINS, testCondition.getValueOperator());
-                Assert.assertEquals(params.get(String.format("value_value_%d", conditionC.getId())), testCondition.stringValue());
+                Assert.assertEquals(params.get(String.format("value_value_%d", conditionC.getId())), testCondition.stringArrayValue()[0]);
 
             } else {
                 Assert.assertTrue(false);

@@ -184,7 +184,9 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         Attribute attr;
         for (AttributeType attrType : AttributeType.values()) {
             for (AttributeScope scope : new AttributeScope[] {
-                    AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+                    AttributeScope.RECORD, AttributeScope.SURVEY,
+                    AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION,
+                    null }) {
 
                 attr = new Attribute();
                 attr.setRequired(true);

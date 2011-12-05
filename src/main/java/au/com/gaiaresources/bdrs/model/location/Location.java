@@ -108,8 +108,19 @@ public class Location extends PortalPersistentImpl implements Attributable<Attri
                inverseJoinColumns = { @JoinColumn(name = "REGION_ID") })
     @ForeignKey(name = "LOCATION_REGION_LOC_FK",
                 inverseName = "LOCATION_REGION_REGION_FK")
-    @Fetch(FetchMode.SUBSELECT)
+    @Fetch(FetchMode.JOIN)
     public Set<Region> getRegions() {
+        // Changing to FetchMode.JOIN as FetchMode.SUBSELECT breaks when:
+        // survey A has a record in it, no survey locations or user locations used.
+        // survey B has a record in it that uses a user location. Survey B also
+        // has survey locations.
+        // Attempting to load the table view in the advanced review screen and selecting
+        // viewing records for survey A. It causes a 500 error with the following exception: 
+        // org.hibernate.exception.DataException: could not load collection by subselect: [au.com.gaiaresources.bdrs.model.location.Location.regions#<22, 28>]
+        // 
+        // where 22 and 28 are id's of locations used in survey B.
+        // 
+        // This may not be the minimum test case.
         return regions;
     }
     

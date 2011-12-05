@@ -121,4 +121,11 @@
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>
     </definition>
+	
+	<definition name="recordFormFooter" template="/WEB-INF/jsp/bdrs/user/record/render/recordFormFooter.jsp">
+	</definition>
+	
+	<definition name="unlockRecordWidget" template="/WEB-INF/jsp/bdrs/user/record/render/unlockRecordWidget.jsp">
+    </definition>
+	
 </tiles-definitions>

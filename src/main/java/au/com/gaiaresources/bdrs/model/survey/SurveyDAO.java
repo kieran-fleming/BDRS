@@ -3,7 +3,7 @@ package au.com.gaiaresources.bdrs.model.survey;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
 import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
@@ -11,7 +11,6 @@ import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
-import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 
 public interface SurveyDAO extends TransactionDAO {
@@ -217,16 +216,6 @@ public interface SurveyDAO extends TransactionDAO {
      * @return the survey with the specified primary key.
      */
     Survey getSurvey(Session sesh, int pk);
-    
-    /**
-     * Overriding this because I may break existing code by changing the
-     * interface...
-     * 
-     * @param sesh
-     * @param pk
-     * @return
-     */
-    Survey getSurvey(org.hibernate.Session sesh, int pk);
 
     /**
      * Returns a set of species that have distributions which overlap the survey's locations

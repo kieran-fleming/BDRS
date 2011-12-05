@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.service.threshold.operatorhandler;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -38,31 +39,37 @@ public class EqualsHandler implements SimpleOperatorHandler {
             Condition condition) throws IllegalArgumentException,
             IllegalAccessException, InvocationTargetException {
 
-        Object actualValue = condition.getPropertyForPath(entity);
-        Class<?> returnType = actualValue.getClass();
         
-        Object val;
-        if(String.class.equals(returnType)) {
-            val = condition.stringValue();
-        } else if(Integer.class.equals(returnType)) {
-            val = condition.intValue();
-        } else if(Long.class.equals(returnType)) {
-            val = condition.longValue();
-        } else if(Double.class.equals(returnType)) {
-            val = condition.doubleValue();
-        } else if(Float.class.equals(returnType)) {
-            val = condition.floatValue();
-        } else if(Boolean.class.equals(returnType)) {
-            val = condition.booleanValue();
-        } else if(Date.class.equals(returnType)) {
-            val = condition.dateValue();
-        } else {
-            val = condition.getValue();
+        List<Object> properties = condition.getPropertiesForPath(entity);
+        for (Object actualValue : properties) {
+            Class<?> returnType = actualValue.getClass();
+            
+            Object val;
+            if(String.class.equals(returnType)) {
+                val = condition.stringValue();
+            } else if(Integer.class.equals(returnType)) {
+                val = condition.intValue();
+            } else if(Long.class.equals(returnType)) {
+                val = condition.longValue();
+            } else if(Double.class.equals(returnType)) {
+                val = condition.doubleValue();
+            } else if(Float.class.equals(returnType)) {
+                val = condition.floatValue();
+            } else if(Boolean.class.equals(returnType)) {
+                val = condition.booleanValue();
+            } else if(Date.class.equals(returnType)) {
+                val = condition.dateValue();
+            } else {
+                val = condition.getValue();
+            }
+            
+            if (match(actualValue, val)) {
+                return true;
+            }
+
         }
         
-        boolean returnValue = match(actualValue, val);
-
-        return returnValue;
+        return false;
     }
 
     /**

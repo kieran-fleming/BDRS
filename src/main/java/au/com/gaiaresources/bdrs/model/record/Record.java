@@ -29,7 +29,6 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Type;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
-import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.attribute.Attributable;
@@ -42,7 +41,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.util.DateFormatter;
+import au.com.gaiaresources.bdrs.security.Role;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -71,7 +70,7 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
     private Location location;
     private Geometry geometry;
     private Double AccuracyInMeters;
-    private Boolean held;
+    private Boolean held = false;
     private RecordVisibility recordVisibility = RecordVisibility.OWNER_ONLY;
 
     private Date when;
@@ -259,23 +258,21 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
     }
     
     @CompactAttribute
-    @Column(name = "HELD")
+    @Column(name = "HELD", nullable = false)
     /**
      * Return whether the record is held or not.
      */
     public Boolean isHeld() {
-        // if held is null, this value is false
-        return held != null ? held : false;
+        return held;
     }
 
-
-    public void setHeld(Boolean held) {
+    public void setHeld(boolean held) {
         this.held = held;
     }
     @CompactAttribute
     @Transient
     public Boolean getHeld(){
-        return held;
+        return isHeld();
     }
 
     @CompactAttribute
@@ -628,11 +625,16 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
      * Whether or not the user attempting to write to this record actually has
      * write access
      * 
-     * @param writer
-     * @return
+     * @param writer - the user attempting to write to this record
+     * @return true if writing allowed, false otherwise
      */
     @Transient
     public boolean canWrite(User writer) {
+        
+        if (writer == null) {
+            // we can't write a record with no writer!
+            return false;
+        }
         if (writer.getId() == null) {
             log.warn("Attempting to write to record with a non null user with a null id. This _probably_ should not happen");
             // user does not exist in database - cannot write.
@@ -650,7 +652,48 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
             return false;
         }
         boolean isOwner = writer.getId().intValue() == this.getUser().getId().intValue();
-        return isOwner || writer.isAdmin();
+        return isOwner || Role.isRoleHigherThanOrEqualTo(Role.getHighestRole(writer.getRoles()), Role.SUPERVISOR);
+    }
+    
+    /**
+     * Contains the logic for if a user can view (not edit) this record
+     * 
+     * @param viewer - the user attempting to view this record. can be null (i.e. not logged in)
+     * @return true if viewing allowed, false otherwise
+     */
+    @Transient
+    public boolean canView(User viewer) {
+
+        if (viewer != null && viewer.getId() == null) {
+            throw new IllegalStateException("viewer does not have an id - the user object is not persisted");
+        }
+        if (this.getId() == null) {
+            // we probably should not be attempting to view a non persisted record. throw an exception
+            throw new IllegalStateException("Cannot view non persisted record");
+        }
+        // at this point we know the record already exists in the database (non null record id).
+        if (this.getUser() == null || this.getUser().getId() == null) {
+            throw new IllegalStateException("The owner of the record is invalid");
+        }
+        
+        boolean hasPrivilege = viewer != null ? Role.isRoleHigherThanOrEqualTo(Role.getHighestRole(viewer.getRoles()), Role.SUPERVISOR) : false;
+        boolean isOwner = viewer != null ? viewer.getId().equals(this.getUser().getId()) : false;
+        
+        switch (this.recordVisibility) {
+        // only the owner or admin can view an OWNER_ONLY record
+        case OWNER_ONLY:
+        // CONTROLLED records are a bit strange. alot of the information is hidden so rendering
+        // forms could be a little tricky. For now handle controlled records the same as
+        // owner only records
+        case CONTROLLED:
+            return isOwner || hasPrivilege;
+        // anyone can view a public record
+        case PUBLIC:
+            return true;
+            
+            default:
+                throw new IllegalStateException("record visibility type not handled : " + this.recordVisibility);
+        }
     }
 
     @Override

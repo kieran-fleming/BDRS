@@ -1,11 +1,8 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 import javax.persistence.AttributeOverride;
@@ -17,19 +14,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
-import org.springframework.util.StringUtils;
 
 import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
-import au.com.gaiaresources.bdrs.file.FileService;
-import au.com.gaiaresources.bdrs.util.CSVUtils;
-import au.com.gaiaresources.bdrs.util.DateFormatter;
 
 
 /**
@@ -43,14 +35,9 @@ import au.com.gaiaresources.bdrs.util.DateFormatter;
 @Filter(name=PortalPersistentImpl.PORTAL_FILTER_NAME, condition=":portalId = PORTAL_ID")
 @Table(name = "ATTRIBUTE_VALUE")
 @AttributeOverride(name = "id", column = @Column(name = "ATTRIBUTE_VALUE_ID"))
-public class AttributeValue extends PortalPersistentImpl implements TypedAttributeValue {
+public class AttributeValue extends AbstractTypedAttributeValue implements TypedAttributeValue {
 	
     private Logger log = Logger.getLogger(getClass());
-	
-    private Attribute attribute;
-    private BigDecimal numericValue;
-    private String stringValue = NOT_RECORDED;
-    private Date dateValue;
     
     public static final String NOT_RECORDED = "Not recorded";
 
@@ -83,53 +70,6 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
                 date = dateFormat.parse(stringValue);
             }
             setDateValue(date);
-        }
-    }
-
-    /*
-     * Does this attribute value have a valid value to return to the user?
-     */
-    @Transient 
-    public boolean isPopulated() {
-        if (attribute == null) {
-            throw new IllegalStateException("Cannot tell if this AttributeValue is populated without");
-        }
-
-        // Nothing to be done for String, Text, String with Valid Values,
-        // Image or File
-        AttributeType type = attribute.getType();
-        
-        switch (type) {
-        case INTEGER:
-        case INTEGER_WITH_RANGE:
-        case DECIMAL:
-            return numericValue != null;
-        
-        case DATE:
-            return dateValue != null;
-            
-        case STRING:
-        case STRING_AUTOCOMPLETE:
-        case TEXT:
-        case BARCODE:
-        case REGEX:
-        case TIME:
-        case HTML:
-        case HTML_COMMENT:
-        case HTML_HORIZONTAL_RULE:  
-        case STRING_WITH_VALID_VALUES:
-        case SINGLE_CHECKBOX:
-        case MULTI_CHECKBOX:
-        case MULTI_SELECT:
-            return StringUtils.hasLength(stringValue);
-            
-        case IMAGE:
-        case FILE:
-            // don't want to return an empty file name or a 'not recorded' file name
-            return StringUtils.hasLength(stringValue) && !NOT_RECORDED.equals(stringValue);
-            
-            default:
-                throw new IllegalStateException("Unhandled type : " + type);
         }
     }
 
@@ -200,103 +140,5 @@ public class AttributeValue extends PortalPersistentImpl implements TypedAttribu
         } else {
             this.dateValue = null;
         }
-    }
-
-    @Transient
-    public String getFileURL() {
-        if(getStringValue() != null) {
-            try {
-                return String.format(FileService.FILE_URL_TMPL, URLEncoder.encode(getClass()
-                        .getCanonicalName(), "UTF-8"), getId(), URLEncoder.encode(
-                        getStringValue(), "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                return String.format(FileService.FILE_URL_TMPL, StringEscapeUtils
-                        .escapeHtml(getClass().getCanonicalName()), getId(),
-                        StringEscapeUtils.escapeHtml(getStringValue()));
-            }
-        } else {
-            return "";
-        }
-    }
-    
-    @Override
-    public String toString() {
-        Attribute a = getAttribute();
-        switch (a.getType()) {
-        case INTEGER:
-        case INTEGER_WITH_RANGE:
-        case DECIMAL:
-            return this.getNumericValue() != null ? this.getNumericValue().toString() : "NaN";          
-
-        case DATE:
-            return this.getDateValue() != null ? DateFormatter.format(this.getDateValue(), DateFormatter.DAY_MONTH_YEAR) : "";
-        case TIME:
-            return this.getDateValue() != null ? DateFormatter.format(this.getDateValue(), DateFormatter.TIME) : "";
-
-        case BARCODE:
-        case REGEX:
-        case STRING:
-        case STRING_AUTOCOMPLETE:
-        case TEXT:
-        
-        case HTML:
-        case HTML_COMMENT:
-        case HTML_HORIZONTAL_RULE:
-
-        case STRING_WITH_VALID_VALUES:
-        
-        case SINGLE_CHECKBOX:
-        case MULTI_CHECKBOX:
-        case MULTI_SELECT:
-
-        case IMAGE:
-        case FILE:
-            return this.getStringValue();
-
-            default:
-                throw new IllegalStateException("attribute type not handled : " + a.getTypeCode());
-        }
-    }
-
-    @Transient
-    public String[] getMultiSelectValue() {
-        return CSVUtils.fromCSVString(this.getStringValue());
-    }
-    
-    @Transient
-    public String[] getMultiCheckboxValue() {
-    	return getMultiSelectValue();
-    }
-    
-    @Transient
-    public boolean hasMultiCheckboxValue(String val) {
-    	return hasMultiSelectValue(val);
-    }
-    
-    @Transient
-    public void setMultiCheckboxValue(String[] values) {
-        setStringValue(CSVUtils.toCSVString(values, true));
-    }
-    
-    @Transient
-    public boolean hasMultiSelectValue(String val) {
-    	String[] values = this.getMultiSelectValue();
-    	Arrays.sort(values);
-    	return Arrays.binarySearch(values, val) >= 0;
-    }
-    
-    @Transient
-    public void setMultiSelectValue(String[] values) {
-        this.setMultiCheckboxValue(values);
-    }
-
-    @Transient
-    public Boolean getBooleanValue() {
-        return Boolean.valueOf(getStringValue());
-    }
-
-    @Transient
-    public void setBooleanValue(String value) {
-        this.setStringValue(Boolean.valueOf(value).toString());
     }
 }

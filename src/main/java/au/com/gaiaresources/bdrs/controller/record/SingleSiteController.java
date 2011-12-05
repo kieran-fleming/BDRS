@@ -52,6 +52,7 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeUtil;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
@@ -118,6 +119,11 @@ public abstract class SingleSiteController extends AbstractController {
      * The form fields used to create the header of the sightings table
      */
     public static final String MODEL_SIGHTING_ROW_LIST = "sightingRowFormFieldList";
+    
+    /**
+     * The record object used to populate the form fields.
+     */
+    public static final String MODEL_RECORD = "record";
 
     @Autowired
     private RecordDAO recordDAO;
@@ -268,7 +274,11 @@ public abstract class SingleSiteController extends AbstractController {
             // This will also set an existing record's visibility back to the survey default.
             record.setRecordVisibility(survey.getDefaultRecordVisibility());
 
-            record.setUser(user);
+            // Preserve the original owner of the record if this is a record edit.
+            if (record.getUser() == null) {
+                record.setUser(user);
+            }
+            
             record.setSurvey(survey);
             record.setAccuracyInMeters(accuracy);
             if (notes != null) {
@@ -295,7 +305,6 @@ public abstract class SingleSiteController extends AbstractController {
             }
 
             // Constants
-            record.setHeld(false);
             record.setFirstAppearance(false);
             record.setLastAppearance(false);
 
@@ -325,18 +334,21 @@ public abstract class SingleSiteController extends AbstractController {
             String prefix;
             for (Attribute attribute : survey.getAttributes()) {
                 if (!AttributeScope.LOCATION.equals(attribute.getScope())) {
-                    prefix = AttributeScope.SURVEY.equals(attribute.getScope()) ? surveyPrefix
+                    if (AttributeUtil.isModifiableByScopeAndUser(attribute, user)) {
+                        prefix = AttributeScope.SURVEY.equals(attribute.getScope()) || 
+                             AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) ? surveyPrefix
                             : recordPrefix;
-                    recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
-                    if (attributeParser.isAddOrUpdateAttribute()) {
-                        recAttr = attributeDAO.save(recAttr);
-                        if (attributeParser.getAttrFile() != null) {
-                            fileService.createFile(recAttr, attributeParser.getAttrFile());
+                        recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
+                        if (attributeParser.isAddOrUpdateAttribute()) {
+                            recAttr = attributeDAO.save(recAttr);
+                            if (attributeParser.getAttrFile() != null) {
+                                fileService.createFile(recAttr, attributeParser.getAttrFile());
+                            }
+                            record.getAttributes().add(recAttr);
+                        } else {
+                            record.getAttributes().remove(recAttr);
+                            attributeDAO.delete(recAttr);
                         }
-                        record.getAttributes().add(recAttr);
-                    } else {
-                        record.getAttributes().remove(recAttr);
-                        attributeDAO.delete(recAttr);
                     }
                 }
             }
@@ -395,6 +407,9 @@ public abstract class SingleSiteController extends AbstractController {
         mv.addObject("record", record);
         mv.addObject("survey", survey);
         mv.addObject("formFieldList", formFieldList);
+        // by definition editing must be enabled for items to be added to the
+	// sightings table.
+        mv.addObject(RecordWebFormContext.MODEL_EDIT, true);
         return mv;
     }
 
@@ -416,8 +431,15 @@ public abstract class SingleSiteController extends AbstractController {
         CensusMethod censusMethod = null;
         if (request.getParameter(PARAM_RECORD_ID) != null
                 && !request.getParameter(PARAM_RECORD_ID).isEmpty()) {
-            record = recordDAO.getRecord(Integer.parseInt(request.getParameter(PARAM_RECORD_ID)));
-            censusMethod = record.getCensusMethod();
+            try {
+                record = recordDAO.getRecord(Integer.parseInt(request.getParameter(PARAM_RECORD_ID)));
+                censusMethod = record.getCensusMethod();
+            } catch (NumberFormatException nfe) {
+                record = new Record();
+                // Set record visibility to survey default. Setting via web form not supported.
+                // Survey's default record visibility can be set in the 'admin -> projects' interface
+                record.setRecordVisibility(survey.getDefaultRecordVisibility());
+            }
         } else {
             record = new Record();
             censusMethod = cmDAO.get(censusMethodId);
@@ -427,6 +449,8 @@ public abstract class SingleSiteController extends AbstractController {
         }
         
         User accessor = getRequestContext().getUser();
+        
+        RecordWebFormContext context = new RecordWebFormContext(request, record, accessor, survey);
         
         // get the records for this form instance (if any)
         List<Record> recordsForFormInstance = getRecordsForFormInstance(record, accessor);
@@ -442,9 +466,15 @@ public abstract class SingleSiteController extends AbstractController {
         for (Attribute attribute : survey.getAttributes()) {
             if (!attribute.isTag()
                     && !AttributeScope.LOCATION.equals(attribute.getScope())) {
-                if (AttributeScope.SURVEY.equals(attribute.getScope())) {
-                    formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, getAttributeValue(attribute, record)));
-                } else {
+                AttributeValue attrVal = AttributeValueUtil.getAttributeValue(attribute, record);
+                if (AttributeScope.SURVEY.equals(attribute.getScope()) || 
+                        (AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) && 
+                                (accessor.isModerator() || (attrVal != null && attrVal.isPopulated())))) {
+                    // only add moderation attributes if the accessor is a moderator or the value is populated
+                    formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, attrVal));
+                } else if (AttributeScope.RECORD.equals(attribute.getScope()) || 
+                        (AttributeScope.RECORD_MODERATION.equals(attribute.getScope()) && 
+                                (accessor.isModerator() || (attrVal != null && attrVal.isPopulated())))) {
                     recordScopedAttributeList.add(attribute);
                     sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
                 }
@@ -461,7 +491,8 @@ public abstract class SingleSiteController extends AbstractController {
                     metadataDAO);
             
             if (!recordProperty.isHidden()) {
-                if (recordProperty.getScope().equals(AttributeScope.SURVEY)) {
+                if (recordProperty.getScope().equals(AttributeScope.SURVEY) || 
+                        AttributeScope.SURVEY_MODERATION.equals(recordProperty.getScope())) {
                     formFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty));
                 } else {
                     recordScopedRecordPropertyList.add(recordProperty);
@@ -536,12 +567,16 @@ public abstract class SingleSiteController extends AbstractController {
         // note: record scoped attributes only!
         mv.addObject(MODEL_RECORD_ROW_LIST, recFormFieldCollectionList);
         
+        mv.addObject(MODEL_RECORD, record);
+        
         mv.addObject("survey", survey);
         mv.addObject("locations", locations);
         mv.addObject("preview", request.getParameter("preview") != null);
 
         mv.addObject("hideAddBtn", hideAddBtn);
         mv.addObject("censusMethod", censusMethod);
+        mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
+        
         return mv;
     }
     
@@ -596,8 +631,9 @@ public abstract class SingleSiteController extends AbstractController {
                 // we are only concerned about survey scoped attributes.
                 // not sure if we need to consider location scoped attributes or not.
                 // record attributes should definitely NOT be considered here.
-                if (av.getAttribute().getScope() == AttributeScope.SURVEY) {
-                    AttributeValue avToTest = getAttributeValue(av.getAttribute(), recordUnderTest);
+                if (AttributeScope.SURVEY.equals(av.getAttribute().getScope())  || 
+                        AttributeScope.SURVEY_MODERATION.equals(av.getAttribute().getScope())) {
+                    AttributeValue avToTest = AttributeValueUtil.getAttributeValue(av.getAttribute(), recordUnderTest);
                     
                     if (avToTest == null) {
                         // early loop continue - item not added to final result
@@ -619,18 +655,6 @@ public abstract class SingleSiteController extends AbstractController {
         }
         
         return result;
-    }
-    
-    /**
-     * Returns the AttributeValue with the corresponding Attribute from the 
-     * attribute values contained inside the record parameter.
-     * 
-     * @param a - attribute to look for
-     * @param r - record to look for the attribute value set
-     * @return AttributeValue if found, otherwise null
-     */
-    private AttributeValue getAttributeValue(Attribute a, Record r) {
-        return AttributeValueUtil.getByAttribute(r.getAttributes(), a);
     }
     
     

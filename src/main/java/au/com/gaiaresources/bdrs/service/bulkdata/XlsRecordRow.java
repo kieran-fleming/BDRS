@@ -746,7 +746,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         if (currentReadCell.getCellType() == Cell.CELL_TYPE_BLANK) {
             recUpload.setNumberSeen(null);
         } else {
-            recUpload.setNumberSeen(new Double(XlsCellUtil.cellToDouble(currentReadCell)).intValue());
+            recUpload.setNumberSeen((int)XlsCellUtil.cellToDouble(currentReadCell));
         }
         return colIndex;
     }

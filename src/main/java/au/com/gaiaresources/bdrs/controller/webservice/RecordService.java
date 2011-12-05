@@ -404,7 +404,7 @@ public class RecordService extends AbstractController {
         response.setHeader("Content-Disposition",
                 "attachment;filename=records_"
                         + System.currentTimeMillis() + ".xls");
-        bulkDataService.exportSurveyRecords(survey, sc, limit, response
+        bulkDataService.exportSurveyRecords(getRequestContext().getHibernate(), survey, sc, limit, response
                 .getOutputStream());
     }
 

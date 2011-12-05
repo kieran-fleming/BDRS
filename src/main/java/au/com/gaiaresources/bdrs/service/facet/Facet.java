@@ -2,7 +2,7 @@ package au.com.gaiaresources.bdrs.service.facet;
 
 import java.util.List;
 
-import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
+import au.com.gaiaresources.bdrs.db.impl.Predicate;
 
 /**
  * The <code>Facet</code> represents a selection criteria to be applied to 
@@ -87,10 +87,9 @@ public interface Facet {
     public void setFacetOptions(List<FacetOption> facetOptions);
 
     /**
-     * Applies the selected predicates to the specified query.
-     * @param q the query where selected predicates shall be applied.
+     * Gets the selected predicates from the Facet.
      */
-    public void applyPredicate(HqlQuery q);
+    public Predicate getPredicate();
 
     /**
      * Sets if at least one of the options in this facet is currently selected.

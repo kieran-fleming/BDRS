@@ -19,6 +19,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -68,6 +69,7 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
     @CompactAttribute
     @CollectionOfElements(fetch = FetchType.LAZY)
     @JoinColumn(name = "INDICATOR_SPECIES_ID")
+    @OrderBy("weight")
     public List<SpeciesProfile> getInfoItems() {
         return infoItems;
     }

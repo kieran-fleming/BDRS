@@ -156,6 +156,10 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         survey.getCensusMethods().add(m2);
         survey.getCensusMethods().add(m3);
         survey = surveyDAO.save(survey);
+        
+        // all tests in this class are attempting to edit a record
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.TRUE.toString());
+        
     }
     
     @Test

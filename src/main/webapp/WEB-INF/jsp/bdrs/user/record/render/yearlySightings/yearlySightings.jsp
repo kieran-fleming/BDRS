@@ -8,6 +8,10 @@
 <jsp:useBean id="context" scope="request" type="au.com.gaiaresources.bdrs.servlet.RequestContext"></jsp:useBean>
 <jsp:useBean id="today" scope="request" type="java.util.Date" />
 
+<%-- Access the facade to retrieve the preference information --%>
+<jsp:useBean id="bdrsPluginFacade" scope="request" type="au.com.gaiaresources.bdrs.servlet.BdrsPluginFacade"></jsp:useBean>
+<c:set var="showScientificName" value="<%= bdrsPluginFacade.getPreferenceBooleanValue(\"taxon.showScientificName\") %>" />
+
 <h1><c:out value="${survey.name}"/></h1>
 
 <span id="script_content" class="hidden">
@@ -27,28 +31,46 @@
 	        <tbody>
 	            <tr>
 	                <th>Species</th>
-	                <td><span class="scientificName"><c:out value="${species.scientificName}"/></span></td>
+	                <td>
+	                	<c:choose>
+                            <c:when test="${showScientificName}">
+                                <span class="scientificName"><c:out value="${species.scientificName}"/></span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="commonName"><c:out value="${ species.commonName }"/></span>
+                            </c:otherwise>  
+                        </c:choose>
+					</td>
 	            </tr>
 	            <tr>
-	                <th><label for="location">Location<label/></th>
-	                <td>
-	                    <select id="location">
-	                        <option></option>
-	                        <c:forEach items="${locations}" var="loc">
-	                            <option value="${loc.id}"
-	                                <c:if test="${loc == location}">
-	                                    selected="selected"
-	                                </c:if>
-	                            >
-	                                <c:out value="${loc.name}"/>
-	                            </option>
-	                        </c:forEach>
-	                    </select>
-	                    <input type="text" name="locationId" class="validate(required)" style="width: 0px; visibility: hidden;"/>
-	                    <c:if test="${ predefinedLocationsOnly == false }">
-	                        <a href="${pageContext.request.contextPath}/bdrs/location/editUserLocations.htm?redirect=/bdrs/user/yearlySightings.htm%3FsurveyId=${survey.id}">Add Location</a>
-                        </c:if>
-	                </td>
+	            	<th><label for="location">Location<label/></th>
+					<td>
+		            	<c:choose>
+		            		<c:when test="${recordWebFormContext.editable}">
+		            			<select id="location">
+		                            <option></option>
+		                            <c:forEach items="${locations}" var="loc">
+		                                <option value="${loc.id}"
+		                                    <c:if test="${loc == location}">
+		                                        selected="selected"
+		                                    </c:if>
+		                                >
+		                                    <c:out value="${loc.name}"/>
+		                                </option>
+		                            </c:forEach>
+		                        </select>
+		                        <input type="text" name="locationId" class="validate(required)" style="width: 0px; visibility: hidden;"/>
+		                        <c:if test="${ predefinedLocationsOnly == false }">
+		                            <a href="${pageContext.request.contextPath}/bdrs/location/editUserLocations.htm?redirect=/bdrs/user/yearlySightings.htm%3FsurveyId=${survey.id}">Add Location</a>
+		                        </c:if>
+		            		</c:when>
+							<c:otherwise>
+								<input type="hidden" id="location" value="${location.id}" />
+								<input type="hidden" name="locationId" value="" />
+								<c:out value="${location.name}" />
+							</c:otherwise>
+		            	</c:choose>
+					</td>
 	            </tr>
 	            <c:forEach items="${formFieldList}" var="formField">
 	                <tr>
@@ -60,6 +82,7 @@
 	                    <td>
 	                        <tiles:insertDefinition name="attributeRenderer">
 	                            <tiles:putAttribute name="formField" value="${formField}"/>
+								<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }" />
 	                        </tiles:insertDefinition>
 	                    </td>
 	                </tr>
@@ -93,13 +116,21 @@
 	                                        class="today"
 	                                    </c:if>
 	                                >
-	                                    <input type="text" class="sightingCell"
-	                                        name="date_<%= date.getTime() %>"
-	                                        title="<fmt:formatDate pattern="dd MMM yyyy" value="${ date }"/>"
-	                                        <c:if test="<%= today.equals(date) %>">
-	                                            placeholder="Today"
-	                                        </c:if>
-	                                    />
+									   <c:choose>
+										    <c:when test="${recordWebFormContext.editable}">
+										        <input type="text" class="sightingCell"
+		                                            name="date_<%= date.getTime() %>"
+		                                            title="<fmt:formatDate pattern="dd MMM yyyy" value="${ date }"/>"
+		                                            <c:if test="<%= today.equals(date) %>">
+		                                                placeholder="Today"
+		                                            </c:if>
+		                                        />
+										    </c:when>
+										    <c:otherwise>
+										        <span id="date_<%= date.getTime() %>"></span>
+										    </c:otherwise>
+										</c:choose>
+	                                    
 	                                </td>
 	                            </c:when>
 	                            <c:otherwise>
@@ -112,20 +143,11 @@
 	        </tbody>
 	    </table>
 	
-	<c:choose>
-	    <c:when test="${ preview }">
-	        <div class="buttonpanel textright">
-	            <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
-	            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
-	        </div>
-	    </c:when>
-	    <c:otherwise>
-	            <div class="buttonpanel textright">
-	                <input type="submit" value="Submit Sightings" class="form_action"/>
-	            </div>
-	        </form>
-	    </c:otherwise>
-	</c:choose>
+	   <%-- the record form footer contains the 'form' close tag --%>
+	<tiles:insertDefinition name="recordFormFooter">
+	    <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />                    
+	</tiles:insertDefinition>
+
 </span>
 
 <noscript>
@@ -141,9 +163,19 @@
 <script type="text/javascript">
     jQuery(function() {
         bdrs.contribute.yearlysightings.init();
-        <c:if test="${location != null}">
-            jQuery("#location").change();
-        </c:if>
+		
+		<c:choose>
+		  <c:when test="${location != null && recordWebFormContext.editable}">
+		      jQuery("#location").change();
+		  </c:when>
+		  <c:when test="${!recordWebFormContext.editable}">
+		      var locationId = ${location.id};
+	          var surveyId = jQuery('#surveyId').val();
+	          var ident = jQuery('#ident').val();
+			  bdrs.contribute.yearlysightings.loadCellData(locationId, surveyId, ident, false);
+		  </c:when>
+		</c:choose>
+		
         /**
          * Prepopulate fields
          */

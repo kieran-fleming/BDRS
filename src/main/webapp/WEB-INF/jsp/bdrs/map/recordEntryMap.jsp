@@ -8,6 +8,11 @@
 
 <tiles:useAttribute name="survey" classname="au.com.gaiaresources.bdrs.model.survey.Survey" ignore="true"/>
 <tiles:useAttribute name="censusMethod" ignore="true"/>
+<tiles:useAttribute name="mapEditable" ignore="true" />
+
+<c:if test="${mapEditable == null}">
+	<c:set var="mapEditable" value="true" />
+</c:if>
 
 <cw:getContent key="user/recordSightingMapDescription" />
 <div id="record_base_map_hover_tip">&nbsp;</div>
@@ -48,7 +53,7 @@
         bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
     
         <c:choose>
-            <c:when test="<%= survey.isPredefinedLocationsOnly() %>">
+		    <c:when test="${survey.predefinedLocationsOnly || not mapEditable}">
                 var layer = bdrs.map.addPositionLayer(layerName);
             </c:when>
             <c:otherwise>

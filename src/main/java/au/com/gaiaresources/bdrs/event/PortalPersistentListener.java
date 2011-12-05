@@ -15,7 +15,7 @@ import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 public class PortalPersistentListener implements PreInsertEventListener {
     private static final long serialVersionUID = -2277148183866046715L;
 
-    private Logger log = Logger.getLogger(getClass());
+    private transient Logger log = Logger.getLogger(getClass());
 
     @Override
     public boolean onPreInsert(PreInsertEvent event) {

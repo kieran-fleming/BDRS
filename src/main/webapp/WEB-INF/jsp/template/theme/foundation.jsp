@@ -47,7 +47,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/js/colorpicker/css/colorpicker.css" type="text/css"/>
         <script src="${pageContext.request.contextPath}/js/colorpicker/js/colorpicker.js" type="text/javascript"></script>
         
-        
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/ketchup/jquery.ketchup.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/ketchup/jquery.ketchup.messages.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/ketchup/jquery.ketchup.validations.basic.js"></script>
@@ -56,6 +55,13 @@
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.tablednd_0_5.js"></script>
 		
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/state-machine.min.js"></script>
+		
+		<%-- 
+		    ninja date parsing, http://www.datejs.com/
+			Note we are using the australian version. May want to make this
+			part of the theme.
+		--%>
+		<script type="text/javascript" src="${pageContext.request.contextPath}/js/date/date-en-AU.js"></script>
         
         <!--  JqGrid stuff the grid.local-en.js file needs t come before the jqGrid.min.js file -->
         <link rel="stylesheet" type="text/css" media="screen" href="${pageContext.request.contextPath}/js/jquery.jqGrid-4.0.0/css/ui.jqgrid.css" />
@@ -84,8 +90,28 @@
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-blockui/jquery.blockUI.js"></script>
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jqPrint/jquery.jqprint.0.3.js"></script>
 		<script src="${pageContext.request.contextPath}/js/jquery.ui.autocomplete.html.js" type="text/javascript"></script>
+		
+		<%-- time picker --%>
+        <script type="text/javascript" src="${pageContext.request.contextPath}/js/timepicker/jquery-ui-timepicker-addon.js"></script>
+
         
-        <script type="text/javascript"> 
+        <script type="text/javascript">
+        	<%--
+        	// override the datepicker format date class...
+			// this allows the datepicker to be updated while the user inputs
+			// their date in whatever funky format they desire.
+			// if we decide to exclude this override the datepicker will only update
+			// when it sees the expected format, 'dd MMM yyyy'
+			--%>
+			jQuery.datepicker.parseDate = function(format, value, setting) {
+			    var d = Date.parse(value);
+				if (!d) {
+					// handled by caller.
+					throw 'could not parse date';
+				}
+			    return d;
+			};
+			 
             jQuery(function () {
                 bdrs.contextPath = '${pageContext.request.contextPath}'; 
                 bdrs.ident = '<%= context.getUser() == null ? "" : context.getUser().getRegistrationKey() %>';
@@ -98,7 +124,7 @@
 				    from mapserver
 				--%>
                 bdrs.authenticated = true;
-                bdrs.authenticatedUserId = ${authenticatedUserId ? authenticatedUserId : 'null'};
+                bdrs.authenticatedUserId = ${authenticatedUserId != null ? authenticatedUserId : 'null'};
                 bdrs.isAdmin = ${isAdmin ? isAdmin : 'null'};
                 </sec:authorize>
 
@@ -142,5 +168,6 @@
 			
             <cw:getThemeTemplate key="template.footer"/>
         </div>
+        <cw:getThemeTemplate key="template.page.footer"/>
     </body>
 </html>

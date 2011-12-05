@@ -17,6 +17,7 @@ import au.com.gaiaresources.bdrs.controller.record.validator.IntValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.RegExpValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.StringValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.TaxonValidator;
+import au.com.gaiaresources.bdrs.controller.record.validator.TimeValidator;
 import au.com.gaiaresources.bdrs.controller.record.validator.Validator;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
@@ -90,7 +91,7 @@ public class RecordFormValidator {
         validatorMap.put(ValidationType.DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, false, false));
         validatorMap.put(ValidationType.REQUIRED_DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, true, false));
         validatorMap.put(ValidationType.REQUIRED_TIME, new RegExpValidator(propertyService, true, false, "\\d{2}:\\d{2}"));
-        validatorMap.put(ValidationType.TIME, new RegExpValidator(propertyService, false, true, "(\\d{2}:\\d{2})?"));
+        validatorMap.put(ValidationType.TIME, new TimeValidator(propertyService, false, true));
         
         validatorMap.put(ValidationType.REQUIRED_TAXON, new TaxonValidator(propertyService, true, false, taxaDAO));
         validatorMap.put(ValidationType.TAXON, new TaxonValidator(propertyService, false, true, taxaDAO));

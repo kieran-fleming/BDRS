@@ -24,7 +24,7 @@ import au.com.gaiaresources.bdrs.security.Role;
  * 
  * @author benk
  */
-@RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
+
 @Controller
 public class SingleSiteMultiTaxaController extends SingleSiteController {
     
@@ -32,6 +32,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
     public static final String PARAM_RECORD_ID = SingleSiteController.PARAM_RECORD_ID;
     public static final String PARAM_SURVEY_ID = SingleSiteController.PARAM_SURVEY_ID;
     public static final String PARAM_CENSUS_METHOD_ID = SingleSiteController.PARAM_CENSUS_METHOD_ID;
+    public static final String SINGLE_SITE_MULTI_TAXA_VIEW_NAME = "singleSiteMultiTaxa";
     
     /**
      * Displays a blank form displaying inputs for the latitude, longitude,
@@ -47,7 +48,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
                                     HttpServletResponse response,
                                     @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,
                                     @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId) {
-        return addRecord(request, response, surveyId, "singleSiteMultiTaxa", censusMethodId);
+        return addRecord(request, response, surveyId, SINGLE_SITE_MULTI_TAXA_VIEW_NAME, censusMethodId);
     }
     
     /**
@@ -61,6 +62,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @return 
      */
     @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa/sightingRow.htm", method = RequestMethod.GET)
+    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     public ModelAndView ajaxAddSightingRow(HttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value= PARAM_SURVEY_ID, required=true) int surveyId,
@@ -89,6 +91,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @throws IOException thrown if uploaded files cannot be saved
      */
     @RequestMapping(value = SINGLE_SITE_MULTI_TAXA_URL, method = RequestMethod.POST)
+    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     public ModelAndView saveRecord(MultipartHttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,

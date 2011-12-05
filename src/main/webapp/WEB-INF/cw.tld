@@ -302,4 +302,13 @@
     <tag-class>au.org.ala.commonui.tag.UserNameTag</tag-class>
     <body-content>JSP</body-content>
   </tag>
+  
+  <function>
+    <name>hasCsvValue</name>
+    <function-class>au.com.gaiaresources.bdrs.util.CSVUtils</function-class>
+    <function-signature>
+        java.lang.Boolean hasValue( java.lang.String, java.lang.String )
+    </function-signature>
+  </function>
 </taglib>
+

@@ -94,7 +94,8 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         Attribute attr;
         for (AttributeType attrType : AttributeType.values()) {
             for (AttributeScope scope : new AttributeScope[] {
-                    AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+                    AttributeScope.RECORD, AttributeScope.SURVEY,
+                    AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, null }) {
 
                 attr = new Attribute();
                 attr.setRequired(true);
@@ -159,9 +160,12 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "formFieldList");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "sightingRowFormFieldList");
 
+        List<AttributeScope> SURVEY_SCOPES = new ArrayList<AttributeScope>();
+        SURVEY_SCOPES.add(AttributeScope.SURVEY);
+        SURVEY_SCOPES.add(AttributeScope.SURVEY_MODERATION);
         for (FormField formField : ((List<FormField>) mv.getModelMap().get("formFieldList"))) {
             if (formField.isAttributeFormField()) {
-                Assert.assertEquals(AttributeScope.SURVEY, ((RecordAttributeFormField) formField).getAttribute().getScope());
+                Assert.assertTrue(SURVEY_SCOPES.contains(((RecordAttributeFormField) formField).getAttribute().getScope()));
             } else if (formField.isPropertyFormField()) {
                 String typeName = ((RecordPropertyFormField) formField).getPropertyName();
                 // It should not be either the species or the number
@@ -174,7 +178,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
 
         for (FormField formField : ((List<FormField>) mv.getModelMap().get("sightingRowFormFieldList"))) {
             if (formField.isAttributeFormField()) {
-                Assert.assertFalse(AttributeScope.SURVEY.equals(((RecordAttributeFormField) formField).getAttribute().getScope()));
+                Assert.assertFalse(SURVEY_SCOPES.contains(((RecordAttributeFormField) formField).getAttribute().getScope()));
             } else if (formField.isPropertyFormField()) {
             	String typeName = ((RecordPropertyFormField) formField).getPropertyName();
                 // It should not be either the species or the number
@@ -326,7 +330,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             recordScopeAttributeValueMapping.put(taxon, attributeValueMapping);
             for (Attribute attr : survey.getAttributes()) {
                 if(!AttributeScope.LOCATION.equals(attr.getScope())) {
-                    if (AttributeScope.SURVEY.equals(attr.getScope())) {
+                    if (AttributeScope.SURVEY.equals(attr.getScope()) || AttributeScope.SURVEY_MODERATION.equals(attr.getScope())) {
                         prefix = surveyPrefix;
                         valueMap = surveyScopeAttributeValueMapping;
                     } else {
@@ -444,7 +448,8 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             Map<Attribute, Object> attributeValueMap = recordScopeAttributeValueMapping.get(taxon);
             Object expected;
             for (TypedAttributeValue recAttr : record.getAttributes()) {
-                if (AttributeScope.SURVEY.equals(recAttr.getAttribute().getScope())) {
+                if (AttributeScope.SURVEY.equals(recAttr.getAttribute().getScope()) || 
+                        AttributeScope.SURVEY_MODERATION.equals(recAttr.getAttribute().getScope())) {
                     expected = surveyScopeAttributeValueMapping.get(recAttr.getAttribute());
                 } else {
                     expected = attributeValueMap.get(recAttr.getAttribute());

@@ -3,7 +3,6 @@ package au.com.gaiaresources.bdrs.model.portal.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -26,8 +25,10 @@ import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.detect.BDRSWurflLoadService;
 import au.com.gaiaresources.bdrs.service.theme.ThemeService;
+import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 // non autowired class...
 public class PortalInitialiser implements ServletContextListener {
@@ -46,7 +47,11 @@ public class PortalInitialiser implements ServletContextListener {
     
     // create admin user
     // create portal preferences
+    // create moderation thresholds
     public void init(Session sesh, Portal p) throws IOException {
+        if (context_path == null) {
+            context_path = ContentService.getContextPath(RequestContextHolder.getContext().getRequestPath());
+        }
         PortalUtil.initPortalData(sesh, p);
         initPortalTheme(p);
     }
@@ -71,11 +76,15 @@ public class PortalInitialiser implements ServletContextListener {
             if (!portalList.isEmpty()) {
                 log.info("ROOT portal already exists, skipping initialisation");
                 // return;
-                log.info("Making sure existing portals have all of the default portal parameters");
+                log.info("Making sure existing portals have all of the default portal parameters and moderation thresholds");
                 for (Portal p : portalList) {
                     // do lazy init of portal preferences and preference categories
                     //log.debug("initialising prefs for portal " + p.getName());
                     PortalUtil.initPortalPreferences(sesh, p, true);
+                    // this is here for legacy portals
+                    // can be removed if we don't want to include this feature in 
+                    // legacy portals or if we come up with a different way of managing them
+                    PortalUtil.initModerationThreshold(sesh, p);
                 }
             } else {
                 log.info("Initialising ROOT portal");

@@ -87,7 +87,7 @@ public class HqlQuery extends Predicate {
             return ret;
         }
         return "select " + (count ? " count(" : "")
-                + (distinct == null ? "obj" : " distinct " + distinct)
+                + (" distinct " + distinct)
                 + (count ? ")" : "") + " " + incipit;
     }
 

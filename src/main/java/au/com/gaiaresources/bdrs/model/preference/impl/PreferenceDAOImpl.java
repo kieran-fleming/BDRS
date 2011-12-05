@@ -256,7 +256,13 @@ public class PreferenceDAOImpl extends AbstractDAOImpl implements PreferenceDAO 
 
             for (Preference p : prefCache.get(portal).values()) {
                 temp = getPreference(p.getId());
-                prefMap.put(temp.getKey(), temp);
+                if (temp == null) {
+                    // this could be a serious error, the cache contains something the db does not
+                    log.warn("Preference "+p.getKey()+" exisits in cache, but not in DAO");
+                    temp = p;
+                } else {
+                    prefMap.put(temp.getKey(), temp);
+                }
             }
 
             return Collections.unmodifiableMap(prefMap);

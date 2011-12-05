@@ -100,7 +100,10 @@ public class XlsLocationRow extends StyledRowImpl {
      */
     public void writeUserLocation(Workbook wb, Location location) {
         Sheet locSheet = getLocationSheet(wb);
-        Row row = locSheet.createRow(locSheet.getLastRowNum());
+        
+        
+        // need to add one onto the last row number else we are overwriting an existing row
+        Row row = locSheet.createRow(locSheet.getLastRowNum() + 1);
         
         int colIndex = 0;
         row.createCell(colIndex++).setCellValue(location.getId());

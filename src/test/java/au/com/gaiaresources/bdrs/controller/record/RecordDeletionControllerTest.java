@@ -82,6 +82,9 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
     private User admin;
     private Date dateA;
     private Date dateB;
+    
+    private List<Record> recordList;
+    
     /**
      * Total number of records created by setup.
      */
@@ -225,6 +228,8 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
         locationB.setUser(admin);
         locationB.setLocation(locationService.createPoint(-32.58, 154.2));
         locationDAO.save(locationB);
+        
+        recordList = new ArrayList<Record>();
 
         int surveyIndex = 1;
         for (CensusMethod method : new CensusMethod[] { methodA, methodB,
@@ -233,7 +238,8 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
             Attribute attr;
             for (AttributeType attrType : AttributeType.values()) {
                 for (AttributeScope scope : new AttributeScope[] {
-                        AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+                        AttributeScope.RECORD, AttributeScope.SURVEY,
+                        AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, null }) {
 
                     attr = new Attribute();
                     attr.setDescription(attrType.toString() + " description");
@@ -296,6 +302,7 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
                 for (CensusMethod cm : survey.getCensusMethods()) {
                     for (User u : new User[] { admin, user }) {
                         Record rec = createRecord(survey, cm, species, u);
+                        recordList.add(rec);
 
                         recordCount++;
                         surveyRecordCount++;
@@ -516,13 +523,13 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
     public void testAdminRecordDeletion() throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/user/deleteRecord.htm");
-        //request.addParameter("recordId", "");
+        request.setRequestURI(RecordDeletionController.RECORD_DELETE_URL);
+        //request.addParameter(RecordDeletionController.PARAM_RECORD_ID, "");
         
         List<Record> records = recordDAO.getRecords(speciesA);
         for (Record record : records) {
             Integer id = record.getId(); 
-            request.setParameter("recordId", id.toString());
+            request.setParameter(RecordDeletionController.PARAM_RECORD_ID, id.toString());
             ModelAndView mv = handle(request, response);
             getRequestContext().getHibernate().flush();
             getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
@@ -535,13 +542,12 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
     public void testUserRecordDeletion() throws Exception {
         login("testuser", "password", new String[] { Role.USER });
         request.setMethod("POST");
-        request.setRequestURI("/bdrs/user/deleteRecord.htm");
-        //request.addParameter("recordId", "");
+        request.setRequestURI(RecordDeletionController.RECORD_DELETE_URL);
         
         List<Record> records = recordDAO.getRecords(user);
         for (Record record : records) {
             Integer id = record.getId(); 
-            request.setParameter("recordId", id.toString());
+            request.setParameter(RecordDeletionController.PARAM_RECORD_ID, id.toString());
             ModelAndView mv = handle(request, response);
             getRequestContext().getHibernate().flush();
             getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
@@ -551,11 +557,36 @@ public class RecordDeletionControllerTest extends AbstractControllerTest {
         records = recordDAO.getRecords(admin);
         for (Record record : records) {
             Integer id = record.getId(); 
-            request.setParameter("recordId", id.toString());
+            request.setParameter(RecordDeletionController.PARAM_RECORD_ID, id.toString());
             ModelAndView mv = handle(request, response);
             getRequestContext().getHibernate().flush();
             getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
             Assert.assertNotNull(recordDAO.getRecord(id));
+        }
+    }
+    
+    @Test
+    public void testBulkRecordDelete() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        request.setMethod("POST");
+        request.setRequestURI(RecordDeletionController.RECORD_DELETE_URL);
+        for (Record r : recordList) {
+            request.addParameter(RecordDeletionController.PARAM_RECORD_ID, r.getId().toString());
+        }
+        
+        ModelAndView mv = handle(request, response);
+        // not sure why we need to do this as i thought flush auto is default but 
+        // the existing tests do it
+        getRequestContext().getHibernate().flush();
+        getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
+        
+        // more than 1 record was deleted and there was no redirection
+        this.assertMessageCode(RecordDeletionController.MSG_CODE_RECORD_MULTI_DELETE_SUCCESS);
+        
+        for (Record r : recordList) {
+            Assert.assertNotNull("sanity check", r.getId());
+            Assert.assertNull("record should now be deleted", recordDAO.getRecord(r.getId()));
         }
     }
 }

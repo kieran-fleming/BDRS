@@ -3,7 +3,9 @@
     <li>
         <a 
             ## The '://' check is for external URL menu items
-            #if(${item.path.startsWith('javascript')} || ${item.path.equals("#")} || ${item.path.contains("://")})
+            #if(not $item.path || ${item.path.equals("")})
+                href="#">${item.name}
+            #elseif(${item.path.startsWith('javascript')} || ${item.path.contains("://")})
                 href="${item.path}">${item.name}
             #else
                 href="${pageContext.request.contextPath}/${item.path}">${item.name}

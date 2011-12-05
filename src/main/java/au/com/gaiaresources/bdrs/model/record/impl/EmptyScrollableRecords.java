@@ -20,4 +20,9 @@ public class EmptyScrollableRecords implements ScrollableRecords {
     public Record nextElement() {
         throw new NoSuchElementException();
     }
+
+    @Override
+    public void rewind() {
+        // does nothing
+    }
 }

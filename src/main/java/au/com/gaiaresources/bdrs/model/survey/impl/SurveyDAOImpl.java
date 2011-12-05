@@ -13,7 +13,7 @@ import net.sf.ehcache.Element;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.hibernate.type.CustomType;
 import org.hibernatespatial.GeometryUserType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -231,11 +231,6 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
             return (Survey)sesh.get(Survey.class, pk);
         }
     }
-    
-    @Override 
-    public Survey getSurvey(org.hibernate.Session sesh, int pk) {
-        return super.getByID(sesh, Survey.class, pk);
-    }
 
     @Override
     public Survey createSurvey(Survey survey) {
@@ -256,7 +251,6 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
             return this.updateSurvey(survey);
         }
     }
-
 
     @Override
     public Survey getSurveyByName(Session sesh, String surveyName) {

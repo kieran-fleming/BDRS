@@ -36,6 +36,11 @@ import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
 import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataBuilder;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataHelper;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataRow;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -59,6 +64,11 @@ import com.vividsolutions.jts.geom.Geometry;
 
 @Controller
 public class LocationBaseController extends AbstractController {
+    
+    public static final String GET_SURVEY_LOCATIONS_FOR_USER = "/bdrs/location/getSurveyLocationsForUser.htm";
+    
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -398,6 +408,30 @@ public class LocationBaseController extends AbstractController {
         ModelAndView mv = new ModelAndView(new RedirectView("/bdrs/admin/survey/locationListing.htm", true));
         mv.addObject("surveyId", survey.getId());
         return mv;
+    }
+    
+    @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RequestMapping(value = GET_SURVEY_LOCATIONS_FOR_USER, method = RequestMethod.GET)
+    public void getSurveyLocationsForUser(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId) throws Exception {
+        JqGridDataHelper jqGridHelper = new JqGridDataHelper(request);       
+        PaginationFilter filter = jqGridHelper.createFilter(request);
+        
+        User currentUser = getRequestContext().getUser();
+        PagedQueryResult<Location> queryResult = locationDAO.getSurveylocations(filter, currentUser, surveyId);
+        
+        JqGridDataBuilder builder = new JqGridDataBuilder(jqGridHelper.getMaxPerPage(), queryResult.getCount(), jqGridHelper.getRequestedPage());
+
+        if (queryResult.getCount() > 0) {
+            for (Location loc : queryResult.getList()) {
+                JqGridDataRow row = new JqGridDataRow(loc.getId());
+                row
+                .addValue("name", loc.getName())
+                .addValue("description", loc.getDescription());
+                builder.addRow(row);
+            }
+        }
+        writeJson(request, response, builder.toJson());
     }
     
     @SuppressWarnings("unchecked")

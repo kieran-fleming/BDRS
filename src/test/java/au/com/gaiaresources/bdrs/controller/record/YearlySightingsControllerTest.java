@@ -100,7 +100,9 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         List<Attribute> attributeList = new ArrayList<Attribute>();
         Attribute attr;
         for(AttributeType attrType : AttributeType.values()) {
-            for(AttributeScope scope : new AttributeScope[] { AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+            for(AttributeScope scope : new AttributeScope[] { 
+                    AttributeScope.RECORD, AttributeScope.SURVEY,
+                    AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, null }) {
                 
                 attr = new Attribute();
                 attr.setRequired(true);
@@ -407,7 +409,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         String key;
         String value;
         for (Attribute attr : survey.getAttributes()) {
-            if(AttributeScope.SURVEY.equals(attr.getScope())) {
+            if(AttributeScope.SURVEY.equals(attr.getScope()) || AttributeScope.SURVEY_MODERATION.equals(attr.getScope())) {
                 key = String.format(AttributeParser.ATTRIBUTE_NAME_TEMPLATE, "", attr.getId());
                 value = "";
     

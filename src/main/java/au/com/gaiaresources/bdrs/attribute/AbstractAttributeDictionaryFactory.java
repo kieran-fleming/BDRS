@@ -34,6 +34,8 @@ public abstract class AbstractAttributeDictionaryFactory implements
         tmp.add(null);
         tmp.add(AttributeScope.RECORD);
         tmp.add(AttributeScope.SURVEY);
+        tmp.add(AttributeScope.RECORD_MODERATION);
+        tmp.add(AttributeScope.SURVEY_MODERATION);
         SCOPE_RECORD_SURVEY = Collections.unmodifiableSet(tmp);
         
         Set<AttributeScope> tmp2 = new HashSet<AttributeScope>(1);

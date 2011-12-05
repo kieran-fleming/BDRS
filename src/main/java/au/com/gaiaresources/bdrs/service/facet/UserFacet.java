@@ -1,10 +1,12 @@
 package au.com.gaiaresources.bdrs.service.facet;
 
+import java.util.List;
 import java.util.Map;
 
 import net.sf.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.util.Pair;
 import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
@@ -21,6 +23,11 @@ public class UserFacet extends AbstractFacet {
     public static final String DISPLAY_NAME = "User";
     
     /**
+     * A limit for the number of options to show in the facet.
+     */
+    private static final Integer OPTIONS_LIMIT = 8;
+    
+    /**
      * Creates a new instance.
      * 
      * @param recordDAO used for retrieving the count of matching records.
@@ -34,19 +41,37 @@ public class UserFacet extends AbstractFacet {
         
         String[] selectedOptions = parameterMap.get(getInputName());
         if(selectedOptions == null) {
-            selectedOptions = new String[]{};
+            if (user != null) {
+                // select "My Records Only" by default when there is a user
+                selectedOptions = new String[]{String.valueOf(user.getId())};
+            } else {
+                // select "All Public Records" by default when user is null (anonymous view)
+                selectedOptions = new String[]{String.valueOf(-1)};
+            }
         }
         Arrays.sort(selectedOptions);
         
-        Long count = Long.valueOf(recordDAO.countRecords(user));
-        if (user != null) {
-            // add the current user as a facet option if there is one
-            super.addFacetOption(new UserFacetOption(user, count, selectedOptions));
-        } else {
-            // set the isActive flag to prevent the facet from showing
-            setActive(false);
-            // create an anonymous user facet option for no user
-            super.addFacetOption(new AnonymousUserFacetOption(count, true));
+        Long count = Long.valueOf(recordDAO.countAllRecords(user));
+        
+        // add the public records item as the first thing in the list
+        super.addFacetOption(new AllPublicRecordsUserFacetOption(user, count, selectedOptions));
+        
+        int userCount = 0;
+        List<Pair<User, Long>> userCounts = recordDAO.getDistinctUsers(null, user);
+        for(Pair<User, Long> pair : userCounts) {
+            if (pair.getFirst().equals(user)) {
+                super.insertFacetOption(new UserFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions), 0);
+            } else if (userCount < OPTIONS_LIMIT) {
+                super.addFacetOption(new UserFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions));
+                userCount++;
+            }
+        }
+        
+        // if the user is not null (anonymous view) and
+        // if the options are not the min of the limit or the count + 2 for my records and all public records
+        // the user has no records and has not been added, so add an option for their 0 records now
+        if (user != null && getFacetOptions().size() < Math.min(OPTIONS_LIMIT, userCount) + 2) {
+            super.insertFacetOption(new UserFacetOption(user, Long.valueOf(0), selectedOptions), 0);
         }
     }
 }

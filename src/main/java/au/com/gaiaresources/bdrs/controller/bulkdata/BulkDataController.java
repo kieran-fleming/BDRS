@@ -112,7 +112,7 @@ public class BulkDataController extends AbstractController {
         response.setHeader("Content-Disposition", "attachment;filename="
                 + filename);
 
-        bulkDataService.exportSurveyTemplate(survey, response.getOutputStream());
+        bulkDataService.exportSurveyTemplate(getRequestContext().getHibernate(), survey, response.getOutputStream());
     }
 
     @RequestMapping(value = "/bulkdata/upload.htm", method = RequestMethod.POST)

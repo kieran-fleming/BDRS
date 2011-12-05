@@ -1,7 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.showcase;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import net.sf.json.JSONArray;
@@ -26,8 +25,8 @@ import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
 import au.com.gaiaresources.bdrs.model.showcase.Gallery;
 import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.util.ImageUtil;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
+import au.com.gaiaresources.bdrs.util.ImageUtil;
 
 public class GalleryControllerTest extends AbstractControllerTest {
 
@@ -44,18 +43,16 @@ public class GalleryControllerTest extends AbstractControllerTest {
     
     ManagedFile mf;
     
-    String savedFilename = "test_image.jpeg"; 
+    String savedFilename = "test_image.png"; 
     
     @Before
     public void setup() throws Exception {
-        String filename = "sample_JPEG.jpg";
+        String filename = "sample_IMG.png";
         File file = new File(getClass().getResource(filename).getFile());
-        
-        
         
         mf = new ManagedFile();
         mf.setFilename(savedFilename);
-        mf.setContentType("image/jpeg");
+        mf.setContentType("image/png");
         mf.setWeight(0);
         mf.setDescription("This is a test image");
         mf.setCredit("Creative Commons");
@@ -157,8 +154,8 @@ public class GalleryControllerTest extends AbstractControllerTest {
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "updated credit");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "updated license");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_NONE);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_FILE, "empty", "image/jpeg", new byte[] {}));
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_FILE, "empty", "image/png", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         ModelAndView mv = this.handle(request, response);
         
@@ -178,31 +175,31 @@ public class GalleryControllerTest extends AbstractControllerTest {
         Assert.assertEquals("updated credit", managedFile.getCredit());
         Assert.assertEquals("updated license", managedFile.getLicense());
         // file name should not have changed due to empty file
-        Assert.assertEquals("test_image.jpeg", managedFile.getFilename());
+        Assert.assertEquals("test_image.png", managedFile.getFilename());
     }
     
     @Test
     public void testSaveExistingWithFiles() throws Exception {
         // add a new image type managed file and convert it
-        String filename = "sample_JPEG.jpg";
+        String filename = "sample_IMG.png";
         
         File file = new File(getClass().getResource(filename).getFile());
 
         byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
-        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, "");
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "New Description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "New Credits");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "New License");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_NONE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         // existing file in slot 2
         // the managed file is overwritten with a new file and all mf items are overwritten
-        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, mf.getUuid());
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "saved description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "saved credit");
@@ -211,7 +208,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         
         ((MockMultipartHttpServletRequest)request).addFile(testFile2);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         request.setRequestURI(GalleryController.EDIT_URL);
         request.setMethod("POST");
@@ -247,32 +244,32 @@ public class GalleryControllerTest extends AbstractControllerTest {
     @Test
     public void testSlideshowAutogen() throws Exception {
      // add a new image type managed file and convert it
-        String filename = "sample_JPEG.jpg";
+        String filename = "sample_IMG.png";
         
         File file = new File(getClass().getResource(filename).getFile());
 
         byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
-        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, "");
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "New Description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "New Credits");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "New License");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         // existing file in slot 2
         // the managed file is overwritten with a new file and all mf items are overwritten
-        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, mf.getUuid());
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "saved description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "saved credit");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "saved license");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile2);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         request.setRequestURI(GalleryController.EDIT_URL);
         request.setMethod("POST");
@@ -314,32 +311,32 @@ public class GalleryControllerTest extends AbstractControllerTest {
     @Test
     public void testSlideshowNoAutogen_uploadslideshowimages() throws Exception {
      // add a new image type managed file and convert it
-        String filename = "sample_JPEG.jpg";
+        String filename = "sample_IMG.png";
         
         File file = new File(getClass().getResource(filename).getFile());
 
         byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
-        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, "");
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "New Description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "New Credits");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "New License");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.jpeg", "image/jpeg", target));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.png", "image/png", target));
         
         // existing file in slot 2
         // the managed file is overwritten with a new file and all mf items are overwritten
-        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, mf.getUuid());
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "saved description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "saved credit");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "saved license");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile2);
-        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.jpeg", "image/jpeg", target));
+        ((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.png", "image/png", target));
         
         request.setRequestURI(GalleryController.EDIT_URL);
         request.setMethod("POST");
@@ -377,7 +374,7 @@ public class GalleryControllerTest extends AbstractControllerTest {
     @Test
     public void testSlideshowNoAutogen_existingmainimage_autogenslideshow() throws Exception {
      // add a new image type managed file and convert it
-        //String filename = "sample_JPEG.jpg";
+        //String filename = "sample_IMG.png";
         
         //File file = new File(getClass().getResource(filename).getFile());
 
@@ -385,14 +382,14 @@ public class GalleryControllerTest extends AbstractControllerTest {
         
         // existing file in slot 1
         // the managed file is overwritten with a new file and all mf items are overwritten
-        //MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        //MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, mf.getUuid());
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "saved description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "saved credit");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "saved license");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         //((MockMultipartHttpServletRequest)request).addFile(testFile2);
-        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.jpeg", "image/jpeg", target));
+        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "whatever.png", "image/png", target));
         
         request.setRequestURI(GalleryController.EDIT_URL);
         request.setMethod("POST");
@@ -424,14 +421,14 @@ public class GalleryControllerTest extends AbstractControllerTest {
     @Test
     public void testSlideshowAutogen_testBoolArgs() throws Exception {
      // add a new image type managed file and convert it
-        String filename = "sample_JPEG.jpg";
+        String filename = "sample_IMG.png";
         
         File file = new File(getClass().getResource(filename).getFile());
 
         byte[] target = ImageUtil.fileToByteArray(file);
         
         // new file in slot 1
-        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, "");
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "New Description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "New Credits");
@@ -439,18 +436,18 @@ public class GalleryControllerTest extends AbstractControllerTest {
         //request.addParameter(GalleryController.PARAM_FILE_AUTOGEN_SLIDESHOW, "true");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile);
-        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         // existing file in slot 2
         // the managed file is overwritten with a new file and all mf items are overwritten
-        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/jpeg", target);
+        MockMultipartFile testFile2 = new MockMultipartFile(GalleryController.PARAM_FILE_FILE, filename, "image/png", target);
         request.addParameter(GalleryController.PARAM_FILE_UUID, mf.getUuid());
         request.addParameter(GalleryController.PARAM_FILE_DESCRIPTION, "saved description");
         request.addParameter(GalleryController.PARAM_FILE_CREDIT, "saved credit");
         request.addParameter(GalleryController.PARAM_FILE_LICENSE, "saved license");
         request.addParameter(GalleryController.PARAM_FILE_SLIDESHOW_ACTION, GalleryController.SLIDESHOW_ACTION_RESIZE);
         ((MockMultipartHttpServletRequest)request).addFile(testFile2);
-        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/jpeg", new byte[] {}));
+        //((MockMultipartHttpServletRequest)request).addFile(new MockMultipartFile(GalleryController.PARAM_FILE_SLIDESHOW_FILE, "empty", "image/png", new byte[] {}));
         
         request.setRequestURI(GalleryController.EDIT_URL);
         request.setMethod("POST");

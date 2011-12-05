@@ -9,10 +9,14 @@ import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
@@ -36,7 +40,7 @@ import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 
 public class TrackerController_Access_Test extends AbstractControllerTest {
-GeometryBuilder geomBuilder = new GeometryBuilder();
+    GeometryBuilder geomBuilder = new GeometryBuilder();
     
     @Autowired
     SurveyDAO surveyDAO;
@@ -65,6 +69,9 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
     Record record;
     
     Logger log = Logger.getLogger(getClass());
+    
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
     
     @Before
     public void setup() throws Exception {
@@ -142,9 +149,10 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
         request.setRequestURI(TrackerController.EDIT_URL);
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_RECORD_ID, record.getId().toString());
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.TRUE.toString());
 
         ModelAndView mv = handle(request, response);
-        ModelAndViewAssert.assertViewName(mv, "tracker");
+        ModelAndViewAssert.assertViewName(mv, TrackerController.TRACKER_VIEW_NAME);
 
         Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
     }
@@ -161,11 +169,11 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
         request.setRequestURI(TrackerController.EDIT_URL);
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_RECORD_ID, record.getId().toString());
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.TRUE.toString());
 
-        ModelAndView mv = handle(request, response);
-        Assert.assertNull(mv);
-        
-        Assert.assertEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        expectedEx.expect(AccessDeniedException.class);
+        expectedEx.expectMessage(RecordWebFormContext.MSG_CODE_EDIT_AUTHFAIL);
+        handle(request, response);
     }
     
     /**
@@ -180,9 +188,10 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
         request.setRequestURI(TrackerController.EDIT_URL);
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_RECORD_ID, record.getId().toString());
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.TRUE.toString());
 
         ModelAndView mv = handle(request, response);
-        ModelAndViewAssert.assertViewName(mv, "tracker");
+        ModelAndViewAssert.assertViewName(mv, TrackerController.TRACKER_VIEW_NAME);
         
         Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
     }
@@ -221,10 +230,9 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_RECORD_ID, record.getId().toString());
 
-        ModelAndView mv = handle(request, response);
-        Assert.assertNull(mv);
-        
-        Assert.assertEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        expectedEx.expect(AccessDeniedException.class);
+        expectedEx.expectMessage(RecordWebFormContext.MSG_CODE_EDIT_AUTHFAIL);
+        handle(request, response);
     }
     
     /**
@@ -246,6 +254,100 @@ GeometryBuilder geomBuilder = new GeometryBuilder();
         
         Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
     }
+    
+    /**
+     * Views a record
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testFormGet_noUser_newRecord_edit() throws Exception {
+        
+        // attempting to view a new record results in trying to create
+        // a new record (i.e. entering edit mode).
+        // since non logged in users can never edit records, access
+        // will always fail.
+        testGetFormGet(null, null, true, false, true);
+        
+    }
+    
+    @Test
+    public void testFormGet_noUser_newRecord_view() throws Exception {
+
+        // attempting to view a new record results in trying to create
+        // a new record (i.e. entering edit mode).
+        // since non logged in users can never edit records, access
+        // will always fail.
+        testGetFormGet(null, null, false, false, true);
+    }
+    
+    @Test
+    public void testFormGet_noUser_existingRecord_view_public() throws Exception {
+        record.setRecordVisibility(RecordVisibility.PUBLIC);
+        testGetFormGet(null, record, false, true, false);
+    }
+    
+    @Test
+    public void testFormGet_noUser_existingRecord_view_controlled() throws Exception {
+        record.setRecordVisibility(RecordVisibility.CONTROLLED);
+        testGetFormGet(null, record, false, false, false);
+    }
+    
+    @Test
+    public void testFormGet_noUser_existingRecord_view_ownerOnly() throws Exception {
+        record.setRecordVisibility(RecordVisibility.OWNER_ONLY);
+        testGetFormGet(null, record, false, false, false);
+    }
+    
+    /**
+     * parameterized test
+     * 
+     * @param loginUser - user to login as, can be null
+     * @param rec - record to request for the form, can be null
+     * @param requestEdit - value to pass to request record editing
+     * @param expectedAccessResult - do we expect to be able to see the tracker form?
+     * @param expectedFormEditState - should the tracker form's state be editable?
+     * @throws Exception
+     */
+    private void testGetFormGet(User loginUser, Record rec, boolean requestEdit, 
+            boolean expectedAccessResult, boolean expectedFormEditState) throws Exception {
+        
+        if (loginUser != null) {
+            login(loginUser.getName(), "password", loginUser.getRoles());    
+        }
+        
+        request.setMethod("GET");
+        request.setRequestURI(TrackerController.EDIT_URL);
+        request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
+        
+        request.setParameter(RecordWebFormContext.PARAM_EDIT, Boolean.toString(requestEdit));
+        
+        if (rec != null) {
+            request.setParameter(TrackerController.PARAM_RECORD_ID, record.getId().toString());
+        }
+
+        if (!expectedAccessResult) {
+            expectedEx.expect(AccessDeniedException.class);
+            if (expectedFormEditState) {
+                // edit mode
+                expectedEx.expectMessage(RecordWebFormContext.MSG_CODE_EDIT_AUTHFAIL);
+            } else {
+                // view mode
+                expectedEx.expectMessage(RecordWebFormContext.MSG_CODE_VIEW_AUTHFAIL);
+            }
+        }
+        ModelAndView mv = handle(request, response);
+        
+        // if access has failed exceptions would have been thrown in the handler and we never reach the
+        // following section of code
+        
+        // if we expect access to be allowed....
+        Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertViewName(mv, TrackerController.TRACKER_VIEW_NAME);
+        RecordWebFormContext webFormContext = (RecordWebFormContext)mv.getModel().get(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT);
+        Assert.assertEquals("editable state does not match expected", requestEdit, webFormContext.isEditable());        
+    }
+    
     
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {

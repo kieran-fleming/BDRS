@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.model.portal;
 
 import java.io.IOException;
+import java.util.List;
 
 import junit.framework.Assert;
 
@@ -17,11 +18,17 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
+import au.com.gaiaresources.bdrs.model.threshold.Threshold;
+import au.com.gaiaresources.bdrs.model.threshold.ThresholdDAO;
+import au.com.gaiaresources.bdrs.util.ModerationUtil;
 
 public class PortalUtilTest extends AbstractControllerTest {
 
     @Autowired
     private PreferenceDAO prefDAO;
+    
+    @Autowired
+    private ThresholdDAO thresholdDAO;
     
     private Portal p1;
     private Portal p2;
@@ -107,5 +114,19 @@ public class PortalUtilTest extends AbstractControllerTest {
                             prefDAO.getPreferenceCategoryByName(sesh, prefCatToEdit.getName(), defaultPortal).getDescription()));
    
         Assert.assertNotNull("pref cat should be lazy init", prefDAO.getPreferenceCategoryByName(sesh, prefCatToDelete.getName(), defaultPortal));                                                                                                          
+    }
+    
+    /**
+     * Tests that the default moderation threshold is created
+     */
+    @Test
+    public void testCreateModerationThreshold() {
+        List<Threshold> defaultTholds = thresholdDAO.getThresholdsByName(sesh, ModerationUtil.MODERATION_THRESHOLD_NAME, p1);
+        Assert.assertTrue("There shouldn't be any default thresholds!", defaultTholds.isEmpty());
+        PortalUtil.initModerationThreshold(sesh, p1);
+        defaultTholds = thresholdDAO.getThresholdsByName(sesh, ModerationUtil.MODERATION_THRESHOLD_NAME, p1);
+        Assert.assertFalse("There should be a default threshold!", defaultTholds.isEmpty());
+        Assert.assertEquals("There can be only 1 default threshold", 1, defaultTholds.size());
+        Assert.assertEquals("The default threshold does not have the default name!", ModerationUtil.MODERATION_THRESHOLD_NAME, defaultTholds.get(0).getName());
     }
 }

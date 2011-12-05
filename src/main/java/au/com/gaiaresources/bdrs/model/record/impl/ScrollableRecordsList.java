@@ -29,4 +29,9 @@ public class ScrollableRecordsList implements ScrollableRecords {
         currentIndex++;
         return r;
     }
+
+    @Override
+    public void rewind() {
+        currentIndex = 0;
+    }
 }

@@ -229,5 +229,15 @@ public interface TaxaDAO {
     void delete(IndicatorSpecies taxon);
 
     void delete(TaxonGroup taxonGroup);
+    
+    /**
+     * Returns a unique list of taxa that have been recorded in the specified 
+     * survey.
+     * @param surveyId the survey containing the records with the taxa to be
+     * returned.
+     * @return a list of unique taxa that have been recoreded in the specified
+     * survey
+     */
+    List<IndicatorSpecies> getDistinctRecordedTaxaForSurvey(int surveyId);
 
 }

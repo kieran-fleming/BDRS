@@ -211,7 +211,7 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 	 */
 	@Override
 	public List<TaxonGroup> getTaxonGroups() {
-		return find("from TaxonGroup");
+		return find("from TaxonGroup g order by g.id");
 	}
 	
 	/**
@@ -858,5 +858,16 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
         }
         
         deleteByQuery(taxonGroup);
+    }
+
+    /* (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.model.taxa.TaxaDAO#getDistinctRecordedTaxaForSurvey(int)
+     */
+    @Override
+    public List<IndicatorSpecies> getDistinctRecordedTaxaForSurvey(int surveyId) {
+        Query q = getSession().createQuery(
+        "select distinct taxon from Record rec left join rec.species taxon left join rec.survey survey where survey.id = :surveyId");
+        q.setParameter("surveyId", surveyId);
+        return q.list();
     }
 }

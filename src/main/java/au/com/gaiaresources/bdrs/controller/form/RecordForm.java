@@ -108,10 +108,10 @@ public class RecordForm {
         this.speciesScientificName = speciesScientificName;
     }
     public void setDate(Date date) {
-        this.date = date;
+        this.date = date != null ? new Date(date.getTime()) : null;
     }
     public Date getDate() {
-        return date;
+        return date != null ? new Date(date.getTime()) : null;
     }
     public String getDisplayDate() {
         return DateFormatter.format(getDate(), DateFormatter.DAY_MONTH_YEAR);

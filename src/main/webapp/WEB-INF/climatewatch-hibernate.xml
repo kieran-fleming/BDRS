@@ -88,6 +88,8 @@
 		        <value>au.com.gaiaresources.bdrs.model.detect.BDRSWurflDevice</value>
 		        <value>au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability</value>
 		        
+		        <value>au.com.gaiaresources.bdrs.model.report.Report</value>
+		        
             </list>
         </property>
         

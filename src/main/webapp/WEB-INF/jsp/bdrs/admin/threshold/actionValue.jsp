@@ -16,6 +16,10 @@
 		        <input type="hidden" name="add_action_value_${ index }" value=""/>
 		        <span>N/A</span>
 		    </c:when>
+		    <c:when test="<%= ActionType.MODERATION_EMAIL_NOTIFICATION.equals(action.getActionType()) %>">
+		        <input type="hidden" name="add_action_value_${ index }" value=""/>
+		        <span>N/A</span>
+		    </c:when>
 		</c:choose>
     </c:when>
     <c:otherwise>
@@ -24,6 +28,10 @@
                 <input class="validate(required, email)" type="text" name="action_value_${ action.id }" value="<c:out value="${ action.value }"/>"/>
             </c:when>
             <c:when test="<%= ActionType.HOLD_RECORD.equals(action.getActionType()) %>">
+                <input type="hidden" name="action_value_${ action.id }" value="<c:out value="${ action.value }"/>"/>
+                <span>N/A</span>
+            </c:when>
+            <c:when test="<%= ActionType.MODERATION_EMAIL_NOTIFICATION.equals(action.getActionType()) %>">
                 <input type="hidden" name="action_value_${ action.id }" value="<c:out value="${ action.value }"/>"/>
                 <span>N/A</span>
             </c:when>

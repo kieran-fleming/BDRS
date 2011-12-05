@@ -156,7 +156,6 @@ div.locationList table tbody tr td input[type=text] {
 }
 
 .locations_map {
-    width: 100%;
     height: 465px;
 }
 
@@ -319,8 +318,12 @@ table.datatable {
 /************************************/
 /* Form Table Styling               */
 /************************************/
-.form_table {
-    width: 100%;
+table.form_table {
+   /* instead of 100% width table, make the table auto center 
+    * this gives our forms a more consistent look rather than letting
+    * browsers choose how much to pad each column by to reach the 100% target 
+    * */
+    margin: 0px auto;
 }
 
 .form_table tbody th {
@@ -330,6 +333,16 @@ table.datatable {
 .form_table th,
 .form_table td {
     vertical-align: top;
+}
+
+
+table.form_table tbody tr th {
+    min-width: 150px;
+	white-space: nowrap;
+}
+
+table.form_table tbody tr td {
+	max-width: 300px;
 }
 
 .form_table textarea {
@@ -354,7 +367,14 @@ table.datatable {
 
 .attribute_input_table tbody td input[type=text],
 .attribute_input_table tbody td select {
-    width: 100%;
+    width: 95%;
+    word-wrap: normal;
+}
+
+#attribute_input_table tbody td,
+#attribute_input_table tbody th {
+    max-width: 120px;
+    word-wrap: normal;
 }
 
 .deleteRow {
@@ -428,8 +448,16 @@ legend {
 	text-align: justify;
 }
 
+.verttop {
+    vertical-align: top;
+}
+
 .vertmiddle {
     vertical-align: middle;
+}
+
+.plaintext {
+    font-weight: normal;
 }
 
 .italics {
@@ -457,6 +485,7 @@ legend {
 
 .scientificName {
     font-style: italic;
+	white-space: nowrap;
 }
 
 .error{
@@ -611,6 +640,10 @@ table {
 
 .sepBottom {
     border-bottom: 1px solid #D3D3D3;
+}
+
+.sepBottomDotted {
+    border-bottom: 1px dotted #D3D3D3; 
 }
 
 .wrapper {
@@ -835,6 +868,10 @@ ul.ui-menu li.ui-menu-item {
     border:collapse;
 }
 
+table.yearlysightings {
+	width: 100%;
+}
+
 .yearlysightings th {
     text-align: center;
 }
@@ -882,7 +919,8 @@ ul.ui-menu li.ui-menu-item {
     border: 1px solid #C0C0C0;
     margin: 0;
     padding: 3px 5px 3px 3px;
-    white-space: nowrap;
+    white-space: normal;
+	max-width: 300px;
 }
 
 /* Making the text boxes consistent with others on the survey page */
@@ -921,6 +959,11 @@ ul.ui-menu li.ui-menu-item {
     width: 20em;
 }
 
+#sightingTable textarea {
+    height: 7em;
+    width: 20em;
+}
+
 /************************************/
 /* Atlas Sighting Form              */
 /************************************/
@@ -933,7 +976,7 @@ ul.ui-menu li.ui-menu-item {
 }
 
 .atlasSighting .leftCol h3 {
-	width: 76%;
+	width: 74%;
 }
 
 .atlasSighting .leftCol h3 img {
@@ -1198,11 +1241,37 @@ h3.field_guide_header {
     border-color: #2D4977;
     padding: 0.5em 0.5em 0.5em 0.5em;
     margin-bottom: 0.5em;
-    
 }
 
 .alaSightingsTable {
     width: 100%;
+}
+
+#alaSightingsTableHeader {
+	font-size: 1em;
+	font-weight: bolder;
+}
+
+div.alaSightingsTableHeader {
+	margin-top: 8px;
+}
+
+div.alaSightingsTableHeaderDoubleLine {
+	margin-top: 5px;
+}
+
+div.alaSightingsTableHeaderDoubleLineArrows {
+    margin-top: 5px;
+}
+
+/* for single line header items */
+.sortArrows {
+	margin-top: 5px;
+}
+
+/* for double line header items */
+.alaSightingsTableHeaderDoubleLine .sortArrows {
+	margin-top: 10px;
 }
 
 .alaSightingsTable .sighting {
@@ -1225,6 +1294,44 @@ h3.field_guide_header {
     border-width: 0px 0px 1px 0px;
     border-style: solid;
     border-color: #D9D9D9;
+}
+
+.alaSightingsTableViewContent .bulkActionContainer {
+	padding-top: 1em;
+	padding-bottom: 2em;
+}
+
+.alaSightingsTableViewContent .bulkActionContainer a {
+    padding-left: 1em;
+	padding-right: 1em;
+}
+
+.alaSightingsTable .typeColumn {
+	width: 10%;
+}
+
+.alaSightingsTable .dateColumn {
+	width: 10%;
+}
+
+.alaSightingsTable .sciNameColumn {
+	width: 20%;
+}
+
+.alaSightingsTable .commonNameColumn {
+	width: 20%
+}
+
+.alaSightingsTable .locationColumn {
+	width: 20%
+}
+
+.alaSightingsTable .userColumn {
+	width: 15%
+}
+
+.alaSightingsTable .altRow {
+	background-color: #E0E8F0;
 }
 
 /**********************/
@@ -1431,6 +1538,13 @@ table.preference_table {
 }
 
 /************************************/
+/* Report Styling                   */
+/************************************/
+.report_descriptor {
+    max-width: 80%;
+}
+
+/************************************/
 /* Menu Layout Styling              */
 /************************************/
 
@@ -1538,4 +1652,29 @@ ul.menu ul ul ul ul li a{
 /***************************/
 .bdrsHighlight {
     background-color: #FFECA3;
+}
+
+/***************************/
+/* General cursor style    */
+/***************************/
+.cursorPointer {
+	cursor:pointer;
+}
+
+/***************************/
+/* Jquery UI adjustments.. */
+/***************************/
+
+/* up and down arrow adjust used to move
+ * arrows closer to each other and bump
+ * the top arrow across so the up/down arrows
+ * line up vertically.
+ */
+.ui-upArrowAdjust {
+	margin-left: 1px;
+	margin-bottom: -9px;
+}
+
+.ui-downArrowAdjust {
+	margin-top: -9px;
 }

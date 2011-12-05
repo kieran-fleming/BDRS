@@ -1,20 +1,32 @@
-<div id="background"></div>
-
 #{if}(${context.user.isRoot()}) 
     <div id="header" class="header root">
 #{else}
     <div id="header" class="header">
 #{end}
-     #{if}(${context.user.isUser()} || ${context.user.isAdmin()})
-           <a href="${pageContext.request.contextPath}/authenticated/redirect.htm"></a>
-     #{else}
-           <a href="${pageContext.request.contextPath}/home.htm"></a>
-     #{end}
-     <div id="portalName">
-         #{if}(!${context.portal})
-             Biological Data Recording System
-         #{else}
-             ${context.portal.name}
-         #{end}
-     </div>
+    #{if}(${context.user.isUser()} || ${context.user.isAdmin()})
+        <a href="${pageContext.request.contextPath}/authenticated/redirect.htm"></a>
+    #{else}
+        <a href="${pageContext.request.contextPath}/home.htm"></a>
+    #{end}
+        <div id="portalName">
+    #{if}(!${context.portal})
+        Biological Data Recording System
+    #{else}
+        ${context.portal.name}
+    #{end}
+    </div>
+ 
+    #{if}(${context.user.isUser()} || ${context.user.isAdmin()})
+    <div id="welcomeText">
+        <div>
+            <a title="Sign out / Log out" href="${pageContext.request.contextPath}/logout">Sign Out</a>
+        </div>
+        <div>
+            <a title="Open user profile for ${context.user.firstName} ${context.user.lastName}" href="${pageContext.request.contextPath}/user/profile.htm">
+                Logged in as ${context.user.name}
+            </a>
+        </div>
+    </div>
+    #{end}
+    <div class="clear"></div>
 </div>

@@ -89,7 +89,7 @@ public class ContentWebService extends AbstractController {
      */
     private String getContent(String key) throws Exception {
         
-        return contentService.getContent(getRequestContext().getPortal(), key);
+        return contentService.getContent(getRequestContext().getHibernate(), getRequestContext().getPortal(), key);
     }
 
     /**
@@ -104,6 +104,6 @@ public class ContentWebService extends AbstractController {
         if (portal == null) {
             throw new IllegalStateException("Portal cannot be null");
         }
-        contentService.saveContent(portal, key, value);
+        contentService.saveContent(getRequestContext().getHibernate(), portal, key, value);
     }
 }

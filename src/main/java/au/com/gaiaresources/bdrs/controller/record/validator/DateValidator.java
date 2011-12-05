@@ -1,7 +1,5 @@
 package au.com.gaiaresources.bdrs.controller.record.validator;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -51,8 +49,8 @@ public class DateValidator extends AbstractValidator {
     public DateValidator(PropertyService propertyService, boolean required,
             boolean blank, Date earliest, Date latest) {
         super(propertyService, required, blank);
-        this.earliest = earliest;
-        this.latest = latest;
+        this.earliest = earliest != null ? new Date(earliest.getTime()) : null;
+        this.latest = latest != null ? new Date(latest.getTime()) : null;
     }
     
     /**

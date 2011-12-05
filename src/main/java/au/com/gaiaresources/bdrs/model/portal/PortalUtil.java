@@ -22,10 +22,13 @@ import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
+import au.com.gaiaresources.bdrs.model.threshold.Threshold;
+import au.com.gaiaresources.bdrs.model.threshold.ThresholdDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
+import au.com.gaiaresources.bdrs.util.ModerationUtil;
 
 /**
  * @author stephanie
@@ -63,6 +66,7 @@ public class PortalUtil {
         User u = registrationService.signUp("admin", "admin@gaiabdrs.com", "admin", "admin", "password", null, Role.ADMIN, true);
         u.setPortal(p);
         initPortalPreferences(sesh, p, false);
+        initModerationThreshold(sesh, p);
     }
 
     /**
@@ -221,5 +225,20 @@ public class PortalUtil {
         pref.setDescription(description);
         pref.setIsRequired(isRequired);
         return prefDAO.save(sesh, pref);
+    }
+    
+    /**
+     * Initializes the threshold for the moderation actions.  The moderation actions 
+     * are automatic holding of records with moderation attributes and automatic 
+     * emails about moderation of Records.
+     * @param sesh 
+     */
+    public static void initModerationThreshold(Session sesh, Portal portal) {
+        ThresholdDAO thresholdDAO = AppContext.getBean(ThresholdDAO.class);
+        ModerationUtil modService = new ModerationUtil(thresholdDAO);
+        List<Threshold> modTholds = thresholdDAO.getThresholdsByName(sesh, ModerationUtil.MODERATION_THRESHOLD_NAME, portal);
+        if (modTholds == null || modTholds.isEmpty()) {
+            modService.createModerationThreshold(sesh, portal);
+        }
     }
 }

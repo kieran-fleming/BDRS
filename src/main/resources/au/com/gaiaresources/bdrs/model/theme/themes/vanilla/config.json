@@ -16,6 +16,16 @@
     
     "theme_elements" : [
         {
+            "type"  : "COLOR",
+            "key"   : "style.body.background.color",
+            "value" : "transparent"
+        },
+        {
+            "type"  : "TEXT",
+            "key"   : "style.content.width",
+            "value" : "868px"
+        },
+        {
             "type"  : "TEXT",
             "key"   : "style.content.font",
             "value" : "Calibri, Arial, Helvetica, sans-serif"
@@ -122,6 +132,11 @@
         },
         {
             "type"  : "COLOR",
+            "key"   : "style.anchor.hover.color",
+            "value" : "#CD202C"
+        },
+        {
+            "type"  : "COLOR",
             "key"   : "style.header.text.color",
             "value" : "#FFFFFF"
         },
@@ -134,11 +149,6 @@
             "type"  : "TEXT",
             "key"   : "style.header.border.radius",
             "value" : "20px"
-        },
-        {
-            "type"  : "COLOR",
-            "key"   : "style.link.color",
-            "value" : "#F69900"
         },
         {
             "type"  : "COLOR",
@@ -386,6 +396,11 @@
             'type'  : 'TEMPLATE',
             'key'   : 'template.footer',
             'value' : 'templates/footer.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.page.footer',
+            'value' : 'templates/page_footer.vm'
         },
         {
             'type'  : 'TEMPLATE',

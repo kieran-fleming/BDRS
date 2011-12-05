@@ -18,13 +18,17 @@ public class DownloadFileController extends AbstractDownloadFileController {
     
     public static final String FILE_DOWNLOAD_URL = "/files/download.htm";
     
+    public static final String CLASS_NAME_QUERY_PARAM = "className";
+    public static final String INSTANCE_ID_QUERY_PARAM = "id";
+    public static final String FILENAME_QUERY_PARAM = "fileName";
+    
     @Autowired
     private ManagedFileDAO managedFileDAO;
     
     @RequestMapping(value = FILE_DOWNLOAD_URL, method = RequestMethod.GET)
-    public ModelAndView downloadFile(@RequestParam("className") String className,
-                                     @RequestParam("id") Integer id,
-                                     @RequestParam("fileName") String fileName,
+    public ModelAndView downloadFile(@RequestParam(CLASS_NAME_QUERY_PARAM) String className,
+                                     @RequestParam(INSTANCE_ID_QUERY_PARAM) Integer id,
+                                     @RequestParam(FILENAME_QUERY_PARAM) String fileName,
                                      HttpServletResponse response) {
         try {
             return super.downloadFile(className, id, fileName);

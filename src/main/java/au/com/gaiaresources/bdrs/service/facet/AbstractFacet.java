@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sf.json.JSONObject;
-import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 
 /**
@@ -94,6 +93,19 @@ public abstract class AbstractFacet implements Facet {
         this.facetOptions.add(opt);
     }
 
+    /**
+     * Inserts a new search option to this facet.
+     * @param opt the option to be added to this facet.
+     * @param index the index at which to insert this facet
+     */
+    public void insertFacetOption(FacetOption opt, int index) {
+        if (opt == null) {
+            throw new IllegalArgumentException();
+        }
+
+        this.facetOptions.add(index, opt);
+    }
+    
     @Override
     public boolean isActive() {
         return isActive;
@@ -121,19 +133,23 @@ public abstract class AbstractFacet implements Facet {
         this.isActive = active;
     }
     
+    /*
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.service.facet.Facet#getPredicate()
+     */
     @Override
-    public void applyPredicate(HqlQuery q) {
+    public Predicate getPredicate() {
         Predicate facetPredicate = null;
         for(FacetOption opt : getFacetOptions()) {
             if(opt.isSelected()) {
                 Predicate optPredicate = opt.getPredicate(); 
-                facetPredicate = facetPredicate == null ? optPredicate : facetPredicate.or(optPredicate);
+                if (optPredicate != null) {
+                    facetPredicate = facetPredicate == null ? optPredicate : facetPredicate.or(optPredicate);
+                }
             }
         }
         
-        if(facetPredicate != null) {
-            q.and(facetPredicate);
-        }
+        return facetPredicate;
     }
     
     @Override

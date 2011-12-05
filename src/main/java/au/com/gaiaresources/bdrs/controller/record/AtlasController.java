@@ -1,12 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.record;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -38,13 +38,20 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeUtil;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
-import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.web.AtlasService;
 import edu.emory.mathcs.backport.java.util.Collections;
 
+/**
+ * Controller for rendering the atlas form. note that the POST handler redirects
+ * to the TrackerController
+ *
+ */
 @Controller
 public class AtlasController extends AbstractController {
 
@@ -52,8 +59,11 @@ public class AtlasController extends AbstractController {
     
     public static final String ATLAS_URL = "/bdrs/user/atlas.htm";
     
-    public static final String TAXON_GROUP_ATTRIBUTE_PREFIX = "taxonGroupAttr_";
-    public static final String CENSUS_METHOD_ATTRIBUTE_PREFIX = "censusMethodAttr_";
+    public static final String ATLAS_FORM_VIEW_NAME = "atlas";
+    
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_TAXON_SEARCH = "taxonSearch";
 
     @Autowired
     private RecordDAO recordDAO;
@@ -71,23 +81,23 @@ public class AtlasController extends AbstractController {
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
     /**
+     * GET handler for rendering the atlas form
      * Note there is no POST method - the atlas form posts to the TrackerController
      * 
-     * @param request
-     * @param response
-     * @param surveyId
-     * @param taxonSearch
-     * @param recordId
-     * @param guid
-     * @return
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyId - the survey ID to create the new form for
+     * @param taxonSearch - scientific name to retrieve a taxon to populate the form with
+     * @param recordId - an existing record ID used to populate the form
+     * @param guid - a guid to retrieve a taxon to populate the form with
+     * @return ModelAndView to render the atlas form
      */
-    @RolesAllowed( {  Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @RequestMapping(value = ATLAS_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,
             HttpServletResponse response,
             @RequestParam(value = "surveyId", required = true) int surveyId,
-            @RequestParam(value = "taxonSearch", required = false) String taxonSearch,
+            @RequestParam(value = PARAM_TAXON_SEARCH, required = false) String taxonSearch,
             @RequestParam(value = "recordId", required = false, defaultValue = "0") int recordId,
             @RequestParam(value = "guid", required = false) String guid) {
         
@@ -95,6 +105,9 @@ public class AtlasController extends AbstractController {
         Record record = recordDAO.getRecord(recordId);
         
         record = record == null ? new Record() : record;
+        
+        User loggedInUser = getRequestContext().getUser();
+        RecordWebFormContext webFormContext = new RecordWebFormContext(request, record, loggedInUser, survey);
         
         // Set record visibility to survey default. Setting via web form not supported.
         // Survey's default record visibility can be set in the 'admin -> projects' interface
@@ -155,17 +168,22 @@ public class AtlasController extends AbstractController {
             Collections.sort(attributeList, new ComparePersistentImplByWeight());
 
             // Retrieve the first file attribute and if present, the associated
-            // record attribute.
+            // record attribute as well as the moderation attributes.
+            List<FormField> moderationFormFields = new ArrayList<FormField>();
             Attribute fileAttr = null;
             AttributeValue fileRecAttr = null;
             for(Attribute attr : attributeList) {
-                if(!AttributeScope.LOCATION.equals(attr.getScope()) && fileAttr == null && AttributeType.FILE.equals(attr.getType())) {
-                    // Attribute found.
-                    fileAttr = attr;
-                    // Try to locate matching record attribute
-                    for(AttributeValue recAttr : record.getAttributes()) {
-                        if(fileRecAttr == null && fileAttr.equals(recAttr.getAttribute())) {
-                            fileRecAttr = recAttr;
+                if(!AttributeScope.LOCATION.equals(attr.getScope())) { 
+                    if (fileAttr == null && AttributeType.FILE.equals(attr.getType())) {
+                        // Attribute found.
+                        fileAttr = attr;
+                        // Try to locate matching record attribute
+                        fileRecAttr = AttributeValueUtil.getByAttribute(record.getAttributes(), fileAttr);
+                    } else {
+                        // add moderation attributes
+                        AttributeValue attrVal = AttributeValueUtil.getByAttribute(record.getAttributes(), attr);
+                        if (AttributeUtil.isVisibleByScopeAndUser(attr, loggedInUser, attrVal)) {
+                            moderationFormFields.add(formFieldFactory.createRecordFormField(survey, record, attr, attrVal));
                         }
                     }
                 }
@@ -188,7 +206,8 @@ public class AtlasController extends AbstractController {
                 locations.addAll(locationDAO.getUserLocations(getRequestContext().getUser()));
             }
             
-            Metadata defaultLocId = getRequestContext().getUser().getMetadataObj(Metadata.DEFAULT_LOCATION_ID);
+            // if there is no logged in user there can be no default location id for that user...
+            Metadata defaultLocId = loggedInUser != null ? loggedInUser.getMetadataObj(Metadata.DEFAULT_LOCATION_ID) : null;
             Location defaultLocation;
             if(defaultLocId == null) {
                 defaultLocation = null;
@@ -197,18 +216,21 @@ public class AtlasController extends AbstractController {
                 defaultLocation = locationDAO.getLocation(defaultLocPk);
             }
             
-            mv = new ModelAndView("atlas");
+            mv = new ModelAndView(ATLAS_FORM_VIEW_NAME);
             mv.addObject("record", record);
             mv.addObject("taxon", species);
             mv.addObject("survey", survey);
             mv.addObject("locations", locations);
             mv.addObject("formFieldMap", formFieldMap);
             mv.addObject("fileFormField", fileFormField);
+            mv.addObject("moderationFormFields", moderationFormFields);
             mv.addObject("preview", request.getParameter("preview") != null);
             mv.addObject("defaultLocation", defaultLocation);
             
             mv.addObject("errorMap", errorMap);
             mv.addObject("valueMap", valueMap);
+            
+            mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, webFormContext);
         }
         
         return mv;

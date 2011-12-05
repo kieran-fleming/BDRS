@@ -4,6 +4,10 @@
 
 <%@page import="java.util.Date"%>
 
+
+<%@page import="au.com.gaiaresources.bdrs.model.taxa.AttributeScope"%>
+
+<%@page import="java.util.Arrays"%>
 <tiles:useAttribute name="condition" classname="au.com.gaiaresources.bdrs.model.threshold.Condition" ignore="true"/>
 <tiles:useAttribute name="index" ignore="true"/>
 <tiles:useAttribute name="valueForKey" ignore="true"/>
@@ -61,6 +65,16 @@
             </c:when>
             <c:when test="<%= Date.class.equals(klass) %>">
                 <input class="validate(required) datepicker" type="text" name="add_${ keyValuePrefix }_value_${ index }"/>
+            </c:when>
+            <c:when test="<%= klass.isEnum() %>">
+                <select class="validate(required)" name="add_${ keyValuePrefix }_value_${ index }" multiple="multiple" size="3">
+                    <c:forEach items="<%= klass.getEnumConstants() %>" var="enum_constants">
+                            <jsp:useBean id="enum_constants" type="java.lang.Object" />
+                            <option value="<%= enum_constants.toString() %>">
+                                <c:out value="<%= enum_constants.toString() %>"/>
+                            </option>
+                    </c:forEach>
+                </select>
             </c:when>
         </c:choose>
     </c:when>
@@ -152,6 +166,25 @@
                         </c:otherwise>
                     </c:choose> 
                 />
+            </c:when>
+            <c:when test="<%= klass.isEnum() %>">
+                <select name="${ keyValuePrefix }_value_${ condition.id }" multiple="multiple" size="2">
+                    <c:forEach items="<%= klass.getEnumConstants() %>" var="enum_constant">
+                            <jsp:useBean id="enum_constant" type="java.lang.Object" />
+                            <option value="<%= enum_constant.toString() %>"
+                            	<c:choose>
+								    <c:when test="${ valueForKey }">
+								        <c:if test="<%= condition.stringKey().equals(enum_constant.toString()) %>">selected="selected"</c:if>
+								    </c:when>
+								    <c:otherwise>
+								        <c:if test="<%= Arrays.asList(condition.stringArrayValue()).contains(enum_constant.toString()) %>">selected="selected"</c:if>
+								    </c:otherwise>
+								</c:choose>
+                            >
+                                <c:out value="<%= enum_constant.toString() %>"/>
+                            </option>
+                    </c:forEach>
+                </select>
             </c:when>
         </c:choose>
     </c:otherwise>

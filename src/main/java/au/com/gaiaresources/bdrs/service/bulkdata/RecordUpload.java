@@ -80,8 +80,8 @@ public class RecordUpload {
         super();
 
         this.id = id;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.createdAt = createdAt != null ? (Date)createdAt.clone() : null;
+        this.updatedAt = updatedAt != null ? (Date)updatedAt.clone() : null;
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
         this.className = className;
@@ -93,8 +93,8 @@ public class RecordUpload {
         this.held = held;
         this.firstAppearance = firstAppearnce;
         this.lastAppearance = lastAppearance;
-        this.when = when;
-        this.time = time;
+        this.when = when != null ? (Date)when.clone() : null;
+        this.time = time != null ? (Date)time.clone() : null;
         this.locationName = locationName;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -113,19 +113,19 @@ public class RecordUpload {
     }
 
     public Date getCreatedAt() {
-        return createdAt;
+        return createdAt != null ? (Date)createdAt.clone() : null;
     }
 
     public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? (Date)createdAt.clone() : null;
     }
 
     public Date getUpdatedAt() {
-        return updatedAt;
+        return updatedAt != null ? (Date)updatedAt.clone() : null;
     }
 
     public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+        this.updatedAt = updatedAt != null ? (Date)updatedAt.clone() : null;
     }
 
     public String getCreatedBy() {
@@ -238,7 +238,7 @@ public class RecordUpload {
     }
 
     public void setWhen(Date when) {
-        this.when = when;
+        this.when = when != null ? (Date)when.clone() : null;
     }
 
     public Date getTime() {
@@ -246,7 +246,7 @@ public class RecordUpload {
     }
 
     public void setTime(Date time) {
-        this.time = time;
+        this.time = time != null ? (Date)time.clone() : null;
     }
 
     /**

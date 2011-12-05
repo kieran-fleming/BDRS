@@ -105,10 +105,10 @@ public class RecordDownloadWriter {
             writeKMLRecords(out, sesh, contextPath, accessingUser, sr);
             break;
         case SHAPEFILE:
-            writeSHPRecords(out, sesh, accessingUser, sr);
+            writeSHPRecords(out, sesh, accessingUser, survey, sr);
             break;
         case XLS:
-            writeXLSRecords(bulkDataService, out, survey, sr);
+            writeXLSRecords(bulkDataService, out, survey, sr, sesh);
             break;
         default:
             // Do nothing
@@ -119,33 +119,44 @@ public class RecordDownloadWriter {
     
     private static void writeXLSRecords(BulkDataService bulkDataService,
             OutputStream out, Survey survey,
-            ScrollableRecords sr) throws Exception {
-        bulkDataService.exportSurveyRecords(survey, sr, out);
+            ScrollableRecords sr, Session sesh) throws Exception {
+        bulkDataService.exportSurveyRecords(sesh, survey, sr, out);
     }
 
     private static void writeSHPRecords(OutputStream out, Session sesh,
-            User accessingUser, ScrollableRecords sr) throws Exception,
+            User accessingUser, Survey survey, ScrollableRecords sr) throws Exception,
             FileNotFoundException, IOException {
         // This is not a good thing
+        // -----
+        // Yes, I believe I just made it worse
         List<Record> recordList = new ArrayList<Record>();
+
         while(sr.hasMoreElements()) {
-            recordList.add(sr.nextElement());
+            Record r = sr.nextElement();
+            if (survey == null || r.getSurvey() == survey) {
+                recordList.add(r);
+            }
         }
         
-        ShapeFileWriter writer = new ShapeFileWriter();
-        File zipFile = writer.exportRecords(recordList, accessingUser);
-        
-        sesh.clear();
-        recordList.clear();
-        
-        FileInputStream inStream = null;
-        try {
-            inStream = new FileInputStream(zipFile);
-            IOUtils.copy(inStream, out);
-        } finally {
-            if (inStream != null) {
-                inStream.close();
-            }
+        if (!recordList.isEmpty()) {
+            
+            // no point writing a non empty shapefile since the user is not
+            // expecting a template in this download but a populated shapefile
+            ShapeFileWriter writer = new ShapeFileWriter();
+            File zipFile = writer.exportRecords(recordList, accessingUser);
+            
+            sesh.clear();
+            recordList.clear();
+            
+            FileInputStream inStream = null;
+            try {
+                inStream = new FileInputStream(zipFile);
+                IOUtils.copy(inStream, out);
+            } finally {
+                if (inStream != null) {
+                    inStream.close();
+                }
+            }    
         }
     }
 

@@ -27,6 +27,7 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.controller.map.RecordDownloadFormat;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -38,6 +39,7 @@ import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
+import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
@@ -85,7 +87,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
     private FacetService facetService;
     @Autowired
     private AdvancedReviewSightingsController controller;
-
+    
     private TaxonGroup taxonGroupBirds;
     private TaxonGroup taxonGroupFrogs;
     private IndicatorSpecies speciesA;
@@ -108,6 +110,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
      * Total number of records created for each survey by setup.
      */
     private int surveyRecordCount;
+    private Map<User, Integer> userRecordCount = new HashMap<User, Integer>();
     /**
      * Total number of records created for each census method.
      */
@@ -245,7 +248,8 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
             Attribute attr;
             for (AttributeType attrType : AttributeType.values()) {
                 for (AttributeScope scope : new AttributeScope[] {
-                        AttributeScope.RECORD, AttributeScope.SURVEY, null }) {
+                        AttributeScope.RECORD, AttributeScope.SURVEY,
+                        AttributeScope.RECORD_MODERATION, AttributeScope.SURVEY_MODERATION, null }) {
     
                     attr = new Attribute();
                     attr.setDescription(attrType.toString() + " description");
@@ -281,7 +285,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                     attributeList.add(attr);
                 }
             }
-
+            
             Survey survey = new Survey();
             survey.setName(String.format("Survey %d", surveyIndex));
             survey.setActive(true);
@@ -296,7 +300,6 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
             survey.getCensusMethods().add(method);
             
             survey = surveyDAO.save(survey);
-            
             surveyRecordCount = 0;
             taxonRecordCount = 0;
             methodRecordCount = 0;
@@ -308,6 +311,13 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
                         
                         recordCount++;
                         surveyRecordCount++;
+                        
+                        int thisUserRecordCount = 1;
+                        if (userRecordCount.containsKey(u)) {
+                            thisUserRecordCount = userRecordCount.get(u)+1;
+                        }
+                        userRecordCount.put(u, thisUserRecordCount);
+                        
                         methodRecordCount++;
                         taxonRecordCount++;
                     }
@@ -350,6 +360,8 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         record.setBehaviour("Behaviour notes");
         record.setHabitat("Habitat Notes");
         record.setNumber(1);
+        // records need to be public for the tests to work as written
+        record.setRecordVisibility(RecordVisibility.PUBLIC);
         
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
         dateFormat.setLenient(false);
@@ -545,6 +557,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         request.addParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -602,7 +615,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
         ModelAndViewAssert.assertViewName(mv, "advancedReview");
         
-        ModelAndViewAssert.assertModelAttributeAvailable(mv, "mapViewSelected");
+        ModelAndViewAssert.assertModelAttributeValue(mv, AdvancedReviewSightingsController.MODEL_TABLE_VIEW_SELECTED, true);
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "surveyId");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortBy");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortOrder");
@@ -642,9 +655,12 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReviewDownload.htm");
         request.addParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME, survey.getId().toString());
+        request.addParameter(AdvancedReviewSightingsController.QUERY_PARAM_DOWNLOAD_FORMAT, RecordDownloadFormat.KML.toString());
+        request.addParameter(AdvancedReviewSightingsController.QUERY_PARAM_DOWNLOAD_FORMAT, RecordDownloadFormat.XLS.toString());
+        request.addParameter(AdvancedReviewSightingsController.QUERY_PARAM_DOWNLOAD_FORMAT, RecordDownloadFormat.SHAPEFILE.toString());
         
         handle(request, response);
-        Assert.assertEquals("application/vnd.ms-excel", response.getContentType());
+        Assert.assertEquals(AdvancedReviewSightingsController.SIGHTINGS_DOWNLOAD_CONTENT_TYPE, response.getContentType());
         Assert.assertTrue(response.getContentAsByteArray().length > 0);
     }
     
@@ -653,6 +669,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         login("admin", "password", new String[] { Role.ADMIN });
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -682,6 +699,7 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         request.addParameter(AdvancedReviewSightingsController.SEARCH_QUERY_PARAM_NAME, speciesA.getScientificName());
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -782,7 +800,34 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         List<User> userList = new ArrayList<User>();
         userList.add(admin);
         
-        testUserFacetSelection(userList, recordCount/2);
+        testUserFacetSelection(userList, admin, recordCount/2);
+    }
+    
+    @Test 
+    public void testUserUserFacet() throws Exception {
+        
+        List<User> userList = new ArrayList<User>();
+        userList.add(user);
+        
+        testUserFacetSelection(userList, admin, userRecordCount.get(user));
+    }
+    
+    @Test 
+    public void testMultipleUserFacet() throws Exception {
+        
+        List<User> userList = new ArrayList<User>();
+        userList.add(user);
+        userList.add(admin);
+        
+        testUserFacetSelection(userList, admin, userRecordCount.get(user)+userRecordCount.get(admin));
+    }
+    
+    @Test 
+    public void testUserViewUserFacet() throws Exception {
+        List<User> userList = new ArrayList<User>();
+        userList.add(user);
+        
+        testUserFacetSelection(userList, user, userRecordCount.get(user));
     }
     
     private void testCensusMethodSelection(List<CensusMethod> methodList, int expectedCount) throws Exception {
@@ -800,10 +845,13 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         
-        Facet facet = getFacetInstanceByType(CensusMethodTypeFacet.class);
-        for(String type: methodTypes) {
-            request.addParameter(facet.getInputName(), type);
+        List<Facet> facets = getFacetInstancesByType(CensusMethodTypeFacet.class);
+        for(Facet facet : facets) {
+            for(String type: methodTypes) {
+                request.addParameter(facet.getInputName(), type);
+            }
         }
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -834,10 +882,13 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         
-        Facet facet = getFacetInstanceByType(SurveyFacet.class);
-        for(Survey survey : surveyList) {
-            request.addParameter(facet.getInputName(), survey.getId().toString());
+        List<Facet> facets = getFacetInstancesByType(SurveyFacet.class);
+        for(Facet facet : facets) {
+            for(Survey survey : surveyList) {
+                request.addParameter(facet.getInputName(), survey.getId().toString());
+            }
         }
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -860,16 +911,26 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         }
     }
     
+    private void deselectMyRecordsOnly() {
+        List<Facet> facets = getFacetInstancesByType(UserFacet.class);
+        for(Facet facet : facets) {
+            request.addParameter(facet.getInputName(), String.valueOf(-1));
+        }
+    }
+
     private void testTaxonGroupFacetSelection(List<TaxonGroup> groupList, int expectedRecordCount) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         
-        Facet facet = getFacetInstanceByType(TaxonGroupFacet.class);
-        for(TaxonGroup group: groupList) {
-            request.addParameter(facet.getInputName(), group.getId().toString());
+        List<Facet> facets = getFacetInstancesByType(TaxonGroupFacet.class);
+        for(Facet facet : facets) {
+            for(TaxonGroup group: groupList) {
+                request.addParameter(facet.getInputName(), group.getId().toString());
+            }
         }
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -894,15 +955,17 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         }
     }
     
-    private void testUserFacetSelection(List<User> userList, int expectedRecordCount) throws Exception {
-        login("admin", "password", new String[] { Role.ADMIN });
+    private void testUserFacetSelection(List<User> userList, User loginUser, int expectedRecordCount) throws Exception {
+        login(loginUser.getName(), loginUser.getPassword(), loginUser.getRoles());
         
         request.setMethod("GET");
         request.setRequestURI("/review/sightings/advancedReview.htm");
         
-        Facet facet = getFacetInstanceByType(UserFacet.class);
-        for(User user: userList) {
-            request.addParameter(facet.getInputName(), user.getId().toString());
+        List<Facet> facets = getFacetInstancesByType(UserFacet.class);
+        for(Facet facet : facets) {
+            for(User user: userList) {
+                request.addParameter(facet.getInputName(), user.getId().toString());
+            }
         }
         
         ModelAndView mv = handle(request, response);
@@ -935,11 +998,15 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         Calendar cal = new GregorianCalendar();
         
         Set<Integer> monthSet = new HashSet<Integer>(monthlist.size());
-        Facet facet = getFacetInstanceByType(MonthFacet.class);
-        for(Long date : monthlist) {
-            request.addParameter(facet.getInputName(), date.toString());
-            monthSet.add(date.intValue());
+        List<Facet> facets = getFacetInstancesByType(MonthFacet.class);
+        for(Facet facet : facets) {
+            for(Long date : monthlist) {
+                request.addParameter(facet.getInputName(), date.toString());
+                monthSet.add(date.intValue());
+            }
         }
+        
+        deselectMyRecordsOnly();
         
         ModelAndView mv = handle(request, response);
         getRequestContext().getHibernate().flush();
@@ -964,14 +1031,69 @@ public class AdvancedReviewSightingsControllerTest extends AbstractControllerTes
         }
     }
     
-    private Facet getFacetInstanceByType(Class<? extends Facet> klass) {
+    private List<Facet> getFacetInstancesByType(Class<? extends Facet> klass) {
+        List<Facet> facetList = new ArrayList<Facet>();
         User user = userDAO.getUser("admin");
         for(Facet facet : facetService.getFacetList(user, new HashMap<String, String[]>())) {
             if(facet.getClass().equals(klass)) {
-                return facet;
+                facetList.add(facet);
             }
         }
         
-        return null;
+        return facetList;
+    }
+    
+    @Test
+    public void testAnonymousView() throws Exception {
+        request.setMethod("GET");
+        request.setRequestURI("/review/sightings/advancedReview.htm");
+        deselectMyRecordsOnly();
+        
+        Calendar cal = new GregorianCalendar();
+        
+        ModelAndView mv = handle(request, response);
+        getRequestContext().getHibernate().flush();
+        getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
+        ModelAndViewAssert.assertViewName(mv, "advancedReview");
+        
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "mapViewSelected");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "surveyId");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortBy");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortOrder");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "searchText");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
+        
+        List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
+        Assert.assertEquals(recordCount, recordList.size());
+    }
+    
+    @Test
+    public void testAllPublicRecordsUserFacetSelection() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        
+        request.setMethod("GET");
+        request.setRequestURI("/review/sightings/advancedReview.htm");
+        
+        List<Facet> facets = getFacetInstancesByType(UserFacet.class);
+        for(Facet facet : facets) {
+            request.addParameter(facet.getInputName(), String.valueOf(-1));
+        }
+        
+        ModelAndView mv = handle(request, response);
+        getRequestContext().getHibernate().flush();
+        getRequestContext().getHibernate().setFlushMode(FlushMode.AUTO);
+        ModelAndViewAssert.assertViewName(mv, "advancedReview");
+        
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "mapViewSelected");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "surveyId");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortBy");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "sortOrder");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "searchText");
+        ModelAndViewAssert.assertModelAttributeAvailable(mv, "facetList");
+        
+        List<Facet> facetList = (List<Facet>)mv.getModel().get("facetList");
+        List<Record> recordList = controller.getMatchingRecordsAsList(facetList, null, null, null, null, null, null);
+        Assert.assertEquals(recordCount, recordList.size());
     }
 }

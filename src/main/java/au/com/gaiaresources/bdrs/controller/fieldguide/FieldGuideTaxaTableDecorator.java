@@ -54,4 +54,17 @@ public class FieldGuideTaxaTableDecorator extends TableDecorator {
         String contextpath = this.getPageContext().getServletContext().getContextPath();
         return String.format("%s/fieldguide/taxon.htm?id=%d", contextpath, taxon.getId());
     }
+    
+    public String getRecordNowButton() {
+        IndicatorSpecies taxon = (IndicatorSpecies)getCurrentRowObject();
+        String contextpath = this.getPageContext().getServletContext().getContextPath();
+        String html = "<form method=\"get\" action=\"%s/bdrs/user/taxonSurveyRenderRedirect.htm\">" + 
+                          "<div class=\"buttonpanel\">" +
+                          "<input type=\"hidden\" name=\"speciesId\" value=\"%d\">" +
+                          "<input type=\"hidden\" name=\"redirectURL\" value=\"%s\">" +
+                          "<input class=\"button form_action\" type=\"submit\" value=\"Record Now\">" +
+                          "</div>" +
+                      "</form>";
+        return String.format(html, contextpath, taxon.getId(), getTaxonFieldGuideURL(taxon));
+    }
 }

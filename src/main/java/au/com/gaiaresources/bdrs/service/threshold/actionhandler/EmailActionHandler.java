@@ -21,8 +21,8 @@ public class EmailActionHandler implements ActionHandler {
     @SuppressWarnings("unused")
     private Logger log = Logger.getLogger(getClass());
 
-    private EmailService emailService;
-    private PropertyService propertyService;
+    protected EmailService emailService;
+    protected PropertyService propertyService;
 
     private final String SIMPLE_PROPERTY_TEMPLATE = " %s \'%s\'\r\n";
     private final String COMPLEX_PROPERTY_TEMPLATE = " %s %s \'%s\' %s %s \'%s\'\r\n";

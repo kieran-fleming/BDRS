@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.DataBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,9 +23,11 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
+import au.com.gaiaresources.bdrs.service.threshold.ComplexTypeOperator;
 import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
+import au.com.gaiaresources.bdrs.model.threshold.ActionEvent;
 import au.com.gaiaresources.bdrs.model.threshold.ActionType;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.model.threshold.Operator;
@@ -191,15 +192,15 @@ public class ThresholdController extends AbstractController {
                         : Operator.valueOf(keyOperatorStr);
                 Operator valueOperator = Operator.valueOf(request.getParameter(String.format("value_operator_%d", conditionPk)));
                 String key = request.getParameter(String.format("key_value_%d", conditionPk));
-                String value = request.getParameter(String.format("value_value_%d", conditionPk));
-
+                String[] values = request.getParameterValues(String.format("value_value_%d", conditionPk));
+                
                 Condition condition = conditionMap.remove(conditionPk);
                 condition.setClassName(className);
                 condition.setPropertyPath(propertyPath);
                 condition.setKeyOperator(keyOperator);
                 condition.setValueOperator(valueOperator);
                 condition.setKey(key);
-                condition.setValue(value);
+                condition.setValue(values);
                 
                 condition = thresholdDAO.save(condition);
 
@@ -217,15 +218,15 @@ public class ThresholdController extends AbstractController {
                         : Operator.valueOf(keyOperatorStr);
                 Operator valueOperator = Operator.valueOf(request.getParameter(String.format("add_value_operator_%d", conditionIndex)));
                 String key = request.getParameter(String.format("add_key_value_%d", conditionIndex));
-                String value = request.getParameter(String.format("add_value_value_%d", conditionIndex));
-
+                String[] values = request.getParameterValues(String.format("add_value_value_%d", conditionIndex));
+                
                 Condition condition = new Condition();
                 condition.setClassName(className);
                 condition.setPropertyPath(propertyPath);
                 condition.setKeyOperator(keyOperator);
                 condition.setValueOperator(valueOperator);
                 condition.setKey(key);
-                condition.setValue(value);
+                condition.setValue(values);
                 
                 condition = thresholdDAO.save(condition);
 
@@ -244,13 +245,14 @@ public class ThresholdController extends AbstractController {
         // Update Existing Actions
         if (actionPks != null) {
             for (int actionPk : actionPks) {
+                ActionEvent actionEvent = ActionEvent.valueOf(request.getParameter(String.format("action_actionevent_%d", actionPk)));
                 ActionType actionType = ActionType.valueOf(request.getParameter(String.format("action_actiontype_%d", actionPk)));
                 String actionValue = request.getParameter(String.format("action_value_%d", actionPk));
 
                 Action action = actionMap.remove(actionPk);
                 action.setActionType(actionType);
                 action.setValue(actionValue);
-
+                action.setActionEvent(actionEvent);
                 actionList.add(action);
             }
         }
@@ -258,21 +260,20 @@ public class ThresholdController extends AbstractController {
         // Add new Actions
         if (newActionIndex != null) {
             for (int actionIndex : newActionIndex) {
-
+                ActionEvent actionEvent = ActionEvent.valueOf(request.getParameter(String.format("add_action_actionevent_%d", actionIndex)));
                 ActionType actionType = ActionType.valueOf(request.getParameter(String.format("add_action_actiontype_%d", actionIndex)));
                 String actionValue = request.getParameter(String.format("add_action_value_%d", actionIndex));
 
                 Action action = new Action();
                 action.setActionType(actionType);
                 action.setValue(actionValue);
-
+                action.setActionEvent(actionEvent);
                 action = thresholdDAO.save(action);
 
                 actionList.add(action);
             }
         }
         threshold.setActions(actionList);
-
         thresholdDAO.save(threshold);
 
         // Delete the now orphaned conditions.
@@ -327,17 +328,18 @@ public class ThresholdController extends AbstractController {
         List<PathDescriptor> childPathDescriptors = condition.getChildPathDescriptors();
 
         ModelAndView mv;
-        if (childPathDescriptors.isEmpty()) {
+        ComplexTypeOperator complexOperator = condition.getComplexTypeOperator();
+        if (complexOperator != null || childPathDescriptors.isEmpty() || condition.isSimplePropertyType()) {
             // Display Operators
             mv = new ModelAndView("thresholdOperatorRenderer");
 
-            if (condition.getValueOperator() == null) {
+            if (childPathDescriptors.isEmpty() && condition.getValueOperator() == null) {
                 // Should be safe to assume there is at least one thing in the array.
                 condition.setValueOperator(condition.getPossibleValueOperators()[0]);
             }
         } else {
             mv = new ModelAndView("thresholdPathDescriptorRenderer");
-            mv.addObject("path_descriptor_list", condition.getChildPathDescriptors());
+            mv.addObject("path_descriptor_list", childPathDescriptors);
         }
 
         mv.addObject("index", index);

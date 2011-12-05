@@ -28,14 +28,14 @@ public class ImageUtil {
     public static BufferedImage resizeImage(InputStream inputStream, Integer width, Integer height) throws IOException {
         // Resize the image as required to fit the space
         BufferedImage sourceImage = ImageIO.read(inputStream);
-
+        
         if (width != null && height != null) {
-            BufferedImage scaledImage = new BufferedImage(width.intValue(), height.intValue(), BufferedImage.TYPE_INT_RGB);
+            BufferedImage scaledImage = new BufferedImage(width.intValue(), height.intValue(), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2_scaled = scaledImage.createGraphics();
             // Better scaling
             g2_scaled.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
     
-            g2_scaled.setBackground(Color.WHITE);
+            g2_scaled.setBackground(new Color(255,255,255,0));
             g2_scaled.clearRect(0,0,width.intValue(),height.intValue());
     
             int origWidth = sourceImage.getWidth();
@@ -49,8 +49,7 @@ public class ImageUtil {
                 g2_scaled.drawImage(sourceImage, 0, (scaledImage.getHeight() - scaledHeight) / 2, scaledImage.getWidth(), scaledHeight, g2_scaled.getBackground(), null);
             } else {
                 int scaledWidth = (int) Math.round(heightRatio * origWidth);
-                g2_scaled.drawImage(sourceImage, (scaledImage.getWidth() - scaledWidth) / 2, 0, scaledWidth, scaledImage.getHeight(), new Color(
-                        0, 0, 0, 255), null);
+                g2_scaled.drawImage(sourceImage, (scaledImage.getWidth() - scaledWidth) / 2, 0, scaledWidth, scaledImage.getHeight(), g2_scaled.getBackground(), null);
             }
             return scaledImage;
         } else if (width != null && height == null) {
@@ -60,7 +59,7 @@ public class ImageUtil {
             double widthRatio = (double)width / (double) origWidth;
             int scaledHeight = (int) Math.round(widthRatio * origHeight);
             
-            BufferedImage scaledImage = new BufferedImage(width.intValue(), scaledHeight, BufferedImage.TYPE_INT_RGB);
+            BufferedImage scaledImage = new BufferedImage(width.intValue(), scaledHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2_scaled = scaledImage.createGraphics();
             
             // no need to set background. The size is exact.

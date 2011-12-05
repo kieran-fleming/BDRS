@@ -44,16 +44,30 @@ import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeUtil;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
+/**
+ * Controller to render the yearly sightings form
+ *
+ */
 @Controller
 public class YearlySightingsController extends AbstractController {
 
     public static final String YEARLY_SIGHTINGS_URL = "/bdrs/user/yearlySightings.htm";
+    
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_LOCATION_ID = "locationId";
+    
+    public static final String YEARLY_SIGHTINGS_FORM_VIEW_NAME = "yearlySightings";
+    
     
     private Logger log = Logger.getLogger(getClass());
 
@@ -73,14 +87,28 @@ public class YearlySightingsController extends AbstractController {
     
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    /**
+     * GET handler to return the yearly sightings form
+     * 
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyId - the survey ID to create the form for
+     * @param recordId - the record ID to retrieve the form for. The form will likely contain many records.
+     * @return ModelAndView for rendering the yearly sightings form
+     */
     @RequestMapping(value = YEARLY_SIGHTINGS_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId,
-                                    @RequestParam(value="recordId", required=false, defaultValue="0") int recordId) {
+                                    @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,
+                                    @RequestParam(value=PARAM_RECORD_ID, required=false, defaultValue="0") int recordId) {
 
+        User loggedInUser = getRequestContext().getUser();
+        Record record = recordDAO.getRecord(recordId);
+        record = record == null ? new Record() : record;
+        
         Survey survey = surveyDAO.getSurvey(surveyId);
+        
+        RecordWebFormContext context = new RecordWebFormContext(request, record, loggedInUser, survey);
 
         // Jan Feb Mar
         // 1
@@ -127,16 +155,18 @@ public class YearlySightingsController extends AbstractController {
             dateMatrix[start.get(Calendar.DAY_OF_MONTH)-1][start.get(Calendar.MONTH)] = start.getTime();
         }
         
-        Record record = recordDAO.getRecord(recordId);
-        record = record == null ? new Record() : record;
         // location may be null
         Location location = record.getLocation();       
         
         // Add survey scope attribute form fields
         List<FormField> formFieldList = new ArrayList<FormField>();
         for(Attribute attribute : survey.getAttributes()) {
-            if(AttributeScope.SURVEY.equals(attribute.getScope()) && !attribute.isTag()) {
-                formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
+            AttributeValue av = AttributeValueUtil.getByAttribute(record.getAttributes(), attribute);
+            if((AttributeScope.SURVEY.equals(attribute.getScope()) || 
+                    (AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) && 
+                            (loggedInUser.isModerator() || (av != null && av.isPopulated())))) && 
+                    !attribute.isTag()) {
+                formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, av));
             }
         }
         Collections.sort(formFieldList);
@@ -151,7 +181,7 @@ public class YearlySightingsController extends AbstractController {
             locations.addAll(locationDAO.getUserLocations(getRequestContext().getUser()));
         }
         
-        ModelAndView mv = new ModelAndView("yearlySightings");
+        ModelAndView mv = new ModelAndView(YEARLY_SIGHTINGS_FORM_VIEW_NAME);
         mv.addObject("survey", survey);
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("species", survey.getSpecies().iterator().next());
@@ -161,17 +191,30 @@ public class YearlySightingsController extends AbstractController {
         mv.addObject("today", today.getTime());
         mv.addObject("location", location);
         mv.addObject("formFieldList", formFieldList);
+        mv.addObject("record", record);
+        mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
 
         return mv;
     }
 
+    /**
+     * POST handler for the yearly sightings form
+     * 
+     * @param request - the http request object
+     * @param response - the http response object
+     * @param surveyId - the survey ID to save a new form instance for
+     * @param locationId - the location ID for the form instance
+     * @return A ModelAndView with a RedirectView
+     * @throws ParseException
+     * @throws IOException
+     */
     @SuppressWarnings("unchecked")
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value = YEARLY_SIGHTINGS_URL, method = RequestMethod.POST)
     public ModelAndView submitRecord(MultipartHttpServletRequest request,
                                     HttpServletResponse response,
-                                    @RequestParam(value="surveyId", required=true) int surveyId,
-                                    @RequestParam(value="locationId", required=true) int locationId) 
+                                    @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyId,
+                                    @RequestParam(value=PARAM_LOCATION_ID, required=true) int locationId) 
         throws ParseException, IOException {
         
         Location location = locationDAO.getLocation(locationId);
@@ -231,18 +274,21 @@ public class YearlySightingsController extends AbstractController {
                     WebFormAttributeParser attributeParser = new WebFormAttributeParser();
                     Set recAtts = rec.getAttributes();
                     for(Attribute attribute : survey.getAttributes()) {
-                        if(AttributeScope.SURVEY.equals(attribute.getScope())) {
-                            recAttr = attributeParser.parse(attribute, rec, request.getParameterMap(), request.getFileMap());
-                            if(attributeParser.isAddOrUpdateAttribute()) {
-                                recAttr = attributeDAO.save(recAttr);
-                                if(attributeParser.getAttrFile() != null) {
-                                    fileService.createFile(recAttr, attributeParser.getAttrFile());
+                        if(AttributeScope.SURVEY.equals(attribute.getScope()) || 
+                                AttributeScope.SURVEY_MODERATION.equals(attribute.getScope())) {
+                            if (AttributeUtil.isModifiableByScopeAndUser(attribute, user)) {
+                                recAttr = attributeParser.parse(attribute, rec, request.getParameterMap(), request.getFileMap());
+                                if(attributeParser.isAddOrUpdateAttribute()) {
+                                    recAttr = attributeDAO.save(recAttr);
+                                    if(attributeParser.getAttrFile() != null) {
+                                        fileService.createFile(recAttr, attributeParser.getAttrFile());
+                                    }
+                                    recAtts.add(recAttr);
                                 }
-                                recAtts.add(recAttr);
-                            }
-                            else {
-                                recAtts.remove(recAttr);
-                                attributeDAO.delete(recAttr);
+                                else {
+                                    recAtts.remove(recAttr);
+                                    attributeDAO.delete(recAttr);
+                                }
                             }
                         }
                     }

@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import au.com.gaiaresources.bdrs.db.Persistent;
 
@@ -19,6 +20,10 @@ public interface TypedAttributeValue extends Persistent {
 	 */
 	public Attribute getAttribute();
 
+	/**
+	 * Set the attribute
+	 * @param attribute to set
+	 */
 	public void setAttribute(Attribute attribute);
 
 	@Column(name = "NUMERIC_VALUE")
@@ -50,19 +55,79 @@ public interface TypedAttributeValue extends Persistent {
 	 */
 	public Date getDateValue();
 
+	/**
+	 * Set the date value
+	 * @param dateValue - the new date value
+	 * 
+	 */
 	public void setDateValue(Date dateValue);
 
+	/**
+	 * Get the file url
+	 * @return a file url String
+	 */
 	public String getFileURL();
 	
+	/**
+	 * Gets the multi checkbox value(s)
+	 * 
+	 * @return String[] with the multi checkbox values
+	 */
 	public String[] getMultiCheckboxValue();
-    public String[] getMultiSelectValue();
+	
+	/**
+	 * Gets the multi select value(s)
+	 * 
+	 * @return String[] with the multi select values
+	 */
+        public String[] getMultiSelectValue();
    
-    public void setMultiCheckboxValue(String[] values);
-    public void setMultiSelectValue(String[] values);
+        /**
+         * Set the multi checkbox values
+         * 
+         * @param String[] containing the multi checkbox values
+         */
+        public void setMultiCheckboxValue(String[] values);
+        
+        /**
+         * Set the multi select values
+         * 
+         * @param String[] containing the multi select values
+         */
+        public void setMultiSelectValue(String[] values);
     
-    public boolean hasMultiCheckboxValue(String val);
-    public boolean hasMultiSelectValue(String val);
+        /**
+         * Check whether a value is contained in the stored multi checkbox value(s) 
+         * 
+         * @param val - value to search for
+         * @return boolean whether the value exists
+         */
+        public boolean hasMultiCheckboxValue(String val);
+        
+        /**
+         * Check whether a value is contained in the stored multi select value(s) 
+         * 
+         * @param val - value to search for
+         * @return boolean whether the value exists
+         */
+        public boolean hasMultiSelectValue(String val);
     
+        /**
+         * get the boolean typed value
+         * @return the stored boolean value
+         */
 	public Boolean getBooleanValue();
+	
+	/**
+	 * set the boolean value
+	 * @param boolean value to store
+	 */
 	public void setBooleanValue(String value);
+	
+	/**
+	 * Returns true if the attribute value has a valid value to return to the user
+	 * @return
+	 */
+	@Transient
+	public boolean isPopulated();
 }

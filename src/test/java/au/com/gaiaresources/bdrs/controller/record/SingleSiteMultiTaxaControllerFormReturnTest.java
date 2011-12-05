@@ -9,8 +9,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpSession;
-import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractGridControllerTest;
@@ -68,19 +66,25 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
         Assert.assertFalse("item 2 should not be highlighted", rf2.isHighlight());
 
         // check record scoped values ...
-        this.assertFormFieldList(rf1.getFormFields(), refRecord1, true, AttributeScope.RECORD);
-        this.assertFormFieldList(rf2.getFormFields(), refRecord2, true, AttributeScope.RECORD);
+        List<AttributeScope> RECORD_SCOPES = new ArrayList<AttributeScope>();
+        RECORD_SCOPES.add(AttributeScope.RECORD);
+        RECORD_SCOPES.add(AttributeScope.RECORD_MODERATION);
+        this.assertFormFieldList(rf1.getFormFields(), refRecord1, true, RECORD_SCOPES);
+        this.assertFormFieldList(rf2.getFormFields(), refRecord2, true, RECORD_SCOPES);
         
         List<FormField> formFieldList = (List<FormField>)mv.getModel().get(SingleSiteController.MODEL_SURVEY_FORM_FIELD_LIST);
         
         // check survey scoped attribute values and record properties
-        assertFormFieldList(formFieldList, refRecord1, true, AttributeScope.SURVEY);
+        List<AttributeScope> SURVEY_SCOPES = new ArrayList<AttributeScope>();
+        SURVEY_SCOPES.add(AttributeScope.SURVEY);
+        SURVEY_SCOPES.add(AttributeScope.SURVEY_MODERATION);
+        assertFormFieldList(formFieldList, refRecord1, true, SURVEY_SCOPES);
         
         // check the list used to generate the sightings table header (Record scope)
         List<FormField> tableHeaderList = (List<FormField>)mv.getModel().get(SingleSiteController.MODEL_SIGHTING_ROW_LIST);
         Assert.assertNotNull("table header form field list should exist in model", tableHeaderList);
         
-        assertFormFieldList(tableHeaderList, refRecord1, false, AttributeScope.RECORD);
+        assertFormFieldList(tableHeaderList, refRecord1, false, RECORD_SCOPES);
     }
     
     @SuppressWarnings("unchecked")
@@ -123,19 +127,25 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
         Assert.assertFalse("item 2 should not be highlighted", rf2.isHighlight());
 
         // check record scoped values ...
-        this.assertFormFieldList(rf1.getFormFields(), refRecord1, true, AttributeScope.RECORD);
-        this.assertFormFieldList(rf2.getFormFields(), refRecord2, true, AttributeScope.RECORD);
+        List<AttributeScope> RECORD_SCOPES = new ArrayList<AttributeScope>();
+        RECORD_SCOPES.add(AttributeScope.RECORD);
+        RECORD_SCOPES.add(AttributeScope.RECORD_MODERATION);
+        this.assertFormFieldList(rf1.getFormFields(), refRecord1, true, RECORD_SCOPES);
+        this.assertFormFieldList(rf2.getFormFields(), refRecord2, true, RECORD_SCOPES);
         
         List<FormField> formFieldList = (List<FormField>)mv.getModel().get(SingleSiteController.MODEL_SURVEY_FORM_FIELD_LIST);
         
         // check survey scoped attribute values and record properties
-        assertFormFieldList(formFieldList, refRecord1, true, AttributeScope.SURVEY);
+        List<AttributeScope> SURVEY_SCOPES = new ArrayList<AttributeScope>();
+        SURVEY_SCOPES.add(AttributeScope.SURVEY);
+        SURVEY_SCOPES.add(AttributeScope.SURVEY_MODERATION);
+        assertFormFieldList(formFieldList, refRecord1, true, SURVEY_SCOPES);
         
         // check the list used to generate the sightings table header (Record scope)
         List<FormField> tableHeaderList = (List<FormField>)mv.getModel().get(SingleSiteController.MODEL_SIGHTING_ROW_LIST);
         Assert.assertNotNull("table header form field list should exist in model", tableHeaderList);
         
-        assertFormFieldList(tableHeaderList, refRecord1, false, AttributeScope.RECORD);
+        assertFormFieldList(tableHeaderList, refRecord1, false, RECORD_SCOPES);
     }
     
     @SuppressWarnings("unchecked")
@@ -211,11 +221,14 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
         int index = 0;
         Map<Attribute, String> newRecordScopedAttributeValues = new HashMap<Attribute, String>();
         Map<RecordPropertyType, String> newRecordScopedRecPropValues = new HashMap<RecordPropertyType, String>();
-        this.addRecordScopedItemsToPostMap(refRecord1, request, index++, seed++, newRecordScopedAttributeValues, newRecordScopedRecPropValues, setLocation);
+        List<AttributeScope> RECORD_SCOPES = new ArrayList<AttributeScope>();
+        RECORD_SCOPES.add(AttributeScope.RECORD);
+        RECORD_SCOPES.add(AttributeScope.RECORD_MODERATION);
+        this.addRecordScopedItemsToPostMap(refRecord1, request, index++, seed++, newRecordScopedAttributeValues, newRecordScopedRecPropValues, setLocation, RECORD_SCOPES);
         
         Map<Attribute, String> newRecordScopedAttributeValues2 = new HashMap<Attribute, String>();
         Map<RecordPropertyType, String> newRecordScopedRecPropValues2 = new HashMap<RecordPropertyType, String>();
-        this.addRecordScopedItemsToPostMap(refRecord2, request, index++, seed++, newRecordScopedAttributeValues2, newRecordScopedRecPropValues2, setLocation);
+        this.addRecordScopedItemsToPostMap(refRecord2, request, index++, seed++, newRecordScopedAttributeValues2, newRecordScopedRecPropValues2, setLocation, RECORD_SCOPES);
         
         request.addParameter(SingleSiteMultiTaxaController.PARAM_SIGHTING_INDEX, Integer.toString(index));
         
@@ -339,11 +352,15 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
      * @param rec
      * @param expectFilledValues - whether we expect attribute values to be non null
      */
-    private void assertFormFieldList(List<FormField> formFields, Record rec, boolean expectFilledValues, AttributeScope scope) {
+    private void assertFormFieldList(List<FormField> formFields, Record rec, boolean expectFilledValues, List<AttributeScope> scopeList) {
         
-        List<RecordProperty> scopedRecordProperties = this.getRecordProperty(rec.getSurvey(), scope);
+        List<RecordProperty> scopedRecordProperties = new ArrayList<RecordProperty>();
+        List<Attribute> expectedAttributes = new ArrayList<Attribute>();
+        for (AttributeScope scope  : scopeList) {
+            scopedRecordProperties.addAll(this.getRecordProperty(rec.getSurvey(), scope));
+            expectedAttributes.addAll(this.getAttributeByScope(rec.getSurvey(), scope));
+        }
         
-        List<Attribute> expectedAttributes = this.getAttributeByScope(rec.getSurvey(), scope);
         
         int attrCount = 0;
         int propCount = 0;
@@ -355,7 +372,7 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
                 AttributeValue origAv = this.getAttributeValueByAttributeId(rec.getAttributes(), tavff.getAttribute().getId());
                 TypedAttributeValue targetAv = tavff.getAttributeValue();
                 
-                Assert.assertEquals("check scope...", scope, tavff.getAttribute().getScope());
+                Assert.assertTrue("check scope...", scopeList.contains(tavff.getAttribute().getScope()));
                 
                 if (expectFilledValues) {
                     // NOTE THIS DOESNT CHECK THE CONTENTS OF THE ATTRIBUTE VALUE ! we do however check that the object references
@@ -381,7 +398,7 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
             } else if (ff.isPropertyFormField()) {
                 Assert.assertTrue("assert before upcast", ff instanceof RecordPropertyFormField);
                 RecordPropertyFormField rpff = (RecordPropertyFormField)ff;
-                Assert.assertEquals("check scope...", scope, rpff.getScope());
+                Assert.assertTrue("check scope...", scopeList.contains(rpff.getScope()));
                 
                 ++propCount;
             }
@@ -405,25 +422,31 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
     
     private void addSurveyScopedItemsToPostMap(Record rec, MockHttpServletRequest req, int seed,
             Map<Attribute, String> avMap, Map<RecordPropertyType, String> recPropMap, boolean useLocation) {
-        addItemsToPostMap(rec, req, AttributeScope.SURVEY, "", seed, avMap, recPropMap, useLocation);
+        List<AttributeScope> scopeList = new ArrayList<AttributeScope>();
+        scopeList.add(AttributeScope.SURVEY);
+        scopeList.add(AttributeScope.SURVEY_MODERATION);
+        addItemsToPostMap(rec, req, scopeList, "", seed, avMap, recPropMap, useLocation);
     }
     
     private void addRecordScopedItemsToPostMap(Record rec, MockHttpServletRequest req, int index, int seed,
                                                                  Map<Attribute, String> avMap, 
                                                                  Map<RecordPropertyType, String> recPropMap, 
-                                                                 boolean useLocation) {        
+                                                                 boolean useLocation, List<AttributeScope> scopeList) {
         String prefix = String.format("%d_", index);
         // add the record id....
         req.addParameter(prefix + SingleSiteController.PARAM_RECORD_ID, rec.getId().toString());
-        addItemsToPostMap(rec, req, AttributeScope.RECORD, prefix, seed, avMap, recPropMap, useLocation);
+        addItemsToPostMap(rec, req, scopeList, prefix, seed, avMap, recPropMap, useLocation);
     }
     
-    private void addItemsToPostMap(Record rec, MockHttpServletRequest req, AttributeScope scope, String prefix, int seed,
+    private void addItemsToPostMap(Record rec, MockHttpServletRequest req, List<AttributeScope> scopeList, String prefix, int seed,
                               Map<Attribute, String> avMap, Map<RecordPropertyType, String> recPropMap, boolean useLocation) {
         
-        List<AttributeValue> scopedAttributeValues = this.getAttributeValuesByScope(rec, scope);
-        List<RecordProperty> scopedRecordProperties = this.getRecordProperty(rec.getSurvey(), scope);
-        
+        List<AttributeValue> scopedAttributeValues = new ArrayList<AttributeValue>();
+        List<RecordProperty> scopedRecordProperties = new ArrayList<RecordProperty>();
+        for (AttributeScope scope : scopeList) {
+            scopedAttributeValues.addAll(this.getAttributeValuesByScope(rec, scope));
+            scopedRecordProperties.addAll(this.getRecordProperty(rec.getSurvey(), scope));
+        }
         for (AttributeValue av : scopedAttributeValues) {
             // increment the seed for each iteration
             String newValue = this.genRandomAttributeValue(av, seed++, false);

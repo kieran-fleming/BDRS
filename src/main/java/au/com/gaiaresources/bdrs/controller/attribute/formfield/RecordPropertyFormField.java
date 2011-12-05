@@ -117,10 +117,18 @@ public class RecordPropertyFormField extends AbstractRecordFormField {
     }
     
     /**
-	 * @return the recordProperty
-	 */
-	public RecordProperty getRecordProperty() {
-		return recordProperty;
-	}
+    * @return the recordProperty
+    */
+    public RecordProperty getRecordProperty() {
+        return recordProperty;
+    }
     
+    /*
+     * (non-Javadoc)
+     * @see au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractFormField#isModerationFormField()
+     */
+    @Override
+    public boolean isModerationFormField() {
+        return AttributeScope.isModerationScope(recordProperty.getScope());
+    }
 }

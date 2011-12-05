@@ -30,8 +30,8 @@ public class YearFacet extends AbstractFacet {
      * @param userParams user configurable parameters provided in via the {@link Preference)}.
      */
     public YearFacet(RecordDAO recordDAO, Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-    	  super(QUERY_PARAM_NAME, DISPLAY_NAME, userParams);
-    	setContainsSelected(parameterMap.containsKey(getInputName()));
+          super(QUERY_PARAM_NAME, DISPLAY_NAME, userParams);
+          setContainsSelected(parameterMap.containsKey(getInputName()));
           
           String[] selectedOptions = parameterMap.get(getInputName());
           if(selectedOptions == null) {

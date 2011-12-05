@@ -8,6 +8,10 @@
 <jsp:useBean id="record" scope="request" type="au.com.gaiaresources.bdrs.model.record.Record" />
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
 
+<%-- Access the facade to retrieve the preference information --%>
+<jsp:useBean id="bdrsPluginFacade" scope="request" type="au.com.gaiaresources.bdrs.servlet.BdrsPluginFacade"></jsp:useBean>
+<c:set var="showScientificName" value="<%= bdrsPluginFacade.getPreferenceBooleanValue(\"taxon.showScientificName\") %>" />
+
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
     <!-- using censusmethod description here in case we want to display no text / more indepth text -->
@@ -17,11 +21,13 @@
 <tiles:insertDefinition name="recordEntryMap">
     <tiles:putAttribute name="survey" value="${survey}"/>
     <tiles:putAttribute name="censusMethod" value="${censusMethod}"/>
+	<tiles:putAttribute name="mapEditable" value="${recordWebFormContext.editable}" />
 </tiles:insertDefinition>
 
-<c:if test="${ not preview }">
+<c:if test="${ not preview and recordWebFormContext.editable}">
     <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/tracker.htm" enctype="multipart/form-data">
 </c:if>
+
     <input type="hidden" name="surveyId" value="${survey.id}"/>
     <c:if test="${censusMethod != null}">
     <input type="hidden" name="censusMethodId" value="${censusMethod.id}"/>
@@ -50,7 +56,7 @@
     <table class="form_table">
         <tbody>
      
-            <c:if test="${survey.recordVisibilityModifiable}">
+            <c:if test="${recordWebFormContext.editable and survey.recordVisibilityModifiable}">
                 <tr>
                     <th title="Who will be able to view your record. \nOwner only means only you will be able to see the record. \nControlled will allow others to see that when and where you have contributed but no additional data will be supplied. \nFull public will show all details of the record to all other users.">Record Visibility</th>
                     <td>
@@ -73,6 +79,7 @@
                     <tiles:putAttribute name="locations" value="${ locations }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
             </c:forEach>
             
@@ -82,6 +89,7 @@
                     <tiles:putAttribute name="locations" value="${ locations }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
             </c:forEach>
             
@@ -91,97 +99,33 @@
                     <tiles:putAttribute name="locations" value="${ locations }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
                     <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
                 </tiles:insertDefinition>
             </c:forEach>
         </tbody>
     </table>
-    
-<c:choose>
-    <c:when test="${ preview }">
-        <div class="buttonpanel textright">
-            <input class="form_action" type="button" value="Go Back" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm?surveyId=${survey.id}'"/>
-            <input class="form_action" type="button" value="Continue" onclick="window.document.location='${pageContext.request.contextPath}/bdrs/admin/survey/locationListing.htm?surveyId=${survey.id}'"/>
-        </div>
-    </c:when>
-    <c:otherwise>
-            <div class="buttonpanel textright">
-                <input class="form_action" type="submit" name="submitAndAddAnother" value="Submit and Add Another"/>
-                <input class="form_action" type="submit" name="submit" value="Submit Sighting"/>
-            </div>
-        </form>
-    </c:otherwise>
-</c:choose>
+
+<%-- the record form footer contains the 'form' close tag --%>
+<tiles:insertDefinition name="recordFormFooter">
+    <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />
+</tiles:insertDefinition>
 
 <script type="text/javascript">
     jQuery(window).load(function() {
         // Species Autocomplete
-        jQuery("#survey_species_search").autocomplete({
-            source: function(request, callback) {
-                var params = {};
-                params.q = request.term;
-                params.surveyId = ${survey.id};
-
-                jQuery.getJSON('${pageContext.request.contextPath}/webservice/survey/speciesForSurvey.htm', params, function(data, textStatus) {
-                    var label;
-                    var result;
-                    var taxon;
-                    var resultsArray = [];
-                    for(var i=0; i<data.length; i++) {
-                        taxon = data[i];
-
-                        label = [];
-                        if(taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
-                            label.push("<b><i>"+taxon.scientificName+"</b></i>");
-                        }
-                        if(taxon.commonName !== undefined && taxon.commonName.length > 0) {
-                            label.push(taxon.commonName);
-                        }
-
-                        label = label.join(' ');
-
-                        resultsArray.push({
-                            label: label,
-                            value: taxon.scientificName,
-                            data: taxon
-                        });
-                    }
-
-                    callback(resultsArray);
-                });
-            },
-            select: function(event, ui) {
-                var taxon = ui.item.data;
-                jQuery("[name=species]").val(taxon.id).trigger("blur");
-                
-                // Load Taxon Group Attributes
-                // Clear the group attribute rows
-                jQuery("[name^=taxonGroupAttr_]").parents("tr").remove();
-                
-                // Build GET request parameters
-                var params = {};
-                params.surveyId = jQuery("[name=surveyId]").val();
-                params.taxonId = taxon.id;
-                var recordIdElem = jQuery("[name=recordId]");
-                if(recordIdElem.length > 0 && recordIdElem.val().length > 0) {
-                    params.recordId = recordIdElem.val();
-                }
-                // Issue Request
-                jQuery.get("${pageContext.request.contextPath}/bdrs/user/ajaxTrackerTaxonAttributeTable.htm", params, function(data) {
-                    jQuery(".form_table").find("tbody").append(data);
-                });
-            },
-            change: function(event, ui) {
-                if(jQuery(event.target).val().length === 0) {
-                    jQuery("[name=species]").val("").trigger("blur");
-                
-                    // Clear the group attribute rows
-                    jQuery("[name^=taxonGroupAttr_]").parents("tr").remove();
-                }
-            },
-            minLength: 2,
-            delay: 300,
-            html: true
-        });
+		var recordIdElem = jQuery("[name=recordId]");
+		var speciesAutocompleteArgs = {
+            surveySpeciesSearchSelector: "#survey_species_search",
+		    speciesIdSelector: "[name=species]",
+		    taxonAttrRowSelector:"[name^=taxonGroupAttr_]",
+		    surveyId: jQuery("[name=surveyId]").val(),
+		    recordId: (recordIdElem.length > 0 && recordIdElem.val().length > 0) ? recordIdElem.val() : undefined,
+		    editable: "${recordWebFormContext.editable}",
+		    attributeTbodySelector: ".form_table tbody", 
+			showScientificName: ${showScientificName}
+		};
+		bdrs.contribute.initSpeciesAutocomplete(speciesAutocompleteArgs);
+		
         
         jQuery("#number").change(function(data) {
             jQuery("#survey_species_search").trigger("blur");

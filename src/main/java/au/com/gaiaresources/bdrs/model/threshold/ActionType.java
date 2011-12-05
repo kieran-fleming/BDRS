@@ -9,6 +9,10 @@ public enum ActionType {
      */
     EMAIL_NOTIFICATION("Send an email to"),
     /**
+     * Send a moderation email.
+     */
+    MODERATION_EMAIL_NOTIFICATION("Send a moderation email"),
+    /**
      * Set the held property of the record to <code>true</code>.
      */
     HOLD_RECORD("Hold Record");

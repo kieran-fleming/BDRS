@@ -28,6 +28,17 @@ public class Message extends ObjectError {
         super(OBJECT_NAME, new String[] {code}, arguments, defaultMessage);
     }
     
+    /**
+     * Create a new instance of the ObjectError class.
+     * 
+     * @param code - the code used to resolve the message. is also used for the
+     * default message
+     * @param arguments - the array of arguments to be used to resolve this message 
+     */
+    public Message(String code, Object[] arguments) {
+        super(OBJECT_NAME, new String[] {code}, arguments, code);
+    }
+    
     public String toString() {
         return resolvableToString();
     }

@@ -1,8 +1,10 @@
 package au.com.gaiaresources.bdrs.model.location.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -15,7 +17,10 @@ import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.QueryOperation;
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
+import au.com.gaiaresources.bdrs.db.impl.QueryPaginator;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.region.Region;
@@ -25,6 +30,8 @@ import au.com.gaiaresources.bdrs.service.db.DeleteCascadeHandler;
 import au.com.gaiaresources.bdrs.service.db.DeletionService;
 
 import com.vividsolutions.jts.geom.Point;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Implementation of {@link LocationDAO} for dealing with {@link Location}
@@ -112,9 +119,10 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<Location> getUserLocations(User user) {
-        return find("from Location l where l.user = ? order by l.name", user);
+        return user != null ? find("from Location l where l.user = ? order by l.name", user) : Collections.emptyList();
     }
 
     @Override
@@ -206,5 +214,30 @@ public class LocationDAOImpl extends AbstractDAOImpl implements LocationDAO {
         q.setParameter("user", user);
 
         return q.list();
+    }
+
+    @Override
+    public PagedQueryResult<Location> getSurveylocations(
+            PaginationFilter filter, User user, int surveyId) {
+        
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        
+        boolean unrestricted = user.isPoweruser() || user.isSupervisor() || user.isAdmin();
+        
+        StringBuilder builder = new StringBuilder();
+        builder.append("select distinct loc ");
+        builder.append(" from Survey s join s.locations loc");
+        builder.append(" where s.id != :surveyId");
+        if (!unrestricted) {
+            builder.append( " and (s.public = true or :user in (select u from s.users u))");
+        }
+        Map<String, Object> argMap = new HashMap<String, Object>();
+        argMap.put("surveyId", surveyId);
+        if (!unrestricted) {
+            argMap.put("user", user);
+        }
+        return new QueryPaginator<Location>().page(this.getSession(), builder.toString(), argMap, filter, "loc");
     }
 }

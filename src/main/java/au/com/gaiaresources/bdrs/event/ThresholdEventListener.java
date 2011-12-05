@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import au.com.gaiaresources.bdrs.service.threshold.ThresholdService;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
+import au.com.gaiaresources.bdrs.model.threshold.ActionEvent;
 import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
 import au.com.gaiaresources.bdrs.model.threshold.ThresholdDAO;
@@ -37,13 +38,13 @@ public class ThresholdEventListener implements PostUpdateEventListener,
     private static final long serialVersionUID = 5389414102803552714L;
 
     @SuppressWarnings("unused")
-    private Logger log = Logger.getLogger(getClass());
+    private transient Logger log = Logger.getLogger(getClass());
 
     @Autowired
-    private ThresholdDAO thresholdDAO;
+    private transient ThresholdDAO thresholdDAO;
 
     @Autowired
-    private ThresholdService thresholdService;
+    private transient ThresholdService thresholdService;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -56,7 +57,7 @@ public class ThresholdEventListener implements PostUpdateEventListener,
      */
     @Override
     public void onPostUpdate(PostUpdateEvent event) {
-        triggerUpdateOrInsert(event.getEntity());
+        triggerUpdateOrInsert(event.getEntity(), false);
     }
 
     /**
@@ -64,7 +65,7 @@ public class ThresholdEventListener implements PostUpdateEventListener,
      */
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        triggerUpdateOrInsert(event.getEntity());
+        triggerUpdateOrInsert(event.getEntity(), true);
     }
 
     /**
@@ -72,7 +73,7 @@ public class ThresholdEventListener implements PostUpdateEventListener,
      */
     @Override
     public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
-        triggerUpdateOrInsert(event.getAffectedOwnerEntityName());
+        triggerUpdateOrInsert(event.getAffectedOwnerEntityName(), false);
     }
 
     /**
@@ -80,10 +81,10 @@ public class ThresholdEventListener implements PostUpdateEventListener,
      */
     @Override
     public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
-        triggerUpdateOrInsert(event.getAffectedOwnerEntityName());
+        triggerUpdateOrInsert(event.getAffectedOwnerEntityName(), false);
     }
 
-    private void triggerUpdateOrInsert(Object entity) {
+    private void triggerUpdateOrInsert(Object entity, boolean isInsert) {
         if ((entity != null) && (entity instanceof PersistentImpl) && (((PersistentImpl)entity).getId() != null)) {
             PersistentImpl original = (PersistentImpl)entity;
             
@@ -91,6 +92,13 @@ public class ThresholdEventListener implements PostUpdateEventListener,
             if (!original.isRunThreshold()) {
                 return;
             }
+            // set the run threshold to false so thresholds don't run again for this object
+            // this is to avoid triggering the thresholds twice on insert because of the 
+            // hibernate insert and subsequent update 
+            // this has the unfortunate side effect of preventing thresholds from running
+            // twice within one session on insert/update
+            // if you want to do that, set this to true in your caller after your first save and before your second
+            original.setRunThreshold(false);
             
             if (thresholdService.isRegisteredReference(original)) {
                 // Triggered by an action.
@@ -103,25 +111,30 @@ public class ThresholdEventListener implements PostUpdateEventListener,
                 
                 // Test if the transaction was rolled back
                 if(persistent != null && entity.equals(persistent)) {
-                    thresholdService.registerReference(persistent);                
+                    thresholdService.registerReference(persistent);
                     
                     // Executing Thresholds
                     String className = persistent.getClass().getCanonicalName();
                     List<Threshold> thresholdList = thresholdDAO.getEnabledThresholdByClassName(sesh, className);
-    
                     for (Threshold threshold : thresholdList) {
                         
                         boolean conditionsPassed = true;
                         for (Condition condition : threshold.getConditions()) {
-                            
                             conditionsPassed = conditionsPassed
                                     && condition.applyCondition(sesh, persistent, thresholdService);
                         }
                         
                         // Conditions Passed. Applying Actions
                         if (conditionsPassed) {
+                            
                             for (Action action : threshold.getActions()) {
-                                thresholdService.applyAction(sesh, threshold, persistent, action);
+                                // only run the action if it is create and update or
+                                // it is create and the created and updated time are the same or
+                                // it is update and the created and updated time are different
+                                if (action.getActionEvent().equals(ActionEvent.CREATE_AND_UPDATE) ||
+                                        (action.getActionEvent().equals(ActionEvent.CREATE) && isInsert) ||
+                                        (action.getActionEvent().equals(ActionEvent.UPDATE) && !isInsert))
+                                    thresholdService.applyAction(sesh, threshold, persistent, action);
                             }
                         }
                     }

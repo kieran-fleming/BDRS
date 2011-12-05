@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import au.com.gaiaresources.bdrs.model.record.Record;
+
 public class AttributeValueUtil {
 
     /**
@@ -23,6 +25,18 @@ public class AttributeValueUtil {
         AttributeValue[] avArray = avSet.toArray(new AttributeValue[0]);
         Arrays.sort(avArray, new AttributeValueComparator());
         return Arrays.asList(avArray);
+    }
+    
+    /**
+     * Returns the AttributeValue with the corresponding Attribute from the 
+     * attribute values contained inside the record parameter.
+     * 
+     * @param a - attribute to look for
+     * @param r - record to look for the attribute value set
+     * @return AttributeValue if found, otherwise null
+     */
+    public static AttributeValue getAttributeValue(Attribute a, Record r) {
+        return getByAttribute(r.getAttributes(), a);
     }
     
     /**

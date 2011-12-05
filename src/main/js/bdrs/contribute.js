@@ -46,6 +46,10 @@ bdrs.contribute.yearlysightings.validateCellChange = function(event) {
     }
 };
 
+/**
+ * Event handler for inserting a record attribute
+ * @param {Object} recAttr - record attribute to insert
+ */
 bdrs.contribute.yearlysightings.insertRecordAttribute = function(recAttr) {
     var inp = jQuery("[name=attribute_"+recAttr.attribute+"]");
     inp.val(recAttr.stringValue);
@@ -90,10 +94,15 @@ bdrs.contribute.yearlysightings.insertRecordAttribute = function(recAttr) {
     } // End file repopulation
 };
 
+/**
+ * Event handler
+ * @param {Object} event - event to be handled
+ */
 bdrs.contribute.yearlysightings.locationSelected = function(event) {
 
     var selectLocation = jQuery(event.currentTarget);
     var location = jQuery("[name=locationId]");
+
     var ans;
     if(location.val().length > 0) {
         ans = confirm("Changing the location will replace the data below. Do you wish to proceed?");
@@ -105,53 +114,74 @@ bdrs.contribute.yearlysightings.locationSelected = function(event) {
     if(ans) {
         location.val(selectLocation.val());
 
-        // Clear all cells
-        jQuery(".sightingCell").each(function(index, element){
-            var inp = jQuery(element);
-            var cell = inp.parents("td");
-            inp.val('');
-            cell.removeClass("errorCell");
-            var date = new Date(parseInt(inp.attr("name").split("_")[1],10));
-            inp.attr("title", bdrs.util.formatDate(date));
-        });
-        
-        // Clear the survey scope attributes
-        jQuery("[name^=attribute_]").val('');
-        jQuery("[id^=attribute_img_], [id^=attribute_data_]").remove();
+        var locationId = selectLocation.val();
+        var surveyId = jQuery('#surveyId').val();
+        var ident = jQuery('#ident').val();
 
-        if(selectLocation.val().length > 0) {
-            var param = {
-                locationId: selectLocation.val(),
-                surveyId: jQuery('#surveyId').val(),
-                ident: jQuery('#ident').val()
-            };
-            jQuery.getJSON(bdrs.contextPath+'/webservice/record/getRecordsForLocation.htm', param, function(data) {
-                var rec;
-                for(var i=0; i<data.length; i++) {
-                    rec = data[i];
-                    if(rec.number !== null) {
-                        jQuery("[name=date_"+rec.when+"]").val(rec.number);
-                    }
-                }
-                
-                if(typeof(rec) !== 'undefined') {
-                    // Use the last survey as the prototype to load the 
-                    // Survey scoped attributes
-                    for(var j=0; j<rec.attributes.length; j++) {
-                        var param = {
-                            recordAttributeId: rec.attributes[j],
-                            ident: jQuery('#ident').val()
-                        };
-                        jQuery.getJSON(bdrs.contextPath+"/webservice/record/getRecordAttributeById.htm", param, bdrs.contribute.yearlysightings.insertRecordAttribute);
-                    } // End for-loop request for survey scope attributes
-                }
-            });
-        } // End location update
+        bdrs.contribute.yearlysightings.loadCellData(locationId, surveyId, ident, true);
     } // End confirm dialog return check
     else {
         selectLocation.val(location.val());
     }
 };
+
+/**
+ * Loads the cells in the yearly sightings form. Each cell represents a different
+ * day in the year
+ * 
+ * @param {Object} locationId - the location id
+ * @param {Object} surveyId - the survey id
+ * @param {Object} ident - the ident of the user
+ * @param {Object} editable - whether the form is editable or not
+ */
+bdrs.contribute.yearlysightings.loadCellData = function(locationId, surveyId, ident, editable) {
+	// Clear all cells
+    jQuery(".sightingCell").each(function(index, element){
+        var inp = jQuery(element);
+        var cell = inp.parents("td");
+        inp.val('');
+        cell.removeClass("errorCell");
+        var date = new Date(parseInt(inp.attr("name").split("_")[1],10));
+        inp.attr("title", bdrs.util.formatDate(date));
+    });
+    
+    // Clear the survey scope attributes
+    jQuery("[name^=attribute_]").val('');
+    jQuery("[id^=attribute_img_], [id^=attribute_data_]").remove();
+
+    if(locationId) {
+        var param = {
+            locationId: locationId,
+            surveyId: surveyId,
+            ident: ident
+        };
+        jQuery.getJSON(bdrs.contextPath+'/webservice/record/getRecordsForLocation.htm', param, function(data) {
+            var rec;
+            for(var i=0; i<data.length; i++) {
+                rec = data[i];
+                if(rec.number !== null) {
+					if (editable) {
+					   jQuery("[name=date_"+rec.when+"]").val(rec.number);	
+					} else {
+					   jQuery("#date_"+rec.when).text(rec.number);
+					}
+                }
+            }
+            
+            if(typeof(rec) !== 'undefined') {
+                // Use the last survey as the prototype to load the 
+                // Survey scoped attributes
+                for(var j=0; j<rec.attributes.length; j++) {
+                    var param = {
+                        recordAttributeId: rec.attributes[j],
+                        ident: jQuery('#ident').val()
+                    };
+                    jQuery.getJSON(bdrs.contextPath+"/webservice/record/getRecordAttributeById.htm", param, bdrs.contribute.yearlysightings.insertRecordAttribute);
+                } // End for-loop request for survey scope attributes
+            }
+        });
+    } // End location update
+}
 
 // End of Yearly Sightings -------------
 // -------------------------------------
@@ -181,40 +211,6 @@ bdrs.contribute.singleSiteMultiTaxa.init = function(sightingIndexSelector, surve
 	}
 };
 
-bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource = function(request, callback) {
-
-    var params = {};
-    params.q = request.term;
-    params.surveyId = jQuery(this.element).data("surveyId");
-    jQuery.getJSON(bdrs.contextPath+'/webservice/survey/speciesForSurvey.htm', params, function(data, textStatus) {
-        var label;
-        var result;
-        var taxon;
-        var resultsArray = [];
-        for(var i=0; i<data.length; i++) {
-            taxon = data[i];
-
-            label = [];
-            if(taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
-                label.push("<b><i>"+taxon.scientificName+"</b></i>");
-            }
-            if(taxon.commonName !== undefined && taxon.commonName.length > 0) {
-                label.push(taxon.commonName);
-            }
-
-            label = label.join(' ');
-
-            resultsArray.push({
-                label: label,
-                value: taxon.scientificName,
-                data: taxon
-            });
-        }
-
-        callback(resultsArray);
-    });
-};
-
 
 /**
  * @param {Object} sightingIndexSelector - on the form page there is a hidden input, aka the sighting index, that shows
@@ -225,7 +221,7 @@ bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource = function(request, call
  * @param {Object} speciesRequired - a boolean, sets validation on the species field.
  * @param {Object} numberRequired - a boolean, sets validation on the number field.
  */
-bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody, speciesRequired, numberRequired) {
+bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody, speciesRequired, numberRequired, showScientificName) {
     var sightingIndexElem = jQuery(sightingIndexSelector);
     var sightingIndex = parseInt(sightingIndexElem.val(), 10);
     sightingIndexElem.val(sightingIndex+1);
@@ -240,17 +236,26 @@ bdrs.contribute.singleSiteMultiTaxa.addSighting = function(sightingIndexSelector
     jQuery.get(url, param, function(data) {
         jQuery(sightingTableBody).append(data);
         
-		bdrs.contribute.singleSiteMultiTaxa.attachRowControls(sightingIndex, surveyId);
+		bdrs.contribute.singleSiteMultiTaxa.attachRowControls(sightingIndex, surveyId, speciesRequired, numberRequired, showScientificName);
     });
 };
 
-bdrs.contribute.singleSiteMultiTaxa.attachRowControls = function(sightingIndex, surveyId, speciesRequired, numberRequired) {
+/**
+ * Helper function for attaching row controls
+ * 
+ * @param {Object} sightingIndex - the sighting index of the row to attach the controls on
+ * @param {Object} surveyId - the survey id
+ * @param {Object} speciesRequired - is the species field mandatory ?
+ * @param {Object} numberRequired - is the number field mandatory ?
+ * @param {Object} showScientificName - when true will show the scientific name, else will use the common name
+ */
+bdrs.contribute.singleSiteMultiTaxa.attachRowControls = function(sightingIndex, surveyId, speciesRequired, numberRequired, showScientificName) {
 
 	// Attach the autocomplete
     var search_elem = jQuery("[name="+sightingIndex+"_survey_species_search]");
     search_elem.data("surveyId", surveyId); 
     search_elem.autocomplete({
-        source: bdrs.contribute.singleSiteMultiTaxa.speciesSearchSource,
+        source: bdrs.contribute.getAutocompleteSourceFcn(showScientificName),
         select: function(event, ui) {
             var taxon = ui.item.data;
             jQuery("[name="+sightingIndex+"_species]").val(taxon.id).blur();
@@ -286,6 +291,13 @@ bdrs.contribute.singleSiteMultiTaxa.attachRowControls = function(sightingIndex, 
 //--------------------------------------
 bdrs.contribute.singleSiteAllTaxa = {};
 
+/**
+ * Add a row to the sightings table
+ * 
+ * @param {Object} sightingIndexSelector - for the input which has the number of existing rows in the sightings table
+ * @param {Object} surveyIdSelector - for the input that holds the survey id
+ * @param {Object} sightingTableBody - the table body for the sightings table
+ */
 bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, surveyIdSelector, sightingTableBody) {
 	var sightingIndexElem = jQuery(sightingIndexSelector);
   var sightingIndex = parseInt(sightingIndexElem.val(), 10);
@@ -315,3 +327,112 @@ bdrs.contribute.singleSiteAllTaxa.addSighting = function(sightingIndexSelector, 
   // update the sightingIndex field to match the attribute count
   sightingIndexElem.val(jQuery(sightingTableBody).find('tr').length);
 };
+
+
+/**
+ * Will initialise the auto complete events, see parameters below
+ *
+ * required parameters:
+ * surveySpeciesSearchSelector - selector for the text input used to search for the species, autocomplete will be applied to this input
+ * speciesIdSelector - the selector for the species ID field. This field is normally hidden
+ * taxonAttrRowSelector - the selector for the taxon attr rows (i.e. will probably be a wildcard)
+ * surveyId - the survey id
+ * recordId - the record id
+ * editable - whether the field is editable or not
+ * attributeTbodySelector - selector for the table where we will append our taxon group attributes
+ * showScientificName - boolean. if true, uses the scientific name for auto complete, else uses the common name
+ * 
+ * Species auto complete
+ * 
+ * @param {Object} args - mandatory arguments to do initialisation of species autocomplete. see notes above...
+ */
+bdrs.contribute.initSpeciesAutocomplete = function(args) {
+	
+	var surveySpeciesSearchSelector = args.surveySpeciesSearchSelector;
+	var speciesIdSelector = args.speciesIdSelector;
+	var taxonAttrRowSelector = args.taxonAttrRowSelector;
+	var surveyId = args.surveyId;
+	var recordId = args.recordId;
+	var editable = args.editable;
+	var attributeTbodySelector = args.attributeTbodySelector;
+	var showScientificName = args.showScientificName;
+	
+	jQuery(surveySpeciesSearchSelector).autocomplete({
+		
+		source: bdrs.contribute.getAutocompleteSourceFcn(showScientificName),
+        select: function(event, ui) {
+            var taxon = ui.item.data;
+            jQuery(speciesIdSelector).val(taxon.id).trigger("blur");
+            
+            // Load Taxon Group Attributes
+            // Clear the group attribute rows
+            jQuery(taxonAttrRowSelector).parents("tr").remove();
+            
+            // Build GET request parameters
+            var params = {};
+            params.surveyId = surveyId;
+            params.taxonId = taxon.id;
+			params.recordId = recordId;
+            params.editForm = editable;
+
+            // Issue Request
+            jQuery.get(bdrs.contextPath+"/bdrs/user/ajaxTrackerTaxonAttributeTable.htm", params, function(data) {
+                jQuery(attributeTbodySelector).append(data);
+            });
+        },
+        change: function(event, ui) {
+            if(jQuery(event.target).val().length === 0) {
+                jQuery(speciesIdSelector).val("").trigger("blur");
+            
+                // Clear the group attribute rows
+                jQuery(taxonAttrRowSelector).parents("tr").remove();
+            }
+        },
+        minLength: 2,
+        delay: 300,
+        html: true
+    });
+}
+
+/**
+ * Get the function to use as the parameter for the jQuery autocomplete 'source'
+ * parameter
+ * 
+ * @param {Object} showScientificName - boolean, when true will use the scientific name
+ * for the autocomplete value. Else will use the common name
+ */
+bdrs.contribute.getAutocompleteSourceFcn = function(showScientificName) {
+	var fcn = function(request, callback) {
+		var params = {};
+		params.q = request.term;
+		params.surveyId = jQuery(this.element).data("surveyId");
+		jQuery.getJSON(bdrs.contextPath + '/webservice/survey/speciesForSurvey.htm', params, function(data, textStatus){
+			var label;
+			var result;
+			var taxon;
+			var resultsArray = [];
+			for (var i = 0; i < data.length; i++) {
+				taxon = data[i];
+				
+				label = [];
+				if (taxon.scientificName !== undefined && taxon.scientificName.length > 0) {
+					label.push("<b><i>" + taxon.scientificName + "</b></i>");
+				}
+				if (taxon.commonName !== undefined && taxon.commonName.length > 0) {
+					label.push(taxon.commonName);
+				}
+				
+				label = label.join(' ');
+				
+				resultsArray.push({
+					label: label,
+					value: showScientificName ? taxon.scientificName : taxon.commonName,
+					data: taxon
+				});
+			}
+			
+			callback(resultsArray);
+		});
+	}
+	return fcn;
+}

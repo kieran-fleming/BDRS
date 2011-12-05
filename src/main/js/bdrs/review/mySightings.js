@@ -53,11 +53,6 @@ bdrs.review.mysightings.TABLE_TAB_PAGE_COUNT_SELECTOR = "#page_count";
 
 bdrs.review.mysightings.RECORD_COUNT_PANEL_SELECTOR = ".recordCountPanel";
 
-bdrs.review.mysightings.FILE_DOWNLOAD_BUTTON_SELECTOR = "#download_button";
-bdrs.review.mysightings.DOWNLOAD_FILE_FORMAT_SELECTOR = "input[name=download_format]";
-bdrs.review.mysightings.KML_FILE_FORMAT = "kml";
-bdrs.review.mysightings.SHP_FILE_FORMAT = "shp";
-bdrs.review.mysightings.XLS_FILE_FORMAT = "xls";
 
 bdrs.review.mysightings.DISPLAY_CHANGE_EVENT_TYPE = "display_changed";
 
@@ -798,22 +793,10 @@ bdrs.review.mysightings.init = function(portal_id) {
         bdrs.review.mysightings.download_tab_display_change_handler);
         
     // Disable file downloading if no format is selected, and update the permalink
-    jQuery(bdrs.review.mysightings.DOWNLOAD_FILE_FORMAT_SELECTOR).change(function(event) {
-        bdrs.review.mysightings.update_permalink();
-        var checked = jQuery(bdrs.review.mysightings.DOWNLOAD_FILE_FORMAT_SELECTOR).filter(":checked");
-        jQuery(bdrs.review.mysightings.FILE_DOWNLOAD_BUTTON_SELECTOR).prop("disabled", checked.length === 0); 
-    }).trigger("change");
-        
-    // Click handler for the file download tab
-    jQuery(bdrs.review.mysightings.FILE_DOWNLOAD_BUTTON_SELECTOR).click(function(event) {
-        var url = [
-            bdrs.contextPath,
-            '/map/ajaxMySightingsDownload.htm?',
-            jQuery(bdrs.review.mysightings.SEARCH_CRITERIA_FORM_SELECTOR).serialize()
-        ].join('');
-        
-        document.location = url;
-    });
+	
+	bdrs.review.downloadSightingsWidget.init(bdrs.review.mysightings.SEARCH_CRITERIA_FORM_SELECTOR, 
+												'/map/ajaxMySightingsDownload.htm', 
+												bdrs.review.mysightings.update_permalink);
         
     // Initialise the Permalink
     bdrs.review.mysightings.update_permalink();

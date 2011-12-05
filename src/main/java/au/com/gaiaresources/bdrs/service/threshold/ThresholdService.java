@@ -14,16 +14,20 @@ import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.threshold.actionhandler.EmailActionHandler;
 import au.com.gaiaresources.bdrs.service.threshold.actionhandler.HoldRecordHandler;
+import au.com.gaiaresources.bdrs.service.threshold.actionhandler.ModerationEmailActionHandler;
 import au.com.gaiaresources.bdrs.service.threshold.operatorhandler.ContainsHandler;
 import au.com.gaiaresources.bdrs.service.threshold.operatorhandler.EqualsHandler;
 import au.com.gaiaresources.bdrs.service.threshold.operatorhandler.RecordAttributeHandler;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 import au.com.gaiaresources.bdrs.email.EmailService;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.threshold.Action;
@@ -32,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.threshold.Condition;
 import au.com.gaiaresources.bdrs.model.threshold.Operator;
 import au.com.gaiaresources.bdrs.model.threshold.Threshold;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
 @SuppressWarnings("serial")
 @Service
@@ -68,6 +73,7 @@ public class ThresholdService implements ConditionOperatorHandler {
             put(Long.class, new Operator[] { Operator.EQUALS });
             put(Date.class, new Operator[] { Operator.EQUALS });
             put(Boolean.class, new Operator[] { Operator.EQUALS });
+            put(AttributeScope.class, new Operator[] { Operator.CONTAINS });
         }
     });
 
@@ -91,8 +97,8 @@ public class ThresholdService implements ConditionOperatorHandler {
     public static Map<Class<?>, ActionType[]> CLASS_TO_ACTION_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ActionType[]>() {
         {
             put(IndicatorSpecies.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION });
-            put(Record.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION,
-                    ActionType.HOLD_RECORD });
+            put(Record.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION, 
+                ActionType.MODERATION_EMAIL_NOTIFICATION, ActionType.HOLD_RECORD });
             put(User.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION });
             put(Survey.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION });
         }
@@ -132,6 +138,14 @@ public class ThresholdService implements ConditionOperatorHandler {
     @Autowired
     private PropertyService propertyService;
 
+    @Autowired
+    private ContentService contentService;
+    
+    @Autowired
+    private RedirectionService redirService;
+    
+    @Autowired
+    private UserDAO userDAO;
     
     @PostConstruct
     public void init() {
@@ -144,6 +158,9 @@ public class ThresholdService implements ConditionOperatorHandler {
                 ActionType.values().length);
         actionHandlerMap.put(ActionType.EMAIL_NOTIFICATION, new EmailActionHandler(
                 emailService, propertyService));
+        actionHandlerMap.put(ActionType.MODERATION_EMAIL_NOTIFICATION, 
+                             new ModerationEmailActionHandler(emailService, propertyService, 
+                                                              contentService, redirService, userDAO));
         actionHandlerMap.put(ActionType.HOLD_RECORD, new HoldRecordHandler());
     }
 
@@ -216,7 +233,7 @@ public class ThresholdService implements ConditionOperatorHandler {
             }
 
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("Error matching condition on property "+condition.getPropertyPath(), e);
             match = false;
         }
 

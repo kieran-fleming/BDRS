@@ -49,6 +49,7 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/map/mySightings.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customJavaScript">
+        	<add-attribute>bdrs/review/downloadSightingsWidget.js</add-attribute>
             <add-attribute>bdrs/review/mySightings.js</add-attribute>
         </put-list-attribute>
     </definition>
@@ -59,9 +60,13 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReview.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customJavaScript">
+        	<add-attribute>bdrs/review/downloadSightingsWidget.js</add-attribute>
             <add-attribute>advancedReviewSightings.js</add-attribute>
         </put-list-attribute>
     </definition>
+	
+	<definition name="downloadSightingsWidget" template="/WEB-INF/jsp/bdrs/user/review/sightings/downloadSightingsWidget.jsp">
+	</definition>
     
     <definition name="advancedReviewFacet" template="/WEB-INF/jsp/bdrs/user/review/sightings/advancedReviewFacet.jsp">
         <put-attribute name="facet" type="object"/>
@@ -331,6 +336,23 @@
             <add-attribute>mobile/database.js</add-attribute>
             <add-attribute>mobile/jquery.infieldlabel.min.js</add-attribute>
             <add-attribute>ketchup/jquery.ketchup.basic.min.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
+    <!-- Report -->
+    <definition name="reportListing" extends="user-template">
+        <put-attribute name="title" value="Report Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/report/listing.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>bdrs/report.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    <definition name="reportRender" extends="user-template">
+        <put-attribute name="title" value="Report Listing"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/report/render.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customJavaScript">
         </put-list-attribute>
     </definition>
 </tiles-definitions>

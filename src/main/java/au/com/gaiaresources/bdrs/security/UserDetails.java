@@ -13,8 +13,8 @@ public class UserDetails implements org.springframework.security.core.userdetail
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Logger log = Logger.getLogger(getClass());
-	private User user;
+	private transient Logger log = Logger.getLogger(getClass());
+	private transient User user;
     
     public UserDetails(User user) {
         if(user == null) {

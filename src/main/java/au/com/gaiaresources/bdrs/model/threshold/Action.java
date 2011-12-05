@@ -29,6 +29,7 @@ public class Action extends PortalPersistentImpl {
 
     private String value;
     private ActionType actionType;
+    private ActionEvent actionEvent = ActionEvent.CREATE_AND_UPDATE;
 
     /**
      * Creates a new Action
@@ -54,5 +55,15 @@ public class Action extends PortalPersistentImpl {
 
     public void setActionType(ActionType actionType) {
         this.actionType = actionType;
+    }
+
+    public void setActionEvent(ActionEvent actionEvent) {
+        this.actionEvent = actionEvent;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ACTIONEVENT", nullable = false)
+    public ActionEvent getActionEvent() {
+        return actionEvent;
     }
 }

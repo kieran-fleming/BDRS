@@ -12,7 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.record.AtlasController;
 import au.com.gaiaresources.bdrs.controller.record.SingleSiteAllTaxaController;
@@ -36,14 +35,8 @@ public class RenderController extends AbstractController {
     private Logger log = Logger.getLogger(this.getClass());
 
     public static final String SURVEY_RENDER_REDIRECT_URL = "/bdrs/user/surveyRenderRedirect.htm";
-    public static final String PARAM_RECORD_ID = "record_id";
-    public static final String PARAM_SURVEY_ID = "survey_id";
-
-    // almost overlapping names here.
-    // This controller looks for 'surveyId'. Pages that this controller
-    // redirects to may use survey_id. So, both of these keys exist in the 
-    // dictionary after redirection.
-    public static final String PARAM_X_SURVEY_ID = "surveyId";
+    public static final String PARAM_RECORD_ID = "recordId";
+    public static final String PARAM_SURVEY_ID = "surveyId";
 
     /**
      * Redirects the request to the appropriate survey renderer depending upon
@@ -66,7 +59,7 @@ public class RenderController extends AbstractController {
         int surveyId = 0;
 
         try {
-            surveyId = Integer.parseInt(request.getParameter(PARAM_X_SURVEY_ID));
+            surveyId = Integer.parseInt(request.getParameter(PARAM_SURVEY_ID));
         } catch (NumberFormatException nfe) {
             try {
                 log.debug("Default is : "
@@ -110,7 +103,6 @@ public class RenderController extends AbstractController {
 
         ModelAndView mv = this.redirect(redirectURL);
         mv.addAllObjects(request.getParameterMap());
-        mv.addObject(PARAM_SURVEY_ID, surveyId);
         return mv;
     }
 }

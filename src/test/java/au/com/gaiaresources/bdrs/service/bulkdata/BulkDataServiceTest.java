@@ -23,7 +23,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.geotools.referencing.operation.projection.Stereographic;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,7 +259,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
 
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -384,7 +383,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
 
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -462,7 +461,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
 
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -544,7 +543,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 		registerStream(outStream);
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 		ByteArrayInputStream inStream = new ByteArrayInputStream(outStream
 				.toByteArray());
 		registerStream(inStream);
@@ -612,7 +611,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
 
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -767,7 +766,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
 
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -904,8 +903,14 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 				"BulkDataServiceTest.testExportEditXls", ".xls");
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
 		registerStream(outStream);
-
-		bulkDataService.exportSurveyRecords(survey, sc, outStream);
+		
+		// exportSurveyRecords evicts objects from the hibernate session interally.
+		// this is the only test in this test suite that relies on items created
+		// before the call the exportSurveyRecords, so we flush here to make sure
+        // the items are properly persisted
+		sessionFactory.getCurrentSession().flush();
+		
+		bulkDataService.exportSurveyRecords(sessionFactory.getCurrentSession(), survey, sc, outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
 		registerStream(inStream);
@@ -1058,14 +1063,13 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		// another....so we
 		// need a new one to use our DAOs.
 		sessionFactory.getCurrentSession().beginTransaction();
-
+		
 		Assert.assertEquals(3, recDAO.countAllRecords().intValue());
 
-		sessionFactory.getCurrentSession().refresh(rec);
-		sessionFactory.getCurrentSession().refresh(recChild);
+		rec = recDAO.getRecord(rec.getId());
+		recChild = recDAO.getRecord(recChild.getId());
 
 		Assert.assertNull(recChild.getParentRecord());
-
 		Assert.assertEquals(1, rec.getChildRecords().size());
 	}
 
@@ -1079,7 +1083,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 						"BulkDataServiceTest.testImportSurveyCensusMethodRecordInRecord",
 						".xls");
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 		registerStream(outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);
@@ -1270,7 +1274,7 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		File spreadSheetTmp = File.createTempFile(
 				"BulkDataServiceTest.testImportRecordDateTime", ".xls");
 		FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
-		bulkDataService.exportSurveyTemplate(survey, outStream);
+		bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
 		registerStream(outStream);
 
 		InputStream inStream = new FileInputStream(spreadSheetTmp);

@@ -75,6 +75,9 @@
 	
 	<!-- Scan for the showcase DAOS -->
 	<context:component-scan base-package="au.com.gaiaresources.bdrs.model.showcase.impl"/>
+	
+	<!-- Scan for the Report DAOS -->
+    <context:component-scan base-package="au.com.gaiaresources.bdrs.model.report.impl"/>
 
     <!-- Scan for xls service -->
     <context:component-scan base-package="au.com.gaiaresources.mv.service.xls"/>

@@ -32,6 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
+import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.servlet.Interceptor;
@@ -196,6 +197,35 @@ public abstract class AbstractControllerTest extends
     protected void assertMessageCode(String code) {
         List<String> msgCodes = getRequestContext().getMessageCodes();
         Assert.assertTrue("Expect error key '" + code + "' in context", listContains(msgCodes, code));
+    }
+    
+    protected void assertMessageCodeAndArgs(String code, Object[] args) {
+        List<Message> messageList = getRequestContext().getMessages();
+        // first find the message code...
+        Message mFound = null;
+        for (Message m : messageList) {
+            if (m.getCode().equals(code)) {
+                mFound = m;
+                break;
+            }
+        }
+        Assert.assertNotNull("Could not find code : " + code, mFound);
+        // no need to compare for args....
+        if (args == null) {
+            return;
+        }
+        
+        Object[] mArgs = mFound.getArguments();
+        // now assert the message parameters...
+        Assert.assertNotNull("message args should not be null", mArgs);
+        Assert.assertEquals("arg list length different", args.length, mArgs.length);
+        // iterate through and make sure they are the same by position...
+        // this assertion method only handles boxes primitives, the .equals method
+        // will probably fail for other object types...
+        
+        for (int i=0; i<args.length; ++i) {
+            Assert.assertEquals("arg different at index: " + i, args[i], mArgs[i]);
+        }
     }
     
     private boolean listContains(List<String> list, String str) {

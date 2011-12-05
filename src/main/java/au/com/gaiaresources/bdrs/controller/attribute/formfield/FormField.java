@@ -40,4 +40,11 @@ public interface FormField extends Comparable<FormField> {
      * @return true if this form field is for display only, false otherwise.
      */
     public boolean isDisplayFormField();
+    
+    /**
+     * Returns true if this form field represents a {@link TypedAttributeValueFormField} 
+     * and the {@link AttributeScope} of the {@link Attribute} is a moderation type.
+     * @return
+     */
+    public boolean isModerationFormField();
 }

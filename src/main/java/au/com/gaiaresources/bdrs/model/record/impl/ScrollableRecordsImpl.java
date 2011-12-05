@@ -20,17 +20,21 @@ public class ScrollableRecordsImpl implements ScrollableRecords {
     private Logger log = Logger.getLogger(getClass());
     private ScrollableResults results;
     
-    private boolean hasMoreElements = false;
+    private boolean hasMoreElements = INIT_HAS_MORE_ELEMENTS;
     private int entriesPerPage = -1;
-    private int currentPageEntryIndex = -1;
+    private int currentPageEntryIndex = INIT_CURRENT_PAGE_ENTRY_INDEX;
     private Record record = null;
+    
+    private static final int INIT_CURRENT_PAGE_ENTRY_INDEX = -1;
+    public static final boolean INIT_HAS_MORE_ELEMENTS = false;
     
     /**
      * Creates a new instance.
      * @param query the query for a set of Records.
      */
     public ScrollableRecordsImpl(Query query) {
-        results = query.setCacheMode(CacheMode.IGNORE).setFetchSize(ScrollableRecords.RECORD_BATCH_SIZE).scroll(ScrollMode.FORWARD_ONLY);
+        // not using 'forward only' scroll mode so we can rewind the scrollable results
+        results = query.setCacheMode(CacheMode.IGNORE).setFetchSize(ScrollableRecords.RECORD_BATCH_SIZE).scroll(ScrollMode.SCROLL_SENSITIVE);
         nextRecord();
     }
     
@@ -72,6 +76,15 @@ public class ScrollableRecordsImpl implements ScrollableRecords {
             record = null;
             return r;
         }
+    }
+    
+    @Override
+    public void rewind() {
+        currentPageEntryIndex = INIT_CURRENT_PAGE_ENTRY_INDEX;
+        hasMoreElements = INIT_HAS_MORE_ELEMENTS;
+        // rewind the underlying ScrollableResults
+        results.beforeFirst();
+        nextRecord();
     }
     
     private void nextRecord() {

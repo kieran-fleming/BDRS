@@ -410,7 +410,11 @@ public abstract class AbstractRecordFilter implements RecordFilter {
             // if user is not specified and accessor is not specified or accessor is not admin,
             // only return public and unheld records
             setRecordVisibility(RecordVisibility.PUBLIC);
-            setHeld(false);
+            // only use held as a false condition for the filter if 
+            // it hasn't been set by the requestor
+            if (isHeld() == null) {
+                setHeld(false);
+            }
         }
 
         // make sure there is a space before the joined clauses

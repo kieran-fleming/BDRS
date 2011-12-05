@@ -186,10 +186,16 @@ public class Condition extends PortalPersistentImpl {
             for (String propName : this.propertyPath.split("\\.")) {
                 PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(target, propName);
                 if (pd.getReadMethod() != null) {
-                    target = pd.getReadMethod().getReturnType();
+                    Method readMethod = pd.getReadMethod();
+                    target = readMethod.getReturnType();
+                    // check if it is an iterable, if so, use the parameterized type
+                    if (Iterable.class.isAssignableFrom(target)) {
+                        target = extractIterableType(readMethod);
+                    }
                 }
             }
         }
+        
         return target;
     }
 
@@ -232,20 +238,26 @@ public class Condition extends PortalPersistentImpl {
      *         method does not return an {@link Iterable}.
      */
     private Class<?> extractIterableType(Method readMethod) {
-        Class<?> iterableType = null;
         Class<?> iterable = readMethod.getReturnType();
         if (Iterable.class.isAssignableFrom(iterable)) {
             Type genericReturnType = readMethod.getGenericReturnType();
-            if (genericReturnType instanceof ParameterizedType) {
-                Type[] typeArguments = ((ParameterizedType) genericReturnType).getActualTypeArguments();
-                if (typeArguments.length == 0) {
-                    log.error("Cannot get target iterable type because the type argument array is empty");
-                } else if (typeArguments.length > 1) {
-                    log.error("More than one type argument returned. Using the first.");
-                    iterableType = (Class<?>) typeArguments[0];
-                } else {
-                    iterableType = (Class<?>) typeArguments[0];
-                }
+            return extractIterableType(genericReturnType);
+        }
+        return null;
+    }
+    
+    public Class<?> extractIterableType(Type genericReturnType) {
+        Class<?> iterableType = null;
+        
+        if (genericReturnType instanceof ParameterizedType) {
+            Type[] typeArguments = ((ParameterizedType) genericReturnType).getActualTypeArguments();
+            if (typeArguments.length == 0) {
+                log.error("Cannot get target iterable type because the type argument array is empty");
+            } else if (typeArguments.length > 1) {
+                log.error("More than one type argument returned. Using the first.");
+                iterableType = (Class<?>) typeArguments[0];
+            } else {
+                iterableType = (Class<?>) typeArguments[0];
             }
         }
         return iterableType;
@@ -300,11 +312,17 @@ public class Condition extends PortalPersistentImpl {
                 // Selection option
                 PropertyDescriptor keyPD = BeanUtils.getPropertyDescriptor(target, propName);
                 PathDescriptor pathDescriptor = new PathDescriptor(
-                        pathBuilder.toString(), keyPD);
-
-                // Potential options
-                orderedMap.put(pathDescriptor, childPathDescriptors);
-                target = keyPD.getReadMethod().getReturnType();
+                            pathBuilder.toString(), keyPD);
+    
+                    // Potential options
+                    orderedMap.put(pathDescriptor, childPathDescriptors);
+                    Method readMethod = keyPD.getReadMethod();
+                    if (readMethod != null) {
+                        target = readMethod.getReturnType();
+                        if (Iterable.class.isAssignableFrom(target)) {
+                            target = extractIterableType(readMethod);
+                        }
+                    }
             }
         } else {
             List<PathDescriptor> valueList = new ArrayList<PathDescriptor>();
@@ -358,6 +376,9 @@ public class Condition extends PortalPersistentImpl {
                     Class<?> iterableType = extractIterableType(value.getReadMethod());
                     if (ThresholdService.COMPLEX_TYPE_TO_OPERATOR_MAP.containsKey(iterableType)) {
                         propertyDescriptorList.add(value);
+                    } else if (PersistentImpl.class.isAssignableFrom(iterableType)
+                            || ThresholdService.SIMPLE_TYPE_TO_OPERATOR_MAP.containsKey(iterableType)) {
+                        propertyDescriptorList.add(value);
                     }
                 }
             }
@@ -397,10 +418,7 @@ public class Condition extends PortalPersistentImpl {
 
     private ComplexTypeOperator getComplexTypeOperator(Class<?> target)
             throws ClassNotFoundException {
-        if (!Iterable.class.isAssignableFrom(target)) {
-            return null;
-        }
-        return ThresholdService.COMPLEX_TYPE_TO_OPERATOR_MAP.get(getTargetIterableTypeForPath());
+        return ThresholdService.COMPLEX_TYPE_TO_OPERATOR_MAP.get(target);
     }
 
     /**
@@ -440,11 +458,11 @@ public class Condition extends PortalPersistentImpl {
         Class<?> target = getTargetClassForPath();
         Operator[] operators = ThresholdService.SIMPLE_TYPE_TO_OPERATOR_MAP.get(target);
         if (operators == null) {
-            if (Iterable.class.isAssignableFrom(target)) {
-                // This could be null but should not be.
-                operators = getComplexTypeOperator().getValueOperators();
+            ComplexTypeOperator complexOperator = getComplexTypeOperator();
+            if (complexOperator != null) {
+                operators = complexOperator.getValueOperators();
             } else {
-                log.warn("Target class is not a simple type or an iterable");
+                log.error("Target class "+target+" is not handled in simple or complex operators.");
             }
         }
 
@@ -652,26 +670,39 @@ public class Condition extends PortalPersistentImpl {
      * @throws InvocationTargetException
      */
     @Transient
-    public Object getPropertyForPath(Object instance)
+    public List<Object> getPropertiesForPath(Object instance)
             throws IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
-
-        Object currentInstance = instance;
+        List<Object> instances = new ArrayList<Object>();
+        instances.add(instance);
         if (this.propertyPath != null) {
             for (String propName : this.propertyPath.split("\\.")) {
-                if (currentInstance == null) {
+                if (instances.isEmpty()) {
                     // There is no point digging deeper because the path is now
                     // broken. 
                     return null;
                 }
-                PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(currentInstance.getClass(), propName);
-                Method readMethod = pd.getReadMethod();
-                currentInstance = readMethod.invoke(currentInstance, new Object[] {});
+                // copy the instances to a temp array
+                List<Object> tempInstances = new ArrayList<Object>(instances);
+                instances.clear();
+                for (Object currentInstance : tempInstances) {
+                    if (Iterable.class.isAssignableFrom(currentInstance.getClass())) {
+                        for (Object object : (Iterable) currentInstance) {
+                            PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(object.getClass(), propName);
+                            Method readMethod = pd.getReadMethod();
+                            instances.add(readMethod.invoke(object, new Object[] {}));
+                        }
+                    } else {
+                        PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(currentInstance.getClass(), propName);
+                        Method readMethod = pd.getReadMethod();
+                        instances.add(readMethod.invoke(currentInstance, new Object[] {}));
+                    }
+                }
             }
-            return currentInstance;
+            return instances;
         } else {
-            return instance;
+            instances.add(instance);
+            return instances;
         }
     }
-
 }

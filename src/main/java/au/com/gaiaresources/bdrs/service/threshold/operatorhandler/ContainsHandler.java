@@ -1,6 +1,7 @@
 package au.com.gaiaresources.bdrs.service.threshold.operatorhandler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -28,11 +29,22 @@ public class ContainsHandler implements SimpleOperatorHandler {
             throws IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
         
-        String actualValue = condition.getPropertyForPath(entity).toString();
-        String expectedValue = condition.stringValue();
-        boolean result = match(actualValue, expectedValue);
+        List<Object> properties = condition.getPropertiesForPath(entity);
         
-        return result;
+        for (Object property : properties) {
+            Object actualValue = property;
+            Object expectedValue = null;
+            if (property.getClass().isEnum()) {
+                actualValue = property.toString();
+                expectedValue = condition.stringArrayValue();
+            } else {
+                expectedValue = condition.stringValue();
+            }
+            if (match(actualValue, expectedValue)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -48,6 +60,10 @@ public class ContainsHandler implements SimpleOperatorHandler {
         		isContained = isContained && Arrays.binarySearch((Object[])objA, item) > -1;
         	}
         	return isContained;
+        } else if(objB.getClass().isArray()) {
+            boolean isContained = true;
+            isContained = isContained && Arrays.binarySearch((Object[])objB, objA) > -1;
+            return isContained;
         } else {
             return objA.toString().contains(objB.toString());
         }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
 import au.com.gaiaresources.bdrs.db.impl.AbstractDAOImpl;
@@ -20,29 +21,33 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
 public class ContentDAOImpl extends AbstractDAOImpl implements ContentDAO {
     Logger log = Logger.getLogger(ContentDAOImpl.class);
     
-    public String getContentValue(String key) {
-        return getContentValue(key, null);
+    public String getContentValue(Session sesh, String key) {
+        return getContentValue(sesh, key, null);
     }
-
-    public Content saveContent(String key, String value) {
+    
+    public Content saveContent(Session sesh, String key, String value) {
         Content content = getContent(key);
         if(content == null){
-            return saveNewContent(key, value);
+            return saveNewContent(sesh, key, value);
         } else {
             content.setValue(value);
             return update(content);
         }
     }
     
-    public Content saveNewContent(String key, String value) {
+    public Content saveNewContent(Session sesh, String key, String value) {
         Content helpItem = new Content();
         helpItem.setKey(key);
         helpItem.setValue(value);
-        return save(helpItem);
+        return save(sesh, helpItem);
     }
     
     public Content getContent(String key){
         return findUnique("from Content where key = ?", new Object[] { key });
+    }
+    @Override
+    public Content getContent(Session sesh, String key){
+        return findUnique(sesh, "from Content where key = ?", new Object[] { key });
     }
     
     @SuppressWarnings("unchecked")
@@ -60,7 +65,7 @@ public class ContentDAOImpl extends AbstractDAOImpl implements ContentDAO {
     }
     
     @Override
-    public String getContentValue(String key, Portal portal) {
+    public String getContentValue(Session sesh, String key, Portal portal) {
         
         if (key == null) {
             throw new IllegalArgumentException("String, key, cannot be null");
@@ -72,7 +77,7 @@ public class ContentDAOImpl extends AbstractDAOImpl implements ContentDAO {
         if (portal != null) {
             query.and(Predicate.eq("portal", portal));
         }
-        Content c = this.findUnique(query.getQueryString(), query.getParametersValue());
+        Content c = this.findUnique(sesh, query.getQueryString(), query.getParametersValue());
         return c != null ? c.getValue() : null;
     }
 }

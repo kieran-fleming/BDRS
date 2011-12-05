@@ -12,7 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -22,10 +24,19 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.record.AtlasController;
+import au.com.gaiaresources.bdrs.controller.record.SingleSiteAllTaxaController;
+import au.com.gaiaresources.bdrs.controller.record.SingleSiteMultiTaxaController;
+import au.com.gaiaresources.bdrs.controller.record.TrackerController;
+import au.com.gaiaresources.bdrs.controller.record.YearlySightingsController;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
+import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
@@ -33,6 +44,7 @@ import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.security.Role;
 
 /**
  * A controller class to load data into the field guide pages
@@ -50,6 +62,9 @@ public class FieldGuideController extends AbstractController {
     @Autowired
     private ContentDAO helpDAO;
 
+    @Autowired
+    private SurveyDAO surveyDAO;
+    public static final String PARAM_SPECIES_ID = "speciesId";
     /**
      * Species Information Page
      * 
@@ -183,10 +198,76 @@ public class FieldGuideController extends AbstractController {
 
         // Add help items.
         HashMap<String, String> helpItemMap = new HashMap<String, String>();
-        helpItemMap.put(Content.HELP_FIELD_GUIDE, helpDAO.getContentValue(Content.HELP_FIELD_GUIDE));
+        helpItemMap.put(Content.HELP_FIELD_GUIDE, helpDAO.getContentValue(
+                        getRequestContext().getHibernate(), Content.HELP_FIELD_GUIDE, 
+                        getRequestContext().getPortal()));
         model.addAttribute(Content.HELP_ITEM_MAP, helpItemMap);
 
         return new ModelAndView("desktop-taxonList", model);
     }
 
+    /**
+     * Redirects the request to the appropriate survey renderer depending upon
+     * the <code>SurveyFormRendererType</code> of the survey.
+     * The survey is selected from the species id.  If no survey is found for the 
+     * species, return an error message as such.  If more than one survey is found for 
+     * the species, returns the first with a message to check the survey.  Otherwise, 
+     * returns the one matching survey for the species.
+     *
+     * @param request the http request.
+     * @param response the http response.
+     * @param speciesId the primary key of the species to be recorded.
+     * @return redirected view to the survey renderer.
+     */
+    @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN})
+    @SuppressWarnings("unchecked")
+    @RequestMapping(value = "/bdrs/user/taxonSurveyRenderRedirect.htm", method = RequestMethod.GET)
+    public ModelAndView recordNow(HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        try {
+            int speciesId = Integer.parseInt(request.getParameter(PARAM_SPECIES_ID));
+            IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesId);
+            List<Survey> surveys = surveyDAO.getSurveys(species);
+            if (surveys.size() < 1) {
+                // add a message that no surveys were found for the species
+                getRequestContext().addMessage("bdrs.survey.noneForTaxa", new String[]{species.getCommonName()});
+                log.warn("No surveys found for species id "+speciesId);
+                return new ModelAndView(new RedirectView(request.getParameter("redirectURL")), request.getParameterMap());
+            } else if (surveys.size() > 1) {
+                // add a message that more than 1 surveys were found for the species
+                log.warn("Multiple surveys found for species id "+speciesId);
+                getRequestContext().addMessage("bdrs.survey.multipleForTaxa", new String[]{species.getCommonName()});
+            }
+            Survey survey = surveys.get(0);
+            return getSurveyRenderRedirect(survey, request);
+        } catch (Exception e) {
+            log.error("Error occurred rendering survey for species id: "+request.getParameter(PARAM_SPECIES_ID), e);
+            getRequestContext().addMessage("bdrs.survey.taxonomy.error");
+            return new ModelAndView(new RedirectView(request.getParameter("redirectURL")), request.getParameterMap());
+        }
+    }
+
+    private ModelAndView getSurveyRenderRedirect(Survey survey,
+            HttpServletRequest request) {
+        SurveyFormRendererType renderer = survey.getFormRendererType();
+
+        renderer = renderer == null ? SurveyFormRendererType.DEFAULT : renderer;
+        String redirectURL;
+        switch (renderer) {
+        // only handle atlas controller, all others redirect to tracker form by default
+        case ATLAS:
+            redirectURL = AtlasController.ATLAS_URL;
+            break;
+        case DEFAULT:
+            // Fall through
+        default:
+            redirectURL = TrackerController.EDIT_URL;
+        }
+
+        ModelAndView mv = this.redirect(redirectURL);
+        mv.addAllObjects(request.getParameterMap());
+        mv.addObject("surveyId", survey.getId());
+        return mv;
+    }
 }

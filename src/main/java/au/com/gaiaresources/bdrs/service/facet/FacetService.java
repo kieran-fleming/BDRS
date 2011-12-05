@@ -19,8 +19,11 @@ import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.service.facet.builder.AttributeFacetBuilder;
 import au.com.gaiaresources.bdrs.service.facet.builder.CensusMethodTypeFacetBuilder;
 import au.com.gaiaresources.bdrs.service.facet.builder.FacetBuilder;
+import au.com.gaiaresources.bdrs.service.facet.builder.LocationFacetBuilder;
+import au.com.gaiaresources.bdrs.service.facet.builder.ModerationFacetBuilder;
 import au.com.gaiaresources.bdrs.service.facet.builder.MonthFacetBuilder;
 import au.com.gaiaresources.bdrs.service.facet.builder.MultimediaFacetBuilder;
 import au.com.gaiaresources.bdrs.service.facet.builder.SurveyFacetBuilder;
@@ -55,10 +58,13 @@ public class FacetService {
         temp.add(new TaxonGroupFacetBuilder());
         temp.add(new MonthFacetBuilder());
         temp.add(new YearFacetBuilder());
+        temp.add(new LocationFacetBuilder());
         temp.add(new SurveyFacetBuilder());
         temp.add(new MultimediaFacetBuilder());
         temp.add(new CensusMethodTypeFacetBuilder());
-
+        temp.add(new AttributeFacetBuilder());
+        temp.add(new ModerationFacetBuilder());
+        
         FACET_BUILDER_REGISTRY = Collections.unmodifiableList(temp);
     }
     

@@ -415,6 +415,10 @@ public class RecordFormValidatorTest extends AbstractControllerTest {
         value = "12:00";
         paramMap.put(key, new String[] { value });
         Assert.assertTrue(validator.validate(paramMap, ValidationType.TIME, key, null));
+        
+        value = "32:00";
+        paramMap.put(key, new String[] { value });
+        Assert.assertFalse(validator.validate(paramMap, ValidationType.TIME, key, null));
 
         value = "anyString";
         paramMap.put(key, new String[] { value });
