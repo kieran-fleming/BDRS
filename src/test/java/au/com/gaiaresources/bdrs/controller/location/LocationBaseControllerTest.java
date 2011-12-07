@@ -25,6 +25,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.LocationAttributeFormField;
+import au.com.gaiaresources.bdrs.controller.record.RecordWebFormContext;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
@@ -106,6 +107,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertViewName(mv, "surveyEditLocation");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "survey");
+        ModelAndViewAssert.assertModelAttributeValue(mv, RecordWebFormContext.MODEL_EDIT, true);
     }
 
     /**
@@ -167,6 +169,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
             curWeight = formField.getWeight();
             Assert.assertTrue(formField.isAttributeFormField());
         }
+        ModelAndViewAssert.assertModelAttributeValue(mv, RecordWebFormContext.MODEL_EDIT, true);
     }
     
     /**

@@ -16,7 +16,7 @@ import au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint;
 public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
 
     private Logger log = Logger.getLogger(getClass());
-    
+
     @Override
     public Portal getPortal(Integer portalId) {
         return this.getPortal(null, portalId);
@@ -128,8 +128,18 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
      */
     @Override
     public Portal save(Session sesh, Portal portal) throws Exception {
+        return save(null, sesh, portal);
+    }
+
+    @Override
+    public Portal save(PortalInitialiser portalInitialiser, Session sesh,
+                Portal portal) throws Exception {
+            
         if(sesh == null) {
             sesh = getSessionFactory().getCurrentSession();
+        }
+        if (portalInitialiser == null) {
+            portalInitialiser = new PortalInitialiser();
         }
         
         // if the portal is already persisted...
@@ -141,7 +151,7 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
         Portal p = super.save(sesh, portal);
         try {
             // seed portal with essential data...
-            new PortalInitialiser().init(sesh, p);
+            portalInitialiser.init(sesh, p);
         } catch (Exception e) {
             log.error("Could not initialise portal. Rolling back transaction...", e);
             throw e;

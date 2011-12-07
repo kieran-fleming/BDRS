@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.Session;
 
 import au.com.gaiaresources.bdrs.db.TransactionDAO;
+import au.com.gaiaresources.bdrs.model.portal.impl.PortalInitialiser;
 
 public interface PortalDAO extends TransactionDAO {
 
@@ -38,4 +39,5 @@ public interface PortalDAO extends TransactionDAO {
 
     void delete(PortalEntryPoint value);
 
+    Portal save(PortalInitialiser portalInitialiser, Session sesh, Portal portal) throws Exception;
 }

@@ -34,6 +34,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.AttributeFormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
+import au.com.gaiaresources.bdrs.controller.record.RecordWebFormContext;
 import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
 import au.com.gaiaresources.bdrs.controller.survey.SurveyBaseController;
 import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataBuilder;
@@ -354,6 +355,8 @@ public class LocationBaseController extends AbstractController {
         mv.addObject("survey", survey);
         mv.addObject("locationFormFieldList", surveyFormFieldList);
         mv.addObject("location", location);
+        // location scoped attributes are always editable on the edit location page...
+        mv.addObject(RecordWebFormContext.MODEL_EDIT, true);
         
         return mv;
     }

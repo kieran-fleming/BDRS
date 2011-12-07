@@ -1781,23 +1781,22 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
         if (item.type == "record") {
             // record specific stuff
             var recordAttrKeys = ["owner", "census_method", "species", "common_name", "number", "notes", "habitat", "when", "behaviour"];
-            
             if (bdrs.authenticated) {
                 var recordId = item["recordId"];
                 var ownerId = item["ownerId"];
                 if (bdrs.authenticatedUserId === ownerId || bdrs.isAdmin) {
-                    var editRecordRow = jQuery("<tr></tr>");
+                    var editRecordRow = jQuery("<tr><td></td></tr>");
                     editRecordRow.attr('colspan', '2');
                     var surveyId = item["surveyId"];
                     var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
-                    jQuery("<a>View&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow);
+                    jQuery("<a>View&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow.find("td"));
                     tbody.append(editRecordRow);
                 }
                 
-                var requestRecordInfoRow = jQuery("<tr></tr>");
+                var requestRecordInfoRow = jQuery("<tr><td></td></tr>");
                 requestRecordInfoRow.attr('colspan', '2');
                 var requestRecordInfoUrl = bdrs.contextPath + "/bdrs/user/contactRecordOwner.htm?recordId=" + recordId;
-                jQuery("<a>Contact&nbsp;Owner</a>").attr('href', requestRecordInfoUrl).appendTo(requestRecordInfoRow);
+                jQuery("<a>Contact&nbsp;Owner</a>").attr('href', requestRecordInfoUrl).appendTo(requestRecordInfoRow.find("td"));
                 tbody.append(requestRecordInfoRow);
             }
             

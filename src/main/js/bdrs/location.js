@@ -723,7 +723,6 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
         autoOpen: false,
         zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
 		resizable: false,
-		width: '857px',
         buttons: {
             "Ok": function() {
 				

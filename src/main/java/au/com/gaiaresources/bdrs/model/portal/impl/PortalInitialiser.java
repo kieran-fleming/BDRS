@@ -88,7 +88,7 @@ public class PortalInitialiser implements ServletContextListener {
                 }
             } else {
                 log.info("Initialising ROOT portal");
-                initRootPortal(sesh, arg0.getServletContext().getContextPath());
+                initRootPortal(sesh, context_path);
                 // Running this here because if you run it in initRootPortal the tests
                 // just never finish
                 loadService.loadWurflXML("wurfl.xml");
@@ -98,7 +98,6 @@ public class PortalInitialiser implements ServletContextListener {
             // update the default themes for all portals
             log.info("Updating default themes for all portals");
             for (Portal portal : portalList) {
-
                 List<Theme> themes = themeService.createDefaultThemes(portal, context_path);
                 if (themeDAO.getActiveTheme(portal) == null) {
                     Theme activeTheme = themes.get(0);
@@ -175,7 +174,7 @@ public class PortalInitialiser implements ServletContextListener {
         portal.setName(portalName);
         portal.setDefault(jsonObject.getBoolean("isDefault"));
 
-        return portalDAO.save(sesh, portal);
+        return portalDAO.save(this, sesh, portal);
     }
 
     private void createPortalEntryPoint(Session sesh, Portal portal,
@@ -244,7 +243,7 @@ public class PortalInitialiser implements ServletContextListener {
             // autowire yourself if you haven't been wired yet
             themeService = AppContext.getBean(ThemeService.class);
         }
-
+        
         List<Theme> themes = themeService.createDefaultThemes(portal, context_path);
         if (themeDAO.getActiveTheme(portal) == null) {
             Theme activeTheme = themes.get(0);
