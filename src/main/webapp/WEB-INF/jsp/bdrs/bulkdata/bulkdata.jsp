@@ -69,7 +69,8 @@
 	                    </th>
 	                    <td>
 	                        <select id="surveyTemplateSelect" name="surveyPk">
-	                            <c:forEach items="${surveyList}" var="survey">
+	                            <option value="">-- Select a Project --</option>
+								<c:forEach items="${surveyList}" var="survey">
 	                                <option value="${survey.id}"><c:out value="${survey.name}"/></option>
 	                            </c:forEach>
 	                        </select>
@@ -78,11 +79,11 @@
 	                <tr>
 	                    <th>Download Checklist:</th>
 	                    <td>
-	                        <a href="javascript: void(0)" onclick="window.document.location='${pageContext.request.contextPath}/webservice/survey/checklist.htm?format=csv&surveyId='+jQuery('#surveyTemplateSelect').val();">
+	                        <a href="javascript: void(0)" id="ssCsvChecklist">
 	                            CSV
 	                        </a>
 	                        &nbsp;|&nbsp;
-	                        <a href="javascript: void(0)" onclick="window.document.location='${pageContext.request.contextPath}/webservice/survey/checklist.htm?format=zip&surveyId='+jQuery('#surveyTemplateSelect').val();">
+	                        <a href="javascript: void(0)" id="ssZipChecklist">
 	                            Zip
 	                        </a>
 	                    </td>
@@ -123,59 +124,60 @@
 	<h3>Step 2: Download Template Shapefile</h3>
 
 	<form id="downloadShapefileTemplateForm" action="${pageContext.request.contextPath}/bulkdata/shapefileTemplate.htm" method="get">
-            <table class="form_table bulkDataTableForm">
-                <tbody>
-                	<tr>
-                        <th>
-                            <label class="strong" for="shapefileType">Feature Type:</label>
-                        </th>
-                        <td>
-                            <select id="shapefileType" name="shapefileType">
-                                <option value="POINT">Point</option>
-								<option value="MULTI_POLYGON">Multi-Polygon</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <label class="strong" for="surveyShapefileTemplateSelect">Project:</label>
-                        </th>
-                        <td>
-                            <select id="surveyShapefileTemplateSelect" name="surveyPk">
-                                <c:forEach items="${surveyList}" var="survey">
-                                    <option value="${survey.id}"><c:out value="${survey.name}"/></option>
-                                </c:forEach>
-                            </select>
-                        </td>
-                    </tr>
-					<tr>
-                        <th>
-                            <label class="strong" for="censusMethodShapefileTemplateSelect">Census Method:</label>
-                        </th>
-                        <td>
-                            <select id="censusMethodShapefileTemplateSelect" name="censusMethodPk">
-                                <option value="0">No census method</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Download Checklist:</th>
-                        <td>
-                            <a href="javascript: void(0)" onclick="window.document.location='${pageContext.request.contextPath}/webservice/survey/checklist.htm?format=csv&surveyId='+jQuery('#surveyShapefileTemplateSelect').val();">
-                                CSV
-                            </a>
-                            &nbsp;|&nbsp;
-                            <a href="javascript: void(0)" onclick="window.document.location='${pageContext.request.contextPath}/webservice/survey/checklist.htm?format=zip&surveyId='+jQuery('#surveyShapefileTemplateSelect').val();">
-                                Zip
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="textright">
-                <input type="submit" value="Download Template" class="form_action"/>
-            </div>
-        </form>
+        <table class="form_table bulkDataTableForm">
+            <tbody>
+            	<tr>
+                    <th>
+                        <label class="strong" for="shapefileType">Feature Type:</label>
+                    </th>
+                    <td>
+                        <select id="shapefileType" name="shapefileType">
+                            <option value="POINT">Point</option>
+							<option value="MULTI_POLYGON">Multi-Polygon</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label class="strong" for="surveyShapefileTemplateSelect">Project:</label>
+                    </th>
+                    <td>
+                        <select id="surveyShapefileTemplateSelect" name="surveyPk">
+                        	<option value="">-- Select a Project --</option>
+                            <c:forEach items="${surveyList}" var="survey">
+                                <option value="${survey.id}"><c:out value="${survey.name}"/></option>
+                            </c:forEach>
+                        </select>
+                    </td>
+                </tr>
+				<tr>
+                    <th>
+                        <label class="strong" for="censusMethodShapefileTemplateSelect">Census Method:</label>
+                    </th>
+                    <td>
+                        <select id="censusMethodShapefileTemplateSelect" name="censusMethodPk">
+                            <option value="0">No census method</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Download Checklist:</th>
+                    <td>
+                        <a href="javascript: void(0)" id="shpCsvChecklist">
+                            CSV
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a href="javascript: void(0)" id="shpZipChecklist">
+                            Zip
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="textright">
+            <input type="submit" value="Download Template" class="form_action"/>
+        </div>
+    </form>
 	
 	<h3>Step 3: Upload Shapefile</h3>
     <div>
@@ -193,7 +195,7 @@
 		        </tbody>
 		    </table>
 		    <div class="textright">
-		        <input type="submit" value="Upload shapefile" class="form_action"/>
+		        <input type="submit" value="Upload Shapefile" class="form_action"/>
 		    </div>
 		</form>
     </div>
@@ -201,54 +203,7 @@
 
 <script type="text/javascript">
     jQuery(function() {
-        // Download Template Expand/Collapse
-        jQuery("#downloadTemplateToggle").click(function() {
-            jQuery("#downloadTemplateWrapper").slideToggle(function() {
-                var canSee = jQuery("#downloadTemplateWrapper").css('display') === 'none';
-                jQuery("#downloadTemplateToggle").text(canSee ? "Expand" : "Collapse");
-            });
-        });
-
-        // Upload Spreadsheet Expand/Collapse
-        jQuery("#uploadSpreadsheetToggle").click(function() {
-            jQuery("#uploadSpreadsheetWrapper").slideToggle(function() {
-                var canSee = jQuery("#uploadSpreadsheetWrapper").css('display') === 'none';
-                jQuery("#uploadSpreadsheetToggle").text(canSee ? "Expand" : "Collapse");
-            });
-        });
+		bdrs.bulkdata.init();
 		
-		$("input[name=bulkDataUploadType]").change(function(){
-			var value = $("input[@name='option_layout']:checked").val();
-			if (value == "spreadsheet") {
-				jQuery("#spreadsheetSection").show();
-				jQuery("#shapefileSection").hide();
-			} else if (value == "shapefile") {
-				jQuery("#spreadsheetSection").hide();
-                jQuery("#shapefileSection").show();
-			} else {
-				throw 'unexpected value on change event: ' + value;
-			}
-		});
-		
-		var createCensusMethodOptionItems = function(data) {
-			var selectNode = jQuery("#censusMethodShapefileTemplateSelect");
-			selectNode.empty();
-			for(var j=0; j<data.length; ++j) {
-                var censusMethod = data[j];
-                var cmOption = jQuery("<option>" + censusMethod.name + "</option>");
-				cmOption.attr("value", censusMethod.id);
-                selectNode.append(cmOption);
-            }
-		}
-		
-		jQuery("#surveyShapefileTemplateSelect").change(function() {
-			var surveyId = jQuery("#surveyShapefileTemplateSelect").val();
-			// populate census method items...
-            jQuery.getJSON(bdrs.contextPath + "/bdrs/user/censusMethod/getSurveyCensusMethods.htm", {surveyId:surveyId}, createCensusMethodOptionItems);
-		});
-		
-		// trigger change events to initialise UI
-		$("#bulkDataUploadType").change();
-		$("#surveyShapefileTemplateSelect").change();
     });
 </script>

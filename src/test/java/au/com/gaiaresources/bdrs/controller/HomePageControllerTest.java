@@ -1,14 +1,11 @@
 package au.com.gaiaresources.bdrs.controller;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapability;
 import au.com.gaiaresources.bdrs.model.detect.BDRSWurflCapabilityDAO;
@@ -79,29 +76,29 @@ public class HomePageControllerTest extends AbstractControllerTest {
         testDesktop(request);
     }
 
-    @Test
-    public void testRenderIPad() throws Exception {
-        request.setMethod("GET");
-        request.setRequestURI(HomePageController.HOME_URL);
-        request.addHeader("user-agent", "Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B405 Safari/531.21.10");
-        testMobile(request);
-    }
-
-    @Test
-    public void testRenderIPhone() throws Exception {
-        request.setMethod("GET");
-        request.setRequestURI(HomePageController.HOME_URL);
-        request.addHeader("user-agent", "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_1 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5");
-        testMobile(request);
-    }
-
-    @Test
-    public void testRenderAndroid() throws Exception {
-        request.setMethod("GET");
-        request.setRequestURI(HomePageController.HOME_URL);
-        request.addHeader("user-agent", "Mozilla/5.0 (Linux; U; Android 2.1-update1; fr-fr; desire_A8181 Build/ERE27) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.0 Mobile Safari/530.17");
-        testMobile(request);
-    }
+//    @Test
+//    public void testRenderIPad() throws Exception {
+//        request.setMethod("GET");
+//        request.setRequestURI(HomePageController.HOME_URL);
+//        request.addHeader("user-agent", "Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B405 Safari/531.21.10");
+//        testMobile(request);
+//    }
+//
+//    @Test
+//    public void testRenderIPhone() throws Exception {
+//        request.setMethod("GET");
+//        request.setRequestURI(HomePageController.HOME_URL);
+//        request.addHeader("user-agent", "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_1 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5");
+//        testMobile(request);
+//    }
+//
+//    @Test
+//    public void testRenderAndroid() throws Exception {
+//        request.setMethod("GET");
+//        request.setRequestURI(HomePageController.HOME_URL);
+//        request.addHeader("user-agent", "Mozilla/5.0 (Linux; U; Android 2.1-update1; fr-fr; desire_A8181 Build/ERE27) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.0 Mobile Safari/530.17");
+//        testMobile(request);
+//    }
 
     private void testDesktop(MockHttpServletRequest request) throws Exception {
         ModelAndView mv = handle(request, response);
@@ -116,8 +113,8 @@ public class HomePageControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertViewName(mv, "signin");
     }
 
-    private void testMobile(MockHttpServletRequest request) throws Exception {
-        ModelAndView mv = handle(request, response);
-        Assert.assertTrue("View is not redirect view", mv.getView() instanceof RedirectView);
-    }
+//    private void testMobile(MockHttpServletRequest request) throws Exception {
+//        ModelAndView mv = handle(request, response);
+//        Assert.assertTrue("View is not redirect view", mv.getView() instanceof RedirectView);
+//    }
 }

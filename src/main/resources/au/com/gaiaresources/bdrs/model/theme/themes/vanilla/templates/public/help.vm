@@ -2,10 +2,4 @@
 
 ${bdrs.getContent("public/help")}
 
-<h2>Do you have some feedback for us?</h2>
-<p>
-	We&#39;d love to hear any feedback about the site, and how you find it.
-	Send general feedback to 
-	<a href="mailto:piers@gaiaresources.com.au">Piers Higgs</a>.
-</p>
 </div>

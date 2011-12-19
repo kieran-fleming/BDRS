@@ -372,24 +372,36 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
     }
 
     protected int writeRowLongitude(Row row, Record rec, int colIndex) {
-        double longitude;
+        Double longitude = null;
         if (rec.getLocation() == null) {
-            longitude = rec.getPoint().getX();
+            if (rec.getPoint() != null) {
+                longitude = rec.getPoint().getX();   
+            }
         } else {
             longitude = rec.getLocation().getLocation().getCentroid().getX();
         }
-        row.createCell(colIndex++).setCellValue(longitude);
+        if (longitude != null) {
+            row.createCell(colIndex++).setCellValue(longitude.doubleValue());
+        } else {
+            row.createCell(colIndex++).setCellValue("");
+        }
         return colIndex;
     }
 
     protected int writeRowLatitude(Row row, Record rec, int colIndex) {
-        double latitude;
+        Double latitude = null;
         if (rec.getLocation() == null) {
-            latitude = rec.getPoint().getY();
+            if (rec.getPoint() != null) {
+                latitude = rec.getPoint().getY();
+            }
         } else {
             latitude = rec.getLocation().getLocation().getCentroid().getY();
         }
-        row.createCell(colIndex++).setCellValue(latitude);
+        if (latitude != null) {
+            row.createCell(colIndex++).setCellValue(latitude.doubleValue());
+        } else {
+            row.createCell(colIndex++).setCellValue("");
+        }
         return colIndex;
     }
 

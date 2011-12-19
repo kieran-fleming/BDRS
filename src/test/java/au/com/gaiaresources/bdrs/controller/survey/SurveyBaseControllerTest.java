@@ -12,6 +12,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FilenameUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +74,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         g2.setColor(Color.GREEN);
         g2.fillRect(0,0,wideImage.getWidth(), wideImage.getHeight());
         File imgTmp = File.createTempFile("SurveyBaseControllerTest.testAddSurveySubmit", ".png");
+        String targetFilename = String.format("%s%s%s", FilenameUtils.getBaseName(imgTmp.getName()), FilenameUtils.EXTENSION_SEPARATOR, SurveyBaseController.TARGET_LOGO_IMAGE_FORMAT);
         ImageIO.write(wideImage, "png", imgTmp);
         
         MockMultipartFile logoFile = new MockMultipartFile(Metadata.SURVEY_LOGO+"_file", imgTmp.getName(), "image/png", new FileInputStream(imgTmp));
@@ -108,7 +110,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         Assert.assertEquals(survey.getStartDate().getTime(), cal.getTime().getTime());
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
-        Assert.assertEquals(imgTmp.getName(), md.getValue());
+        Assert.assertEquals(targetFilename, md.getValue());
         
         Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
         Assert.assertEquals(false, survey.isRecordVisibilityModifiable());
@@ -129,6 +131,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         g2.setColor(Color.GREEN);
         g2.fillRect(0,0,tallImage.getWidth(), tallImage.getHeight());
         File imgTmp = File.createTempFile("SurveyBaseControllerTest.testAddSurveySubmit", ".png");
+        String targetFilename = String.format("%s%s%s", FilenameUtils.getBaseName(imgTmp.getName()), FilenameUtils.EXTENSION_SEPARATOR, SurveyBaseController.TARGET_LOGO_IMAGE_FORMAT);
         ImageIO.write(tallImage, "png", imgTmp);
         
         MockMultipartFile logoFile = new MockMultipartFile(Metadata.SURVEY_LOGO+"_file", imgTmp.getName(), "image/png", new FileInputStream(imgTmp));
@@ -163,7 +166,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         Assert.assertEquals(survey.getStartDate().getTime(), cal.getTime().getTime());
         
         Metadata md = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
-        Assert.assertEquals(imgTmp.getName(), md.getValue());
+        Assert.assertEquals(targetFilename, md.getValue());
         
         Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
         Assert.assertEquals(true, survey.isRecordVisibilityModifiable());

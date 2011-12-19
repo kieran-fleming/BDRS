@@ -241,6 +241,19 @@ bdrs.map.control = {
     MODIFY_FEATURE: "modifyFeature"
 };
 
+/**
+ * Falling back to a default when we use open layers to auto zoom
+ * to a single point.
+ * Using 16 at the moment. Although google maps reports that a zoom
+ * level of 19 is supported, for some areas not in the city, tiles
+ * for that zoom level does not exist. This is a problem for us since
+ * records are often taken outside of city limits.
+ * 
+ * Unfortunately, 16 is too low to be able to see detail in city areas
+ * but this is a comprimise we are making for now.
+ */
+bdrs.map.DEFAULT_POINT_ZOOM_LEVEL = 16;
+
 // --------------------------------------
 // Some notes on map projections
 //
@@ -488,23 +501,17 @@ bdrs.map.addControlPanel = function(map, enlargeMapAvailable, zoomLockAvailable)
     
     var control;
     var sep;
-    for(var i=controlArray.length-1; i>-1; i--) {
+    for(var i=0; i<controlArray.length; ++i) {
         control = controlArray[i];
         if(control !== undefined && control !== null) {
             // if the first, then we don't need to start with a separator
-            if(i < (controlArray.length-1)) {
+            if(i > 0) {
                 sep = bdrs.map.getControlSeparator();
-                sep.css("float", "right");
                 controlPanel.append(sep);
             } 
-            control.css("float", "right");
             controlPanel.append(control);
         }
     }
-    
-    var clear = jQuery("<div></div>").css({"clear":"both"});
-    controlPanel.append(clear);
-    
     jQuery(map.div).parent().before(controlPanel);
 };
 
@@ -870,6 +877,16 @@ bdrs.map.createOpenlayersStyleMap = function(selectedId) {
 	return new OpenLayers.StyleMap(styles);
 };
 
+/**
+ * Create a kml layer and add it to the map
+ * 
+ * @param {Object} map OpenLayers.Map object
+ * @param {Object} layerName name of the layer
+ * @param {Object} kmlURL the url used to collect the KML 
+ * @param {Object} options layer options
+ * @param {Object} ignoreId - aka the feature id of the selected feature.
+ * Is called 'ignoreId' as the feature id is ignored during feature clustering.
+ */
 bdrs.map.addKmlLayer = function(map, layerName, kmlURL, options, ignoreId){
     if (options === undefined) {
         options = {};
@@ -1940,8 +1957,8 @@ bdrs.map.getPopupRightHandler = function(newContentState){
 bdrs.map.addGeocodeControl = function(geocodeOptions){
     // See bdrs.map.createDefaultMap for a description of geocode options.
     var defaultOptions = {
-        useKeyHandler: true,
-        zoom: 10
+        useKeyHandler: false,
+        zoom: -1
     };
     var options = jQuery.extend(true, {}, defaultOptions, geocodeOptions);
     
@@ -2002,7 +2019,12 @@ bdrs.map.geocode = function(options, address, doAfter){
                     bdrs.map.baseMap.setCenter(new OpenLayers.LonLat(130, -27).transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION), 4);
                 }
                 else {
-                    var zoom = options.zoom < 0 ? bdrs.map.baseMap.getNumZoomLevels() - 1 : options.zoom;
+                    var zoom;
+                    if(options.zoom < 0) {
+                        zoom = bdrs.map.baseMap.baseLayer.maxZoomLevel;
+                    } else {
+                        zoom = options.zoom;
+                    }
                     // Jump to entered location and update lat/long
                     var lonLat = new OpenLayers.LonLat(point.x, point.y);
                     bdrs.map.baseMap.setCenter(lonLat.transform(bdrs.map.WGS84_PROJECTION, bdrs.map.GOOGLE_PROJECTION), zoom);
@@ -2454,6 +2476,8 @@ bdrs.survey.location.updateLocation = function(pk, options) {
             // zoom the map to show the currently selected location
             var geobounds = feature.geometry.getBounds();
             var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
+			
+			zoom = zoom > bdrs.map.DEFAULT_POINT_ZOOM_LEVEL ? bdrs.map.DEFAULT_POINT_ZOOM_LEVEL : zoom;
             bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
             
             // show the location attributes in the locationAttributesContainer
@@ -2497,14 +2521,21 @@ bdrs.getDatePickerParams = function() {
     return params;
 };
 
+bdrs.timePickerCloseHandler = function(value,timePickerInstance) {
+    // only way I could see to acces the input node.
+	// calls blur event to trigger form validation
+    jQuery(timePickerInstance.input[0]).blur();
+};
+
 bdrs.initDatePicker = function(){
 
     // this function prevents the from date from being after the to date
     // and vice versa in the date picker
-    var onSelectDateRangeHandler = function(selectedDate){
-        var option = this.id == "from" ? "minDate" : "maxDate", instance = $(this).data("datepicker"), date = $.datepicker.parseDate(instance.settings.dateFormat ||
-        $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-        dates.not(this).datepicker("option", option, date);
+    var onSelectDateRangeHandler = function(selectedDate, instance){
+        var option = this.id == "from" ? "minDate" : "maxDate";
+		var targetSelector = this.id == "from" ? "#to" : "#from";
+		var date = $.datepicker.parseDate((instance.settings.dateFormat || $.datepicker._defaults.dateFormat), selectedDate, instance.settings);
+		jQuery(targetSelector).datepicker("option", option, date);
         jQuery(this).trigger('blur');
     };
     
@@ -2544,7 +2575,9 @@ bdrs.initDatePicker = function(){
     });
 	
 	// initialise timepicker inputs
-	jQuery('.timepicker').timepicker({});
+	jQuery('.timepicker').timepicker({
+		onClose: bdrs.timePickerCloseHandler
+	});
 };
 
 bdrs.initColorPicker = function(){
@@ -2552,6 +2585,15 @@ bdrs.initColorPicker = function(){
         bdrs.util.createColorPicker(jQuery(this));
     });
 };
+
+/**
+ * Remove the disabled attribute from the submit inputs on the form.
+ * 
+ * @param {Object} formNode - the form we are currently submitting
+ */
+bdrs.unbindDisableHandler = function(formNode) {
+	jQuery('input[type=submit]', formNode).unbind('click.disable');
+}
 
 //disable form submit button on click to prevent double-click dual submission
 bdrs.initSubmitDisabler = function() {
@@ -2771,3 +2813,4 @@ bdrs.require("bdrs/dnd.js");
 bdrs.require("bdrs/map.js");
 bdrs.require("bdrs/model/attribute_type.js");
 bdrs.require("bdrs/url/urls.js");
+bdrs.require("bdrs/bulkdata/bulkdata.js");

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
@@ -183,10 +185,9 @@ public class MySightingsController extends SightingsController {
             
         } else {
             groupList = taxaDAO.getTaxonGroup(selectedSurvey);
-            startDate = startDate == null ? selectedSurvey.getStartDate() : startDate;
-            if(endDate == null) {
-                endDate = selectedSurvey.getEndDate() == null ? new Date() : selectedSurvey.getEndDate();
-            } 
+            
+            startDate = selectedSurvey.getFormRendererType().getStartDateForSightings(selectedSurvey);
+            endDate = selectedSurvey.getFormRendererType().getEndDateForSightings(selectedSurvey);
         }
         
         // If the current selectedTab string is some random garbage,
@@ -400,6 +401,7 @@ public class MySightingsController extends SightingsController {
         SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);
         RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
         ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
+        
         RecordDownloadWriter.write(getRequestContext().getHibernate(), request, response, sr, RecordDownloadFormat.KML, user);
     }
     
@@ -437,7 +439,7 @@ public class MySightingsController extends SightingsController {
                                     @RequestParam(value = QUERY_PARAM_DOWNLOAD_FORMAT, required = false) String[] downloadFormat) throws Exception {
         
         User user = getRequestContext().getUser();
-        SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);       
+        SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);
 
         RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
         ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
@@ -458,6 +460,7 @@ public class MySightingsController extends SightingsController {
     private RecordFilter getRecordFilter(int surveyId, int taxonGroupId,
             String taxonSearch, Date startDate, Date endDate, User accessor,
             boolean userRecordsOnly, int limit, boolean count) {
+        
         RecordFilter filter = null;
         if (count) {
             filter = new AdvancedCountRecordFilter();
@@ -466,7 +469,14 @@ public class MySightingsController extends SightingsController {
         }
         filter.setSurveyPk(surveyId);
         filter.setStartDate(startDate);
-        filter.setEndDate(endDate);
+        // set the end date to the end of the day, instead of the default start of the day
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(endDate);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+        filter.setEndDate(cal.getTime());
         
         if(taxonGroupId > 0) {
             filter.setTaxonGroupPk(taxonGroupId);
@@ -485,6 +495,7 @@ public class MySightingsController extends SightingsController {
             filter.setPageNumber(1);
             filter.setEntriesPerPage(limit);
         }
+        
         return filter;
     }
     

@@ -240,6 +240,17 @@
         </put-list-attribute>
     </definition>
     
+    <definition name="importTaxon" extends="admin-template">
+        <put-attribute name="title" value="Import Taxonomy"/>
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxonomy/import.jsp"/>
+        <put-attribute name="maps" value="false"/>
+        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customJavaScript">
+            <add-attribute>taxonomy.js</add-attribute>
+            <add-attribute>html5media/html5media.min.js</add-attribute>
+        </put-list-attribute>
+    </definition>
+    
     <definition name="taxonProfileRow" template="/WEB-INF/jsp/bdrs/admin/taxonomy/profileRow.jsp">
         <put-attribute name="profile" type="object"/>
         <put-attribute name="index"/>

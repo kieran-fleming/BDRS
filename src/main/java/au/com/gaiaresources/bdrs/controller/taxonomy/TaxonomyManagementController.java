@@ -107,6 +107,15 @@ public class TaxonomyManagementController extends AbstractController {
     }
     
     @RolesAllowed( { Role.ADMIN })
+    @RequestMapping(value = "/bdrs/admin/taxonomy/importTaxon.htm", method = RequestMethod.GET)
+    public ModelAndView importTaxon(HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        ModelAndView mv = new ModelAndView("importTaxon");
+        return mv;
+    }
+    
+    @RolesAllowed( { Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/taxonomy/edit.htm", method = RequestMethod.GET)
     public ModelAndView edit(HttpServletRequest request,
                              HttpServletResponse response,
@@ -429,42 +438,45 @@ public class TaxonomyManagementController extends AbstractController {
     @RequestMapping(value = "/bdrs/admin/taxonomy/import.htm", method = RequestMethod.GET)
     public ModelAndView ajaxImportProfile(HttpServletRequest request,
                                        HttpServletResponse response,
-                                       @RequestParam(required=false, value="pk", defaultValue="0") int taxonPk,
+                                       @RequestParam(required=false, value="pk", defaultValue="0") String taxonPk,
                                        @RequestParam(required=false, value="guid") String guid) throws IOException {
 
         IndicatorSpecies taxon;
-        List<FormField> formFieldList;
-        if(taxonPk == 0) {
+        List<FormField> formFieldList = new ArrayList<FormField>();
+        int taxonId = StringUtils.nullOrEmpty(taxonPk) ? 0 : Integer.valueOf(taxonPk);
+        if(taxonId == 0) {
             taxon = new IndicatorSpecies();
         } else {
-            taxon = taxaDAO.getIndicatorSpecies(taxonPk);
+            taxon = taxaDAO.getIndicatorSpecies(taxonId);
         }
-        
         // import the profile from the atlas service
-        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
+        Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute(MV_ERROR_MAP);
+        if (errorMap == null) {
+            // it might not actually exist yet, if this is the first URL that is hit.
+            errorMap = new HashMap<String, String>();
+        }
         IndicatorSpecies importTaxon = atlasService.importSpecies(taxon, guid, false, errorMap, null);
         if (importTaxon == null) {
             // return the error that caused the import to fail
             String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
-            getRequestContext().addMessage(String.format(tmpl, taxon.getGuid()));
+            getRequestContext().addMessage(String.format(tmpl, StringUtils.nullOrEmpty(guid) ? taxon.getGuid() : guid));
         } else {
             taxon = importTaxon;
-        }
-        // Need to be careful that a taxon may have attribute values
-        // that are no longer applicable for the currently assigned taxon group.
-        Map<Attribute, IndicatorSpeciesAttribute> attributeValueMapping = 
-            new HashMap<Attribute, IndicatorSpeciesAttribute>();
-        for(IndicatorSpeciesAttribute val : taxon.getAttributes()) {
-            attributeValueMapping.put(val.getAttribute(), val);
-        }
-        
-        // We are only interested in the attributes from the currently
-        // assigned group.
-        formFieldList = new ArrayList<FormField>();
-        for(Attribute attr : taxon.getTaxonGroup().getAttributes()) {
-            if(attr.isTag()) {
-                IndicatorSpeciesAttribute val = attributeValueMapping.get(attr);
-                formFieldList.add(formFieldFactory.createTaxonFormField(attr, val));
+            // Need to be careful that a taxon may have attribute values
+            // that are no longer applicable for the currently assigned taxon group.
+            Map<Attribute, IndicatorSpeciesAttribute> attributeValueMapping = 
+                new HashMap<Attribute, IndicatorSpeciesAttribute>();
+            for(IndicatorSpeciesAttribute val : taxon.getAttributes()) {
+                attributeValueMapping.put(val.getAttribute(), val);
+            }
+            
+            // We are only interested in the attributes from the currently
+            // assigned group.
+            for(Attribute attr : taxon.getTaxonGroup().getAttributes()) {
+                if(attr.isTag()) {
+                    IndicatorSpeciesAttribute val = attributeValueMapping.get(attr);
+                    formFieldList.add(formFieldFactory.createTaxonFormField(attr, val));
+                }
             }
         }
         
@@ -557,6 +569,9 @@ public class TaxonomyManagementController extends AbstractController {
                 // protect against null or empty ids
                 continue;
             }
+            // trim the whitespace
+            id = id.trim();
+            
             IndicatorSpecies sp = null;
             boolean successfulImport = false;
             try {

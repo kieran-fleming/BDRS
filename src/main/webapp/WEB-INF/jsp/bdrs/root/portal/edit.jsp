@@ -51,52 +51,57 @@
 	    </tbody>
 	</table>
 	
-	<h3>Portal Entry Points</h3>
-	<cw:getContent key="root/portalEdit/entryPoints" />
-	
-    <input id="entryPointIndex" type="hidden" value="0"/> 
-    <div class="textright buttonpanel">
-        <input class="form_action" type="button" value="Add Entry Point" onclick="bdrs.portal.addPortalEntryPoint('#portalEntryPointTable', '#entryPointIndex');"/>
+	<div class="input_container">
+		<h3>Portal Entry Points</h3>
+		<cw:getContent key="root/portalEdit/entryPoints" />
+		
+	    <input id="entryPointIndex" type="hidden" value="0"/> 
+	    <div class="textright buttonpanel">
+	        <input class="form_action" type="button" value="Add Entry Point" onclick="bdrs.portal.addPortalEntryPoint('#portalEntryPointTable', '#entryPointIndex');"/>
+	    </div>
+		<table id="portalEntryPointTable" class="datatable textcenter">
+		   <thead>
+		       <tr>
+		           <th>Regex Pattern</th>
+		           <th>Redirect URL</th>
+		           <th>Delete</th>
+		       </tr>
+		   </thead>
+		   <tbody>
+		       <c:set var="entryPointIndex" value="0"></c:set>
+		       <c:forEach var="portalEntryPoint" items="${ portalEntryPointList }">
+		           <tiles:insertDefinition name="portalEntryPointRow">
+	                    <tiles:putAttribute name="portalEntryPoint" value="${ portalEntryPoint }"/>
+	                    <tiles:putAttribute name="index" value="${ entryPointIndex }"/>
+	                </tiles:insertDefinition>
+	                <c:if test="${ portalEntryPoint.id == null }">
+	                    <c:set var="entryPointIndex" value="${ entryPointIndex + 1 }"></c:set>
+	                </c:if>
+		       </c:forEach>
+		   </tbody>
+		</table>
+		
+		<%--
+		<h3>Pattern Tester</h3>
+	    <cw:getContent key="root/portalEdit/patternTester" />
+	    
+	    <table>
+	        <tbody>
+	            <tr>
+	                <th>Test URL:</th>
+	                <td>
+	                    <input name="testUrl" type="text"/>
+	                </td>
+	                <td>
+	                    <input class="form_action" type="button" value="Test" onclick="bdrs.portal.testPortalEntryPointPattern('#urlTestResult');"/>
+	                </td>
+	            </tr>
+	        <tbody>
+	    </table>
+	    <div id="urlTestResult"></div>
+	    
+	    --%>
     </div>
-	<table id="portalEntryPointTable" class="datatable textcenter">
-	   <thead>
-	       <tr>
-	           <th>Regex Pattern</th>
-	           <th>Redirect URL</th>
-	           <th>Delete</th>
-	       </tr>
-	   </thead>
-	   <tbody>
-	       <c:set var="entryPointIndex" value="0"></c:set>
-	       <c:forEach var="portalEntryPoint" items="${ portalEntryPointList }">
-	           <tiles:insertDefinition name="portalEntryPointRow">
-                    <tiles:putAttribute name="portalEntryPoint" value="${ portalEntryPoint }"/>
-                    <tiles:putAttribute name="index" value="${ entryPointIndex }"/>
-                </tiles:insertDefinition>
-                <c:if test="${ portalEntryPoint.id == null }">
-                    <c:set var="entryPointIndex" value="${ entryPointIndex + 1 }"></c:set>
-                </c:if>
-	       </c:forEach>
-	   </tbody>
-	</table>
-	
-	<h3>Pattern Tester</h3>
-    <cw:getContent key="root/portalEdit/patternTester" />
-    
-    <table>
-        <tbody>
-            <tr>
-                <th>Test URL:</th>
-                <td>
-                    <input name="testUrl" type="text"/>
-                </td>
-                <td>
-                    <input class="form_action" type="button" value="Test" onclick="bdrs.portal.testPortalEntryPointPattern('#urlTestResult');"/>
-                </td>
-            </tr>
-        <tbody>
-    </table>
-    <div id="urlTestResult"></div>
     
     <div class="textright buttonpanel">
         <input class="form_action" type="submit" value="Save Portal" id="save_portal"/>

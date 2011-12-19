@@ -1,10 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.record.validator;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeOption;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 
@@ -35,10 +37,13 @@ public class DynamicIntRangeValidator extends IntValidator {
     @Override
     public boolean validate(Map<String, String[]> parameterMap, String key, Attribute attribute, Map<String, String> errorMap){
         boolean isValid = super.validate(parameterMap, key, attribute, errorMap);
-        
-        
-        Integer min = Integer.parseInt(attribute.getOptions().get(0).getValue());
-    	Integer max = Integer.parseInt(attribute.getOptions().get(1).getValue());
+        List<AttributeOption> attrOpts = attribute.getOptions();
+        Integer min = Integer.MIN_VALUE;
+        Integer max = Integer.MAX_VALUE;
+        if (attrOpts.size() >= 2) {
+            min = Integer.parseInt(attrOpts.get(0).getValue());
+            max = Integer.parseInt(attrOpts.get(1).getValue());
+        }
         
     	if (isValid) {
             

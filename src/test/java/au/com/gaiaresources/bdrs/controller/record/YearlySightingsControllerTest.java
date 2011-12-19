@@ -15,6 +15,7 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,8 @@ public class YearlySightingsControllerTest extends RecordFormTest {
     private IndicatorSpecies speciesB;
     private Location locationA;
     private Location locationB;
+    
+    private Logger log = Logger.getLogger(getClass());
 
     @Before
     public void setUp() throws Exception {
@@ -479,11 +482,14 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                 } 
             }
         }
+        
+        Date startDate = SurveyFormRendererType.YEARLY_SIGHTINGS.getStartDateForSightings(survey);
+        Date endDate = SurveyFormRendererType.YEARLY_SIGHTINGS.getEndDateForSightings(survey);
 
         // Fill in 300 out of the possible 365/366 days of the year with the
         // index of that day in the year.
         Calendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
+        cal.setTime(startDate);  // start at the start date for the survey...
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -505,7 +511,8 @@ public class YearlySightingsControllerTest extends RecordFormTest {
         Assert.assertEquals(redirectionService.getMySightingsUrl(survey), redirect.getUrl());
         
         Assert.assertEquals(300, recordDAO.countAllRecords().intValue());
-        for(Record rec : recordDAO.getRecords(getRequestContext().getUser(), survey, locationA)) {
+        
+        for(Record rec : recordDAO.getRecords(getRequestContext().getUser(), survey, locationA, startDate, endDate)) {
             // Assert that this was a sighting we added
             Assert.assertTrue(sightingSet.remove(rec.getNumber()));
             cal.setTime(rec.getWhen());
@@ -578,7 +585,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                 }
             }
         }
-        
+
         // All records accounted for.
         Assert.assertTrue(sightingSet.isEmpty());
     }

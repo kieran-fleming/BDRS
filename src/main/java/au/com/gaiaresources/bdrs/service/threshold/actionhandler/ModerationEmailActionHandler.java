@@ -71,8 +71,10 @@ public class ModerationEmailActionHandler extends EmailActionHandler {
             }
             for (User user : surveyUsers) {
                 if (user.isModerator()) {
-                    emailParams.put("userFirstName", user.getFirstName());
-                    emailParams.put("userLastName", user.getLastName());
+                    emailParams.put("moderatorFirstName", user.getFirstName());
+                    emailParams.put("moderatorLastName", user.getLastName());
+                    emailParams.put("userFirstName", loggedInUser.getFirstName());
+                    emailParams.put("userLastName", loggedInUser.getLastName());
                     emailService.sendMessage(user.getEmailAddress(), record.getUser().getEmailAddress(), 
                                              "A record requires moderation", 
                                              contentService.getContent(sesh, "email/ModerationRequired"), 
@@ -83,6 +85,8 @@ public class ModerationEmailActionHandler extends EmailActionHandler {
         } else {
             // a moderator has changed a moderated record, email the user that 
             // their record was moderated
+            emailParams.put("moderatorFirstName", loggedInUser.getFirstName());
+            emailParams.put("moderatorLastName", loggedInUser.getLastName());
             emailParams.put("userFirstName", record.getUser().getFirstName());
             emailParams.put("userLastName", record.getUser().getLastName());
             emailService.sendMessage(record.getUser().getEmailAddress(), loggedInUser.getEmailAddress(), 

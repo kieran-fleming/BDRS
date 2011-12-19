@@ -3,7 +3,7 @@
 #{else}
     <div id="header" class="header">
 #{end}
-    #{if}(${context.user.isUser()} || ${context.user.isAdmin()})
+    #{if}(${context.user})
         <a href="${pageContext.request.contextPath}/authenticated/redirect.htm"></a>
     #{else}
         <a href="${pageContext.request.contextPath}/home.htm"></a>
@@ -16,7 +16,7 @@
     #{end}
     </div>
  
-    #{if}(${context.user.isUser()} || ${context.user.isAdmin()})
+    #{if}(${context.user})
     <div id="welcomeText">
         <div>
             <a title="Sign out / Log out" href="${pageContext.request.contextPath}/logout">Sign Out</a>

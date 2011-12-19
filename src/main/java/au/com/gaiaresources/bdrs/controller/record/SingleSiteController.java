@@ -9,10 +9,12 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -31,7 +34,6 @@ import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordFormFieldCollection;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
-import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyFormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
@@ -240,7 +242,7 @@ public abstract class SingleSiteController extends AbstractController {
             }
         }
 
-        Record record;
+        Record record = null;
 
         String surveyPrefix = AttributeParser.DEFAULT_PREFIX;
         WebFormAttributeParser attributeParser = new WebFormAttributeParser();
@@ -315,23 +317,25 @@ public abstract class SingleSiteController extends AbstractController {
                 IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesPk);
                 record.setSpecies(species);
             }
-
             // Number
             // this can happen in the singleSiteAllTaxa page
             String count = request.getParameter(String.format("%s" + PARAM_NUMBER, recordPrefix));
+            Integer number = null;
             if (!StringUtils.nullOrEmpty(count)) {
                 try {
-                    record.setNumber(Integer.parseInt(count));
+                    number = Integer.parseInt(count);
                 } catch (NumberFormatException e) {
                     log.error("Value should be an integer: " + e.getMessage());
                 }
             }
-
-            records.add(recordDAO.saveRecord(record));
-
+            record.setNumber(number);
+            // check that we can save the record at this point based on the count
+            boolean canSave = canSaveRecord(number);
             // Record Attributes
             AttributeValue recAttr;
             String prefix;
+            Map<AttributeValue, MultipartFile> attsToSave = new HashMap<AttributeValue, MultipartFile>();
+            List<AttributeValue> attsToDelete = new ArrayList<AttributeValue>();
             for (Attribute attribute : survey.getAttributes()) {
                 if (!AttributeScope.LOCATION.equals(attribute.getScope())) {
                     if (AttributeUtil.isModifiableByScopeAndUser(attribute, user)) {
@@ -340,16 +344,35 @@ public abstract class SingleSiteController extends AbstractController {
                             : recordPrefix;
                         recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
                         if (attributeParser.isAddOrUpdateAttribute()) {
-                            recAttr = attributeDAO.save(recAttr);
-                            if (attributeParser.getAttrFile() != null) {
-                                fileService.createFile(recAttr, attributeParser.getAttrFile());
-                            }
-                            record.getAttributes().add(recAttr);
+                            attsToSave.put(recAttr, attributeParser.getAttrFile());
                         } else {
-                            record.getAttributes().remove(recAttr);
-                            attributeDAO.delete(recAttr);
+                            attsToDelete.add(recAttr);
+                        }
+                        if (!canSave) {
+                            canSave = AttributeScope.RECORD.equals(attribute.getScope()) && 
+                                      recAttr != null && recAttr.isPopulated();
                         }
                     }
+                }
+            }
+            
+            // always save records that are being edited
+            canSave = canSave || record.getId() != null;
+            if (canSave) {
+                records.add(recordDAO.saveRecord(record));
+                
+                for (Entry<AttributeValue, MultipartFile> entry : attsToSave.entrySet()) {
+                    recAttr = entry.getKey();
+                    recAttr = attributeDAO.save(recAttr);
+                    if (entry.getValue() != null) {
+                        fileService.createFile(recAttr, entry.getValue());
+                    }
+                    record.getAttributes().add(recAttr);
+                }
+                
+                for (AttributeValue attributeValue : attsToDelete) {
+                    record.getAttributes().remove(attributeValue);
+                    attributeDAO.delete(attributeValue);
                 }
             }
         }
@@ -363,12 +386,23 @@ public abstract class SingleSiteController extends AbstractController {
 
             getRequestContext().addMessage(MSG_CODE_SUCCESS_ADD_ANOTHER, new Object[] { records.size() });
         } else {
+            // highlight the last record to be added
             mv = new ModelAndView(new RedirectView(
                     redirectionService.getMySightingsUrl(survey), true));
+            RecordWebFormContext.addRecordHighlightId(mv, record);
             getRequestContext().addMessage(MSG_CODE_SUCCESS, new Object[] { records.size() });
         }
 
         return mv;
+    }
+
+    /**
+     * Determines if we can save a record based on the value of the count field.
+     * @param number the count field for the record
+     * @return true if the record can be saved, false otherwise
+     */
+    protected boolean canSaveRecord(Integer number) {
+        return true;
     }
 
     @InitBinder
@@ -514,20 +548,6 @@ public abstract class SingleSiteController extends AbstractController {
         if (!predefinedLocationsOnly) {
             locations.addAll(locationDAO.getUserLocations(getRequestContext().getUser()));
         }
-
-        // 2 is the minimum possible number of sighting row form fields.
-        // If the number of sighting row form fields equals this there are no record scoped
-        // attributes to display on the page, hence it is meaningless to be able to add sighting rows.
-        // Hide the button.
-        Boolean hideAddBtn = false;
-        if (sightingRowFormFieldList.size() == 2) {
-            RecordPropertyFormField r = (RecordPropertyFormField) sightingRowFormFieldList.get(0);
-            RecordPropertyFormField r1 = (RecordPropertyFormField) sightingRowFormFieldList.get(1);
-            if (r.isHidden() && r1.isHidden()) {
-                hideAddBtn = true;
-            }
-        }
-
         ModelAndView mv = new ModelAndView(viewName);
         
         int sightingIndex = STARTING_SIGHTING_INDEX;
@@ -572,14 +592,12 @@ public abstract class SingleSiteController extends AbstractController {
         mv.addObject("survey", survey);
         mv.addObject("locations", locations);
         mv.addObject("preview", request.getParameter("preview") != null);
-
-        mv.addObject("hideAddBtn", hideAddBtn);
         mv.addObject("censusMethod", censusMethod);
         mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
         
         return mv;
     }
-    
+
     private List<Record> getRecordsForFormInstance(Record rec, User accessor) {
         
         // early return if the record is a non persisted instance - i.e. this will return

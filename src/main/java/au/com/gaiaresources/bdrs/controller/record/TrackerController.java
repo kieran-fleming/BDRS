@@ -447,10 +447,7 @@ public class TrackerController extends AbstractController {
                 getRequestContext().addMessage(new Message("bdrs.record.save.success"));
             }
             
-            // add the record id to the redirection view for record highlighting
-            if (res.getRecord() != null) {
-            	mv.addObject("record_id", res.getRecord().getId());
-            }
+            RecordWebFormContext.addRecordHighlightId(mv, res.getRecord());
         }
 
         return mv;

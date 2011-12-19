@@ -126,14 +126,19 @@ public class AtlasService {
             if (species == null) {
                 species = new IndicatorSpecies();
             } 
-            if (StringUtils.nullOrEmpty(guid) || "null".equals(guid)) {
+            if (guid == null || StringUtils.nullOrEmpty(guid.trim()) || "null".equals(guid.trim())) {
                 // get the guid from the species if none is specified
                 guid = species.getGuid();
             }
+            JSONObject ob = null;
+            if (guid != null) {
+                guid = guid.trim();
+                ob = getJSONObject(guid, shortProfile);
+            }
             
-            JSONObject ob = getJSONObject(guid, shortProfile);
             if (ob == null) {
-            	errorMap.put("", "Could not retrieve species profile from the Atlas for guid " + guid);
+            	
+                errorMap.put("", "Could not retrieve species profile from the Atlas for guid " + guid);
             	return null;
             }
             

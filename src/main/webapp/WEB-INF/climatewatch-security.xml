@@ -12,7 +12,7 @@
         <custom-filter position="FORM_LOGIN_FILTER" ref="bdrsAuthenticationFilter" />
         
 
-        <intercept-url pattern="/authenticated/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/>
+        <intercept-url pattern="/authenticated/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER,ROLE_SUPERVISOR,ROLE_POWER_USER"/>
 
         <intercept-url pattern="/secure/**/*" access="ROLE_USER,ROLE_TEACHER,ROLE_ADMIN"/>
         <intercept-url pattern="/admin/**/*" access="ROLE_ADMIN,ROLE_ROOT,ROLE_POWER_USER,ROLE_SUPERVISOR"/>

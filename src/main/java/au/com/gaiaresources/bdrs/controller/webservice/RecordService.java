@@ -612,7 +612,8 @@ public class RecordService extends AbstractController {
                 .getAttributeValue(recordAttributePk);
         JSONObject rec = new JSONObject();
         if (recAttr != null) {
-            rec.accumulateAll(recAttr.flatten());
+            // flatten with depth of 1 so we can see the underlying attribute type
+            rec.accumulateAll(recAttr.flatten(1));
         }
         response.setContentType("application/json");
         response.getWriter().write(rec.toString());

@@ -20,7 +20,7 @@
         see on the data entry form for your project.
     </p>
      
-    <div id="attributeContainer">
+    <div id="attributeContainer" class="input_container">
 	    <div class="textright buttonpanel">
 	        <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#attributeContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
 	        <input type="button" class="form_action" value="Add Another Field" onclick="bdrs.attribute.addAttributeRow('#attribute_input_table', true, false)"/>
@@ -52,53 +52,58 @@
     
     <h2>Edit Project: Choose Census Methods</h2>
     
-	<table>
-		<tbody>
-			<tr>
-		        <th title="Whether the default 'Standard Taxonomic' census method is provided. If this is false you will need to assign a census method to this survey to create records.">Standard Taxonomic Census Method Provided:</th>
-		        <td>
-		            <input type="checkbox" name="defaultCensusMethodProvided" value="true"
-		                <c:if test="${survey.defaultCensusMethodProvided}">
-		                    checked="checked"
-		                </c:if>
-		            />
-		        </td>
-		    </tr>
-		</tbody>
-	</table>
+	<cw:getContent key="admin/editProject/chooseCensusMethods" />
 	
-    <cw:getContent key="admin/editProject/chooseCensusMethods" />
-	
-	<p>
-        If you have chosen not to have the default 'Standard Taxonomic' census method provided, the first census method in the list shall become the default census method for this survey.
-    </p>
-    
-    <div id="subCensusMethodContainer">
-        <div class="textright buttonpanel">
-            <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#subCensusMethodContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
-            <input id="addCensusMethodBtn" class="form_action" type="button" value="Add Census Method" />
-        </div>
-        <table id="censusMethod_input_table" class="datatable attribute_input_table">
-            <thead>
-                <tr>
-                    <th>&nbsp;</th>
-                    <th>Census Method Name</th>
-                    <th>Taxonomic</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach items="${ survey.censusMethods }" var="cm">
-                    <tiles:insertDefinition name="censusMethodEditRow">
-                        <tiles:putAttribute name="id" value="${cm.id}"/>
-                        <tiles:putAttribute name="name" value="${cm.name}"/>
-                        <tiles:putAttribute name="taxonomic" value="${cm.taxonomic}" />
-                    </tiles:insertDefinition>
-                </c:forEach>
-            </tbody>
-        </table>
+	<div class="right">
+	    <a id="censusMethodToggle" href="javascript: void(0);">Click here to add a Census Method to your Project</a>
+	</div>
+	<div class="clear"></div>
+	<div class="input_container" id="censusMethodWrapper" style="display:none">
+		<table>
+			<tbody>
+				<tr>
+			        <th title="Whether the default 'Standard Taxonomic' census method is provided. If this is false you will need to assign a census method to this survey to create records.">Standard Taxonomic Census Method Provided:</th>
+			        <td>
+			            <input type="checkbox" name="defaultCensusMethodProvided"
+			                <c:if test="${survey.defaultCensusMethodProvided}">
+			                    checked="checked"
+			                </c:if>
+			            />
+			        </td>
+			    </tr>
+			</tbody>
+		</table>
+		
+	    <p>
+	        If you have chosen not to have the default 'Standard Taxonomic' census method provided, the first census method in the list shall become the default census method for this survey.
+	    </p>
+	    
+	    <div id="subCensusMethodContainer">
+	        <div class="textright buttonpanel">
+	            <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#subCensusMethodContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
+	            <input id="addCensusMethodBtn" class="form_action" type="button" value="Add Census Method" />
+	        </div>
+	        <table id="censusMethod_input_table" class="datatable attribute_input_table">
+	            <thead>
+	                <tr>
+	                    <th>&nbsp;</th>
+	                    <th>Census Method Name</th>
+	                    <th>Taxonomic</th>
+	                    <th>Delete</th>
+	                </tr>
+	            </thead>
+	            <tbody>
+	                <c:forEach items="${ survey.censusMethods }" var="cm">
+	                    <tiles:insertDefinition name="censusMethodEditRow">
+	                        <tiles:putAttribute name="id" value="${cm.id}"/>
+	                        <tiles:putAttribute name="name" value="${cm.name}"/>
+	                        <tiles:putAttribute name="taxonomic" value="${cm.taxonomic}" />
+	                    </tiles:insertDefinition>
+	                </c:forEach>
+	            </tbody>
+	        </table>
+	    </div>
     </div>
-    
     <div class="textright buttonpanel">
         <input type="submit" class="form_action" value="Save"/>
         <input type="submit" class="form_action" name="saveAndPreview" value="Save And Preview"/>
@@ -169,5 +174,13 @@
         });
 
         $('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
+
+        // Census method expand/collapse
+        jQuery("#censusMethodToggle").click(function() {
+            var canSee = jQuery("#censusMethodWrapper").css('display') === 'none';
+            jQuery("#censusMethodToggle").text(canSee ? "Click here to hide Census Method selection" : "Click here to add a Census Method to your Project");
+            
+            jQuery("#censusMethodWrapper").slideToggle();
+        });
     });
 </script>

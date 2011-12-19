@@ -1,5 +1,7 @@
 package au.com.gaiaresources.bdrs.controller.embedded;
 
+import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +29,7 @@ import au.com.gaiaresources.bdrs.model.showcase.GalleryDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.template.TemplateService;
 
 @RolesAllowed( {Role.ADMIN} )
 @Controller
@@ -48,6 +51,8 @@ public class EmbeddedWidgetController extends AbstractController {
     private GalleryDAO galleryDAO;
     @Autowired
     private ManagedFileDAO mfDAO;
+    @Autowired
+    private TemplateService templateService;
 
     @RequestMapping(value = "/bdrs/public/embedded/widgetBuilder.htm", method = RequestMethod.GET)
     public ModelAndView widgetBuilder(HttpServletRequest request,
@@ -112,14 +117,23 @@ public class EmbeddedWidgetController extends AbstractController {
     }
 
     @RequestMapping(value = "/bdrs/public/embedded/bdrs-embed.css", method = RequestMethod.GET)
-    public ModelAndView generateEmbeddedJS(HttpServletRequest request,
+    public void generateEmbeddedJS(HttpServletRequest request,
             HttpServletResponse response) {
-
-        ModelAndView mv = new ModelAndView("bdrs_embed_css");
-        mv.addAllObjects(toSimpleParameterMap(request.getParameterMap()));
         response.setContentType("text/css");
-
-        return mv;
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+        
+        Enumeration<String> en = request.getParameterNames();
+        while (en.hasMoreElements()) {
+            String name = en.nextElement();
+            params.put(name, request.getParameter(name));
+        }
+        
+        try {
+            response.getWriter().write(templateService.transformToString("bdrs-embed.vm", getClass(), params));    
+        } catch (IOException ioe) {
+            log.error("Could not write bdrs-embed.css", ioe);
+        }
     }
 
     @SuppressWarnings("unchecked")

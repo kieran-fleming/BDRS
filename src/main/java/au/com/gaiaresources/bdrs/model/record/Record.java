@@ -618,7 +618,12 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
 
         boolean isOwner = accessor.getId().intValue() == this.getUser().getId().intValue();
         // if you aren't the owner or admin and the record isn't public or is held, hide the details
-        return !isOwner && (!isPublic || isHeld()) && !accessor.isAdmin();
+        if (isOwner || accessor.isAdmin()) {
+            // the owner and the admin can always see their records
+            return false;
+        }
+        // everyone besided the owner and admin can only see public and unheld records
+        return !isPublic || isHeld();
     }
     
     /**

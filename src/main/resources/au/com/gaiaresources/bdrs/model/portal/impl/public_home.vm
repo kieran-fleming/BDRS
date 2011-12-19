@@ -1,5 +1,3 @@
-<h1>${portal.getName()} Home</h1>
-
 <p>
 This is an implementation of the Biological Data Recording System, software developed by the <a href="http://www.ala.org.au">Atlas of Living Australia</a>.  You can find our more about this software by visiting the <a href="http://www.ala.org.au/">Atlas of Living Australia web site</a>, or the <a href="http://code.google.com/p/ala-citizenscience/">Google Code repository</a>.
 </p>

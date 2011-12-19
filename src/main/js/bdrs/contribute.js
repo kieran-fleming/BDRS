@@ -8,6 +8,9 @@ bdrs.contribute = {};
 //--------------------------------------
 bdrs.contribute.yearlysightings = {};
 
+/**
+ * Initialise the yearly sightings page
+ */
 bdrs.contribute.yearlysightings.init = function() {
     var form = jQuery('form');
     form.submit(bdrs.contribute.yearlysightings.submitHandler);
@@ -20,20 +23,35 @@ bdrs.contribute.yearlysightings.init = function() {
     sightingCells.blur(bdrs.contribute.yearlysightings.validateCellChange);
 };
 
+/**
+ * Handler for form submit - blocks if any of the yearly sighting table cells
+ * are in error
+ * 
+ * @param {Object} event
+ */
 bdrs.contribute.yearlysightings.submitHandler = function(event) {
     var form = jQuery(event.currentTarget);
     return form.find(".errorCell").length === 0;
 };
 
+/**
+ * Handler for yearly sighting table cell 'on change'. Marks cell as 
+ * being in error which will then block the form submitting.
+ * 
+ * @param {Object} event
+ */
 bdrs.contribute.yearlysightings.validateCellChange = function(event) {
     var inp = jQuery(event.currentTarget);
     var cell = inp.parent("td");
     
     var isValid = true;    
-    if(/^\d+$/.test(inp.val()) || (inp.val().length === 0)) {
-        isValid = parseInt(inp.val(),10) < 1000000;
-    } else {
-        isValid = false;
+	
+	if (inp.val().length > 0) {
+		if(/^\d+$/.test(inp.val())) {
+            isValid = parseInt(inp.val(),10) < 1000000;
+		} else {
+			isValid = false;
+		}
     }
     
     if(isValid) {
@@ -51,47 +69,71 @@ bdrs.contribute.yearlysightings.validateCellChange = function(event) {
  * @param {Object} recAttr - record attribute to insert
  */
 bdrs.contribute.yearlysightings.insertRecordAttribute = function(recAttr) {
-    var inp = jQuery("[name=attribute_"+recAttr.attribute+"]");
-    inp.val(recAttr.stringValue);
-    
-    // Repopulate files
-    var fileInput = jQuery("#attribute_file_"+recAttr.attribute);
-    if(fileInput.length > 0) {
-        var fileUrl = bdrs.contextPath+"/files/download.htm?"+recAttr.fileURL;
-        if(fileInput.hasClass("image_file")) {
-            // Images
-            var img = jQuery("<img/>");
-            img.attr({
-                width: 250,
-                src: fileUrl,
-                alt: "Missing Image"
+	var attrId = recAttr.attribute.id;
+	var attrType = bdrs.model.taxa.attributeType.code[recAttr.attribute.typeCode];
+    var inp = jQuery("[name=attribute_"+attrId+"]");
+	
+	if (bdrs.model.taxa.attributeType.SINGLE_CHECKBOX === attrType) {
+        if (recAttr.booleanValue === true) {
+            inp.prop("checked", true);
+        }
+	} else if (bdrs.model.taxa.attributeType.MULTI_CHECKBOX === attrType) {
+		var valueArray = recAttr.multiCheckboxValue;
+		if (valueArray && jQuery.isArray(valueArray)) {
+			// mark each selected checkbox...as being selected!
+			jQuery.each(valueArray, function(index, elem) {
+				inp.filter("[value="+elem+"]").prop("checked", true);
+			});
+		}
+	} else if (bdrs.model.taxa.attributeType.MULTI_SELECT === attrType) {
+		var valueArray = recAttr.multiSelectValue;
+        if (valueArray && jQuery.isArray(valueArray)) {
+            // mark each selected checkbox...as being selected!
+            jQuery.each(valueArray, function(index, elem) {
+                inp.children("[value="+elem+"]").prop("selected", true);
             });
-            
-            var imgAnchor = jQuery("<a></a>");
-            imgAnchor.attr("href", fileUrl);
-            
-            var imgContainer = jQuery("<div></div>");
-            imgContainer.attr("id", "attribute_img_"+recAttr.attribute);
-            
-            imgContainer.append(imgAnchor);
-            imgAnchor.append(img);
-            
-            inp.parent().before(imgContainer);
         }
-        else if(fileInput.hasClass("data_file")) {
-            
-            // Data
-            var dataAnchor = jQuery("<a></a>");
-            dataAnchor.attr("href", fileUrl);
-            dataAnchor.text(recAttr.stringValue);
-            
-            var dataContainer = jQuery("<div></div>");
-            dataContainer.attr("id", "attribute_data_"+recAttr.attribute);
-            
-            dataContainer.append(dataAnchor);
-            inp.parent().before(dataContainer);                                                                         
-        }
-    } // End file repopulation
+	} else {
+		inp.val(recAttr.stringValue);
+		
+		// Repopulate files
+		var fileInput = jQuery("#attribute_file_" + attrId);
+		if (fileInput.length > 0) {
+			var fileUrl = bdrs.contextPath + "/files/download.htm?" + recAttr.fileURL;
+			if (fileInput.hasClass("image_file")) {
+				// Images
+				var img = jQuery("<img/>");
+				img.attr({
+					width: 250,
+					src: fileUrl,
+					alt: "Missing Image"
+				});
+				
+				var imgAnchor = jQuery("<a></a>");
+				imgAnchor.attr("href", fileUrl);
+				
+				var imgContainer = jQuery("<div></div>");
+				imgContainer.attr("id", "attribute_img_" + attrId);
+				
+				imgContainer.append(imgAnchor);
+				imgAnchor.append(img);
+				
+				inp.parent().before(imgContainer);
+			}
+			else if (fileInput.hasClass("data_file")) {
+				// Data
+				var dataAnchor = jQuery("<a></a>");
+				dataAnchor.attr("href", fileUrl);
+				dataAnchor.text(recAttr.stringValue);
+				
+				var dataContainer = jQuery("<div></div>");
+				dataContainer.attr("id", "attribute_data_" + attrId);
+				
+				dataContainer.append(dataAnchor);
+				inp.parent().before(dataContainer);
+			}
+		} // End file repopulation
+	}
 };
 
 /**
@@ -145,8 +187,14 @@ bdrs.contribute.yearlysightings.loadCellData = function(locationId, surveyId, id
         inp.attr("title", bdrs.util.formatDate(date));
     });
     
-    // Clear the survey scope attributes
-    jQuery("[name^=attribute_]").val('');
+    // Clear the survey scope attributes - reset state of form!
+	// don't remove the value of checkbox types!
+    jQuery("[name^=attribute_]").not('input[type=checkbox]').val('');
+	// remove the checked attribute of checkbox types
+	jQuery("[name^=attribute_]").filter('input[type=checkbox]').prop('checked', false);
+	// remove the selected attribute of selection types
+	jQuery("[name^=attribute_]").children('option').prop('selected', false);
+	// remove all file values
     jQuery("[id^=attribute_img_], [id^=attribute_data_]").remove();
 
     if(locationId) {
@@ -357,6 +405,17 @@ bdrs.contribute.initSpeciesAutocomplete = function(args) {
 	var attributeTbodySelector = args.attributeTbodySelector;
 	var showScientificName = args.showScientificName;
 	
+    jQuery(surveySpeciesSearchSelector).keydown(function(event, ui) {
+		var speciesElem = jQuery(surveySpeciesSearchSelector);
+		speciesElem.data('speciesValue', speciesElem.val());
+    });
+    jQuery(surveySpeciesSearchSelector).keyup(function(event,ui){
+    	var speciesElem = jQuery(surveySpeciesSearchSelector);
+		if (speciesElem.data('speciesValue') !== speciesElem.val()) {
+        	jQuery(speciesIdSelector).val("");
+        }
+    });
+    
 	jQuery(surveySpeciesSearchSelector).autocomplete({
 		
 		source: bdrs.contribute.getAutocompleteSourceFcn(showScientificName),

@@ -476,7 +476,7 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public String stringValue() {
-        return this.value;
+        return singleStringValue(this.value);
     }
 
     @Transient
@@ -491,11 +491,8 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     private Boolean booleanValue(String val) {
-        if (val == null) {
-            return null;
-        } else {
-            return Boolean.parseBoolean(val);
-        }
+        String ssv = singleStringValue(val);
+        return ssv != null ? Boolean.parseBoolean(ssv) : null;
     }
     
     @Transient
@@ -505,15 +502,29 @@ public class Condition extends PortalPersistentImpl {
 
     private String[] stringArrayValue(String val) {
     	try {
-    		CSVReader csvReader = new CSVReader(new StringReader(val));
-    		String[] array = csvReader.readNext();
-    		csvReader.close();
-    		return array;
-    	} catch(IOException ioe){
-    		// cannot occur
-    		throw new IOError(ioe);
+    	    CSVReader csvReader = new CSVReader(new StringReader(val));
+	        String[] array = csvReader.readNext();
+	        csvReader.close();
+	        return array;
+    	} catch(IOException ioe) {
+    	    // cannot occur
+    	    throw new IOError(ioe);
     	}
-	}
+    }
+    
+    private String singleStringValue(String val) {
+        if (val == null) {
+            return null;
+        }
+        String[] sav = stringArrayValue(val);
+        if (sav == null || sav.length == 0) {
+			return null;
+		}
+		if (sav.length > 1) {
+			log.warn("more than one item in string array value. total items : " + sav.length);
+		}
+        return sav[0];
+    }
 
 	@Transient
     public Integer intKey() {
@@ -522,7 +533,8 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public Integer intValue() {
-        return intValue(this.value);
+        String ssv = singleStringValue(this.value);
+        return intValue(ssv);
     }
 
     @Transient
@@ -545,7 +557,7 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public Long longValue() {
-        return longValue(this.value);
+        return longValue(singleStringValue(this.value));
     }
 
     @Transient
@@ -568,7 +580,7 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public Double doubleValue() {
-        return doubleValue(this.value);
+        return doubleValue(singleStringValue(this.value));
     }
 
     @Transient
@@ -591,7 +603,7 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public Float floatValue() {
-        return floatValue(this.value);
+        return floatValue(singleStringValue(this.value));
     }
 
     @Transient
@@ -614,7 +626,7 @@ public class Condition extends PortalPersistentImpl {
 
     @Transient
     public Date dateValue() {
-        return dateValue(this.value);
+        return dateValue(singleStringValue(this.value));
     }
 
     @Transient

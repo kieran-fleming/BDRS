@@ -1,9 +1,11 @@
 package au.com.gaiaresources.bdrs.model.menu;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 /**
  * A MenuItem represents an item in a menu in a view.
@@ -12,7 +14,12 @@ import au.com.gaiaresources.bdrs.security.Role;
  * 
  * @author stephanie
  */
-public class MenuItem {
+public class MenuItem implements Comparable<MenuItem>, Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7120509046578687956L;
 
     /**
      * The text that will be displayed on the menu item in the view.
@@ -136,5 +143,46 @@ public class MenuItem {
      */
     public void setItems(List<MenuItem> items) {
         this.items = items;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    @Override
+    public int compareTo(MenuItem o) {
+        // compares two menu items by name to determine sorting order
+        // the name Bulk Data always sorts to the end of the collection
+        String thisName = this.getName();
+        String thatName = o.getName();
+        if (StringUtils.nullOrEmpty(thisName) && StringUtils.nullOrEmpty(thatName)) {
+            return 0;
+        } else if (StringUtils.nullOrEmpty(thisName)) {
+            return -1;
+        } else if (StringUtils.nullOrEmpty(thatName)) {
+            return 1;
+        } else if ("BulkData".equals(thisName)) {
+            return 1;
+        } else if ("BulkData".equals(thatName)) {
+            return -1;
+        } else {
+            return thisName.compareTo(thatName);
+        }
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof MenuItem)) {
+            return false;
+        }
+        
+        MenuItem that = (MenuItem) obj;
+        // two menu items with the same name should be the same object
+        return this.getName().equals(that.getName());
+    }
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

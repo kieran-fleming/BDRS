@@ -7,113 +7,110 @@
 <jsp:useBean id="listType" type="au.com.gaiaresources.bdrs.controller.survey.SpeciesListType" scope="request"/>
 
 <h1>Edit Project: Choose Taxonomy</h1>
+
+<cw:getContent key="admin/editProject/editTaxonomy" />
+
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editTaxonomy.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
-
-    <div>
-        <cw:getContent key="admin/editProject/editTaxonomy" />
-
-        <fieldset id="speciesListTypeFieldSet">
-            <c:forEach items="<%=SpeciesListType.values()%>" var="type">
-                <jsp:useBean id="type" type="au.com.gaiaresources.bdrs.controller.survey.SpeciesListType" />
-                <div>
-                    <input id="<%= type.getCode() %>"
-                           class="vertmiddle"
-                           type="radio"
-                           name="speciesListType"
-                           value="<%= type.toString() %>"
-                           <c:if test="<%= type.equals(listType) %>">
-                               checked="checked"
-                           </c:if>
-                    />
-                    <label for="<%= type.getCode() %>" title="<%= type.getTip() %>">
-                        <%= type.getName() %>
-                    </label>
-                </div>
-            </c:forEach>
-        </fieldset>
-    </div>
-
-    <div id="speciesListTypeChooserWrapper">
-        <div class="speciesListChooser ONE_SPECIES MANY_SPECIES" style="display: none;">
-            <h2></h2>
-
-            <label for="species_search">Species:</label>
-            <input id="species_search" type="text" name="species_search"
-                placeholder="Search" onkeydown="if(event.keyCode==13){return false;}"/>
-
-            <h3>Species</h3>
-            <a class="right" href="javascript:void(0);" onclick="jQuery('#speciesTable tbody tr').remove();">Remove All Species</a>
-            <table id="speciesTable" class="datatable">
-                <thead>
-                    <tr>
-                        <th>Scientific Name</th>
-                        <th>Common Name</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach items="${survey.species}" var="species">
-                        <tr>
-                            <td>
-                                <c:out value="${species.scientificName}"/>
-                                <input type="hidden" name="species" value="${species.id}"/>
-                            </td>
-                            <td><c:out value="${species.commonName}"/></td>
-                            <td class="textcenter">
-                                <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').remove();">
-                                    <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/>
-                                </a>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                </tbody>
-            </table>
-
-        </div>
-        <div class="speciesListChooser SPECIES_GROUP" style="display: none;">
-            <h2></h2>
-
-            <label for="speciesGroup_search">Species Group:</label>
-            <input id="speciesGroup_search" type="text" name="speciesGroup_search"
-                    placeholder="Search" onkeydown="if(event.keyCode==13){return false;}"/>
-
-            <h3>Species Group</h3>
-            <a class="right" href="javascript:void(0);" onclick="jQuery('#speciesGroupTable tbody tr').remove();">Remove All Groups</a>
-            <table id="speciesGroupTable" class="datatable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach items="${taxonGroupSet}" var="group">
-                        <tr>
-                            <td>
-                                <c:out value="${group.name}"/>
-                                <input type="hidden" name="speciesGroup" value="${group.id}"/>
-                            </td>
-                            <td class="textcenter">
-                                <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').remove();">
-                                    <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/>
-                                </a>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                </tbody>
-            </table>
-
-        </div>
-        <div class="speciesListChooser ALL_SPECIES" style="display: none;">
-            <h2></h2>
-            <p>All species will be added automatically when saved.</p>
-        </div>
-    </div>
-
-    <div class="textright buttonpanel">
-        <input type="submit" class="form_action" value="Save"/>
-        <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
+	<div class="input_container">
+	    <div>
+	        <fieldset id="speciesListTypeFieldSet">
+	            <c:forEach items="<%=SpeciesListType.values()%>" var="type">
+	                <jsp:useBean id="type" type="au.com.gaiaresources.bdrs.controller.survey.SpeciesListType" />
+	                <div>
+	                    <input id="<%= type.getCode() %>"
+	                           class="vertmiddle"
+	                           type="radio"
+	                           name="speciesListType"
+	                           value="<%= type.toString() %>"
+	                           <c:if test="<%= type.equals(listType) %>">
+	                               checked="checked"
+	                           </c:if>
+	                    />
+	                    <label for="<%= type.getCode() %>" title="<%= type.getTip() %>">
+	                        <%= type.getName() %>
+	                    </label>
+	                </div>
+	            </c:forEach>
+	        </fieldset>
+	    </div>
+	
+	    <div id="speciesListTypeChooserWrapper">
+	        <div class="speciesListChooser ONE_SPECIES MANY_SPECIES" style="display: none;">
+	            <label for="species_search">Search:</label>
+	            <input id="species_search" type="text" name="species_search"
+	                placeholder="Search" onkeydown="if(event.keyCode==13){return false;}"/>
+	
+	            <h3>Species</h3>
+	            <a class="right" href="javascript:void(0);" onclick="jQuery('#speciesTable tbody tr').remove();">Remove All Species</a>
+	            <table id="speciesTable" class="datatable">
+	                <thead>
+	                    <tr>
+	                        <th>Scientific Name</th>
+	                        <th>Common Name</th>
+	                        <th>Delete</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    <c:forEach items="${survey.species}" var="species">
+	                        <tr>
+	                            <td>
+	                                <c:out value="${species.scientificName}"/>
+	                                <input type="hidden" name="species" value="${species.id}"/>
+	                            </td>
+	                            <td><c:out value="${species.commonName}"/></td>
+	                            <td class="textcenter">
+	                                <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').remove();">
+	                                    <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/>
+	                                </a>
+	                            </td>
+	                        </tr>
+	                    </c:forEach>
+	                </tbody>
+	            </table>
+	
+	        </div>
+	        <div class="speciesListChooser SPECIES_GROUP" style="display: none;">
+	            <label for="speciesGroup_search">Search:</label>
+	            <input id="speciesGroup_search" type="text" name="speciesGroup_search"
+	                    placeholder="Search" onkeydown="if(event.keyCode==13){return false;}"/>
+	
+	            <h3>Species Group</h3>
+	            <a class="right" href="javascript:void(0);" onclick="jQuery('#speciesGroupTable tbody tr').remove();">Remove All Groups</a>
+	            <table id="speciesGroupTable" class="datatable">
+	                <thead>
+	                    <tr>
+	                        <th>Name</th>
+	                        <th>Delete</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    <c:forEach items="${taxonGroupSet}" var="group">
+	                        <tr>
+	                            <td>
+	                                <c:out value="${group.name}"/>
+	                                <input type="hidden" name="speciesGroup" value="${group.id}"/>
+	                            </td>
+	                            <td class="textcenter">
+	                                <a href="javascript: void(0);" onclick="jQuery(this).parents('tr').remove();">
+	                                    <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete"/>
+	                                </a>
+	                            </td>
+	                        </tr>
+	                    </c:forEach>
+	                </tbody>
+	            </table>
+	
+	        </div>
+	        <div class="speciesListChooser ALL_SPECIES" style="display: none;">
+	            <p>All species will be added automatically when saved.</p>
+	        </div>
+	    </div>
+	
+	    <div class="textright buttonpanel">
+	        <input type="submit" class="form_action" value="Save"/>
+	        <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
+	    </div>
     </div>
 </form>
 
@@ -124,7 +121,6 @@
 
             var initLookup = {
                 ONE_SPECIES : function() {
-                    jQuery(".ONE_SPECIES").find("h2").text("<%=SpeciesListType.ONE_SPECIES.getName()%>");
                     // Delete all but the first row (if there is one)
                     var tbody = jQuery("#speciesTable tbody");
                     var first = tbody.find("tr:first");

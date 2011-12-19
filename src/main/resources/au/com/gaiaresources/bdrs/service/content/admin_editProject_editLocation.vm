@@ -1,0 +1,6 @@
+<p>
+On this page you can define a Location that can be re-used throughout your Projects. 
+You can define a Location as a polygon, line or point, and then when users 
+pick it from a list as they enter records, a point will be placed at the 
+centre of the feature you define here.
+</p>

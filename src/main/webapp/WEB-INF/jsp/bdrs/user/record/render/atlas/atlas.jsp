@@ -144,7 +144,16 @@
 					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
 		        </tiles:insertDefinition>
 		        
-		        <c:forEach items="${moderationFormFields}" var="formField">
+            <c:if test="${ fileFormField != null }">
+                <tiles:insertDefinition name="formFieldRenderer">
+                    <tiles:putAttribute name="formField" value="${ fileFormField }"/>
+                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
+                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
+                    <tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
+                </tiles:insertDefinition>
+            </c:if>
+		        
+            <c:forEach items="${moderationFormFields}" var="formField">
                 <tiles:insertDefinition name="formFieldRenderer">
                     <tiles:putAttribute name="formField" value="${ formField }"/>
                     <tiles:putAttribute name="errorMap" value="${ errorMap }"/>

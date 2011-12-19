@@ -395,7 +395,11 @@ bdrs.taxonomy.initEditTaxon = function(parentAutocompleteSelector, parentPkSelec
             
             jQuery.get(bdrs.contextPath+'/bdrs/admin/taxonomy/ajaxTaxonAttributeTable.htm', param, function(data) {
                 var taxonAttributeWrapperElem = jQuery(taxonAttributeWrapperSelector);
+                
                 taxonAttributeWrapperElem.append(data);
+                if (data.length > 0) {
+                    taxonAttributeWrapperElem.addClass("input_container");
+                }
                 
                 bdrs.initDatePicker();
                 jQuery(".acomplete").autocomplete({

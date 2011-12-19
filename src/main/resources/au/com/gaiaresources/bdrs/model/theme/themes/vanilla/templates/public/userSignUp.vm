@@ -11,7 +11,7 @@
         <table cellspacing="0" cellpadding="1">
             <tr>
                 <td class="formlabel">Desired username*:</td>
-                <td><input id="username" name="username" type="text" size="40" class="validate(required)"/>
+                <td><input id="username" name="username" type="text" size="40" class="validate(required, maxlength(30))"/>
                    <span style="padding:0 0 0 0.5em"  id="unavail" class="hidden error"><img src="${asset}images/bdrs/icon_cross_red12x12.png"/>&nbsp;This username is unavailable</span>
                    <span style="padding:0 0 0 0.5em"  id="avail" class="hidden success"><img src="${asset}images/bdrs/icon_tick_green12x12.png"/>&nbsp;Username available</span>
                 </td>
@@ -22,15 +22,15 @@
             </tr>
             <tr>
                 <td class="formlabel">First Name*:</td>
-                <td><input name="firstName" type="text" size="40" class="validate(required)"/></td>
+                <td><input name="firstName" type="text" size="40" class="validate(required, maxlength(30))"/></td>
             </tr>
             <tr>
                 <td class="formlabel">Last Name*:</td>
-                <td><input name="lastName" type="text" size="40" class="validate(required)"/></td>
+                <td><input name="lastName" type="text" size="40" class="validate(required, maxlength(30))"/></td>
             </tr>
             <tr>
                 <td class="formlabel">Choose a password*:</td>
-                <td><input id="password" type="password" name="password" size="40" class="validate(required)"/></td>
+                <td><input id="password" type="password" name="password" size="40" class="validate(rangelength(6, 12))"/></td>
 
             </tr>
             <tr>

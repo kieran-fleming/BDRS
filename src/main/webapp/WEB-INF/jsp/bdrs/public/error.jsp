@@ -13,11 +13,4 @@
 	    </c:otherwise>
 	</c:choose>
 </h2>
-<p>
-    You will be automatically redirected to the <a href="${pageContext.request.contextPath}/authenticated/redirect.htm">home</a> page in 10 seconds.
-</p>
-
-<script type="text/javascript">
-    timer=setTimeout('window.document.location="${pageContext.request.contextPath}/authenticated/redirect.htm"', 10000)
-</script>
 

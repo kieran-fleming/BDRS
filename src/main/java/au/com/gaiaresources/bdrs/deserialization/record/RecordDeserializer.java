@@ -218,17 +218,12 @@ public class RecordDeserializer {
             recordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
             if(recordProperty.isRequired()) {
             	validator.validate(params, ValidationType.REQUIRED_HISTORICAL_DATE, klu.getDateKey(), null, recordProperty);
+            	validator.validate(dateRangeParams, ValidationType.REQUIRED_DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
             } else {
             	validator.validate(params, ValidationType.BLANKABLE_HISTORICAL_DATE, klu.getDateKey(), null, recordProperty);
+            	validator.validate(dateRangeParams, ValidationType.DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
             }
-            		
-			recordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
-			if (recordProperty.isRequired()) {
-				validator.validate(dateRangeParams, ValidationType.REQUIRED_DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
-			} else {
-				validator.validate(dateRangeParams, ValidationType.DATE_WITHIN_RANGE, klu.getDateKey(), null, recordProperty);
-			}
-	        		
+    	        		
             recordProperty = new RecordProperty(survey, RecordPropertyType.ACCURACY, metadataDAO);
             if (recordProperty.isRequired()) {
             	validator.validate(params, ValidationType.REQUIRED_DOUBLE, klu.getAccuracyKey(), null, recordProperty);
@@ -237,6 +232,13 @@ public class RecordDeserializer {
             }
             
             validator.validate(params, ValidationType.INTEGER, klu.getRecordIdKey(), null);
+            
+            recordProperty = new RecordProperty(survey, RecordPropertyType.TIME, metadataDAO);
+            if (recordProperty.isRequired()) {
+                validator.validate(params, ValidationType.REQUIRED_TIME, klu.getTimeKey(), null, recordProperty);
+            } else {
+                validator.validate(params, ValidationType.TIME, klu.getTimeKey(), null, recordProperty);
+            }
             		
             if (entry.getGeometry() == null) {
             	recordProperty = new RecordProperty(survey, RecordPropertyType.POINT, metadataDAO);
@@ -441,16 +443,23 @@ public class RecordDeserializer {
             }
     
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-         // Dates
-            Date date;
-            if(entry.getValue(klu.getDateKey()) == null){
+            // Dates
+            Date date = null;
+            
+            String dateString = entry.getValue(klu.getDateKey());
+            if (StringUtils.nullOrEmpty(dateString)){
             	date = null;
-            }else{
-            	date = dateFormat.parse(entry.getValue(klu.getDateKey()));
+            } else {
+            	date = dateFormat.parse(dateString);
             }
-            Calendar cal = new GregorianCalendar();
+            Calendar cal = Calendar.getInstance();
+            cal.clear();
             if(date != null) {
             	cal.setTime(date);
+            	cal.clear(Calendar.HOUR_OF_DAY);
+            	cal.clear(Calendar.MINUTE);
+            	cal.clear(Calendar.SECOND);
+            	cal.clear(Calendar.MILLISECOND);
             }
             if (minute != null) {
             	cal.set(Calendar.MINUTE, minute);
@@ -458,9 +467,11 @@ public class RecordDeserializer {
             if (hour != null) {
             	 cal.set(Calendar.HOUR_OF_DAY, hour);
             }
-            cal.clear(Calendar.MILLISECOND);
-            if(date != null && hour != null && minute != null) {
-            	record.setWhen(cal.getTime());
+            
+            // if any of the time fields are non null, set the
+            // date/time fields of the record.
+            if(date != null || hour != null || minute != null) {
+                record.setWhen(cal.getTime());
                 record.setTime(cal.getTimeInMillis());
                 record.setLastDate(cal.getTime());
                 record.setLastTime(cal.getTimeInMillis());

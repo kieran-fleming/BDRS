@@ -96,6 +96,6 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
     
     @Override
     public boolean isModerationFormField() {
-        return AttributeScope.isModerationScope(attribute.getScope());
+        return attribute != null && AttributeScope.isModerationScope(attribute.getScope());
     }
 }

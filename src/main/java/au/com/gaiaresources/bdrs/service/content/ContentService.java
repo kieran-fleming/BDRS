@@ -83,6 +83,7 @@ public class ContentService {
         tmp.put("admin/editProject/editTaxonomy", CONTENT_PACKAGE + "admin_editProject_editTaxonomy.vm");
         tmp.put("admin/editProject/chooseCensusMethods", CONTENT_PACKAGE + "admin_editProject_chooseCensusMethods.vm");
         tmp.put("admin/editProject/editLocations", CONTENT_PACKAGE + "admin_editProject_editLocations.vm");
+        tmp.put("admin/editProject/editLocation", CONTENT_PACKAGE + "admin_editProject_editLocation.vm");
         tmp.put("admin/manageThresholds", CONTENT_PACKAGE + "admin_manageThresholds.vm");
         tmp.put("admin/editPreferences", CONTENT_PACKAGE + "admin_editPreferences.vm");
         tmp.put("admin/taxonomy/editTaxonomy", CONTENT_PACKAGE + "admin_taxonomy_editTaxonomy.vm");
@@ -93,6 +94,7 @@ public class ContentService {
         tmp.put("admin/gallery/editGallery", CONTENT_PACKAGE + "admin_gallery_editGallery.vm");
         tmp.put("admin/gallery/listGallery", CONTENT_PACKAGE + "admin_gallery_listGallery.vm");
         tmp.put("admin/content/edit", CONTENT_PACKAGE + "admin_content_edit.vm");
+        tmp.put("user/review/mySightings", CONTENT_PACKAGE + "user_review_mySightings.vm");
         
         tmp.put("user/profile/editProfile", CONTENT_PACKAGE + "user_profile_editProfile.vm");
         tmp.put("user/locations/edit.vm", CONTENT_PACKAGE + "user_locations_edit.vm");

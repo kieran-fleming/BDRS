@@ -345,6 +345,13 @@ table.form_table tbody tr td {
 	max-width: 300px;
 }
 
+/* set the min with for the tracker form table to keep the hidden species input to 
+   the right of the species input for the ketchup popups */
+table.tracker_form_table tbody tr td,
+table.taxon_edit_form_table tbody tr td {
+	/*min-width: 155px;*/
+}
+
 .form_table textarea {
     height: 7em;
     width: 20em;
@@ -417,6 +424,10 @@ legend {
 /************************************/
 .hidden {
 	display: none;
+	visibility: hidden;
+}
+
+.invisible {
 	visibility: hidden;
 }
 
@@ -680,14 +691,6 @@ table {
     background-color: #FFFFFF;
     background-repeat: repeat;
     padding: 20px;
-    min-height: 400px;
-    
-    -webkit-border-bottom-right-radius: 20px;
-	-webkit-border-bottom-left-radius: 20px;
-	-moz-border-radius-bottomright: 20px;
-	-moz-border-radius-bottomleft: 20px;
-	border-bottom-right-radius: 20px;
-	border-bottom-left-radius: 20px;
 }
 
 a:link, a:visited {
@@ -749,6 +752,11 @@ input[disabled] {
 	zoom:1;
 }
 
+/* Make the lat and lon coordinates on the bottom right, white */
+.map_wrapper .olControlMousePosition {
+    color: #FFFFFF;
+}
+
 .mapLogoMax {
 	position: fixed;
 	bottom: 100px;
@@ -800,7 +808,7 @@ input[disabled] {
     text-align: center;
     margin: 0px auto;
     position: relative;
-    z-index: 1500;
+    z-index: 1200;
     bottom: 45px;
     width: 500px;
     height: 20px;
@@ -924,11 +932,13 @@ table.yearlysightings {
 }
 
 /* Making the text boxes consistent with others on the survey page */
+/* Set width to 99% so that hidden input field with ketchup on it will not
+   cause the height to increase */
 #sightingTable input[type=text], 
 #sightingTable input[type=password],
 #sightingTable textarea {
     border-width: 1;
-    width: 100%;
+    width: 91%;
     resize: none;
     margin: 0;
     padding: 0;
@@ -941,12 +951,16 @@ table.yearlysightings {
 }
 
 /* Special cases where the size is partially known */
+/* Set width to 99% so that hidden input field with ketchup on it will not
+   cause the height to increase */
 #sightingTable input[type=text].ui-autocomplete-input {
-    width: 100%;
+    width: 91%;
 }
 
+/* Set width to 99% so that hidden input field with ketchup on it will not
+   cause the height to increase */
 #sightingTable input[type=text].datepicker {
-    width: 100%;
+    width: 91%;
 }
 
 #sightingTable input[type=file] {
@@ -1055,8 +1069,13 @@ table.yearlysightings {
     margin: 10px;
 }
 
-.atlas_import_container textarea {
-    width: 450px;
+.atlas_import_container textarea,
+.atlas_import_container table {
+    width: 100%;
+}
+
+.atlas_import_container table.form_table tbody tr th {
+    max-width: 150px;
 }
 
 .checkbox_container input {
@@ -1365,9 +1384,15 @@ div.alaSightingsTableHeaderDoubleLineArrows {
 /* My Sightings       */
 /**********************/
 
+#sightings_criteria {
+	width: 85%;
+	margin: 0 0 0 0;
+}
+
 #sightings_criteria .interrogative {
     font-size: 1.2em;
     text-align: left;
+	padding-left: 3em;
 }
 
 #sightings_criteria th {
@@ -1420,6 +1445,16 @@ div.alaSightingsTableHeaderDoubleLineArrows {
 
 .recordCountPanel {
     margin-top: 0.5em;
+}
+
+.searchCriteriaSpacer {
+	height: 9px;
+}
+
+.searchButtonContainer {
+	float:right;
+	position:relative;
+	top:-38px;
 }
 
 /***********************/
@@ -1676,5 +1711,14 @@ ul.menu ul ul ul ul li a{
 }
 
 .ui-downArrowAdjust {
-	margin-top: -9px;
+    margin-top: -9px;
+}
+
+/* style for the Gaia logo on the About page */
+.gaia_logo {
+    height: 100px;
+    -webkit-border-radius: 8px;
+    -khtml-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
 }

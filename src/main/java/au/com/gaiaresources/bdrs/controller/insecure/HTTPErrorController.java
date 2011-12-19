@@ -19,6 +19,8 @@ import au.com.gaiaresources.bdrs.email.EmailService;
 
 @Controller
 public class HTTPErrorController {
+    public static final String NOT_FOUND_URL = "/error/404.htm";
+    
     @Autowired
     private EmailService emailService;
     private Logger log = Logger.getLogger(getClass());
@@ -60,7 +62,7 @@ public class HTTPErrorController {
         return view;
     }
 
-    @RequestMapping(value = "/error/404.htm", method = RequestMethod.GET)
+    @RequestMapping(value = NOT_FOUND_URL, method = RequestMethod.GET)
     public ModelAndView handle404(HttpServletRequest req) {
     	ModelAndView view;
     	if ((req.getSession().getAttribute("sessionType") != null) 

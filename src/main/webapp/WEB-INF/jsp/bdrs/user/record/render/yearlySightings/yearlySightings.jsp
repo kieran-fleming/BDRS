@@ -14,7 +14,11 @@
 
 <h1><c:out value="${survey.name}"/></h1>
 
-<span id="script_content" class="hidden">
+<noscript>
+    <tiles:insertDefinition name="noscriptMessage"></tiles:insertDefinition>
+</noscript>
+
+<div id="script_content" class="invisible">
 	<p>
 	    This is a yearly calendar form &#8212; simply pick the location you are
 	    recording for, then click on the day you are reporting on (today is
@@ -148,15 +152,11 @@
 	    <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />                    
 	</tiles:insertDefinition>
 
-</span>
-
-<noscript>
-    <tiles:insertDefinition name="noscriptMessage"></tiles:insertDefinition>
-</noscript>
+</div>
 
 <script type="text/javascript">
     jQuery(function() {
-        jQuery("#script_content").removeClass("hidden");
+        jQuery("#script_content").removeClass("invisible");
     });
 </script>
 
@@ -180,5 +180,5 @@
          * Prepopulate fields
          */
         bdrs.form.prepopulate();
-        });
+    });
 </script>

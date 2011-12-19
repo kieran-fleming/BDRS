@@ -17,6 +17,7 @@
 	
 	<label>Select the area of the content you would like to edit: </label>
 	<select id="selectContentToEdit" onchange="bdrs.admin.onSelectContentEditorChange()">
+		<option value="">-- Select Content --</option>
 	<c:forEach items="${keys}" var="k">
 		<option value="${k}">${k}</option>
 	</c:forEach>
@@ -31,8 +32,8 @@
 </sec:authorize>
 
 <div class="markItUpSubmitButton buttonpanel textright">
-    <input id="resetContent" type="button" class="form_action"  value="Reset Current Content Default" onclick="bdrs.admin.adminEditContent.resetCurrentContent()"/>
-    <input id="submitEditContent" type="button" class="form_action"  value="Save" />
+    <input id="resetContent" type="button" class="form_action" value="Reset Current Content Default" onclick="bdrs.admin.adminEditContent.resetCurrentContent()"/>
+    <input id="submitEditContent" type="button" class="form_action" value="Save" />
 </div>
 
 <div class="clear"></div>

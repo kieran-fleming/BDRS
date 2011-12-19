@@ -49,7 +49,8 @@ public class ContentWebService extends AbstractController {
         String value = request.getParameter(VALUE);
         if (!StringUtils.hasLength(key)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No key passed to save content");
-            throw new Exception("No key passed to save content");
+            log.warn("No key passed to save content");
+            return;
         }
         // we don't check for valid keys. maybe this needs to change?
         saveContent(key, value);
@@ -70,13 +71,12 @@ public class ContentWebService extends AbstractController {
         String key = request.getParameter(KEY);
         if (!StringUtils.hasLength(key)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No key passed to load content");
-            throw new Exception("No key passed to load content");
+            return;
         }
         String content = getContent(key);
         JSONObject result = new JSONObject();
         result.put("content", content);
-        response.getWriter().write(result.toString());
-        response.setContentType("application/json");
+        writeJson(request, response, result.toString());
     }
     
     /**

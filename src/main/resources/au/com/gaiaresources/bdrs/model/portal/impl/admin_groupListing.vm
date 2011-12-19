@@ -1,7 +1,4 @@
 <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut metus 
-    lacinia tellus posuere elementum. Proin at leo nibh, a hendrerit odio. 
-    Integer consectetur metus eget mauris sagittis in eleifend metus dictum. 
-    Sed sed lacus dui. Nullam sit amet iaculis leo. Fusce vulputate porta eros 
-    in hendrerit. 
+    User groups are useful for creating categories of users. These groups can then be used when
+    assigning access privileges which is far easier than assigning privileges to users one at a time. 
 </p>

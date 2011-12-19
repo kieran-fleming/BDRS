@@ -1,7 +1,4 @@
 <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut metus 
-    lacinia tellus posuere elementum. Proin at leo nibh, a hendrerit odio. 
-    Integer consectetur metus eget mauris sagittis in eleifend metus dictum. 
-    Sed sed lacus dui. Nullam sit amet iaculis leo. Fusce vulputate porta eros 
-    in hendrerit. 
+    Here you can fill out the details of the Census Method you are adding to the system. Census methods allow you to define additional attributes that would be added to your form in addition
+    to the attributes setup in your project. Each Census Method will then be available across the entire site, for any Project you are administrating.
 </p>

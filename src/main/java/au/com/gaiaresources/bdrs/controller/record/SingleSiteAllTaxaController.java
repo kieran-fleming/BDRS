@@ -143,4 +143,11 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
         }
         return result;
     }
+    
+    @Override
+    protected boolean canSaveRecord(Integer count) {
+        // To avoid saving an extremely large number of records, don't save 
+        // records where the count isn't set
+        return count != null;
+    }
 }

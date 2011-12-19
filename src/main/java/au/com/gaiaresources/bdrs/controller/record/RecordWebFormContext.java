@@ -3,6 +3,8 @@ package au.com.gaiaresources.bdrs.controller.record;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
@@ -24,6 +26,11 @@ public class RecordWebFormContext {
     
     public static final String MSG_CODE_EDIT_AUTHFAIL = "bdrs.record.edit.authfail";
     public static final String MSG_CODE_VIEW_AUTHFAIL = "bdrs.record.view.authfail";
+    
+    // From MySightingsController - the query parameter record ID.
+    // Not refering to MySightings directly here since we may introduce
+    // cyclic dependencies.
+    public static final String MODEL_RECORD_ID = "record_id";
     
     private boolean editable;
     private boolean existingRecord;
@@ -112,23 +119,56 @@ public class RecordWebFormContext {
         return this.editable;
     }
     
+    /**
+     * Is the accessing user capable of unlocking the requested record
+     * @return boolean
+     */
     public boolean isUnlockable() {
         return this.unlockable;
     }
     
+    /**
+     * Whether the record requested was an existing record or not
+     * @return boolean
+     */
     public boolean isExistingRecord() {
         return this.existingRecord;
     }
     
+    /**
+     * The record ID requested to be opened in this form
+     * @return Integer record ID
+     */
     public Integer getRecordId() {
         return this.recordId;
     }
     
+    /**
+     * The survey id to be opened for this form
+     * @return Integer survey ID
+     */
     public Integer getSurveyId() {
         return this.surveyId;
     }
     
+    /**
+     * Is the form being opened for preview
+     * @return boolean
+     */
     public boolean isPreview() {
         return this.preview;
+    }
+    
+    /**
+     * hacky helper method. Used to add the record ID onto the model and view
+     * for highlighting after the redirect.
+     * 
+     * @param mv ModelAndView
+     * @param r Record
+     */
+    public static void addRecordHighlightId(ModelAndView mv, Record r) {
+        if (r != null) {
+            mv.addObject(MODEL_RECORD_ID, r.getId());
+        }
     }
 }

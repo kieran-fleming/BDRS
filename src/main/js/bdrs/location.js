@@ -19,9 +19,67 @@ bdrs.location.SELECT_CONTROL_KEY = "selectControl";
 // class applied when a row is focused
 bdrs.location.ROW_HIGHLIGHT_CLASS = "bdrsHighlight";
 
+// selectors used on editUserLocations.htm
+bdrs.location.SAVE_AND_EXIT_SELECTOR = "#saveAndExit";
+
+bdrs.location.USER_LOCATION_ROW_TMPL = '\
+<tr>\
+    <td>\
+        {{if (newLocation)}}\
+            <input type="radio" name="defaultLocationId" value="index_${ index }"/>\
+        {{else}}\
+            <input type="radio" name="defaultLocationId" value="id_${ id }"\
+                {{if (defaultLocation)}}\
+                    checked="checked"\
+                {{/if}}\
+            />\
+        {{/if}}\
+    </td>\
+    <td>\
+        {{if (newLocation)}}\
+            <input type="text" name="add_name_${ index }" class="validate(required) location_name"  value="${ name }" />\
+            <input type="hidden" name="add_location" value="${ index }"/>\
+			<span id="add_location_wkt_message_${ index }"></span>\
+        {{else}}\
+            <input type="text" name="name_${ id }" class="validate(required) location_name" value="${ name }"/>\
+            <input type="hidden" name="location" value="${ id }"/>\
+			<span id="location_wkt_message_${ id }"></span>\
+        {{/if}}\
+    </td>\
+    <td>\
+        {{if (newLocation)}}\
+            <input type="text" class="loc_latitude validate(required, range(-90,90))" name="add_latitude_${ index }" value="${ latitude }" />\
+        {{else}}\
+            <input type="text" class="loc_latitude validate(required, range(-90,90))" name="latitude_${ id }" value="${ latitude }"/>\
+        {{/if}}\
+    </td>\
+    <td>\
+        {{if (newLocation)}}\
+            <input type="text" class="loc_longitude validate(required, range(-180, 180))" name="add_longitude_${ index }" value="${ longitude }" />\
+        {{else}}\
+            <input type="text" class="loc_longitude validate(required, range(-180, 180))" name="longitude_${ id }" value="${ longitude }"/>\
+        {{/if}}\
+        \
+        {{if (newLocation)}}\
+            <input type="hidden" class="loc_wkt" name="add_location_WKT_${ index }" value="${ wkt }"  />\
+        {{else}}\
+            <input type="hidden" class="loc_wkt" name="location_WKT_${ id }" value="${ wkt }" />\
+        {{/if}}\
+    </td>\
+    <td class="textcenter">\
+        <a id="delete_${ id }" class="loc_delete" href="javascript: void(0);">\
+            <img src="${ bdrsContextPath }/images/icons/delete.png" alt="Delete" class="vertmiddle"/>\
+        </a>\
+    </td>\
+</tr>\
+';
+
 bdrs.location.initLocationMapAndTable = function(locationArray, tbodySelector) {
     var layerName = 'Location Layer';
     bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
+	
+	// precompile our user location row template...
+	bdrs.location.precompiledUserLocationRowTemplate = jQuery.template(bdrs.location.USER_LOCATION_ROW_TMPL);
 	
 	bdrs.location.wktFormatter = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
 	
@@ -230,79 +288,109 @@ bdrs.location.addLocationRow = function(tableBodySelector, locationJsonObj, olFe
 	
 	locationJsonObj.bdrsContextPath = bdrs.contextPath;
 	
-	// Asynchronously load our template content.
-	// can optimize by loading and precompiling the template once
-    $.get(bdrs.contextPath + '/tmpl/locationRow.tmpl', function(template) {
-        // Use that stringified template with $.tmpl() and 
-        // inject the rendered result into the body.
-        var row = $.tmpl(template, locationJsonObj);
-		row.appendTo($(tableBodySelector));
-		
-		
-		row.data(bdrs.location.FEATURE_KEY, olFeature);
-		
-		var nameInput = row.find(".location_name");
-		var latInput = row.find(".loc_latitude");
-		var lonInput = row.find(".loc_longitude");
-		var wktInput = row.find(".loc_wkt");
-		var delAnchor = row.find(".loc_delete");
-		
-		// event bindings....
-		
-		row.focus(bdrs.location.onRowFocus);
-        row.blur(bdrs.location.onRowBlur);
-		
-		nameInput.keypress(bdrs.location.inputKeyPressed);
-		latInput.keypress(bdrs.location.inputKeyPressed);
-		lonInput.keypress(bdrs.location.inputKeyPressed);
-		wktInput.keypress(bdrs.location.inputKeyPressed);
-		
-		nameInput.focus(bdrs.location.inputFocus);
-		latInput.focus(bdrs.location.inputFocus);
-		lonInput.focus(bdrs.location.inputFocus);
-		wktInput.focus(bdrs.location.inputFocus);
-		
-		nameInput.blur(bdrs.location.inputBlur);
-        latInput.blur(bdrs.location.inputBlur);
-        lonInput.blur(bdrs.location.inputBlur);
-        wktInput.blur(bdrs.location.inputBlur);
+    // render the row from our precompiled template...
+	var row = jQuery.tmpl(bdrs.location.precompiledUserLocationRowTemplate, locationJsonObj);
+	
+	row.appendTo(jQuery(tableBodySelector));
+	
+	row.data(bdrs.location.FEATURE_KEY, olFeature);
+	
+	var nameInput = row.find(".location_name");
+	var latInput = row.find(".loc_latitude");
+	var lonInput = row.find(".loc_longitude");
+	var wktInput = row.find(".loc_wkt");
+	var delAnchor = row.find(".loc_delete");
+	
+	// event bindings....
+	
+	row.focus(bdrs.location.onRowFocus);
+    row.blur(bdrs.location.onRowBlur);
+	
+	nameInput.keypress(bdrs.location.inputKeyPressed);
+	latInput.keypress(bdrs.location.inputKeyPressed);
+	lonInput.keypress(bdrs.location.inputKeyPressed);
+	wktInput.keypress(bdrs.location.inputKeyPressed);
+	
+	nameInput.focus(bdrs.location.inputFocus);
+	latInput.focus(bdrs.location.inputFocus);
+	lonInput.focus(bdrs.location.inputFocus);
+	wktInput.focus(bdrs.location.inputFocus);
+	
+	nameInput.blur(bdrs.location.inputBlur);
+    latInput.blur(bdrs.location.inputBlur);
+    lonInput.blur(bdrs.location.inputBlur);
+    wktInput.blur(bdrs.location.inputBlur);
 
-		nameInput.change(bdrs.location.onNameChanged);
-		latInput.change(bdrs.location.onLatChanged);
-		lonInput.change(bdrs.location.onLonChanged);
-		wktInput.change(bdrs.location.onWktChanged);
+	nameInput.change(bdrs.location.onNameChanged);
+	latInput.change(bdrs.location.onLatChanged);
+	lonInput.change(bdrs.location.onLonChanged);
+	wktInput.change(bdrs.location.onWktChanged);
+	
+	delAnchor.click(function() {
+		var myRow = jQuery(this).parents('tr'); 
+		myRow.hide().find('select, input, textarea').attr('disabled', 'disabled');
+		var feature = myRow.data(bdrs.location.FEATURE_KEY);
 		
-		delAnchor.click(function() {
-			var myRow = jQuery(this).parents('tr'); 
-			myRow.hide().find('select, input, textarea').attr('disabled', 'disabled');
-			var feature = myRow.data(bdrs.location.FEATURE_KEY);
-			// unselect feature if it is selected. this removes the popups and highlighting.
-			bdrs.location.unselectFeature(feature);
-			feature.layer.destroyFeatures(feature);
-		});
+		// make sure the modify/draw controls are deactivated or we get the vertice features
+		// hanging around on the map after the original polygon has been removed.
+		var map = feature.layer.map;
 		
-		// duck punching
-		var updateMediator = new bdrs.location.LocationUpdateMediator(olFeature, row);
-		
-		olFeature[bdrs.location.UPDATE_MEDIATOR_KEY] = updateMediator;
-		row.data(bdrs.location.UPDATE_MEDIATOR_KEY, updateMediator);
-		
-		if (bNewRow) {
-			// select the new row
-			bdrs.location.selectFeature(olFeature);
-		}
-		
-		// init ketchup for the row
-		row.ketchup();
+		bdrs.location.deactivateControlByDisplayClass(map, "olControlModifyFeature");
+		bdrs.location.deactivateControlByDisplayClass(map, "olControlDrawFeaturePolygon");
+		bdrs.location.deactivateControlByDisplayClass(map, "olControlDrawFeaturePoint");
+		bdrs.location.deactivateControlByDisplayClass(map, "olControlDrawFeaturePath");
+        
+		var lum = feature[bdrs.location.UPDATE_MEDIATOR_KEY];
+		// lum (LocationUpdateMediator) should never be null. it is duckpunched on feature creation.
+		lum.deleteFeature();
 	});
+	
+	// duck punching
+	var updateMediator = new bdrs.location.LocationUpdateMediator(olFeature, row);
+	
+	olFeature[bdrs.location.UPDATE_MEDIATOR_KEY] = updateMediator;
+	row.data(bdrs.location.UPDATE_MEDIATOR_KEY, updateMediator);
+	
+	// init ketchup for the row
+	row.ketchup();
+	
+	var wktSelector = "input[name='";
+    wktSelector += bNewRow ? "add_" : "";
+    wktSelector += "location_WKT_";
+    wktSelector += bNewRow ? locationJsonObj.index : locationJsonObj.id;
+    wktSelector += "']";
+    
+    var messageSelector = "#";
+    messageSelector += bNewRow ? "add_" : "";
+    messageSelector += "location_wkt_message_";
+    messageSelector += bNewRow ? locationJsonObj.index : locationJsonObj.id;
+	
+	updateMediator.wktSelector = wktSelector;
+	updateMediator.messageSelector = messageSelector;
+    
+    if (bNewRow) {
+        // select the new row
+        bdrs.location.selectFeature(olFeature);
+		// validate the wkt
+		bdrs.map.validateWktInput(wktSelector, 
+            messageSelector, 
+            bdrs.location.geomValidCallback, 
+            bdrs.location.geomInvalidCallback);
+    }
+};
+
+bdrs.location.deactivateControlByDisplayClass = function(map, displayClassName) {
+	jQuery.each(map.getControlsBy("displayClass", displayClassName), function(index, element) {
+        element.deactivate();
+    });
 };
 
 bdrs.location.inputKeyPressed = function(e) {
 	
-	if(e.keyCode == 13) {
+	if(e.keyCode === 13) {
 		// triggers the change event and
 		// blocks 'Enter' from bubbling up and submitting the form
-        $(this).change();
+        jQuery(this).change();
         return false; // returning false will prevent the event from bubbling up.
     } else {
         return true;
@@ -317,7 +405,7 @@ bdrs.location.inputFocus = function() {
 bdrs.location.inputBlur = function() {
 	var row = jQuery(this).parents('tr');
     row.blur();
-}
+};
 
 bdrs.location.onRowFocus = function(){
 	var row = jQuery(this);
@@ -370,7 +458,7 @@ bdrs.location.createFeaturePopup = function (map, googleProjectionLonLatPos, fea
     if (!options) {
         options = {};
     }
-    defaultOptions = {
+    var defaultOptions = {
         popupName: "popcorn",
         onPopupClose: null,
         mapServerQueryManager: null,
@@ -400,10 +488,10 @@ bdrs.location.createFeaturePopup = function (map, googleProjectionLonLatPos, fea
     jQuery(popup.contentDiv).css("overflow", "hidden");
                  
     if (options.featureToBind) {
-        var feature = options.featureToBind;
-        feature.popup = popup;
+        var featureToBind = options.featureToBind;
+        featureToBind.popup = popup;
         // So we can deselect the feature later via onPopupClose
-        popup.feature = feature;
+        popup.feature = featureToBind;
     }
 
     map.addPopup(popup);
@@ -413,7 +501,7 @@ bdrs.location.createFeaturePopup = function (map, googleProjectionLonLatPos, fea
 };
 
 bdrs.location.locationRowKeyPressed = function(e) {
-    if(e.keyCode == 13) {
+    if(e.keyCode === 13) {
         return false; // returning false will prevent the event from bubbling up.
     } else {
         return true;
@@ -444,6 +532,12 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 	this.latInput = this.tableRow.find(".loc_latitude");
     this.lonInput = this.tableRow.find(".loc_longitude");
     this.wktInput = this.tableRow.find(".loc_wkt");
+	
+	// selector for the wkt input
+	this.wktSelector = null;
+	// selector for the wkt message selector, reports whether the
+	// wkt is valid or not...
+	this.messageSelector = null;
 	
 	// state machine for managing location object selection
 	this.fsm = StateMachine.create({
@@ -530,7 +624,7 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
         centroid.transform(bdrs.map.GOOGLE_PROJECTION, bdrs.map.WGS84_PROJECTION);
         this.latInput.val(bdrs.map.roundLatOrLon(centroid.y));
         this.lonInput.val(bdrs.map.roundLatOrLon(centroid.x));
-        this.wktInput.val(bdrs.location.wktFormatter.write(feature));
+		this._setWktInput(bdrs.location.wktFormatter.write(feature));
 	};
 	
 	// used by open layers handlers to signal that a feature has been selected
@@ -540,7 +634,7 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 	
 	this.featureUnselected = function() {
         this.fsm.deselectFeature();
-	}
+	};
 	
 	// used by the table row to signal that the row has been selected
 	this.rowSelected = function() {
@@ -549,6 +643,16 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 	
 	this.rowUnselected = function() {
 		this.fsm.rowBlur();
+	};
+	
+	this.deleteFeature = function() {
+		if (this.selectionManager.isLocationSelected(this)) {
+			this.selectionManager.selectLocation(null);
+		}
+		// to reenable the save buttons if we have deleted our invalid geometry
+        bdrs.location.geomValidCallback(this.wktSelector, this.messageSelector);
+		bdrs.location.unselectFeature(feature);
+		feature.layer.destroyFeatures(feature);
 	};
 	
 	this._refreshMapFeature = function(newgeom) {
@@ -573,7 +677,15 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 		// all the collegues directly.
         // I'm just reusing the geometry information in the feature. thus it is important
         // the order in which we update things.
-        this.wktInput.val(bdrs.location.wktFormatter.write(this.feature));
+		this._setWktInput(bdrs.location.wktFormatter.write(this.feature));
+	};
+	
+	this._setWktInput = function(newValue) {
+		this.wktInput.val(newValue);
+		bdrs.map.validateWktInput(this.wktSelector, 
+			this.messageSelector, 
+			bdrs.location.geomValidCallback, 
+			bdrs.location.geomInvalidCallback);
 	};
 	
 	this._removeFocus = function() {
@@ -582,7 +694,7 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 	
 	this._setFieldsEnabled = function() {
 		var wktString = this.wktInput.val();
-        if (wktString.indexOf("POINT") == 0) {
+        if (wktString.indexOf("POINT") === 0) {
             this.latInput.attr('disabled', null);
             this.lonInput.attr('disabled', null);
         } else {
@@ -593,6 +705,32 @@ bdrs.location.LocationUpdateMediator = function(feature, tableRow) {
 	
 	// initialise whether the lat/lon fields are enabled
 	this._setFieldsEnabled();
+};
+
+/**
+ * callback when a geometry is reported to be valid
+ * 
+ * @param {Object} wktSelector of the geometry that was just checked
+ * @param {Object} messageSelector for the gemetry that was just checked
+ * @param {Object} data the response of the ajax request that checked the geometry
+ */
+bdrs.location.geomValidCallback = function(wktSelector, messageSelector, data) {
+	jQuery(messageSelector).removeClass("error");
+	if (jQuery(".error").length === 0) {
+	    jQuery(bdrs.location.SAVE_AND_EXIT_SELECTOR).prop("disabled", false);
+	}
+};
+
+/**
+ * callback when a geometry is reported to be invalid
+ * 
+* @param {Object} wktSelector of the geometry that was just checked
+ * @param {Object} messageSelector for the gemetry that was just checked
+ * @param {Object} data the response of the ajax request that checked the geometry
+ */
+bdrs.location.geomInvalidCallback = function(wktSelector, messageSelector, data) {
+	jQuery(messageSelector).addClass("error");
+	jQuery(bdrs.location.SAVE_AND_EXIT_SELECTOR).prop("disabled", true);
 };
 
 // get the selection control for the layer. we always expect
@@ -612,7 +750,7 @@ bdrs.location.selectFeature = function(feature) {
     var layer = feature.layer;
     var selectControl = bdrs.location.getSelectControl(layer);
     // if the feature is NOT selected, select it.
-    if ($.inArray(feature, layer.selectedFeatures) == -1) {
+    if (jQuery.inArray(feature, layer.selectedFeatures) === -1) {
         selectControl.select(feature);  
     }
 };
@@ -623,16 +761,24 @@ bdrs.location.unselectFeature = function(feature) {
     var layer = feature.layer;
     var selectControl = bdrs.location.getSelectControl(layer);
     // if the feature is selected, deselect it.
-    if ($.inArray(feature, layer.selectedFeatures) > -1) {
+    if (jQuery.inArray(feature, layer.selectedFeatures) > -1) {
         selectControl.unselect(feature);
     }
 };
 
-// remembers what item is currently selected and deselects it if appropriate
+/**
+ * Remembers what item is currently selected and deselects it if is appropriate
+ */
 bdrs.location.SelectionManager = function() {
 	// bdrs.location.LocationUpdateMediator
 	this.currentSelection = null;
 	
+	/**
+	 * Selects the passed in location - deselects the previously
+	 * selected location if required.
+	 * 
+	 * @param {Object} location LocationUpdateMediator to select.
+	 */
 	this.selectLocation = function(location) {
 
 		if (!this.currentSelection) {
@@ -647,6 +793,15 @@ bdrs.location.SelectionManager = function() {
             // set the new location
             this.currentSelection = location;   
 		}
+	};
+	
+	/**
+	 * Is the locationUpdatedMediator the currently selected item
+	 * 
+	 * @param {Object} location LocationUpdateMediator object to check
+	 */
+	this.isLocationSelected = function(lum) {
+		return this.currentSelection === lum;
 	};
 };
 
@@ -742,10 +897,10 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
 					var processedRow = jQuery.tmpl(compiledRowTemplate, data);
                     tbodyNode.append(processedRow);
 				}                
-                $( this ).dialog( "close" );
+                jQuery( this ).dialog( "close" );
             },
             Cancel: function() {
-                $( this ).dialog( "close" );
+                jQuery( this ).dialog( "close" );
             }
         },
         title: "Add Existing Location"
@@ -754,4 +909,4 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
     jQuery(openDialogButtonSelector).click(function() {
         jQuery(dialogSelector).dialog( "open" );
     });
-}
+};

@@ -4,7 +4,7 @@
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <tiles:insertDefinition name="title">
-    <tiles:putAttribute name="title" value="Choose User Locations"/>
+    <tiles:putAttribute name="title" value="My Locations"/>
 </tiles:insertDefinition>
 
 <cw:getContent key="user/locations/edit.vm" />
@@ -36,8 +36,7 @@
 		    </div>
 		</div>
 	    <div class="textright buttonpanel">
-	        <input type="submit" class="form_action" value="Save"/>
-	        <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
+	        <input id="saveAndExit" type="submit" class="form_action" value="Save"/>
 	    </div>
 	</div>
 </form>

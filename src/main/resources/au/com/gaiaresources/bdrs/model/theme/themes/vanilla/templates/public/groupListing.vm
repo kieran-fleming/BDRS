@@ -1,8 +1,14 @@
 <h1>Select a Taxonomic Group</h1>
 
+#if(${taxonGroups.isEmpty()})
+<p>
+Your portal currently has no species in the Field Guide. Your administrator can change this and add in species manually or import them from the <a href="http://www.ala.org.au/">Atlas of Living Australia</a>.
+</p>
+#else
 <p>
 Click on the group name or thumbnail below to get a list of species for that group.
 </p>
+#end
 
 #foreach ($taxonGroup in ${taxonGroups})
     <div class="left field_guide_group">

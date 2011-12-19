@@ -39,8 +39,11 @@ import org.springframework.test.web.ModelAndViewAssert;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.test.TestDataCreator;
 import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
@@ -64,6 +67,8 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
     private RecordDAO recordDAO;
     @Autowired
     private FileService fileService;
+    @Autowired
+    private MetadataDAO metadataDAO;
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
     private Random rand = new Random(123456789);
@@ -633,6 +638,11 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         survey.getCensusMethods().add(taxonomicParentMethod);
         survey.getCensusMethods().add(basicMethod);
         
+        
+        RecordProperty recordProperty = new RecordProperty(survey, RecordPropertyType.NOTES, metadataDAO);
+        recordProperty.setHidden(true);
+        recordProperty = new RecordProperty(survey, RecordPropertyType.WHEN, metadataDAO);
+        recordProperty.setRequired(false);
         surveyDAO.save(survey);
     }
     

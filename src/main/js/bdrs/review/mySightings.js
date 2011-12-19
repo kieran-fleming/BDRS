@@ -802,7 +802,7 @@ bdrs.review.mysightings.init = function(portal_id) {
     bdrs.review.mysightings.update_permalink();
     jQuery(bdrs.review.mysightings.PERMALINK_LINK_SELECTOR).click(function() {
         jQuery(bdrs.review.mysightings.PERMALINK_LINK_SELECTOR).hide();
-        jQuery(bdrs.review.mysightings.PERMALINK_INPUT_SELECTOR).show();
+        jQuery(bdrs.review.mysightings.PERMALINK_INPUT_SELECTOR).show().focus();
     });
     jQuery(bdrs.review.mysightings.PERMALINK_INPUT_SELECTOR).blur(function() {
         jQuery(bdrs.review.mysightings.PERMALINK_LINK_SELECTOR).show();

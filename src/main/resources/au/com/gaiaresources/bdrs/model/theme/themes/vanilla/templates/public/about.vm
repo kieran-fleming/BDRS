@@ -1,44 +1,63 @@
-<h1>About</h1>
+<div class="pageContent">
     ${bdrs.getContent("public/about")}
 
-<div class="input_container">
-    <table class="link_table" style="color: grey;">
-        <tbody>
-            <tr>
-                <td style="text-align: center; border-style: none;">
-                    <img src="${asset}images/bdrs/atlasoflivingaust.png"/>
-                </td>
-                <td style="padding: 10px; border-style: none; color: grey;">
-                    <p>This portal is running the <a href="http://code.google.com/p/ala-citizenscience/">Biological Data Recording System</a>, software developed by the <a href="http://www.ala.org.au/">Atlas of Living Australia</a>.</p>
-                    
-                    <p>The Atlas of Living Australia is a collaborative, national project focused on making information
-                    on Australia&apos;s biodiversity more accessible and useable online. It is a joint project between CSIRO,
-                    state herbaria and museums, the Australian Government Departments of Environment, Water, Heritage
-                    and the Arts (DEWHA) and Agriculture, Fisheries and Forestry (DAFF), and two Australian
-                    universities.</p>
-                    <a href="http://www.ala.org.au/">www.ala.org.au</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <p>The <a href="http://code.google.com/p/ala-citizenscience/">Biological Data Recording System</a> was developed under funding from the <a href="http://www.ala.org.au/">Atlas of Living Australia</a> by <a href="http://www.gaiaresources.com.au">Gaia Resources</a>.</p>
 
-<div>
-<h3>Software Information</h3>
-<p>
-This portal runs the <a href="http://code.google.com/p/ala-citizenscience/">Biological Data Recording System</a>, 
-and this site is running the core at version ${coreRevisionNumber}
-#if(${implRevisionNumber})and the implementation is at revision ${implRevisionNumber}#end.  
-</p>
-<p>
-For more information on the software please go to the main Google Code <a href="http://code.google.com/p/ala-citizenscience/">repository</a>.
-</p>
-</div>
+    <div class="input_container">
+        <table class="link_table" style="color: grey;">
+            <tbody>
+                <tr>
+                    <td style="text-align: center; border-style: none;">
+                        <img src="${asset}images/bdrs/atlasoflivingaust.png"/>
+                    </td>
+                    <td style="padding: 10px; border-style: none; color: grey;">
+                        
+                        <p>The Atlas of Living Australia is a collaborative, national project focused on making information
+                        on Australia&apos;s biodiversity more accessible and useable online. It is a joint project between CSIRO,
+                        state herbaria and museums, the Australian Government Departments of Environment, Water, Heritage
+                        and the Arts (DEWHA) and Agriculture, Fisheries and Forestry (DAFF), and two Australian
+                        universities.</p>
+                        <a href="http://www.ala.org.au/">www.ala.org.au</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    <div class="input_container">
+        <table class="link_table" style="color: grey;">
+            <tbody>
+                <tr>
+                    <td style="padding: 10px; border-style: none; color: grey;">
+                        
+                        <p>Gaia Resources is a consultancy that responsibly delivers sustainable technology solutions to companies that work with the environment. 
+                        For more information on Gaia Resources, visit their web site.</p>
+                        <a href="http://www.gaiaresources.com.au/">www.gaiaresources.com.au</a>
+                    </td>
+                    <td style="text-align: center; border-style: none;">
+                        <img class="gaia_logo" src="${asset}images/bdrs/Gaia_transparent.png"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-<!-- 
-Only for those that are in the know.
-<div>${coreRevisionInfo}</div>
-#if(${implRevisionInfo})
-<div>${implRevisionInfo}</div>
-#end
--->
+    <div>
+        <h3>Software Information</h3>
+        <p>
+            This site is running the <a href="http://code.google.com/p/ala-citizenscience/">Biological Data Recording System</a> at version ${coreRevisionNumber}
+            #if(${implRevisionNumber})and the implementation is at revision ${implRevisionNumber}#end.  
+        </p>
+        <p>
+            For more information on the software please go to the main Google Code <a href="http://code.google.com/p/ala-citizenscience/">repository</a>.
+        </p>
+    </div>
+        
+    <!-- 
+    Only for those that are in the know.
+    <div>${coreRevisionInfo}</div>
+    #if(${implRevisionInfo})
+    <div>${implRevisionInfo}</div>
+    #end
+    -->
+</div>

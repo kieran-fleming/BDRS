@@ -265,8 +265,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
         params.put("date", dateFormat.format(today));
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put(TrackerController.PARAM_TIME, "15:48");
         params.put("notes", "");
         request.setParameters(params);
         
@@ -305,8 +304,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
         params.put("date", dateFormat.format(today));
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put(TrackerController.PARAM_TIME, "15:48");
         params.put("notes", "");
         request.setParameters(params);
         
@@ -345,8 +343,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         params.put("latitude", "-32.546");
         params.put("longitude", "115.488");
         params.put("date", dateFormat.format(today));
-        params.put("time_hour", "15");
-        params.put("time_minute", "48");
+        params.put(TrackerController.PARAM_TIME, "15:48");
         params.put("notes", "");
         request.setParameters(params);
         

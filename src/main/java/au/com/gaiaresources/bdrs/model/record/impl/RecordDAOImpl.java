@@ -199,8 +199,9 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
 
     @Override
-    public List<Record> getRecords(User user, Survey survey, Location location) {
-        return find("from Record r where r.location = ? and r.survey = ? and r.user = ?", new Object[] {location, survey, user});
+    public List<Record> getRecords(User user, Survey survey, Location location, Date startDate, Date endDate) {
+        return find("from Record r where r.location = ? and r.survey = ? and r.user = ? and r.when >= ? and r.when <= ?", 
+                    new Object[] {location, survey, user, startDate, endDate});
     }
     
     @Override

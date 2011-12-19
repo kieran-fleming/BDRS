@@ -208,6 +208,7 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
         survey3 = surveyDAO.createSurvey("Survey3");
         survey3.getGroups().add(group2);
         survey3 = surveyDAO.updateSurvey(survey3);
+        survey3.setPublic(false);
         
     }
     

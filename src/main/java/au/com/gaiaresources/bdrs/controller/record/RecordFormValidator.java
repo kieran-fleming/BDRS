@@ -87,10 +87,10 @@ public class RecordFormValidator {
         validatorMap.put(ValidationType.DATE, new DateValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_DATE, new DateValidator(propertyService, true, false));
         validatorMap.put(ValidationType.REQUIRED_HISTORICAL_DATE, new HistoricalDateValidator(propertyService, true, false));
-        validatorMap.put(ValidationType.BLANKABLE_HISTORICAL_DATE, new HistoricalDateValidator(propertyService, false, false));
-        validatorMap.put(ValidationType.DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, false, false));
+        validatorMap.put(ValidationType.BLANKABLE_HISTORICAL_DATE, new HistoricalDateValidator(propertyService, false, true));
+        validatorMap.put(ValidationType.DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, false, true));
         validatorMap.put(ValidationType.REQUIRED_DATE_WITHIN_RANGE, new DynamicDateRangeValidator(propertyService, true, false));
-        validatorMap.put(ValidationType.REQUIRED_TIME, new RegExpValidator(propertyService, true, false, "\\d{2}:\\d{2}"));
+        validatorMap.put(ValidationType.REQUIRED_TIME, new TimeValidator(propertyService, true, false));
         validatorMap.put(ValidationType.TIME, new TimeValidator(propertyService, false, true));
         
         validatorMap.put(ValidationType.REQUIRED_TAXON, new TaxonValidator(propertyService, true, false, taxaDAO));

@@ -41,6 +41,7 @@ import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
@@ -118,26 +119,13 @@ public class YearlySightingsController extends AbstractController {
         // If the date is defined in the survey then that is the key date
         // and we go backwards and forwards by 6 months, otherwise we select
         // today as the key date and go backwards and forwards by 6 months.
-        GregorianCalendar start = new GregorianCalendar();
-        GregorianCalendar end = new GregorianCalendar();
+        Calendar start = Calendar.getInstance();
+        Calendar end = Calendar.getInstance();
 
-        if(survey.getStartDate() == null) {
-            start.setTime(new Date());
-            start.set(Calendar.DAY_OF_MONTH, 0);
-            start.add(Calendar.MONTH, -6);
+        start.setTime(SurveyFormRendererType.YEARLY_SIGHTINGS.getStartDateForSightings(survey));
+        end.setTime(SurveyFormRendererType.YEARLY_SIGHTINGS.getEndDateForSightings(survey));
 
-            end.setTime(start.getTime());
-            end.add(Calendar.YEAR, 1);
-        } else {
-            start.setTime(survey.getStartDate());
-            start.set(Calendar.DAY_OF_MONTH, 0);
-            start.add(Calendar.MONTH, -6);
-
-            end.setTime(start.getTime());
-            end.add(Calendar.YEAR, 1);
-        }
-
-        GregorianCalendar today = new GregorianCalendar();
+        Calendar today = Calendar.getInstance();
         today.setTime(new Date());
         today.set(Calendar.HOUR_OF_DAY, 0);
         today.set(Calendar.MINUTE, 0);
@@ -222,7 +210,9 @@ public class YearlySightingsController extends AbstractController {
         IndicatorSpecies species = survey.getSpecies().iterator().next();
         User user = getRequestContext().getUser();
         
-        List<Record> recordList = recordDAO.getRecords(user, survey, location);
+        List<Record> recordList = recordDAO.getRecords(user, survey, location, 
+                                                       SurveyFormRendererType.YEARLY_SIGHTINGS.getStartDateForSightings(survey),
+                                                       SurveyFormRendererType.YEARLY_SIGHTINGS.getEndDateForSightings(survey));
         Map<Long, Record> timeToRecordMap = new HashMap<Long, Record>(365);
         Date when;
         // Build a map of the records that we c
@@ -233,6 +223,9 @@ public class YearlySightingsController extends AbstractController {
             }
         }
 
+        // need separate 'recToDisplay' local variable as 'rec' can be assigned
+        // records that do not appear in our yearly sightings range.
+        Record recToDisplay = null;
         Record rec;
         String key;
         String value;
@@ -296,11 +289,15 @@ public class YearlySightingsController extends AbstractController {
 
                     rec.setNumber(Integer.parseInt(value));
                     recordDAO.saveRecord(rec);
+                    // we know 'rec' is not null here so...
+                    recToDisplay = rec;
                 }
             }
         }
-
+        
+        // highlight the last record...
         ModelAndView mv = new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(survey), true));
+        RecordWebFormContext.addRecordHighlightId(mv, recToDisplay);
         return mv;
     }
 

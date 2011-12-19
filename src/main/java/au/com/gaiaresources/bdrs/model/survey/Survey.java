@@ -49,7 +49,7 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
     private boolean active;
     private Date startDate;
     private Date endDate;
-    private boolean publik;
+    private boolean publik = true;
 
     private List<Location> locations = new ArrayList<Location>();
     private Set<User> users = new HashSet<User>();
@@ -75,7 +75,7 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
     // the survey.
     private static final boolean DEFAULT_RECORD_VISIBILITY_MODIFIABLE = true;
     
-    private static final boolean DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY = true;
+    private static final boolean DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY = false;
 
     /**
      * {@inheritDoc}
@@ -273,7 +273,7 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
     @Transient
     public SurveyFormRendererType getFormRendererType() {
         Metadata md = getMetadataByKey(Metadata.FORM_RENDERER_TYPE);
-        return md == null ? null : SurveyFormRendererType.valueOf(md.getValue());
+        return md == null ? SurveyFormRendererType.DEFAULT : SurveyFormRendererType.valueOf(md.getValue());
     }
     
     @Transient

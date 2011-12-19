@@ -78,9 +78,13 @@ public interface RecordDAO extends TransactionDAO {
 	 *            the containing survey for the records to be retrieved.
 	 * @param location
 	 *            the location of the records to be retrieved.
+	 * @param startDate
+	 *            the start date (inclusive) of the records
+	 * @param endDate
+	 *            the end date (inclusive) of the records
 	 * @return the records for the specified survey in the specified location.
 	 */
-	List<Record> getRecords(User user, Survey survey, Location location);
+	List<Record> getRecords(User user, Survey survey, Location location, Date startDate, Date endDate);
 
 	List<Record> getRecords(Geometry withinGeom);
 

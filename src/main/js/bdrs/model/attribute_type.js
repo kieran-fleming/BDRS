@@ -49,23 +49,23 @@ bdrs.model.taxa.attributeType.AttributeType = function(value, code, name) {
 };
 
 // Initialising the attribute types.
-new bdrs.model.taxa.attributeType.AttributeType('INTEGER', 'IN', 'Integer');
-new bdrs.model.taxa.attributeType.AttributeType('INTEGER_WITH_RANGE', 'IR', 'Integer Range');
-new bdrs.model.taxa.attributeType.AttributeType('DECIMAL', 'DE', 'Decimal');
-new bdrs.model.taxa.attributeType.AttributeType('BARCODE', 'BC', 'Bar Code');
-new bdrs.model.taxa.attributeType.AttributeType('DATE', 'DA', 'Date');
-new bdrs.model.taxa.attributeType.AttributeType('TIME', 'TM', 'Time');
-new bdrs.model.taxa.attributeType.AttributeType('STRING', 'ST', 'Short Text');
-new bdrs.model.taxa.attributeType.AttributeType('STRING_AUTOCOMPLETE', 'SA', 'Short Text (Auto Complete)');
-new bdrs.model.taxa.attributeType.AttributeType('TEXT', 'TA', 'Long Text');
-new bdrs.model.taxa.attributeType.AttributeType('HTML', 'HL', 'HTML');
-new bdrs.model.taxa.attributeType.AttributeType('HTML_COMMENT', 'CM', 'Comment');
-new bdrs.model.taxa.attributeType.AttributeType('HTML_HORIZONTAL_RULE', 'HR', 'Horizontal Rule');
-new bdrs.model.taxa.attributeType.AttributeType('STRING_WITH_VALID_VALUES', 'SV', 'Selection');
-new bdrs.model.taxa.attributeType.AttributeType('SINGLE_CHECKBOX', 'SC', 'Single Checkbox');
-new bdrs.model.taxa.attributeType.AttributeType('MULTI_CHECKBOX', 'MC', 'Multi Checkbox');
-new bdrs.model.taxa.attributeType.AttributeType('MULTI_SELECT', 'MS', 'Multi Select');
-new bdrs.model.taxa.attributeType.AttributeType('IMAGE', 'IM', 'Image File');
-new bdrs.model.taxa.attributeType.AttributeType('FILE', 'FI', 'Data File');
+bdrs.model.taxa.attributeType.INTEGER = new bdrs.model.taxa.attributeType.AttributeType('INTEGER', 'IN', 'Integer');
+bdrs.model.taxa.attributeType.INTEGER_WITH_RANGE = new bdrs.model.taxa.attributeType.AttributeType('INTEGER_WITH_RANGE', 'IR', 'Integer Range');
+bdrs.model.taxa.attributeType.DECIMAL = new bdrs.model.taxa.attributeType.AttributeType('DECIMAL', 'DE', 'Decimal');
+bdrs.model.taxa.attributeType.BARCODE = new bdrs.model.taxa.attributeType.AttributeType('BARCODE', 'BC', 'Bar Code');
+bdrs.model.taxa.attributeType.DATE = new bdrs.model.taxa.attributeType.AttributeType('DATE', 'DA', 'Date');
+bdrs.model.taxa.attributeType.TIME = new bdrs.model.taxa.attributeType.AttributeType('TIME', 'TM', 'Time');
+bdrs.model.taxa.attributeType.STRING = new bdrs.model.taxa.attributeType.AttributeType('STRING', 'ST', 'Short Text');
+bdrs.model.taxa.attributeType.STRING_AUTOCOMPLETE = new bdrs.model.taxa.attributeType.AttributeType('STRING_AUTOCOMPLETE', 'SA', 'Short Text (Auto Complete)');
+bdrs.model.taxa.attributeType.TEXT = new bdrs.model.taxa.attributeType.AttributeType('TEXT', 'TA', 'Long Text');
+bdrs.model.taxa.attributeType.HTML = new bdrs.model.taxa.attributeType.AttributeType('HTML', 'HL', 'HTML');
+bdrs.model.taxa.attributeType.HTML_COMMENT = new bdrs.model.taxa.attributeType.AttributeType('HTML_COMMENT', 'CM', 'Comment');
+bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE = new bdrs.model.taxa.attributeType.AttributeType('HTML_HORIZONTAL_RULE', 'HR', 'Horizontal Rule');
+bdrs.model.taxa.attributeType.STRING_WITH_VALID_VALUES = new bdrs.model.taxa.attributeType.AttributeType('STRING_WITH_VALID_VALUES', 'SV', 'Selection');
+bdrs.model.taxa.attributeType.SINGLE_CHECKBOX = new bdrs.model.taxa.attributeType.AttributeType('SINGLE_CHECKBOX', 'SC', 'Single Checkbox');
+bdrs.model.taxa.attributeType.MULTI_CHECKBOX = new bdrs.model.taxa.attributeType.AttributeType('MULTI_CHECKBOX', 'MC', 'Multi Checkbox');
+bdrs.model.taxa.attributeType.MULTI_SELECT = new bdrs.model.taxa.attributeType.AttributeType('MULTI_SELECT', 'MS', 'Multi Select');
+bdrs.model.taxa.attributeType.IMAGE = new bdrs.model.taxa.attributeType.AttributeType('IMAGE', 'IM', 'Image File');
+bdrs.model.taxa.attributeType.FILE = new bdrs.model.taxa.attributeType.AttributeType('FILE', 'FI', 'Data File');
 
 

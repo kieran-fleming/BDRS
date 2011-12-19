@@ -100,8 +100,7 @@ public class TrackerController_Wkt_Test extends AbstractControllerTest {
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_CENSUS_METHOD_ID, cm.getId().toString());
         request.setParameter(TrackerController.PARAM_DATE, "02 Aug 2011 12:45");
-        request.setParameter(TrackerController.PARAM_TIME_HOUR, "15");
-        request.setParameter(TrackerController.PARAM_TIME_MINUTE, "48");
+        request.setParameter(TrackerController.PARAM_TIME, "15:48");
         request.setParameter(TrackerController.PARAM_NOTES, "my notes");
         request.setParameter(TrackerController.PARAM_WKT, geom.toText());
         
@@ -130,8 +129,7 @@ public class TrackerController_Wkt_Test extends AbstractControllerTest {
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_CENSUS_METHOD_ID, cm.getId().toString());
         request.setParameter(TrackerController.PARAM_DATE, "02 Aug 2011 12:45");
-        request.setParameter(TrackerController.PARAM_TIME_HOUR, "15");
-        request.setParameter(TrackerController.PARAM_TIME_MINUTE, "48");
+        request.setParameter(TrackerController.PARAM_TIME, "15:48");
         request.setParameter(TrackerController.PARAM_NOTES, "my notes");
         request.setParameter(TrackerController.PARAM_WKT, geom.toText());
         request.setParameter(TrackerController.PARAM_RECORD_VISIBILITY, RecordVisibility.OWNER_ONLY.toString());
@@ -162,8 +160,7 @@ public class TrackerController_Wkt_Test extends AbstractControllerTest {
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_CENSUS_METHOD_ID, cm.getId().toString());
         request.setParameter(TrackerController.PARAM_DATE, "02 Aug 2011 12:45");
-        request.setParameter(TrackerController.PARAM_TIME_HOUR, "15");
-        request.setParameter(TrackerController.PARAM_TIME_MINUTE, "48");
+        request.setParameter(TrackerController.PARAM_TIME, "15:48");
         request.setParameter(TrackerController.PARAM_NOTES, "my notes");
         request.setParameter(TrackerController.PARAM_WKT, geom.toText());
         request.setParameter(TrackerController.PARAM_RECORD_VISIBILITY, RecordVisibility.PUBLIC.toString());
@@ -192,8 +189,7 @@ public class TrackerController_Wkt_Test extends AbstractControllerTest {
         request.setParameter(TrackerController.PARAM_SURVEY_ID, survey.getId().toString());
         request.setParameter(TrackerController.PARAM_CENSUS_METHOD_ID, cm.getId().toString());
         request.setParameter(TrackerController.PARAM_DATE, "02 Aug 2011 12:45");
-        request.setParameter(TrackerController.PARAM_TIME_HOUR, "15");
-        request.setParameter(TrackerController.PARAM_TIME_MINUTE, "48");
+        request.setParameter(TrackerController.PARAM_TIME, "15:48");
         request.setParameter(TrackerController.PARAM_NOTES, "my notes");
         request.setParameter(TrackerController.PARAM_WKT, wktString);
 

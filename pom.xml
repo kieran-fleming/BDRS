@@ -635,6 +635,13 @@
                             </excludes>
                         </resource>
                         <resource>
+                            <directory>src/main</directory>
+                            <includes>
+                                <include>index.jsp</include>
+                            </includes>
+                            <filtering>false</filtering>
+                        </resource>
+                        <resource>
                             <directory>src/main/css</directory>
                             <targetPath>css</targetPath>
                             <filtering>true</filtering>

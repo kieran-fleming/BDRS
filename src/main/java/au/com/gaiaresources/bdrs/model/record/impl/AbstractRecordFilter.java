@@ -397,7 +397,9 @@ public abstract class AbstractRecordFilter implements RecordFilter {
             cal.set(Calendar.MILLISECOND, 999);
             setEndDate(cal.getTime());
             
-            builder.append(" and record.time >= :startTime and record.time <= :endTime");
+            // records with no "when" should also be retrieved because they are 
+            // neither inside nor outside the time range
+            builder.append(" and (record.time between :startTime and :endTime or record.time is null)");
             paramMap.put("startTime", getStartDate().getTime());
             paramMap.put("endTime", getEndDate().getTime());
         }

@@ -117,10 +117,8 @@ public abstract class AttributeParser {
             validationType = attribute.isRequired() ? ValidationType.REQUIRED_DATE : ValidationType.DATE;
             return validator.validate(parameterMap, validationType, paramKey, attribute);
         case TIME:
-            // time field can never be invalid as it is restricted by the view
-            // even if it is required, if the view changes, the validation should also change
-            // TODO: may want to check that the time is within the start and end time of the survey?
-            return true;
+            validationType = attribute.isRequired() ? ValidationType.REQUIRED_TIME : ValidationType.TIME;
+            return validator.validate(parameterMap, validationType, paramKey, attribute);
         case HTML:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:

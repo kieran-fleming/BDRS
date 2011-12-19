@@ -1,7 +1,6 @@
 <div class="pageContent">
     <h1 class="textcenter">Welcome to the Biological Data Recording System</h1>
     <div class="left_col">
-        <div style="height: 37.5em;"></div>
         <h3>Supported By</h3>
         <a href="http://www.ala.org.au/">
             <img src="${asset}images/bdrs/atlasoflivingaust.png" alt="Atlas of Living Australia"/>

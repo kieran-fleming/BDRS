@@ -15,7 +15,10 @@ bdrs.admin.adminEditContent =  {
       			bdrs.admin.adminEditContent.getTextarea().value = data.content; 
       			bdrs.admin.adminEditContent.originalText = bdrs.admin.adminEditContent.getTextarea().value; 
       		})
-    		.error(function(data) { bdrs.message.set("error loading content to edit"); });
+    		.error(function(data) { 
+			    bdrs.admin.adminEditContent.getTextarea().value = "";
+				bdrs.admin.adminEditContent.originalText = bdrs.admin.adminEditContent.getTextarea().value;
+			});
 		},
 		saveContent: function(key) {
 			jQuery.ajax(bdrs.contextPath + "/webservice/content/saveContent.htm", 
@@ -25,7 +28,7 @@ bdrs.admin.adminEditContent =  {
       		})
       		.success(function(data) { 
       			bdrs.admin.adminEditContent.originalText = bdrs.admin.adminEditContent.getTextarea().value; 
-      			bdrs.message.set("'" + bdrs.admin.adminEditContent.getKeyDisplayName()+ "' content saved successfully");
+      			bdrs.message.set("'" + key + "' content saved successfully");
     		})
     		.error(function(data) { bdrs.message.set("Failed to save") });
 		},
@@ -46,9 +49,14 @@ bdrs.admin.adminEditContent =  {
 		    }
 		},
 		resetCurrentContent: function() {
+			var key = bdrs.admin.adminEditContent.getKey();
+			if (!key) {
+				alert("Please select content to reset");
+				return;
+			}
             var answer = confirm("Are you sure? The current content will be reset and any changes will be lost!")
             if (answer) {
-                window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm?key=" + bdrs.admin.adminEditContent.getKey();
+                window.location = bdrs.contextPath + "/admin/resetContentToDefault.htm?key=" + key;
             }
         },
         clearContent: function() {
@@ -105,6 +113,13 @@ bdrs.admin.onSelectContentEditorChange = function() {
 $(document).ready(function() {
 	// add a handler for the "Save Email Template" button
     $("#submitEditContent").click(function() {
+		
+		var key = bdrs.admin.adminEditContent.getKey();
+        if (!key) {
+            alert("Please select content to edit");
+            return;
+        }
+		
         // check the template name
         var templateName;
         if ($('#selectContentToEdit option:selected')[0].value == -1) {

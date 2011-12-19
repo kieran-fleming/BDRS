@@ -2,7 +2,26 @@
     <body>
         <p>Hi ${userFirstName} ${userLastName},</p>
         
-        <p>Someone has moderated a <a href="${bdrsApplicationUrl}${viewRecordUrl}">record you have created</a>.</p>
+        <p>
+            I'm on one of the admnistrators of the ${portal.getName()}. Recently, you recorded 
+            a sighting in the system under a project that has moderation turned on. 
+            What this means is that the administrators are given the option to review 
+            that record.
+        </p>
         
+        <p>
+            I've reviewed your record and suggested changes as you will be able to see 
+            by going to this <a href="${bdrsApplicationUrl}${viewRecordUrl}">link</a>
+        </p>
+        <p>
+            If you choose to make more edits, then this will continue to send 
+            links back and forth until the record is released.
+        </p>
+        <p>
+            Thanks for your contribution to the ${portal.getName()}!
+        </p>
+        <p>
+            ${moderatorFirstName} ${moderatorLastName}
+        </p>
     </body>
 </html>

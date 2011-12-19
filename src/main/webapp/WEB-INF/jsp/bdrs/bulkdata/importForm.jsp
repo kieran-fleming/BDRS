@@ -27,6 +27,7 @@
                 </th>
                 <td>
                     <select id="surveySelect" name="surveyPk">
+                    	<option value="">-- Select a survey --</option>
                         <c:forEach items="${surveyList}" var="curSurvey">
                             <option value="${curSurvey.id}"
                                 <c:if test="${ curSurvey == survey }">
@@ -53,3 +54,9 @@
         <input type="submit" value="Upload Spreadsheet" class="form_action"/>
     </div>
 </form>
+
+<script type="text/javascript">
+	jQuery(function() {
+		jQuery("#uploadSpreadsheetForm").submit(bdrs.bulkdata.getSpreadsheetUploadSubmitFunc("#surveySelect", "#spreadsheetInput"));
+	});
+</script>

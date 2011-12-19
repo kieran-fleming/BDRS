@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.controller.survey;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,10 +12,13 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -184,7 +188,7 @@ public class SurveyBaseController extends AbstractController {
         Metadata logo = survey.getMetadataByKey(Metadata.SURVEY_LOGO);
         if(logoFileStr.isEmpty() && logo != null) {
             // The file was intentionally cleared.
-            Set<Metadata> surveyMetadata = new HashSet(survey.getMetadata());
+            Set<Metadata> surveyMetadata = new HashSet<Metadata>(survey.getMetadata());
             surveyMetadata.remove(logo);
             survey.setMetadata(surveyMetadata);
             
@@ -192,19 +196,24 @@ public class SurveyBaseController extends AbstractController {
         }
         else if(!logoFileStr.isEmpty() && logoFile != null && logoFile.getSize() > 0) {
             if (ImageUtil.isMimetypeSupported(logoFile.getContentType())) {
+                String targetBasename = FilenameUtils.getBaseName(logoFile.getOriginalFilename());
+                
+                String targetFilename = String.format("%s%s%s", targetBasename, FilenameUtils.EXTENSION_SEPARATOR, TARGET_LOGO_IMAGE_FORMAT);
+                
                 if(logo == null) {
                     logo = new Metadata();
                     logo.setKey(Metadata.SURVEY_LOGO);
                 }
-                logo.setValue(logoFile.getOriginalFilename());
+                logo.setValue(targetFilename);
                 metadataDAO.save(logo);
                 survey.getMetadata().add(logo);
                 
                 BufferedImage scaledImage = ImageUtil.resizeImage(logoFile.getInputStream(), TARGET_LOGO_DIMENSION.width, TARGET_LOGO_DIMENSION.height);
 
-                File targetFile = fileService.createTargetFile(logo.getClass(), logo.getId(), logoFile.getOriginalFilename());
-                
-                ImageUtil.saveImage(targetFile, scaledImage, logoFile.getContentType(), 100);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(scaledImage, TARGET_LOGO_IMAGE_FORMAT, baos);
+                baos.flush();
+                fileService.createFile(logo.getClass(), logo.getId(), targetFilename, baos.toByteArray());
             }
             else {
                 log.warn("Unable to resize logo image with content type "+logoFile.getContentType());

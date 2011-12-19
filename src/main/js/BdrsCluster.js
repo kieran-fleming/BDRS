@@ -59,6 +59,12 @@ bdrs.map.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
                 var selected = this.layer.selectedFeatures.slice();
                 var select = new OpenLayers.Control.SelectFeature(this.layer);
                 var selectedFid = (selected && selected.length > 0 ) ? selected[0].fid : -1;
+				
+				// the last feature we add to place it on the top!
+				// the last item in the 'clusters' array gets placed at the top of the layer.
+				// unfortunately this does rely on an internal implementation detail of open layers.
+				// we use this to bring the highlighted item to the top.
+				var topCluster = null;
                 
                 for(var i=0; i<this.features.length; ++i) {
                     feature = this.features[i];
@@ -77,13 +83,22 @@ bdrs.map.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
 									clustered = true;
 									break;
 								}
-							}					
+							}
 						} 
                         if(!clustered) {
-                            clusters.push(this.createCluster(this.features[i]));
+							var newCluster = this.createCluster(feature);
+							if (feature.fid != this.ignoreId) {
+							    clusters.push(newCluster);	
+							} else {
+							    topCluster = newCluster;
+							}
                         }
                     }
                 }
+				
+				if (topCluster) {
+					clusters.push(topCluster);
+				}
 
                 // Close popups and unselect features!
                 if (this.layer.selectPopUpControl) {
@@ -145,6 +160,13 @@ bdrs.map.BdrsCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
     createCluster: function(feature) {
 		var geom;
 		var modifiable;
+		
+		// feature is already a cluster. This handles the  case where
+		// we remove then add a feature in order to raise it to the top
+		// of the layer
+		if (feature.cluster) {
+			return feature;
+		}
 
         if (feature.geometry.CLASS_NAME === "OpenLayers.Geometry.Point") {
             var center = feature.geometry.getBounds().getCenterLonLat();

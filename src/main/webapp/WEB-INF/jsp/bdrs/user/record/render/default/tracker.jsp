@@ -53,7 +53,7 @@
         <input type="hidden" name="recordVisibility" value="${survey.defaultRecordVisibility}" />
     </c:if>
     
-    <table class="form_table">
+    <table class="form_table tracker_form_table">
         <tbody>
      
             <c:if test="${recordWebFormContext.editable and survey.recordVisibilityModifiable}">

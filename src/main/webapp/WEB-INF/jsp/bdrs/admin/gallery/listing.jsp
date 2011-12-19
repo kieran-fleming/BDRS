@@ -3,7 +3,8 @@
 
 <h1>Galleries</h1>
 
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In non imperdiet nisl. Praesent ipsum massa, ultricies nec congue vel, suscipit id quam. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Ut tellus leo, tincidunt vitae fermentum nec, dictum vel odio. Nunc a ante ac ipsum dignissim adipiscing. Etiam cursus, turpis sollicitudin placerat varius, risus massa blandit sem, ac ultrices felis metus quis nunc. Sed condimentum lorem quis diam rutrum vel tincidunt nisi lobortis. Aliquam a felis erat, ut mollis magna. Etiam laoreet tellus sit amet ante consequat hendrerit. Donec vel elit ac nibh venenatis pulvinar. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi ullamcorper ligula elit. Curabitur dapibus accumsan adipiscing. Proin sit amet tortor tortor. Vivamus nibh purus, ornare sed aliquet nec, adipiscing eget orci. Nam nulla massa, mollis vitae iaculis sed, lobortis non augue. Praesent in odio metus. Quisque hendrerit ligula ut orci dapibus nec hendrerit nisl pretium.
+<p>
+	These are your available galleries.
 </p>
 
 <p>On this page you may:</p>

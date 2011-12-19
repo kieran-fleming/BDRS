@@ -193,7 +193,6 @@ bdrs.util.maximise = function(triggerSelector, contentSelector, maximiseLabel, m
         
       //add escape listener
 		jQuery(document).keyup(function(key){
-			console.log(key.keyCode);
 			if (key.keyCode === 27) {
 				bdrs.util.maximise(triggerSelector, contentSelector, maximiseLabel, minimiseLabel);
 			}

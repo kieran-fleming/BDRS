@@ -75,7 +75,7 @@
 		                            class="validate(required)"
 		                        </c:when>
 		                    </c:choose>
-		                    name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:1px;padding:2px 0 0 0;margin:0 0 0 -4px;border-width:0;"/>
+		                    name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:0px;padding:0px 0 0 0;margin:0 0 0 -10px;border-width:0;"/>
 		            </c:when>
 		            <c:when test="<%= formField.getSurvey().getSpecies().size() == 1 %>">
 		                <input type="hidden" name="${ formPrefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>
@@ -268,7 +268,7 @@
 		                calDate.setTime(formField.getRecord().getWhen());
 		            }
 		        %>
-		        <input id="date" class="datepicker_historical validate(required)" type="text" name="${ formPrefix }date"
+		        <input id="date" class="datepicker_historical <c:if test="${ formField.required }">validate(required)</c:if>" type="text" name="${ formPrefix }date"
 		            <c:choose>
 		                <c:when test="<%= valueMap != null && valueMap.containsKey(formField.getPrefix()+\"date\") %>">
 		                    value="<c:out value="<%= valueMap.get(formField.getPrefix()+\"date\") %>"/>"
@@ -299,6 +299,13 @@
         %>
 		<c:choose>
 		    <c:when test="${fieldEditable}">
+		    	
+				<c:if test="<%= errorMap != null && errorMap.containsKey(formField.getPrefix()+\"time\") %>">
+                    <p class="error">
+                        <c:out value="<%= errorMap.get(formField.getPrefix()+\"time\") %>"/>
+                    </p>
+                </c:if>
+				
                 <input type="text" name="${ formPrefix }time" 
 				    class="timepicker
 					<c:choose>

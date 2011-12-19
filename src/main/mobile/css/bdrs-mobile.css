@@ -72,3 +72,26 @@ ul h1, ul h2, ul h3, ul h4 {
 .ui-body-b .secondaryAction.delete {
     color: red;
 }
+
+/* css for IN field */
+
+.field_IN input{
+	width: 8%;
+}
+
+.field_IN .ui-controlgroup{
+	padding-left: 1%;
+	display: inline-block;
+}
+
+/* css to style jqm collapsible contentbox for point fields, becomes obsolete from jqm rc1+ when data-content-theme element comes into effect*/
+.temp-content-box-styles {
+	border: 1px solid black;
+	border-radius: 10px;
+	padding: 0px 8px 0px 8px;
+	background-color: #ffffff;
+}
+
+#loadingContent {
+	text-align: center;
+}

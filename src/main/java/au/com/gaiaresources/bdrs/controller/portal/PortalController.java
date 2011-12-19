@@ -19,6 +19,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.insecure.HTTPErrorController;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
@@ -296,7 +298,15 @@ public class PortalController extends AbstractController {
         Matcher matcher = pattern.matcher(request.getServletPath());
         
         String subServletPath = matcher.replaceFirst("");
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/"+subServletPath);
+        
+        String path;
+        if(request.getServletPath().equals(subServletPath)) {
+            path = HTTPErrorController.NOT_FOUND_URL;
+        } else {
+            path = "/"+subServletPath;
+        }
+        
+        RequestDispatcher dispatcher = request.getRequestDispatcher(path);
         dispatcher.forward(request, response);
     }
 }

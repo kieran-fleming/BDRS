@@ -1,3 +1,6 @@
 <p>
-The BDRS has the ability to create widgets that can be embedded in other web sites.  At this point in time, the only widget available is for the Latest Statistics, but this will change in subsequent versions.  More will be documented on these preferences in coming releases of the software, and in the Google Code repository located <a href="http://code.google.com/p/ala-citizenscience/">here</a>.
+The BDRS has the ability to create 'widgets' which can be embedded 
+in other pages of the BDRS, or on other websites. Here you can 
+configure a widget, preview it, and then take the code to embed 
+on another page.
 </p>

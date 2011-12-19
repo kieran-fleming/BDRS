@@ -4,20 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.db.TransactionCallback;
 import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
@@ -80,7 +75,7 @@ public class VanillaUserSignUpController extends AbstractController {
             @RequestParam(value = "password", required = true) String password)
             throws Exception {
 
-        String redirect = hasErrors(email, firstName, lastName);
+        String redirect = hasErrors(email, firstName, lastName, username);
         if (redirect != null) {
             return redirect;
         }
@@ -131,6 +126,7 @@ public class VanillaUserSignUpController extends AbstractController {
     /**
      * Convenience method for validating form and feeding errors in to the
      * binding result
+     * @param username 
      * 
      * @param u
      *            the UserSignUpForm to validate
@@ -138,12 +134,17 @@ public class VanillaUserSignUpController extends AbstractController {
      *            the binding result to pass errors to
      * @return true if there ARE binding errors, false if there aren't.
      */
-    private String hasErrors(String email, String firstName, String lastName) {
+    private String hasErrors(String email, String firstName, String lastName, String username) {
         String redirect = null;
         if (userDAO.getUserByEmailAddress(email) != null) {
             // The username (email address) is already taken.
             getRequestContext().addMessage(new Message(
                     "UserSignUpForm.emailAddress[unique]"));
+            redirect = "redirect:/reminder.htm";
+        } else if (userDAO.getUser(username) != null) {
+            // The username is already taken.
+            getRequestContext().addMessage(new Message(
+                    "UserSignUpForm.userName[unique]"));
             redirect = "redirect:/reminder.htm";
         } else {
             if (empty(firstName)) {
@@ -159,6 +160,11 @@ public class VanillaUserSignUpController extends AbstractController {
             if (empty(email)) {
                 getRequestContext().addMessage(new Message(
                         "UserSignUpForm.emailAddress[not.blank]"));
+                redirect = "redirect:usersignup.htm";
+            }
+            if (empty(username)) {
+                getRequestContext().addMessage(new Message(
+                        "UserSignUpForm.userName[not.blank]"));
                 redirect = "redirect:usersignup.htm";
             }
         }

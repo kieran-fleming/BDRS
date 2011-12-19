@@ -34,6 +34,7 @@ import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.location.Location;
+import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
@@ -85,6 +86,9 @@ public class ApplicationService extends AbstractController {
     
     @Autowired
     private au.com.gaiaresources.bdrs.model.location.LocationService locationService;
+    
+    @Autowired
+    private LocationDAO locationDAO;
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
     
@@ -336,21 +340,6 @@ public class ApplicationService extends AbstractController {
         }
         
         Integer recordPk = getJSONInteger(jsonRecordBean, "server_id", 0);
-        
-        Double latitude = Double.parseDouble(PropertyUtils.getProperty(jsonRecordBean, "latitude").toString());
-        Double longitude = Double.parseDouble(PropertyUtils.getProperty(jsonRecordBean, "longitude").toString());
-        String accuracyStr = getJSONString(jsonRecordBean, "accuracy", "");
-        Double accuracy = accuracyStr.trim().isEmpty() ? null : Double.parseDouble(accuracyStr);
-        
-        Date when = getJSONDate(jsonRecordBean, "when", null);
-        Date lastDate = getJSONDate(jsonRecordBean, "lastDate", null);
-        String notes = getJSONString(jsonRecordBean, "notes", "");
-        Integer number = getJSONInteger(jsonRecordBean, "number", null);
-        Integer censusMethodPk = getJSONInteger(jsonRecordBean, "censusMethod_id", null);
-        Integer surveyPk = getJSONInteger(jsonRecordBean, "survey_id", null);
-        Integer taxonPk = getJSONInteger(jsonRecordBean, "taxon_id", null);
-        String scientificName = getJSONString(jsonRecordBean, "scientificName", "");
-        
         Record rec;
         if(recordPk < 1) {
             rec = recordDAO.getRecordByClientID(clientID);
@@ -361,21 +350,59 @@ public class ApplicationService extends AbstractController {
             rec = recordDAO.getRecord(recordPk);
         }
         
-        rec.setUser(user);
-        rec.setPoint(locationService.createPoint(latitude, longitude));
-        rec.setAccuracyInMeters(accuracy);
+		
+		String latitudeString = getJSONString(jsonRecordBean, "latitude", "");
+        Double latitude = latitudeString.trim().isEmpty() ? null : Double.parseDouble(latitudeString);
+		String longitudeString = getJSONString(jsonRecordBean, "longitude", "");
+        Double longitude = longitudeString.trim().isEmpty() ? null : Double.parseDouble(longitudeString);
+		if (latitude != null && longitude != null) {
+			rec.setPoint(locationService.createPoint(latitude, longitude));
+		}
+
+		String accuracyStr = getJSONString(jsonRecordBean, "accuracy", "");
+        Double accuracy = accuracyStr.trim().isEmpty() ? null : Double.parseDouble(accuracyStr);
+		rec.setAccuracyInMeters(accuracy);
+		
+		//set location for record if exists
+		Integer locationId = getJSONInteger(jsonRecordBean, "location", null);
+		if (locationId != null) {
+			Location l = locationDAO.getLocation(locationId.intValue());
+			rec.setLocation(l);
+		}
+		
+		//set other dwc values
+        Date when = getJSONDate(jsonRecordBean, "when", null);
         rec.setWhen(when);
-        rec.setTime(when.getTime());
-        rec.setLastDate(lastDate == null ? when : lastDate);
-        rec.setLastTime(lastDate == null ? when.getTime() : lastDate.getTime());
-        rec.setNotes(notes);
-        rec.setNumber(number);
-        rec.setSurvey(surveyDAO.getSurvey(surveyPk));
+        rec.setTime(when == null ? null : when.getTime());
         
+        Date lastDate = getJSONDate(jsonRecordBean, "lastDate", null);
+        rec.setLastDate(lastDate == null ? when : lastDate);
+        
+        Long lastTime = null;
+        if (lastDate == null) {
+        	if (when != null) {
+        		lastTime = when.getTime();
+        	}
+        } else {
+	        lastTime = lastDate.getTime();
+        }
+        rec.setLastTime(lastTime);
+        
+        String notes = getJSONString(jsonRecordBean, "notes", null);
+        rec.setNotes(notes);
+        
+        Integer number = getJSONInteger(jsonRecordBean, "number", null);
+        rec.setNumber(number);
+        
+        Integer censusMethodPk = getJSONInteger(jsonRecordBean, "censusMethod_id", null);
         if(censusMethodPk != null) {
             rec.setCensusMethod(censusMethodDAO.get(censusMethodPk));
         }
         
+        Integer surveyPk = getJSONInteger(jsonRecordBean, "survey_id", null);
+        
+        String scientificName = getJSONString(jsonRecordBean, "scientificName", null);
+        Integer taxonPk = getJSONInteger(jsonRecordBean, "taxon_id", null);
         if(taxonPk != null) {
             IndicatorSpecies taxon = taxaDAO.getIndicatorSpecies(taxonPk);
             if(taxon == null) {
@@ -390,6 +417,11 @@ public class ApplicationService extends AbstractController {
             rec.setSpecies(taxon);
         }
         
+        rec.setUser(user);
+        if(surveyPk != null) {
+	        rec.setSurvey(surveyDAO.getSurvey(surveyPk));
+	    }
+
         rec = recordDAO.saveRecord(rec);
         
         Map<String, Object> map = new HashMap<String, Object>();

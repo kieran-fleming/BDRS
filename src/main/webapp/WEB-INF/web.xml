@@ -31,6 +31,10 @@
         <location>/error/redirect500.htm</location>
     </error-page>
     
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+    
     <filter>
         <filter-name>portalSelectionFilter</filter-name>
         <filter-class>au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter</filter-class>

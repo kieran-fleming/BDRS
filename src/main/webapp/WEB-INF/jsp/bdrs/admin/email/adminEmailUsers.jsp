@@ -91,7 +91,7 @@
                        { name:'from.first name', className:'myDropLink', replaceWith:'\$\{from.firstName\}'},
                        { name:'from.last name', className:'myDropLink', replaceWith:'\$\{from.lastName\}'},
                        { name:'from.email address', className:'myDropLink', replaceWith:'\$\{from.emailAddress\}'},
-                       { name:'homepage link', className:'myDropLink', replaceWith:'\<a href=\"\$\{bdrs.application.url\}\/home.htm\"\>'}
+                       { name:'homepage link', className:'myDropLink', replaceWith:'\<a href=\"\$\{bdrsApplicationUrl\}\/home.htm\"\>link\<\/a\>'}
                       ]
                 });
 

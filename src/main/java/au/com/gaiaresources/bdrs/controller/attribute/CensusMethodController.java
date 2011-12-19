@@ -190,13 +190,18 @@ public class CensusMethodController extends AbstractController {
     
     @RequestMapping(value=GET_CENSUS_METHOD_FOR_SURVEY_URL, method = RequestMethod.GET)
     public void getSurveyCensusMethods(HttpServletRequest request, HttpServletResponse response,
-            @RequestParam(value=PARAM_SURVEY_ID, required=true) Integer surveyId) throws Exception {
+            @RequestParam(value=PARAM_SURVEY_ID, required=false) Integer surveyId) throws Exception {
         
+        if (surveyId == null) {
+            // return empty json object
+            this.writeJson(request, response, "[]");
+            return;
+        }
         Survey survey = surveyDAO.get(surveyId);
         if (survey == null) {
             // return empty json object
             this.writeJson(request, response, "[]");
-			return;
+            return;
         }
         List<CensusMethod> censusMethodList = survey.getCensusMethods();
         JSONArray array = new JSONArray();

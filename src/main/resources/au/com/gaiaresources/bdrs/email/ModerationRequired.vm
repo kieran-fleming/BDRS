@@ -1,8 +1,33 @@
 <html>
     <body>
-        <p>Hi ${userFirstName} ${userLastName},</p>
-        
-        <p>A <a href="${bdrsApplicationUrl}${viewRecordUrl}">recently created/modified record</a> requires moderation.</p>
-        
+        <p>Hi ${moderatorFirstName} ${moderatorLastName},</p>
+        <p>
+	        I've just logged a record in the ${portal.getName()} that requires your attention, 
+	        as it is logged against a survey with moderation turned on, and 
+	        you are a designated administrator.
+        </p>
+        <p>
+            The details of the record can be found <a href="${bdrsApplicationUrl}${viewRecordUrl}">here</a>
+        </p>
+        <p>
+            If you edit the moderation fields, the system will email me back 
+            to let me know that there has been a change, and then I can make 
+            any edits. This will continue to send links back and forth until 
+            the record is released.
+        </p>
+        <p>
+            If you want to approve this record for release, then you need to go to the 
+            Advanced Review page, look at the record in the List view, and mark 
+            it for release that way.
+        </p>
+        <p>
+            You can access the Advanced Review page by going <a href="${bdrsApplicationUrl}/review/sightings/advancedReview.htm?0_user=-1&0_held=held">here</a>
+        </p>
+        <p>
+            Thanks!
+        </p>
+        <p>
+            ${userFirstName} ${userLastName}
+        </p>
     </body>
 </html>

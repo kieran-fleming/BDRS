@@ -55,6 +55,8 @@ import au.com.gaiaresources.bdrs.spatial.ShapefileType;
 @Controller
 public class BulkDataController extends AbstractController {
 
+    public static final String BULK_DATA_URL = "/bulkdata/bulkdata.htm";
+    
     public static final String CONTENT_TYPE_XLS = "application/vnd.ms-excel";
     public static final String SHAPEFILE_UPLOAD_URL = "/bulkdata/uploadShapefile.htm";
     public static final String SHAPEFILE_TEMPLATE_URL = "/bulkdata/shapefileTemplate.htm";
@@ -65,6 +67,8 @@ public class BulkDataController extends AbstractController {
     
     public static final String MV_PARAM_RESULTS_IN_ERROR = "errors";
     public static final String MV_PARAM_WRITE_COUNT = "writeCount";
+    
+    public static final String MSG_KEY_SHAPEFILE_UPLOAD_BAD_ZIP = "bdrs.bulkdata.shapefile.uploadBadZip";
     
     private Logger log = Logger.getLogger(getClass());
 
@@ -77,7 +81,7 @@ public class BulkDataController extends AbstractController {
     @Autowired
     private BulkDataService bulkDataService;
 
-    @RequestMapping(value = "/bulkdata/bulkdata.htm", method = RequestMethod.GET)
+    @RequestMapping(value = BULK_DATA_URL, method = RequestMethod.GET)
     public ModelAndView bulkdata(HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -325,7 +329,13 @@ public class BulkDataController extends AbstractController {
         File tempFile = File.createTempFile("shapefileupload", Long.toString(System.nanoTime()));
         uploadedFile.transferTo(tempFile);
         
-        ShapeFileReader reader = new ShapeFileReader(tempFile);
+        ShapeFileReader reader;
+        try {
+            reader = new ShapeFileReader(tempFile);
+        } catch (IOException ioe) {
+            getRequestContext().addMessage(MSG_KEY_SHAPEFILE_UPLOAD_BAD_ZIP);
+            return redirect(BULK_DATA_URL);
+        }
         
         RecordKeyLookup klu = new ShapefileRecordKeyLookup();
         ShapefileToRecordEntryTransformer transformer = new ShapefileToRecordEntryTransformer(klu);

@@ -5,7 +5,7 @@
 <h2 class="error_description">
 	<c:choose>
 	    <c:when test="${statusCode == 404}">
-	        The page you are looking for cannot be found...
+	        The page you are looking for cannot be found.
 	    </c:when>
 	    <c:otherwise>
 	        We seem to be having a problem displaying your page.</br>
@@ -13,11 +13,4 @@
 	    </c:otherwise>
 	</c:choose>
 </h2>
-<p>
-    You will be automatically redirected to the <a href="${pageContext.request.contextPath}/authenticated/redirect.htm">home</a> page in 10 seconds.
-</p>
-
-<script type="text/javascript">
-    timer=setTimeout('window.document.location="${pageContext.request.contextPath}/authenticated/redirect.htm"', 10000)
-</script>
 

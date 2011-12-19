@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
 import au.com.gaiaresources.bdrs.model.map.GeoMap;
 import au.com.gaiaresources.bdrs.model.menu.MenuDAO;
 import au.com.gaiaresources.bdrs.model.menu.MenuItem;
@@ -64,8 +66,8 @@ public class MenuService {
                 // insert at the end of the menu's items
                 menuItem.getItems().addAll(mapMenu);
             } else if (CONTRIBUTE_MENU.equals(menuItem.getName())) {
-                // insert the surveyMenu at the appropriate item
                 menuItem.getItems().addAll(surveyMenu);
+                Collections.sort(menuItem.getItems());
             }
         }
         

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
 import au.com.gaiaresources.bdrs.model.theme.ThemeDAO;
 import au.com.gaiaresources.bdrs.security.Role;
@@ -32,6 +33,8 @@ public class StaticPageController extends AbstractController {
     private ThemeDAO themeDAO;
     @Autowired
     private RedirectionService redirectionService;
+    @Autowired
+    private FileService fileService;
     
     Logger log = Logger.getLogger(getClass());
     
@@ -81,23 +84,28 @@ public class StaticPageController extends AbstractController {
                 return redirect(redirectionService.getHomeUrl());
             }
             
-            File staticFile = new File(Theme.THEME_DIR_PROCESSED,
-                                       fileDir + filename);
+            File processedDir = fileService.getTargetDirectory(theme, Theme.THEME_DIR_PROCESSED, false);
+            
+            File staticFile = new File(processedDir, fileDir);
+            staticFile = new File(staticFile, filename);
             
             if (!staticFile.exists()) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return null;
             }
             
-            String path = new File(Theme.THEME_DIR_PROCESSED,
-                                   fileDir + filename).getPath();
+            StringBuilder pathBuilder = new StringBuilder();
+            pathBuilder.append(Theme.THEME_DIR_PROCESSED);
+            pathBuilder.append(File.separator);
+            pathBuilder.append(fileDir);
+            pathBuilder.append(filename);
 
             StringWriter writer = new StringWriter();
 
             // We may need to replace some attributes.... add to this map if that's the case
             Map<String, Object> attributeMap = new HashMap<String, Object>();
             
-            templateService.mergeTemplate(theme, path, attributeMap, writer);
+            templateService.mergeTemplate(theme, pathBuilder.toString(), attributeMap, writer);
             ModelAndView mv = new ModelAndView("static_public");
             
             mv.addObject("renderedPage", writer.toString());

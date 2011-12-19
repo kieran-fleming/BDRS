@@ -185,6 +185,7 @@ public class FileService {
 			String name) throws IOException {
 	    File instanceDir = getPersistentInstanceFolder(clazz, id);
 	    File writeToFile = new File(instanceDir, name);
+	    logger.info("attempting to create new file : " + writeToFile.getAbsolutePath());
 	    if (writeToFile.createNewFile()) {
 	        return writeToFile;
 	    } else {

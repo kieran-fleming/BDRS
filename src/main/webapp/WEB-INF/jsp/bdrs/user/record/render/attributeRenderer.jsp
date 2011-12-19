@@ -207,16 +207,28 @@
      <c:when test="${ formField.attribute.type == 'INTEGER_WITH_RANGE'}">
 		<c:choose>
 		    <c:when test="${fieldEditable}">
-		        <input type="text"
-		            id="${inputName}"
-		            name="${inputName}"
-		            value="<c:out value="${ fieldValue }"/>"
+		        <input type="text" id="${inputName}" name="${inputName}" value="<c:out value="${ fieldValue }"/>" 
 		            <c:choose>
 		                <c:when test="${ formField.attribute.required }">
-		                    class="validate(range(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), number)"
+		                      <c:choose>
+		                          <c:when test="<%= formField.getAttribute().getOptions().size() >= 2 %>">
+		                              class="validate(range(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), integer)"
+		                          </c:when>
+		                          <c:otherwise>
+		                              class="validate(integer)"
+		                          </c:otherwise>
+		                      </c:choose>
+		                      
 		                </c:when>
 		                <c:otherwise>
-		                     class="validate(rangeOrBlank(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), numberOrBlank)"
+		                     <c:choose>
+		                          <c:when test="<%= formField.getAttribute().getOptions().size() >= 2 %>">
+		                              class="validate(rangeOrBlank(<c:out value="${formField.attribute.options[0]}"/>,<c:out value="${formField.attribute.options[1]}"/>), integerOrBlank)"
+		                          </c:when>
+		                          <c:otherwise>
+		                              class="validate(integerOrBlank)"
+		                          </c:otherwise>
+		                      </c:choose>
 		                </c:otherwise>
 		            </c:choose>
 		        />
@@ -546,8 +558,8 @@
 		            jQuery(function() {
 		                var elem = jQuery("<a></a>");
 		                elem.attr({
-		                    href: "javascript: void(0)",
-		                    class: "clearLink"
+		                    "href": "javascript: void(0)",
+		                    "class": "clearLink"
 		                });
 		                elem.text('Clear');
 		                elem.click(function() {
@@ -601,8 +613,8 @@
 		            jQuery(function() {
 		                var elem = jQuery("<a></a>");
 		                elem.attr({
-		                    href: "javascript: void(0)",
-		                    class: "clearLink"
+		                    "href": "javascript: void(0)",
+		                    "class": "clearLink"
 		                });
 		                elem.text('Clear');
 		                elem.click(function() {

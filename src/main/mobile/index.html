@@ -146,9 +146,18 @@
 </head>
 <body>
 
-<!-- Login page --> 
-<div data-role="page" id="login" data-theme="b"> 
+<!-- Load page  
+<div data-role="page" id="splash" data-theme="a"> 
+    <div data-role="content" class="bdrs-page-splash">
+    	<div id="loadingContent">
+    		<img alt="logo" src="images/web_hi_res_300.png">
+            <div>BDRS Loading ...</div>
+    	</div>
+    </div> /content
+</div> /page-->
 
+<!-- Login page -->
+<div data-role="page" id="login" data-theme="b"> 
  
     <div data-role="header" class="t" data-theme="b"> 
         <a href="application.htm" data-role="button" data-theme="b" rel="external" id="appLink" style="display:none;">download app</a>
@@ -331,25 +340,10 @@
         <h2><span id="record-type"></span>&nbsp;Record&nbsp;<span id="record-sibling-count"></span></h2> 
         
         <div id="record-form" action="" method="post">
-            <div data-role="fieldcontain"><label for="record-latitude">Latitude</label><input type="text" name="record-latitude" id="record-latitude" class="validate decimal latitude"/></div>
-            <div data-role="fieldcontain"><label for="record-longitude">Longitude</label><input type="text" name="record-longitude" id="record-longitude" class="validate decimal longitude"/></div>
-             <div data-role="fieldcontain"><label for="record-accuracy">Accuracy</label><input type="text" name="record-accuracy" id="record-accuracy" class="validate decimal accuracy"/></div>
-            <div data-inline="true" class="center">
-                <button data-inline="true" id="record-gps">GPS Location</button>
-            </div>
             <!--div data-inline="true" class="center">
                 <a data-inline="true" data-rel="dialog" data-role="button" onclick="setTimeout(&#39;setup(&quot;lonlat&quot;)&#39;,1000);window.location='index.html#mobilemap';">Select Lat/Lon From Map</a>
             </div-->
-            <div data-role="fieldcontain"><label for="record-when">Date</label><input type="text" name="record-when" id="record-when" class="validate required date"/></div>
-            <div data-role="fieldcontain"><label for="record-time">Time</label><input type="text" name="record-time" id="record-time" class="validate required"/></div>
-            <div data-role="fieldcontain"><label for="record-notes">Notes</label><input type="text" name="record-notes" id="record-notes"/></div>
-            
-            <!--<span id="record-survey-attributes"></span>-->
-            <div data-role="collapsible" data-collapsed="true">
-                <h1>Survey Attributes</h1>
-                <span id="record-survey-attributes"></span>
-            </div>
-            <!--<span id="record-taxongroup-attributes"></span>-->
+            <span id="record-survey-attributes"></span>
             <div data-role="collapsible" data-collapsed="true">
                 <h1>Taxon Group Attributes</h1>
                 <span id="record-taxongroup-attributes"></span>
@@ -386,22 +380,7 @@
         <!-- Whats up with that? A form that is a div with a method? -->
         <div id="point-intersect-form" action="" method="post">
 
-            <div data-role="collapsible" data-collapsed="true">
-                <h1>General Details</h1>
-                <div data-role="fieldcontain"><label for="pi-latitude">Latitude</label><input type="text" name="pi-latitude" id="pi-latitude" class="validate decimal latitude"/></div>
-                <div data-role="fieldcontain"><label for="pi-longitude">Longitude</label><input type="text" name="pi-longitude" id="pi-longitude" class="validate decimal longitude"/></div>
-                <!--div data-inline="true" class="center">
-                    <a data-inline="true" data-rel="dialog" data-role="button" onclick="setTimeout(&#39;setup(&quot;lonlat&quot;)&#39;,1000);window.location='index.html#mobilemap';">Select Lat/Lon From Map</a>
-                </div-->
-                <div data-role="fieldcontain"><label for="pi-when">Date</label><input type="text" name="pi-when" id="pi-when" class="validate required date"/></div>
-                <div data-role="fieldcontain"><label for="pi-time">Time</label><input type="text" name="pi-time" id="pi-time" class="validate required"/></div>
-                <div data-role="fieldcontain"><label for="pi-notes">Notes</label><input type="text" name="pi-notes" id="pi-notes"/></div>
-            </div>
-            <div data-role="fieldcontain"><label for="pi-accuracy">Accuracy</label><input type="text" name="pi-accuracy" id="pi-accuracy" class="validate decimal accuracy"/></div>
-            <div data-inline="true" class="center">
-                <button data-inline="true" id="pi-gps">GPS Location</button>
-            </div>
-        
+            <div data-role="collapsible" data-collapsed="true" id ="point-intersect-survey-attributes"></div>
             <!-- Substrate -->
             <div id="point-intersect-substrate-attributes" data-role="fieldcontain">
                 <span id="point-intersect-substrate-point-number"></span>

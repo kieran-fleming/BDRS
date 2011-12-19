@@ -106,7 +106,11 @@ public class UserProfileController extends AbstractController {
         String[] allowedRoles = Role.getRolesLowerThanOrEqualTo(Role.getHighestRole(editingUser.getRoles()));
         ArrayList<String> allowedRolesArrayList = new ArrayList<String>();
         for (String r : allowedRoles) {
-            allowedRolesArrayList.add(r);
+            // don't add the anonymous role because it is not an allowed role, it
+            // is the default role for anonymous access
+            if (!r.equals(Role.ANONYMOUS)) {
+                allowedRolesArrayList.add(r);
+            }
         }
         mv.addObject("allowedRoles", allowedRolesArrayList);
 

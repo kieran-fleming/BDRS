@@ -1,7 +1,7 @@
 <p>
 Project Locations are presented to the User as a 
 drop down list of sites that they can choose from, 
-instead of having to lick on the map to define the 
+instead of having to click on the map to define the 
 co-ordinates.  This is particularly useful if you 
 are monitoring particular sites.  While Users can 
 also define their own Locations, you can restrict 

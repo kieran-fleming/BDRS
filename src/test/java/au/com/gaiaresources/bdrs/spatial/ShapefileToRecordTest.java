@@ -2,7 +2,6 @@ package au.com.gaiaresources.bdrs.spatial;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,7 +23,6 @@ import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileFeatureStore;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
-import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,12 +33,15 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import au.com.gaiaresources.bdrs.attribute.AttributeDictionaryFactory;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
+import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializer;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordDeserializerResult;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordEntry;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordKeyLookup;
 import au.com.gaiaresources.bdrs.geometry.GeometryBuilder;
+import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.method.Taxonomic;
@@ -75,6 +76,8 @@ public class ShapefileToRecordTest extends AbstractTransactionalTest {
     UserDAO userDAO;
     @Autowired
     CensusMethodDAO cmDAO;
+    @Autowired
+    MetadataDAO metaDAO;
     
     User currentUser;
     Survey survey;
@@ -85,6 +88,8 @@ public class ShapefileToRecordTest extends AbstractTransactionalTest {
     CensusMethod taxaCm;
     
     Date surveyStartDate;
+    
+    Survey basicSurvey;
     
     private SimpleDateFormat shpDateFormat = new SimpleDateFormat("dd MMM yyyy");
     
@@ -186,6 +191,12 @@ public class ShapefileToRecordTest extends AbstractTransactionalTest {
         surveyDAO.save(survey);
         
         currentUser = userDAO.getUser("admin");
+        
+        basicSurvey = new Survey();
+        basicSurvey.setStartDate(surveyStartDate);
+        basicSurvey.setName("a basic survey");
+        basicSurvey.setDescription("basic survey description");
+        surveyDAO.save(basicSurvey);
     }
     
     @Test
@@ -756,6 +767,120 @@ public class ShapefileToRecordTest extends AbstractTransactionalTest {
         Assert.assertTrue(result.getErrorMap().containsKey("sattr_8"));
         Assert.assertTrue(result.getErrorMap().containsKey("sattr_9"));
         Assert.assertTrue(result.getErrorMap().containsKey(klu.getDateKey()));
+    }
+    
+    @Test
+    public void testShapefileImportDateTime1() throws Exception {
+        testRecordWhenSaving(true, true);
+    }
+    
+    @Test
+    public void testShapefileImportDateTime2() throws Exception {
+        testRecordWhenSaving(true, false);
+    }
+    
+    @Test
+    public void testShapefileImportDateTime3() throws Exception {
+        testRecordWhenSaving(false, true);
+    }
+    
+    @Test
+    public void testShapefileImportDateTime4() throws Exception {
+        testRecordWhenSaving(false, false);
+    }
+    
+    private void testRecordWhenSaving(boolean dateRequired, boolean timeRequired) throws Exception {
+        
+        // make time field not required.
+        RecordProperty timeProperty = new RecordProperty(basicSurvey, RecordPropertyType.TIME, metaDAO);
+        timeProperty.setRequired(timeRequired);            
+    
+
+        // make time field not required.
+        RecordProperty dateProperty = new RecordProperty(basicSurvey, RecordPropertyType.WHEN, metaDAO);
+        dateProperty.setRequired(dateRequired);       
+        
+        Calendar cal = Calendar.getInstance();
+        
+        cal.clear();
+        cal.set(2011, 6, 22, 00, 00, 00);
+        Date dateOnly = cal.getTime();
+        
+        RecordKeyLookup klu = new ShapefileRecordKeyLookup();
+        ShapefileToRecordEntryTransformer transformer = new ShapefileToRecordEntryTransformer(klu);
+        
+        // create the template:
+        ShapeFileWriter writer = new ShapeFileWriter();
+        File file = writer.createZipShapefile(basicSurvey, null, ShapefileType.POINT);
+        
+        ShapeFileReader reader = new ShapeFileReader(file);
+        
+        Assert.assertEquals(1, reader.getSurveyIdList().size());
+        Assert.assertEquals(basicSurvey.getId(), reader.getSurveyIdList().get(0));
+        Assert.assertEquals(1, reader.getCensusMethodIdList().size());
+        Assert.assertEquals(0, reader.getCensusMethodIdList().get(0).intValue());
+        
+        // manipulate the template:
+        GeometryBuilder gb = new GeometryBuilder();
+        ShapefileDataStore ds = reader.getDataStore();
+        
+        List<ShapefileFeature> featureList = new LinkedList<ShapefileFeature>();
+        
+        // set errors in the input here
+        {
+            Map<String, Object> featureAttr = new HashMap<String, Object>();
+            featureAttr.put(klu.getNotesKey(), "comments");
+            if (dateRequired) {
+                featureAttr.put(klu.getDateKey(), shpDateFormat.format(dateOnly));
+            }
+            if (timeRequired) {
+                featureAttr.put(klu.getTimeKey(), "14:30");
+            }
+            featureAttr.put(klu.getSpeciesNameKey(), "wootus maxus");
+            Point point = gb.createPoint(10, 5);
+            featureList.add(new ShapefileFeature(point, featureAttr));
+        }
+        
+        writeFeatures(ds, featureList);
+        
+        List<RecordEntry> entries = transformer.shapefileFeatureToRecordEntries(reader.getFeatureIterator(), reader.getSurveyIdList(), reader.getCensusMethodIdList());
+        
+        Assert.assertNotNull(entries);
+        Assert.assertEquals(1, entries.size());
+        
+        AttributeDictionaryFactory adf = new ShapefileAttributeDictionaryFactory();
+        AttributeParser parser = new ShapefileAttributeParser();
+        RecordDeserializer rds = new RecordDeserializer(klu, adf, parser);
+        List<RecordDeserializerResult> dsResult = rds.deserialize(currentUser, entries);
+        
+        Assert.assertNotNull(dsResult);
+        Assert.assertEquals(1, dsResult.size());
+        
+        for (Entry<String, String> entry : dsResult.get(0).getErrorMap().entrySet()) {
+            log.debug(entry.getKey() + " : " + entry.getValue());
+        }
+        
+        Assert.assertTrue("Should be an empty error map", dsResult.get(0).getErrorMap().isEmpty());
+        Assert.assertEquals(1, recordDAO.countAllRecords().intValue());
+        Record record = recordDAO.search(null, null, null).getList().get(0);
+        
+        Calendar expectedCal = Calendar.getInstance();
+        expectedCal.clear();
+        if (dateRequired) {
+            expectedCal.set(Calendar.YEAR, cal.get(Calendar.YEAR));
+            expectedCal.set(Calendar.MONTH, cal.get(Calendar.MONTH));
+            expectedCal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
+        }
+        if (timeRequired) {
+            expectedCal.set(Calendar.HOUR_OF_DAY, 14);
+            expectedCal.set(Calendar.MINUTE, 30);
+        }
+        
+        if (dateRequired || timeRequired) {
+            Assert.assertEquals("dates should be equal", expectedCal.getTime(), record.getWhen());
+        } else {
+            Assert.assertNull("date should be null", record.getWhen());
+        }
     }
     
     private Attribute createAttribute(String name, AttributeType type, boolean required) {

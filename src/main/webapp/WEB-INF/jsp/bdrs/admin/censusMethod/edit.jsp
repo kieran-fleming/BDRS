@@ -27,7 +27,7 @@
         <tr>
             <th>Description:</th>
             <td>
-            	<textarea rows="4" class="validate(maxlength(1023))" name="description"><c:out value="${censusMethod.description}"/></textarea>
+            	<textarea rows="4" class="validate(maxlength(1023))" name="description" title="This is added to the top of the form"><c:out value="${censusMethod.description}"/></textarea>
             </td>
         </tr>
         <tr>
@@ -74,10 +74,10 @@
         </tr>
     </table>
     
-    <h3>Census Method Attributes</h3>
-    
-    <div id="censusMethodAttributeContainer">
-	    <div class="textright buttonpanel">
+    <div id="censusMethodAttributeContainer" class="input_container">
+	    <h3>Census Method Attributes</h3>
+        <p>Add in attributes you want to attach to this Census Method through this form</p>
+        <div class="textright buttonpanel">
 	        <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#censusMethodAttributeContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
 	        <input type="button" class="form_action" value="Add Another Field" onclick="bdrs.attribute.addAttributeRow('#attribute_input_table', false, false)"/>
 	    </div>
@@ -103,10 +103,10 @@
 	        </tbody>
 	    </table>	
     </div>
-
-    <h3>Sub Census Methods</h3>
-
-    <div id="subCensusMethodContainer">
+    <br>
+    <div id="subCensusMethodContainer" class="input_container">
+        <h3>Sub Census Methods</h3>
+        <p>Here you can actually attach other Census Methods to this one.</p>
         <div class="textright buttonpanel">
             <a id="maximiseLink" class="text-left" href="javascript:bdrs.util.maximise('#maximiseLink', '#subCensusMethodContainer', 'Enlarge Table', 'Shrink Table')">Enlarge Table</a>
             <input id="addCensusMethodBtn" class="form_action" type="button" value="Add Census Method" />

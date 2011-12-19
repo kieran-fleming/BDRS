@@ -24,12 +24,12 @@ bdrs.embed.widgetBuilder = {
 		this.cssStylesSelector = args.cssStylesSelector;
 		this.embedSrcSelector = args.embedSrcSelector;
 		this.previewSelector = args.previewSelector;
+		this.previewButtonSelector = args.previewButtonSelector;
 		this.domain = args.domain;
 		this.port = args.port;
 		
 		jQuery(this.featureSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.changeFeature, this));
-		jQuery(this.widgetParamSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.updatePreview, this));
-        jQuery(this.cssStylesSelector).bind("change", null, jQuery.proxy(bdrs.embed.widgetBuilder.updatePreview, this));
+		jQuery(this.previewButtonSelector).bind("click", null, jQuery.proxy(bdrs.embed.widgetBuilder.updatePreview, this));
 		
 		jQuery(this.embedSrcSelector).click(function(event) {
             event.target.focus();
@@ -44,8 +44,6 @@ bdrs.embed.widgetBuilder = {
 		jQuery(this.customSectionSelector).hide();
 		var feature = featureElem.val();
 		jQuery(this.widgetMap[feature]).show();
-		
-		this.updatePreview(event);
 	},
 	
 	updatePreview: function(event) {
@@ -61,7 +59,7 @@ bdrs.embed.widgetBuilder = {
             domain: this.domain,
             port: this.port,
             contextPath: bdrs.contextPath,
-            feature: featureElem.val(),
+            feature: featureElem.val()
         };
 		
 		for (var i=0; i<widgetParams.length; ++i) {
@@ -69,7 +67,8 @@ bdrs.embed.widgetBuilder = {
 			embedParams[param.attr("name")] = param.val();
 		}
 		
-        for(var i=0; i<cssStyles.length; i++) {
+        // reusing 'i' for this loop
+        for(i=0; i<cssStyles.length; i++) {
             var style = jQuery(cssStyles[i]);
             embedParams[style.attr("name")] = style.val();
         }
@@ -93,6 +92,10 @@ bdrs.embed.widgetBuilder = {
         previewElem.empty();
         previewElem.append(targetSpan);
         previewElem.append(embedScript);
+		
+		// Add a black border around the preview so the user can see the
+		// extent of their widget
+		jQuery('#widget_target').children('iframe').css("border", "solid 1px grey");
     },
 	
     
