@@ -374,7 +374,7 @@ exports.save = function(id, data) {
         data.indicatorSpecies, data.indicatorSpecies_server_ids.species);
 
     bdrs.mobile.survey._saveLocations(survey, data.locations);
-    bdrs.mobile.survey._saveRecordProperties(survey, data.recordProperties);
+    bdrs.mobile.survey._saveRecordProperties(survey, data);
     
     // save survey attributes and options in survey
     var a;
@@ -511,75 +511,77 @@ exports._saveAttribute = function(flatAttribute) {
  * @param survey in which we want to store the attributes.
  * @param recordProperties array of dwc fields.
  */
-exports._saveRecordProperties = function(survey, recordProperties) {
+exports._saveRecordProperties = function(survey, data) {
 	var recordProperty;
+	var recordProperties = data.recordProperties;
 	var attribute;
     var attributeType;
     var attributeOptions;
- 
-    for (var i=0; i<recordProperties.length; i++) {
-    	recordProperty = recordProperties[i];
-    	
-    	switch (recordProperty.name) {
-	    	case "Number":
-	    	case "AccuracyInMeters":
-	    		attributeType = bdrs.mobile.attribute.type.INTEGER_WITH_RANGE;
-	    		attributeOptions = [0,1000];
-	    		break;
-	    	case "Species":
-	    		attributeType = bdrs.mobile.attribute.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE;
-	    		attributeOptions = [];
-	    		break;
-	    	case "Location":
-	    		attributeType = bdrs.mobile.attribute.type.STRING_WITH_VALID_VALUES;
-	    		attributeOptions = [];
-	    		//attributeOptions = [];??????????
-	    		//TODO: remove exports._saveLocations and store them as attributeOptions?
-	    		break;
-	    	case "Point":
-	    		attributeType = bdrs.mobile.attribute.type.LATITUDE_LONGITUDE;
-	    		attributeOptions = [];
-	    		break;
-	    	case "When":
-	    		attributeType = bdrs.mobile.attribute.type.DATE;
-	    		attributeOptions = [];
-	    		break;
-	    	case "Time":
-	    		attributeType = bdrs.mobile.attribute.type.TIME;
-	    		attributeOptions = [];
-	    		break;
-	    	case "Notes":
-	    		attributeType = bdrs.mobile.attribute.type.TEXT;
-	    		attributeOptions = [];
-	    		break;
-	    	default:
-	    		attributeType = bdrs.mobile.attribute.type.STRING;
-	    		attributeOptions = [];
-    	}
-    	
-    	attribute = new Attribute({
-    		 server_id: null,
-             weight: recordProperty.weight,
-             typeCode: attributeType,
-             required: recordProperty.required,
-             name: recordProperty.name,
-             description: recordProperty.description,
-             tag: false,
-             scope: recordProperty.scope,
-             isDWC: true
-    	});
-    	bdrs.mobile.Debug("Number of attributeOptions = " + attributeOptions.length);
-    	var option;
-    	for(var j=0; j<attributeOptions.length; j++) {
-    		bdrs.mobile.Debug("Going to create a new option wit value " + attributeOptions[j] + " for attribute " + attribute.name());
-    		attribute.options().add(new AttributeOption({
-    			server_id: null,
-    			weight: null,
-    			value: attributeOptions[j]
-    		}));
-    	}
-    	survey.attributes().add(attribute);
-    }
+	
+	if (recordProperties !== null) {
+	    for (var i=0; i<recordProperties.length; i++) {
+	    	recordProperty = recordProperties[i];
+	    	
+	    	switch (recordProperty.name) {
+	    		case "Number":
+		    	case "AccuracyInMeters":
+		    		attributeType = bdrs.mobile.attribute.type.INTEGER_WITH_RANGE;
+		    		attributeOptions = ['0','1000000'];
+		    		break;
+		    	case "Species":
+		    		attributeType = bdrs.mobile.attribute.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE;
+		    		attributeOptions = [];
+		    		break;
+		    	case "Location":
+		    		attributeType = bdrs.mobile.attribute.type.STRING_WITH_VALID_VALUES;
+		    		attributeOptions = [];
+		    		break;
+		    	case "Point":
+		    		attributeType = bdrs.mobile.attribute.type.LATITUDE_LONGITUDE;
+		    		attributeOptions = [];
+		    		break;
+		    	case "When":
+		    		attributeType = bdrs.mobile.attribute.type.DATE;
+		    		attributeOptions = [];
+		    		break;
+		    	case "Time":
+		    		attributeType = bdrs.mobile.attribute.type.TIME;
+		    		attributeOptions = [];
+		    		break;
+		    	case "Notes":
+		    		attributeType = bdrs.mobile.attribute.type.TEXT;
+		    		attributeOptions = [];
+		    		break;
+		    	default:
+		    		attributeType = bdrs.mobile.attribute.type.STRING;
+		    		attributeOptions = [];
+	    	}
+	    	
+	    	attribute = new Attribute({
+	    		 server_id: null,
+	             weight: recordProperty.weight,
+	             typeCode: attributeType,
+	             required: recordProperty.required,
+	             name: recordProperty.name,
+	             description: recordProperty.description,
+	             tag: false,
+	             scope: recordProperty.scope,
+	             isDWC: true
+	    	});
+	    	bdrs.mobile.Debug("Number of attributeOptions = " + attributeOptions.length);
+	    	var option;
+	    	for(var j=0; j<attributeOptions.length; j++) {
+	    		bdrs.mobile.Debug("Going to create a new option wit value " + attributeOptions[j] + " for attribute " + attribute.name());
+	    		attribute.options().add(new AttributeOption({
+	    			server_id: null,
+	    			weight: null,
+	    			value: attributeOptions[j]
+	    		}));
+	    	}
+	    	survey.attributes().add(attribute);
+	    }
+	}
+
 }
 
 /**

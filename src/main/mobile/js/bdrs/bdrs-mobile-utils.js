@@ -229,7 +229,11 @@ bdrs.mobile.getCurrentDate = function() {
 };
 
 bdrs.mobile.formatDate = function(date) {
-    return bdrs.mobile.zerofill(date.getDate(), 0) + " " + bdrs.mobile.months[date.getMonth()] + " " + date.getFullYear();
+	if (date === null || date === undefined) {
+		return '';
+	} else {
+		return bdrs.mobile.zerofill(date.getDate(), 0) + " " + bdrs.mobile.months[date.getMonth()] + " " + date.getFullYear();
+	}
 };
 
 bdrs.mobile.parseDate = function(dateStr) {
@@ -376,8 +380,7 @@ bdrs.mobile.record.util.getDescriptor = function(record) {
     } else {
         descriptor.title = record.latitude() + ', ' + record.longitude();
     }
-
-    descriptor.description = bdrs.mobile.formatDate(record.when());
+    	descriptor.description = bdrs.mobile.formatDate(record.when());
     return descriptor;
 };
 

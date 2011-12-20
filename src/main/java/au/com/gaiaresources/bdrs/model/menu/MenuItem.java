@@ -161,9 +161,9 @@ public class MenuItem implements Comparable<MenuItem>, Serializable {
             return -1;
         } else if (StringUtils.nullOrEmpty(thatName)) {
             return 1;
-        } else if ("BulkData".equals(thisName)) {
+        } else if ("Bulk Data".equals(thisName)) {
             return 1;
-        } else if ("BulkData".equals(thatName)) {
+        } else if ("Bulk Data".equals(thatName)) {
             return -1;
         } else {
             return thisName.compareTo(thatName);

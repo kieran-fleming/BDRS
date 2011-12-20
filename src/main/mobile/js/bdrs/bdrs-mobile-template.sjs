@@ -35,7 +35,7 @@ exports.render = function (templateName, model, selector) {
             jQuery.tmpl(templateName, model).appendTo(selector);
         });
     } else {
-        jQuery.tmpl(templateName, model).appendTo(selector);    
+        jQuery.tmpl(templateName, model).appendTo(selector);
     }
 };
 
@@ -51,7 +51,7 @@ exports.renderCallback = function (templateName, model, selector, callback) {
         Template.findBy('name', templateName , function(template) {
                 jQuery.template(templateName, (jQuery(template).data('template')));
                 jQuery.tmpl(templateName, model).appendTo(selector);
-                callback();
+    	callback();
             });
     } else {
         jQuery.tmpl(templateName, model).appendTo(selector);    
@@ -75,7 +75,7 @@ exports.renderSync = function (templateName, model, selector, queue) {
             });
     } else {
         jQuery.tmpl(templateName, model).appendTo(selector);    
-        queue.next();
+	queue.next();
     }
 };
 
@@ -128,25 +128,25 @@ exports.initTemplates = function() {
     exports.checkOrAddTemplate('methodListItem', '<li id="${id}" class="method-${id}"><h3>${title}</h3><p>${description}</p></li>', 0);
     exports.checkOrAddTemplate('censusTypeCheckbox', '<input type="radio" name="site-type" id="site-type-${id}" value="${name}"/><label for="site-type-${id}">${name}</label>', 0);
     exports.checkOrAddTemplate('recordSpeciesInput', '<div class="speciesEntryField" data-role="fieldcontain"><label for="record-species">Species</label><input class="validate {{if required}}required{{/if}}" type="text" name="record-species" id="record-species"/></div>', 4);
-    //exports.checkOrAddTemplate('recordSpeciesInput', '<div class="speciesEntryField" data-role="fieldcontain"><label for="record-species">Species</label><input class="validate required" type="text" name="record-species" id="record-species"/></div>', 3);
-    exports.checkOrAddTemplate('recordNumberSlider', '<div data-role="fieldcontain" class="numberSlider"><label for="record-number" id="record-number-label">Number</label><input class="validate {{if required}}required{{/if}}" type="number" data-type="range" name="record-number" id="record-number" value="1" min="0" max="50"></div>', 6);
     
-    exports.checkOrAddTemplate('attributeValueIR', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate integerRange {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}" range="${minmax}"/></div>', 0);
-    exports.checkOrAddTemplate('attributeValueIN', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate integer {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
+    exports.checkOrAddTemplate('attributeValueIR', '<div class="attributeValue field_IN" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate integerRange {{if required}}required{{/if}} " type="number" name="record-attr-${id}" id="record-attr-${id}" value="${value}" range="${minmax}"/><div id="count-record-attr-${id}" data-role="controlgroup" data-type="horizontal"><button addval="-5">-5</button><button addval="-1">-</button><button addval="0">0</button><button addval="+1">+</button><button addval="+5">+5</button></div></div>', 0);
+    exports.checkOrAddTemplate('attributeValueIN', '<div class="attributeValue field_IN" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate integer {{if required}}required{{/if}} " type="number" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/><div id="count-record-attr-${id}" data-role="controlgroup" data-type="horizontal"><button addval="-5">-5</button><button addval="-1">-</button><button addval="0">0</button><button addval="+1">+</button><button addval="+5">+5</button></div></div>', 0);
     exports.checkOrAddTemplate('attributeValueDE', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate decimal {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueDA', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate date {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueST', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate {{if required}}required{{/if}}" type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueSA', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate {{if required}}required{{/if}}" type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
+    exports.checkOrAddTemplate('attributeValueSD', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate {{if required}}required{{/if}}" type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueTA', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><textarea class="validate {{if required}}required{{/if}}" name="record-attr-${id}" id="record-attr-${id}">${value}</textarea></div>', 0);
     exports.checkOrAddTemplate('attributeValueBC-btn', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate regExp {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}" regexp="${regExp}"/><button id="record-btn-${id}" data-inline="true">Scan</button></div>', 0);
     exports.checkOrAddTemplate('attributeValueBC', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate regExp {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}" regexp="${regExp}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueRE-btn', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate regExp {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}" regexp="${regExp}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueRE', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate regExp {{if required}}required{{/if}} " type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}" regexp="${regExp}"/></div>', 0);
-    exports.checkOrAddTemplate('attributeValueSV', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><select class="validate {{if required}}required{{/if}}" name="record-attr-${id}" id="record-attr-${id}" data-native-menu="false">{{html options}}</select></div>', 0);
+    exports.checkOrAddTemplate('attributeValueSV', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><select class="validate {{if required}}required{{/if}}" name="record-attr-${id}" id="record-attr-${id}" data-native-menu="false">{{if !required}}<option></option>{{/if}}{{html options}}</select></div>', 0);
     exports.checkOrAddTemplate('attributeValueSV-option', '<option value="${value}" {{if selected}}selected="selected"{{/if}}>${text}</option>', 0);
     exports.checkOrAddTemplate('attributeValueFI', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate {{if required}}required{{/if}}" type="file" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueTM', '<div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}">${description}{{if required}}&nbsp;*{{/if}}</label><input class="validate {{if required}}required{{/if}}" type="text" name="record-attr-${id}" id="record-attr-${id}" value="${value}"/></div>', 0);
     exports.checkOrAddTemplate('attributeValueSC', '<div class="attributeValue" data-role="fieldcontain"><fieldset data-role="controlgroup"><legend>${description}{{if required}}&nbsp;*{{/if}}</legend><input type="checkbox" name="record-attr-${id}" id="record-attr-${id}" value="true" {{if value}}checked="checked"{{/if}} /><label for="record-attr-${id}">${description}</label></fieldset></div>', 0);
+    exports.checkOrAddTemplate('attributeValueLL', '<div data-role="collapsible" data-theme="b" data-content-theme="b" class="temp-content-box-styles"><h3>${description}</h3><div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}-lat">Latitude{{if required}}&nbsp;*{{/if}}</label><input type="number" name="record-attr-${id}-lat" id="record-attr-${id}-lat" class="validate decimal latitude {{if required}}required{{/if}} "/></div><div class="attributeValue" data-role="fieldcontain"><label for="record-attr-${id}-lon">Longitude{{if required}}&nbsp;*{{/if}}</label><input type="number" name="record-attr-${id}-lon" id="record-attr-${id}-lon" class="validate decimal longitude {{if required}}required{{/if}} "/></div> <div data-inline="true" class="center"><button data-inline="true" id="record-gps">GPS Location</button></div></div>', 0);
     
     exports.checkOrAddTemplate('attributeValueMC', '<div class="attributeValue" data-role="fieldcontain"><fieldset data-role="controlgroup"><legend>${description}{{if required}}&nbsp;*{{/if}}</legend>{{html options}}</fieldset></div>', 0);
     exports.checkOrAddTemplate('attributeValueMC-option', '<input type="checkbox" name="record-attr-${id}-${index}" id="record-attr-${id}-${index}" class="validate {{if required}}multiCheckboxRequired{{/if}}" value="${optname}" {{if checked}}checked="checked"{{/if}} /><label for="record-attr-${id}-${index}">${optname}</label>', 0);

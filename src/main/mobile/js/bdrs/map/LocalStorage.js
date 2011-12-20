@@ -33,7 +33,6 @@ function PopulateLocal(minLat, minLon, maxLat, maxLon, bottomZoom, topZoom) {
 	if (i > 400) {
 		alert("Local Storage will not support that many tiles, please select a smaller area")
 	} else {
-		//alert("Saving image data to local storage, Please wait...");
 		setTimeout('saveArray(srcArray)', 2000);
 	}
 }

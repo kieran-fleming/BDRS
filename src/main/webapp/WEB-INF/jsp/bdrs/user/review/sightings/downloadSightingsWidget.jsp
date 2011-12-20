@@ -27,7 +27,7 @@
                 </c:if>
             />
             <label for="shp">
-                Shapefile (SHP) &mdash; Can be used in <a href="http://en.wikipedia.org/wiki/Comparison_of_geographic_information_systems_software" target="_target">GIS applications</a>.
+                Shapefile (SHP) &mdash; Can be used in <a href="http://www.qgis.org" target="_target">GIS applications, such as QGIS</a>.
             </label> 
         </div>
         <div>
@@ -37,7 +37,7 @@
                 </c:if>
             />
             <label for="xls">
-                Spreadsheet (XLS) &mdash; Can be used for <a href="http://www.libreoffice.org/features/calc/">Spreadsheet Applications</a>
+                Spreadsheet (XLS) &mdash; Can be used for <a href="http://www.libreoffice.org" target="_target">Spreadsheet Applications</a>
             </label> 
         </div>
     </fieldset>

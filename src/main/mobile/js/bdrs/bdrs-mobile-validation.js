@@ -39,6 +39,9 @@ bdrs.mobile.validation.IntegerValidator = function() {
     return this;
 };
 
+/**
+ * Returns true if within range or empty
+ */
 bdrs.mobile.validation.IntegerWithRangeValidator = function() {
 	
 	this.isValid = function(elem) {
@@ -55,13 +58,46 @@ bdrs.mobile.validation.IntegerWithRangeValidator = function() {
 		
 	    var minRange = parseInt(rangeAttributes[0]);
 	    var maxRange = parseInt(rangeAttributes[1]);
-	    var theValue = parseInt(elem.val());
+	    var stringValue = elem.val();
+	    var theValue;
+	    if (stringValue === "") {
+	    	return true;
+	    } else if (isNaN(parseInt(stringValue))) {
+	    	elem.val("");
+	    	return true;
+	    } else {
+	    	 theValue = parseInt(elem.val());
+	    	 return minRange <= theValue && theValue <= maxRange ? true : false;
+	    }
+
+	};
+	
+};
+
+bdrs.mobile.validation.DecimalWithRangeValidator = function() {
+	
+	this.isValid = function(elem) {
+		
+		var rangeAttributes = elem.attr('range').split(' ');
+		
+		this.getHeader = function() {
+			return 'Invalid';
+		};
+		    
+	    this.getMessage = function() {
+	        return '${label} must be a decimal in the range of ' + rangeAttributes[0] + ' and ' + rangeAttributes[1];  
+	    };
+		
+	    var minRange = parseFloat(rangeAttributes[0]);
+	    var maxRange = parseFloat(rangeAttributes[1]);
+	    var theValue = parseFloat(elem.val());
 	    
 		return minRange <= theValue && theValue <= maxRange ? true : false;
 		
 	};
 	
 };
+
 
 bdrs.mobile.validation.DecimalValidator = function() {
 
@@ -120,12 +156,22 @@ bdrs.mobile.validation.DateValidator = function() {
     return this;
 };
 
+/**
+ * Returns true if [-90,90] or if empty
+ */
 bdrs.mobile.validation.LatitudeValidator = function() {
 
     this.isValid = function(elem) {
         var val = elem.val();
-        var value = parseFloat(val);
-        return value !== NaN && value >= -90 && value <= 90;
+        if (val === "") {
+        	return true;
+        } else if (isNaN(val)) {
+        	elem.val("");
+        	return true;
+        } else {
+            var value = parseFloat(val);
+	    	return value !== NaN && value >= -90 && value <= 90;
+        }
     };
     
     this.getHeader = function() {
@@ -139,12 +185,22 @@ bdrs.mobile.validation.LatitudeValidator = function() {
     return this;
 };
 
+/**
+ * Returns true if [-180,180;] or if empty
+ */
 bdrs.mobile.validation.LongitudeValidator = function() {
 
     this.isValid = function(elem) {
         var val = elem.val();
-        var value = parseFloat(val);
-        return value !== NaN && value >= -180 && value <= 180;
+        if (val === "") {
+        	return true;
+        } else if (isNaN(val)) {
+        	elem.val("");
+        	return true;
+        } else {
+            var value = parseFloat(val);
+	    	return value !== NaN && value >= -180 && value <= 180;
+	    }
     };
     
     this.getHeader = function() {

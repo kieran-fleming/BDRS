@@ -47,6 +47,7 @@ exports._get_modified_records = function() {
         query = query.prefetch('censusMethod');
         query = query.prefetch('survey');
         query = query.prefetch('species');
+        query = query.prefetch('location');
 
         query = query.list(resume);
     };
@@ -75,6 +76,7 @@ exports.synchronize  = function() {
     };
     
     var uploadData = [];
+
     for(var i=0; i<modifiedRecords.length; i++) {
         var rec = modifiedRecords[i];
         recLookup[rec.id] = rec;
@@ -85,6 +87,10 @@ exports.synchronize  = function() {
         recJSON.server_id = rec.server_id();
         recJSON.latitude = rec.latitude();
         recJSON.longitude = rec.longitude();
+        var recordLocation = rec.location();
+        if (recordLocation !== null  && recordLocation !== undefined) {
+        	recJSON.location = recordLocation.server_id();
+        }
         recJSON.accuracy = rec.accuracy();
         recJSON.when = bdrs.mobile.syncService._dateToJSON(rec.when(), rec.time());
         recJSON.lastDate = bdrs.mobile.syncService._dateToJSON(rec.lastDate(), rec.lastTime());
@@ -119,9 +125,11 @@ exports.synchronize  = function() {
             recAttrLookup[recAttr.id] = recAttr;
             
             var attr = recAttr.attribute();
-
+            if(attr.isDWC()){
+            	//This is not the attributevalue you are looking for
+            	continue;
+            }
             var recAttrJSON = {};
-            
             recAttrJSON.id = recAttr.id;
             recAttrJSON.server_id =  recAttr.server_id();
             recAttrJSON.attribute_id = attr.server_id();

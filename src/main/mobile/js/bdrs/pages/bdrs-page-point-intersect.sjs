@@ -43,22 +43,27 @@ exports.Create =  function() {
         jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
     });
     
-    jQuery('#pi-gps').click(function (event) {
+    jQuery('#record-gps').click(function (event) {
 		var position;
 		waitfor(position) {
 			bdrs.mobile.geolocation.getCurrentPosition(resume);
 		}
 		if (position !== undefined) {
-			jQuery('#pi-latitude').val(bdrs.mobile.roundnumber(position.coords.latitude, 5));
-        	jQuery('#pi-longitude').val(bdrs.mobile.roundnumber(position.coords.longitude, 5));
-			jQuery('#pi-accuracy').val(bdrs.mobile.roundnumber(position.coords.accuracy, 5));
+			var survey = bdrs.mobile.survey.getDefault();
+			var spatialAttributes;
+			waitfor(spatialAttributes) {
+				survey.attributes().filter('name','=','Point').or(new persistence.PropertyFilter('name','=','AccuracyInMeters')).limit(2).list(resume);
+			}
+			if(spatialAttributes.length === 2) {
+				jQuery('#record-attr-' + spatialAttributes[0].id +'-lat').val(bdrs.mobile.roundnumber(position.coords.latitude, 5));
+	        	jQuery('#record-attr-' + spatialAttributes[0].id +'-lon').val(bdrs.mobile.roundnumber(position.coords.longitude, 5));
+				jQuery('#record-attr-' + spatialAttributes[1].id).val(bdrs.mobile.roundnumber(position.coords.accuracy, 5));
+			}
 		} else {
 			bdrs.mobile.Debug('Could not get GPS loc');
 		}
 	});
 	
-	jQuery('#pi-when').datepicker({maxDate: new Date()});
-	jQuery('#pi-time').timepicker();
 }
 
 /**
@@ -66,10 +71,8 @@ exports.Create =  function() {
  */
 exports.Show = function() {
 	
-	var setting;
-	waitfor(setting) {
-		Settings.findBy('key', 'current-survey-id' , resume);
-	}
+	var currentSurvey = bdrs.mobile.survey.getDefault();
+	var attributeValueMap = {};
 	
     //////////////////////////////////////////////////////
     // Get the number of points in this transect
@@ -88,29 +91,21 @@ exports.Show = function() {
                 filter('censusMethod','=',exports._point_data.substrateMethod.id).
                 filter('deleted','=',false).
                 count(resume);
-        }
-        
-    	// Setup default form values...
-       	bdrs.mobile.Debug('Default Values');
-		var when = bdrs.mobile.getCurrentDate();
-		jQuery('#pi-when').val(when);
-		var time = bdrs.mobile.getCurrentTime(); 
-		jQuery('#pi-time').val(time);
-        jQuery('#pi-notes').val('');        
+        }      
     } else {
-        // Updating a record
+        // EDIT record form
+        // get record and get all the attribute values
         count = '';
         var record = exports._point_data.substrateRecord;
-        
-		var when = record.when() === null ? bdrs.mobile.getCurrentDate() : bdrs.mobile.formatDate(record.when());
-		jQuery('#pi-when').val(when);
-		bdrs.mobile.Debug('Record time is : ' + record.time());
-    	var time = record.time().length === 0 ? bdrs.mobile.getCurrentTime() : record.time(); 
-		jQuery('#pi-time').val(time);
-	
-		bdrs.mobile.Debug('Adding values for notes and number');
-		jQuery('#pi-notes').val(record.notes());
-    	jQuery('#pi-number').val(record.number());   
+        var attributeValues;
+        waitfor(attributeValues) {
+            record.attributeValues().prefetch('attribute').list(resume);
+        }
+        var recAttr;
+        for(var i=0; i<attributeValues.length; i++) {
+            recAttr = attributeValues[i];
+            attributeValueMap[recAttr.attribute().id] = recAttr;
+        }
     }
     
     jQuery('#point-intersect-sibling-count').text(count);
@@ -120,7 +115,6 @@ exports.Show = function() {
     //////////////////////////////////////////////////////
 	// TODO this can be cleaned up more.
 	// Map of record attributes where { attributeID: attributeValueObj }
-	var attributeValueMap = {}
     var attributeValues;
     waitfor(attributeValues) {
         exports._point_data.substrateRecord.attributeValues().prefetch('attribute').list(resume);
@@ -246,6 +240,17 @@ exports.Show = function() {
     
     bdrs.mobile.restyle('#point-intersect');
     
+    
+    if (currentSurvey !== null) {
+        jQuery.mobile.pageLoading(false);
+        exports._insertSurveyAttributes(record, currentSurvey, attributeValueMap);
+        bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
+        jQuery.mobile.pageLoading(true);
+    } else {
+        bdrs.mobile.Error('Current Survey ID not known');
+        return;
+    }
+    
     // This is down here because it crashes out on desktop machines with GPS @TODO
 	var latCoord;
 	var lonCoord;
@@ -265,9 +270,34 @@ exports.Show = function() {
 	    lonCoord = record.longitude();
 		accuracy = record.accuracy();
 	}
-    jQuery('#pi-latitude').val(latCoord);
-    jQuery('#pi-longitude').val(lonCoord);
-	jQuery('#pi-accuracy').val(accuracy);
+	
+	 var dwcAttributes;
+	    waitfor(dwcAttributes) {
+	    	currentSurvey.attributes().filter('isDWC', '=', true).list(resume);
+	    }
+	    
+	    for (var i=0; i<dwcAttributes.length; i++) {
+	    	var attribute = dwcAttributes[i]; 
+	    	switch(attribute.name()) {
+		    	case "Point" :
+		    	    	jQuery('#record-attr-' + attribute.id + '-lat').val(latCoord);
+		    	        jQuery('#record-attr-' + attribute.id + '-lon').val(lonCoord);
+		    		break;
+		    	case "AccuracyInMeters" :
+		    		jQuery('#record-attr-' + attribute.id).val(accuracy);
+		    		break;
+		    	case "When" :
+		    		if(isNewRecord) {
+		    	    	jQuery('#record-attr-' + attribute.id).datepicker("setDate", new Date());
+		    	    }
+		    		break;
+		    	case "Time" :
+		    	    if(isNewRecord) {
+		    	    	jQuery('#record-attr-' + attribute.id).val(bdrs.mobile.getCurrentTime());
+		    	    }
+		    		break;
+	    	}
+	    }
 }
 	
 /**
@@ -398,6 +428,7 @@ exports._insertObservationRow = function(obsRecord, species) {
     waitfor() {
         bdrs.template.renderCallback('recordPointIntersect-species', speciesTmplParams, '#block-a-'+rowTmplParams.id, resume);
     }
+    
     jQuery('#pi-taxonomy-species-'+speciesTmplParams.id).autocomplete({
 	    source: function(request, response) {
 	    	var currentSurvey = bdrs.mobile.survey.getDefault();
@@ -435,6 +466,32 @@ exports._insertObservationRow = function(obsRecord, species) {
     delButton.click(exports._delete_observation);
 };
 
+/**
+ * Insert survey attributes into the record form.
+ * 
+ * @param record The object that backs the current form.
+ * @param survey The survey containing the attributes to be added to the form.
+ * @param attributeValueMap a map of record attributes keyed against the 
+ * attribute ID. That is, { attributeID: attributeValueObj }.
+ */
+exports._insertSurveyAttributes = function(record, survey, attributeValueMap) {	
+    var attributes;
+    waitfor(attributes) {
+        survey.attributes().order('weight', true).list(resume);
+    }
+    // Clear old attributes and hide the collapsible.
+    var surveyAttrsWrapperElem = jQuery('#point-intersect-survey-attributes');
+    surveyAttrsWrapperElem.empty();
+    // Insert record attributes
+    var recAttrFormField;
+    var recPropertyAttrFormField;
+    for (var i = 0; i < attributes.length; i++) {
+    	var attribute = attributes[i]; 
+        recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attribute);
+        recAttrFormField.toFormField('#point-intersect-survey-attributes', attributeValueMap[attribute.id], record);
+    }
+};
+
 exports._getCensusMethodAttribute = function(cmethod, attrName, attrTypeCode) {
     var methodAttributes;
     waitfor(methodAttributes) {
@@ -455,30 +512,112 @@ exports._savePoint = function() {
     jQuery.mobile.pageLoading(false);
 	bdrs.mobile.Debug ('Save Point Called');
 	
-	// Get the survey
+	var attributeValueMap = {};
 	var survey = bdrs.mobile.survey.getDefault();
-    
-    var lat = jQuery('#pi-latitude').val();
-    var lon = jQuery('#pi-longitude').val();
-	var accuracy = jQuery('#pi-accuracy').val();
-    var when = bdrs.mobile.parseDate(jQuery('#pi-when').val());
-    var time = jQuery('#pi-time').val();    
-    var notes = jQuery('#pi-notes').val();
     
 	// Save the substrate first
 	var substrateRec = exports._point_data.substrateRecord;
 	substrateRec.parent(exports._point_data.parentRecord);
 	substrateRec.censusMethod(exports._point_data.substrateMethod);
 	
-	var now = new Date();
+	 //GET THE DWC attributes from the survey
+    //USE the id from the DWC species attribute to retrieve the value. E.g.#record-attr-56724547867
+    var DWC_attributes;
+    waitfor(DWC_attributes) {
+    	survey.attributes().filter("isDWC", '=', true).order('weight', true).list(resume);
+    }
+    var DWC_attributesMap = {};
+    var DWC_attribute;
+    for (var i=0; i<DWC_attributes.length; i++) {
+    	DWC_attribute = DWC_attributes[i];
+    	DWC_attributesMap[DWC_attribute.name()] = DWC_attribute; 
+    }
+    
+    // Dwc values that exist in the form will be stored in the record
+    if(DWC_attributesMap['Notes'] !== undefined) {
+    	var notesElem = jQuery('#record-attr-' + DWC_attributesMap['Notes'].id);
+    	if (notesElem !== null) {
+    		substrateRec.notes(jQuery(notesElem).val());
+    	}
+    }
+    if(DWC_attributesMap['Number'] !== undefined) {
+    	var numberElem = jQuery('#record-attr-' + DWC_attributesMap['Number'].id);
+    	if (numberElem !== null) {
+    		substrateRec.number(jQuery(numberElem).val());
+    	}
+    }
+    
+    var lat;
+    var lon;
+    if(DWC_attributesMap['Point'] !== undefined) {
+    	var latElem = jQuery('#record-attr-' + DWC_attributesMap['Point'].id + '-lat');
+    	var lonElem = jQuery('#record-attr-' + DWC_attributesMap['Point'].id + '-lon');
+    	if (latElem !== null) {
+    		lat = jQuery(latElem).val();
+    		substrateRec.latitude(lat);
+    	}
+    	if (lonElem !== null) {
+    		lon = jQuery(lonElem).val();
+    		substrateRec.longitude(lon);
+    	}
+    }
+    if(DWC_attributesMap['When'] !== undefined) {
+    	var whenElem = jQuery('#record-attr-' + DWC_attributesMap['When'].id);
+    	if (whenElem !== null) {
+    		var when = bdrs.mobile.parseDate(jQuery(whenElem).val());
+    		substrateRec.when(when);
+    	}
+    }
+    if(DWC_attributesMap['Time'] !== undefined) {
+    	var timeElem = jQuery('#record-attr-' + DWC_attributesMap['Time'].id);
+    	if (timeElem !== null) {
+    	    var time = jQuery(timeElem).val(); 
+    	    substrateRec.time(time);
+    	}
+    }
+    var accuracy;
+    if(DWC_attributesMap['AccuracyInMeters'] !== undefined) {
+    	var accuracyElem = jQuery('#record-attr-' + DWC_attributesMap['AccuracyInMeters'].id);
+    	if (accuracyElem !== null) {
+    	    accuracy = jQuery(accuracyElem).val(); 
+    	    substrateRec.accuracy(accuracy);
+    	}
+    }
+    var now = new Date();
+    substrateRec.modifiedAt(now);
+    
+    if(DWC_attributesMap['Location'] !== undefined) {
+    	var locationElem = jQuery('#record-attr-' + DWC_attributesMap['Location'].id);
+    	if (locationElem !== null) {
+    	    var serveridLatLon = jQuery(locationElem + ":selected").val();
+    	    var serveridLatLonArray = serveridLatLon.split(":");
+    	    var locationServerId = serveridLatLonArray[0];
+    	    if (locationServerId !== undefined && locationServerId !== null && locationServerId !== "") {
+    	    	var location;
+    	    	waitfor(location) {
+    	    		Location.findBy('server_id', locationServerId, resume);
+    	    	}
+	    		if(location !== null) {
+	    			location.records().add(substrateRec)
+	    		}
+    	    }
+    	}
+    }
+
 	substrateRec.survey(survey);
-	substrateRec.modifiedAt(now);
-	substrateRec.when(when);
-	substrateRec.time(time);
-	substrateRec.latitude(lat);
-	substrateRec.longitude(lon);
-	substrateRec.accuracy(accuracy);
-	substrateRec.notes(notes);
+	
+	 // Survey Attributes
+    var attributes;
+    waitfor(attributes) {
+        survey.attributes().order('weight', true).list(resume);
+    }
+
+    var recAttrFormField;
+    for (var i = 0; i < attributes.length; i++) {
+        recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attributes[i]);
+        recAttrFormField.fromFormField('#point-intersect-survey-attributes', substrateRec.attributeValues(), attributeValueMap[attributes[i].id]);   
+    }
+	
 	
 	var substrateRecAttr = exports._point_data.substrateRecAttr;
 	substrateRec.attributeValues().add(substrateRecAttr);

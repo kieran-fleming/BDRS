@@ -2,7 +2,11 @@
  * Event handlers for the record page. 
  */
 exports.Create =  function() {
-}
+};
+
+/*exports.BeforeShow = function() {
+	exports.Show();
+};*/
 	
 exports.Show = function() {
 	bdrs.mobile.Debug('site show');
@@ -81,9 +85,9 @@ exports.Show = function() {
 	jQuery('.bdrs-page-site #site-type-' + bdrs.mobile.getParameter('censusType')).attr('checked', true).checkboxradio('refresh');
 	
 	jQuery('.bdrs-page-site .methodList').listview("refresh");
-}
+};
 	
 exports.Hide = function() {
 	jQuery('.bdrs-page-site .censusControlGroup').empty();
 	jQuery('.bdrs-page-site .methodList').empty();
-}
+};

@@ -74,4 +74,11 @@ exports.start = function() {
     document.addEventListener("menubutton", function() {
         window.plugins.bdrs.exit();
     }, false);
+    document.addEventListener("pause", function() {
+        bdrs.mobile.geolocation.disable();
+    }, false);
+    document.addEventListener("resume", function() {
+    	bdrs.mobile.geolocation.enable();
+    }, false);
+    //jQuery.mobile.changePage("#login", jQuery.mobile.defaultPageTransition, false, true);
 };

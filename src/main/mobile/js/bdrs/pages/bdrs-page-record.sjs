@@ -43,20 +43,6 @@ exports.Create =  function() {
             exports.Show();
         }
     });
-    jQuery('#record-gps').click(function (event) {
-        var position;
-        waitfor(position) {
-            bdrs.mobile.geolocation.getCurrentPosition(resume);
-        }
-        
-        if (position !== undefined) {
-            jQuery('#record-latitude').val(bdrs.mobile.roundnumber(position.coords.latitude, 5));
-            jQuery('#record-longitude').val(bdrs.mobile.roundnumber(position.coords.longitude, 5));
-            jQuery('#record-accuracy').val(bdrs.mobile.roundnumber(position.coords.accuracy, 5));
-        } else {
-            bdrs.mobile.Debug('Could not get GPS loc');
-        }
-    });
     jQuery('#record-delete').click(function(event) {
 
         var selectedRecordId = bdrs.mobile.getParameter('selected-record');
@@ -70,9 +56,6 @@ exports.Create =  function() {
             jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
         }
     });
-
-    jQuery('#record-when').datepicker({maxDate: new Date()});
-    jQuery('#record-time').timepicker();
 }
 
 /**
@@ -87,10 +70,10 @@ exports.Show = function() {
     // Map of record attributes where { attributeID: attributeValueObj }
     var attributeValueMap = {}
     var selectedRecordId = bdrs.mobile.getParameter('selected-record');
-    bdrs.mobile.Debug("Showing Record with ID: " + selectedRecordId);
     var isNewRecord = false;
 
     if (selectedRecordId === undefined) {
+    	bdrs.mobile.Debug("create new empty record");
         record = new Record();
         record.deleted(false);
         isNewRecord = true;
@@ -100,6 +83,7 @@ exports.Show = function() {
             }
         }
     } else {
+    	bdrs.mobile.Debug("get record and get all the attribute values");
         waitfor(record) {
             Record.all().filter('id', '=', selectedRecordId).filter('deleted','=',false).prefetch('censusMethod').prefetch('parent').one(resume);
         }
@@ -121,8 +105,6 @@ exports.Show = function() {
     var isCensusMethodRecord = ((bdrs.mobile.getParameter('censusMethodId') !== undefined) || (record.censusMethod() !== null));
     
     bdrs.mobile.Debug('isCensusMethodRecord : ' + isCensusMethodRecord);
-    jQuery('.bdrs-page-record .speciesEntryField').remove();
-    jQuery('.bdrs-page-record .numberSlider').remove();
     var cmethod = null;
     
     var isTaxonomic;
@@ -152,7 +134,7 @@ exports.Show = function() {
         methodAttrsCollapsible.hide();
         methodAttrsWrapperElem.empty();
         
-        // No census method means that the record will be optionally taxonomic.
+        bdrs.mobile.Debug("No census method means that the record will set to be optionally taxonomic.");
         isTaxonomic = false;
         isOptionallyTaxonomic = true;
     }
@@ -195,52 +177,6 @@ exports.Show = function() {
         var templateParams = {
             required : isTaxonomic
         };
-        // add the number slider.
-        bdrs.template.renderOnlyCallback('recordNumberSlider', templateParams, function(element) {
-            jQuery('#record-form').prepend(element);
-            jQuery('#record-number').textinput();
-            jQuery('#record-number').slider();
-            jQuery('.bdrs-page-record .numberSlider').fieldcontain();
-        });
-    
-        // add the species box.
-        bdrs.template.renderOnlyCallback('recordSpeciesInput', templateParams, function(element) {
-            jQuery('#record-form').prepend(element);
-            bdrs.mobile.restyle(element);
-            new bdrs.mobile.widget.RecentTaxaWidget(2).after(element);
-        
-            var scientificName = record.species() === null ? '' : record.species().scientificName();
-            jQuery('#record-species').val(scientificName).autocomplete({
-                source: function(request, response) {
-	        		//get species for current survey
-            		currentSurvey.species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(null,function(speciesList){
-            			var names = [];
-            			speciesList.forEach(function(aSpecies){
-            				//add the names of the found species to the response
-                            names.push({ label : aSpecies.commonName() + ' - <i>' + aSpecies.scientificName()+ '</i>', value : aSpecies.scientificName()});
-            			});
-            			response(names);
-            		});
-                },
-                change: function(event, ui) {
-                    jQuery.mobile.pageLoading(false);
-                    
-                    var scientificName = jQuery('#record-species').val();
-                    var taxon;
-                    waitfor(taxon) {
-                        Species.all().filter('scientificName', '=', scientificName).one(resume);
-                    }
-   
-                    bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
-                    
-                    jQuery.mobile.pageLoading(true);
-                },
-                open: function(event, ui){
-                	jQuery('.ui-autocomplete').css('z-index',100);
-                },
-                html: true
-            });
-        });
     }
 
     //////////////////////////
@@ -253,22 +189,21 @@ exports.Show = function() {
     ////////////////////////////////////
     if (currentSurvey !== null) {
         jQuery.mobile.pageLoading(false);
-    
         bdrs.mobile.pages.record._insertSurveyAttributes(record, currentSurvey, attributeValueMap);
         bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
-    
         jQuery.mobile.pageLoading(true);
     } else {
         bdrs.mobile.Error('Current Survey ID not known');
         return;
     }
+    
 
     // If editing, populate the form with data from the database.
-    var latCoord;
+	var latCoord;
     var lonCoord;
     var accuracy;
-
     if(record.latitude() === null && record.longitude() === null && record.accuracy() === null) {
+    	
         var position;
         waitfor(position) {
             bdrs.mobile.geolocation.getCurrentPosition(resume);
@@ -283,18 +218,35 @@ exports.Show = function() {
         lonCoord = record.longitude();
         accuracy = record.accuracy();
     }
-    jQuery('#record-latitude').val(latCoord);
-    jQuery('#record-longitude').val(lonCoord);
-    jQuery('#record-accuracy').val(accuracy);
-
-    var when = record.when() === null ? bdrs.mobile.getCurrentDate() : bdrs.mobile.formatDate(record.when());
-    jQuery('#record-when').val(when);
-
-    var time = record.time().length === 0 ? bdrs.mobile.getCurrentTime() : record.time(); 
-    jQuery('#record-time').val(time);
-
-    jQuery('#record-notes').val(record.notes());
-    jQuery('#record-number').val(record.number());
+    
+    var dwcAttributes;
+    waitfor(dwcAttributes) {
+    	currentSurvey.attributes().filter('isDWC', '=', true).list(resume);
+    }
+    
+    for (var i=0; i<dwcAttributes.length; i++) {
+    	var attribute = dwcAttributes[i]; 
+    	switch(attribute.name()) {
+	    	case "Point" :
+	    	    	jQuery('#record-attr-' + attribute.id + '-lat').val(latCoord);
+	    	        jQuery('#record-attr-' + attribute.id + '-lon').val(lonCoord);
+	    		break;
+	    	case "AccuracyInMeters" :
+	    		jQuery('#record-attr-' + attribute.id).val(accuracy);
+	    		break;
+	    	case "When" :
+	    		if(isNewRecord) {
+	    	    	jQuery('#record-attr-' + attribute.id).datepicker("setDate", new Date());
+	    	    }
+	    		break;
+	    	case "Time" :
+	    	    if(isNewRecord) {
+	    	    	jQuery('#record-attr-' + attribute.id).val(bdrs.mobile.getCurrentTime());
+	    	    }
+	    		break;
+    	}
+    }
+     
 }
     
 /**
@@ -349,7 +301,7 @@ exports._insertCensusMethodAttributes = function(record, cmethod, attributeValue
         bdrs.mobile.Debug('Triggering CM Expand 2');
         methodAttrsCollapsible.show().trigger('expand');
     }
-}
+};
 
 /**
  * Insert survey attributes into the record form.
@@ -360,34 +312,20 @@ exports._insertCensusMethodAttributes = function(record, cmethod, attributeValue
  * attribute ID. That is, { attributeID: attributeValueObj }.
  */
 exports._insertSurveyAttributes = function(record, survey, attributeValueMap) {
-    bdrs.mobile.Info('Survey Name : ' + survey.name() );
     var attributes;
     waitfor(attributes) {
-    	//temporarily ignores dwc fields that exist in the AttributesTable
-        //survey.attributes().order('weight', true).list(resume);
-    	survey.attributes().filter("isDWC", '!=', true).order('weight', true).list(resume);
+        survey.attributes().order('weight', true).list(resume);
     }
-    
-    bdrs.mobile.Debug('Survey Attributes');
-    
-    // Clear old attributes and hide the collapsible.
+    // Clear old attributes
     var surveyAttrsWrapperElem = jQuery('#record-survey-attributes');
-    var surveyAttrsCollapsible = surveyAttrsWrapperElem.parents('[data-role=collapsible]');
-    if(attributes.length === 0) {
-        surveyAttrsCollapsible.hide();
-    }
     surveyAttrsWrapperElem.empty();
-
     // Insert record attributes
     var recAttrFormField;
+    var recPropertyAttrFormField;
     for (var i = 0; i < attributes.length; i++) {
-        recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attributes[i]);
-        recAttrFormField.toFormField('#record-survey-attributes', attributeValueMap[attributes[i].id]);
-    }
-    
-    // Show the collapsible.
-    if(attributes.length > 0) {
-        surveyAttrsCollapsible.show().trigger('expand');
+    	var attribute = attributes[i]; 
+        recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attribute);
+        recAttrFormField.toFormField('#record-survey-attributes', attributeValueMap[attribute.id], record);
     }
 };
 
@@ -524,6 +462,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
             buttonElem.appendTo(collapsibleElem.parent());
             
             buttonElem.jqmData('censusMethodId', subMethods[i].id);
+
             buttonElem.click(function(event) {
                 if(bdrs.mobile.validation.isValidForm('#record-form')) {
                     // Save the record first.
@@ -561,7 +500,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
 /**
  * Insert taxon group attributes to the form.
  * 
- * @param record The object that backs the current form.
+ * @param taxon The taxon for which we are getting the taxongroup attributes
  * @param attributeValueMap a map of record attributes keyed against the 
  * attribute ID. That is, { attributeID: attributeValueObj }.
  */
@@ -671,7 +610,7 @@ exports.markRecordForDelete = function(record) {
 };
 
 /**
- * Private function, does the actual recording.
+ * Private function, does the actual recording or updating.
  */
 exports._record = function() {
     // Need to blur to force the species autocomplete to insert any 
@@ -683,23 +622,21 @@ exports._record = function() {
 
     var record;
     var attributeValueMap = {};
+    var species_startedit;
     var survey = bdrs.mobile.survey.getDefault();
-    bdrs.mobile.Debug('Pulled attributes from record form');
     var selectedRecordId = bdrs.mobile.getParameter('selected-record');
+    bdrs.mobile.Debug(selectedRecordId);
     if (selectedRecordId === undefined) {
-    	//we are dealing with a new record
+    	bdrs.mobile.Debug("Dealing with a new record");
         record = new Record();
         record.deleted(false);
         persistence.add(record);
-        
     } else {
-    	//we are editing a record
+    	bdrs.mobile.Debug("Dealing with an existing record");
         waitfor(record) {
             Record.all().filter('id', '=', selectedRecordId).filter('deleted','=',false).one(resume);
         }
-        
-        var species_startedit = record.species();
-        
+        species_startedit = record.species();
         var attributeValues;
         waitfor(attributeValues) {
             record.attributeValues().prefetch('attribute').list(resume);
@@ -735,127 +672,180 @@ exports._record = function() {
         isOptionallyTaxonomic = true;
     }
     
-    bdrs.mobile.Debug(jQuery('#record-latitude').val());
-    bdrs.mobile.Debug(jQuery('#record-longitude').val());
-    bdrs.mobile.Debug(jQuery('#record-accuracy').val());
-    bdrs.mobile.Debug(jQuery('#record-when').val());
-    bdrs.mobile.Debug(jQuery('#record-time').val());
-    bdrs.mobile.Debug(jQuery('#record-species').val());
-    
-    // If the record is taxonomic or optionally 
-    // taxonomic (with a non empty scientific name)
-    var species = null;
-    var speciesElem = jQuery('#record-species');
-    var scientificName = speciesElem.length === 0 ? '' : speciesElem.val();
-    if(isTaxonomic || (isOptionallyTaxonomic && scientificName.length > 0)) {
-        
-        waitfor(species) {
-            Species.all().filter('scientificName', '=', scientificName).prefetch('taxonGroup').one(resume);
-        }
-        bdrs.mobile.Debug('Scientific Name for record: ' + scientificName);
-        if (species !== undefined && species !== null) {
-            bdrs.mobile.Debug(species.commonName());
-            bdrs.mobile.Debug(species.scientificName());
-        } else if (scientificName !== '') {
-            // Create a field species.
-            var sp = new Species({
-                scientificNameAndAuthor: "Field Species",
-                scientificName: scientificName,
-                commonName: scientificName,
-                rank: "Field Species",
-                author: "Field Species",
-                year: ""
-            });
-            
-            // Check for field taxon group
-            var tg;
-            waitfor(tg) {
-                TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
-            }
-            if (tg == null) {
-                tg = new TaxonGroup({
-                    name: "Field Species"
-                });
-                persistence.add(tg);
-            }
-            persistence.add(sp);
-            tg.species().add(sp);
-            survey.species().add(sp);
-            species = sp;
-            waitfor() {
-                persistence.flush(resume);
-            }
-            bdrs.mobile.Debug('Created a new species: ' + species.scientificName());
-            bdrs.mobile.Debug(species.scientificName());
-        }
-        
-        species.records().add(record);
+    //GET THE DWC attributes from the survey
+    //USE the id from the DWC species attribute to retrieve the value. E.g.#record-attr-56724547867
+    var DWC_attributes;
+    waitfor(DWC_attributes) {
+    	survey.attributes().filter("isDWC", '=', true).order('weight', true).list(resume);
+    }
+    var DWC_attributesMap = {};
+    var DWC_attribute;
+    for (var i=0; i<DWC_attributes.length; i++) {
+    	DWC_attribute = DWC_attributes[i];
+    	DWC_attributesMap[DWC_attribute.name()] = DWC_attribute; 
+    }
+ 
 
-        // Update Species Count index.
-        bdrs.mobile.Debug('Updating species count');
-        if(species_startedit !== undefined && species_startedit !== null ){
-        	//we are editing a record
-        	if(species_startedit.id !== species.id){
-        		//species has changed
-        		//decrementing count old species
-                 var counter;
-                 waitfor(counter) {
-                     SpeciesCount.all().filter('scientificName','=', species_startedit.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
-                 }
-                 counter.count(counter.count() - 1);
-                 counter.userCount(counter.userCount() - 1);
-                 //incrementing count new species
-                 var counter;
-                 waitfor(counter) {
-                     SpeciesCount.all().filter('scientificName','=', species.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
-                 }
-                 if (counter === null) {
-                     counter = new SpeciesCount({scientificName: species.scientificName(), 
-                         count: 1 , userCount: 1});
-                     persistence.add(counter);
-                     counter.species(species);
-                     counter.survey(survey);
-                 } else {
-                     counter.count(counter.count() + 1);
-                     counter.userCount(counter.userCount() + 1);
-                 }
-        	}
-        } else {
-        	//this is a new record
-            var counter;
-            waitfor(counter) {
-                SpeciesCount.all().filter('scientificName','=', species.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
-            }
-            if (counter === null) {
-                counter = new SpeciesCount({scientificName: species.scientificName(), 
-                    count: 1 , userCount: 1});
-                persistence.add(counter);
-                counter.species(species);
-                counter.survey(survey);
-            } else {
-                counter.count(counter.count() + 1);
-                counter.userCount(counter.userCount() + 1);
-            }
-        	
-        }
+    //get values for dwc fields if they exist in the survey
+    if(DWC_attributesMap['Species'] !== undefined) {
+    	var species = null;
+    	var speciesElem = jQuery('#record-attr-' + DWC_attributesMap['Species'].id);
+    	var scientificName = speciesElem.length === 0 ? '' : speciesElem.val();
+    	bdrs.mobile.Debug("Current value of species element = " + scientificName + " (length=" + scientificName.length + ")");
+    	    if(isTaxonomic || (isOptionallyTaxonomic && scientificName.length > 0)) {
+    	    	bdrs.mobile.Debug("isTaxonomic || (isOptionallyTaxonomic && scientificName.length > 0)");
+    	        waitfor(species) {
+    	            Species.all().filter('scientificName', '=', scientificName).prefetch('taxonGroup').one(resume);
+    	        }
+    	        if (species !== undefined && species !== null) {
+    	            bdrs.mobile.Debug(species.commonName());
+    	            bdrs.mobile.Debug(species.scientificName());
+    	            species.records().add(record);
+    	        } else if(scientificName !== '') {
+    	            // Create a field species.
+    	            var sp = new Species({
+    	                scientificNameAndAuthor: "Field Species",
+    	                scientificName: scientificName,
+    	                commonName: scientificName,
+    	                rank: "Field Species",
+    	                author: "Field Species",
+    	                year: ""
+    	            });
+    	            // Check for field taxon group
+    	            var tg;
+    	            waitfor(tg) {
+    	                TaxonGroup.all().filter('name', '=', 'Field Species').one(resume);
+    	            }
+    	            if (tg == null) {
+    	                tg = new TaxonGroup({
+    	                    name: "Field Species"
+    	                });
+    	                persistence.add(tg);
+    	            }
+    	            persistence.add(sp);
+    	            tg.species().add(sp);
+    	            survey.species().add(sp);
+    	            species = sp;
+    	            waitfor() {
+    	                persistence.flush(resume);
+    	            }
+    	            species.records().add(record);
+    	        }
+
+    	        // Update Species Count index.
+    	        bdrs.mobile.Debug('Updating species count');
+    	      //decrementing old species counter if we started of with a species
+    	        if(species_startedit !== null && species_startedit !== undefined && species !== null) {
+    	        	 var counter;
+    	        	 waitfor(counter) {
+    	        	     SpeciesCount.all().filter('scientificName','=', species_startedit.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
+    	        	 }
+	                 if (counter === null) {
+	                     counter = new SpeciesCount({scientificName: species_startedit.scientificName(), count: 0 , userCount: 0});
+	                     persistence.add(counter);
+	                     counter.species(species_startedit);
+	                     counter.survey(survey);
+	                 } else {
+	                	 counter.count(counter.count() - 1);
+	    	        	 counter.userCount(counter.userCount() - 1);
+	                 }
+    	        }
+
+    	        //if a new species exists, increment the counter or create a counter if there is none
+    	        if(species !== null && species !== undefined){
+    	        	 var counter;
+    	                 waitfor(counter) {
+    	                     SpeciesCount.all().filter('scientificName','=', species.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
+    	                 }
+    	        	 if (counter === null) {
+    	                     counter = new SpeciesCount({scientificName: species.scientificName(), count: 1 , userCount: 1});
+    	                     persistence.add(counter);
+    	                     counter.species(species);
+    	                     counter.survey(survey);
+    	                 } else {
+    	                     counter.count(counter.count() + 1);
+    	                     counter.userCount(counter.userCount() + 1);
+    	                 }
+    	        }
+    	    }
+    	    
+    	    if(species_startedit !== null && species_startedit !== undefined && species === null) {
+    	    	species_startedit.records().remove(record);
+    	    	 var counter;
+	        	 waitfor(counter) {
+	        	     SpeciesCount.all().filter('scientificName','=', species_startedit.scientificName()).and(new persistence.PropertyFilter('survey','=',survey.id)).one(resume);
+	        	 }
+                 if (counter !== null) {
+                	 counter.count(counter.count() - 1);
+    	        	 counter.userCount(counter.userCount() - 1);
+                 } 
+	        }
     }
     
-    var latitude = jQuery('#record-latitude').val();
-    var longitude = jQuery('#record-longitude').val();
-    var accuracy = jQuery('#record-accuracy').val();
-    var when = bdrs.mobile.parseDate(jQuery('#record-when').val());
-    var time = jQuery('#record-time').val();    
-    var notes = jQuery('#record-notes').val();
-    var number = jQuery('#record-number').val();
+    // Dwc values that exist in the form will be stored in the record
+    if(DWC_attributesMap['Notes'] !== undefined) {
+    	var notesElem = jQuery('#record-attr-' + DWC_attributesMap['Notes'].id);
+    	if (notesElem !== null) {
+        	record.notes(jQuery(notesElem).val());
+    	}
+    }
+    if(DWC_attributesMap['Number'] !== undefined) {
+    	var numberElem = jQuery('#record-attr-' + DWC_attributesMap['Number'].id);
+    	if (numberElem !== null) {
+        	record.number(jQuery(numberElem).val());
+    	}
+    }
+    if(DWC_attributesMap['Point'] !== undefined) {
+    	var latElem = jQuery('#record-attr-' + DWC_attributesMap['Point'].id + '-lat');
+    	var lonElem = jQuery('#record-attr-' + DWC_attributesMap['Point'].id + '-lon');
+    	if (latElem !== null) {
+        	record.latitude(jQuery(latElem).val());
+    	}
+    	if (lonElem !== null) {
+        	record.longitude(jQuery(lonElem).val());
+    	}
+    }
+    if(DWC_attributesMap['When'] !== undefined) {
+    	var whenElem = jQuery('#record-attr-' + DWC_attributesMap['When'].id);
+    	if (whenElem !== null) {
+    		var when = bdrs.mobile.parseDate(jQuery(whenElem).val());
+    	    record.when(when);
+    	}
+    }
+    if(DWC_attributesMap['Time'] !== undefined) {
+    	var timeElem = jQuery('#record-attr-' + DWC_attributesMap['Time'].id);
+    	if (timeElem !== null) {
+    	    var time = jQuery(timeElem).val(); 
+    	    record.time(time);
+    	}
+    }
+    if(DWC_attributesMap['AccuracyInMeters'] !== undefined) {
+    	var accuracyElem = jQuery('#record-attr-' + DWC_attributesMap['AccuracyInMeters'].id);
+    	if (accuracyElem !== null) {
+    	    var accuracy = jQuery(accuracyElem).val(); 
+    	    record.accuracy(accuracy);
+    	}
+    }
     
     record.modifiedAt(new Date());
-    record.latitude(latitude);
-    record.longitude(longitude);
-    record.accuracy(accuracy);
-    record.when(when);
-    record.time(time);    
-    record.notes(notes);
-    record.number(number);
+    
+    if(DWC_attributesMap['Location'] !== undefined) {
+    	var locationElem = jQuery('#record-attr-' + DWC_attributesMap['Location'].id);
+    	if (locationElem !== null) {
+    	    var serveridLatLon = jQuery(locationElem + ":selected").val();
+    	    var serveridLatLonArray = serveridLatLon.split(":");
+    	    var locationServerId = serveridLatLonArray[0];
+    	    if (locationServerId !== undefined && locationServerId !== null && locationServerId !== "") {
+    	    	var location;
+    	    	waitfor(location) {
+    	    		Location.findBy('server_id', locationServerId, resume);
+    	    	}
+	    		if(location !== null) {
+	    			location.records().add(record)
+	    		}
+    	    }
+    	}
+    }
     
     if (bdrs.mobile.getParameter('record-parent') !== undefined) {
         var parent;
@@ -874,12 +864,7 @@ exports._record = function() {
     var recAttrFormField;
     for (var i = 0; i < attributes.length; i++) {
         recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attributes[i]);
-        recAttrFormField.fromFormField('#record-survey-attributes', record.attributeValues(), attributeValueMap[attributes[i].id]);     
-    }
-    
-    var attributes;
-    waitfor(attributes) {
-        survey.attributes().list(resume);
+        recAttrFormField.fromFormField('#record-survey-attributes', record.attributeValues(), attributeValueMap[attributes[i].id]);   
     }
     
     // Taxon Group Attributes
@@ -897,7 +882,7 @@ exports._record = function() {
         }
     }
 
-
+    //CensusMethod Attributes
     if (cmethod !== null && cmethod !== undefined) {
         var cmAttributes;
         waitfor(cmAttributes) {
@@ -918,7 +903,7 @@ exports._record = function() {
     jQuery.mobile.pageLoading(true);
     
     return record;
-}
+};
 
 exports._getCensusMethodAttribute = function(cmethod, attrName, attrTypeCode) {
     var methodAttributes;

@@ -188,6 +188,7 @@ public class CensusMethodController extends AbstractController {
         response.getWriter().write(builder.toJson());
     }
     
+    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
     @RequestMapping(value=GET_CENSUS_METHOD_FOR_SURVEY_URL, method = RequestMethod.GET)
     public void getSurveyCensusMethods(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_SURVEY_ID, required=false) Integer surveyId) throws Exception {

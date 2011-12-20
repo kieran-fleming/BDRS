@@ -1,5 +1,5 @@
 exports.Create = function() {
-},
+};
 
 exports.Show = function() {
 	// show download in progress dialog
@@ -67,8 +67,7 @@ exports.Show = function() {
 			bdrs.mobile.Error("The clickhandler of the survey failed to retrieve the value of the 'survey-id attribute.");
 		}
 	});
-	
-},
+};
 
 /* 
  * Removes the survey List from the DOM

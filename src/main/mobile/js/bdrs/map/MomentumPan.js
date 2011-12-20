@@ -87,7 +87,6 @@ OpenLayers.Control.DragPan = OpenLayers.Class(OpenLayers.Control.OldDragPan, {
         var me = this;
         this.intervalID = window.setInterval(function(geckoInterval) {
 			var actualInverval = (geckoInterval / 2) || animationInterval;
-            //console.log(me.handler.lastVx, me.handler.lastVy, "px/ms");
             me.map.pan(-me.handler.lastVx * actualInverval,
                        -me.handler.lastVy * actualInverval,
                        {animate: false});
