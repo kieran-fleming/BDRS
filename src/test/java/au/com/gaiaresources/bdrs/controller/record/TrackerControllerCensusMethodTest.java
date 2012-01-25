@@ -242,9 +242,11 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/user/tracker.htm");
         request.setParameter("surveyId", survey.getId().toString());
         request.setParameter("censusMethodId", m1.getId().toString());
-        request.setParameter("submitAndAddAnother", "Submit and Add Another");
+        request.setParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER, "Submit and Add Another");
         
         ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, TrackerController.EDIT_URL);
         
         Assert.assertEquals(survey.getId(), mv.getModelMap().get("surveyId"));
         Assert.assertEquals(m1.getId(), mv.getModelMap().get("censusMethodId"));
@@ -273,9 +275,11 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/user/tracker.htm");
         request.setParameter("surveyId", survey.getId().toString());
         request.setParameter("censusMethodId", m1.getId().toString());
-        request.setParameter("submitAndAddAnother", "Submit and Add Another");
+        request.setParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER, "Submit and Add Another");
         
         ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, RecordWebFormContext.SURVEY_RENDER_REDIRECT_URL);
         
         Assert.assertEquals(survey.getId(), mv.getModelMap().get("surveyId"));
         Assert.assertEquals(m1.getId(), mv.getModelMap().get("censusMethodId"));
@@ -312,9 +316,11 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/user/tracker.htm");
         request.setParameter("surveyId", survey.getId().toString());
         request.setParameter("censusMethodId", m3.getId().toString());
-        request.setParameter("submitAndAddAnother", "Submit and Add Another");
+        request.setParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER, "Submit and Add Another");
         
         ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, RecordWebFormContext.SURVEY_RENDER_REDIRECT_URL);
         
         Assert.assertEquals(survey.getId(), mv.getModelMap().get("surveyId"));
         Assert.assertEquals(m3.getId(), mv.getModelMap().get("censusMethodId"));
@@ -351,9 +357,11 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
         request.setRequestURI("/bdrs/user/tracker.htm");
         request.setParameter("surveyId", survey.getId().toString());
         request.setParameter("censusMethodId", m3.getId().toString());
-        request.setParameter("submitAndAddAnother", "Submit and Add Another");
+        request.setParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER, "Submit and Add Another");
         
         ModelAndView mv = handle(request, response);
+        
+        this.assertRedirect(mv, RecordWebFormContext.SURVEY_RENDER_REDIRECT_URL);
         
         Assert.assertEquals(survey.getId(), mv.getModelMap().get("surveyId"));
         Assert.assertEquals(m3.getId(), mv.getModelMap().get("censusMethodId"));

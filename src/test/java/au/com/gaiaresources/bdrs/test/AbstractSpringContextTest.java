@@ -8,11 +8,16 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import au.com.gaiaresources.bdrs.email.EmailService;
+import au.com.gaiaresources.bdrs.email.impl.MockEmailService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {
@@ -21,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
         "file:src/main/webapp/WEB-INF/climatewatch-hibernate-datasource-test.xml",
         "file:src/main/webapp/WEB-INF/climatewatch-security.xml",
         "file:src/main/webapp/WEB-INF/climatewatch-daos.xml",
-        "file:src/main/webapp/WEB-INF/climatewatch-email.xml",
+        "file:src/main/webapp/WEB-INF/climatewatch-email-test.xml",
         "file:src/main/webapp/WEB-INF/climatewatch-servlet.xml",
         "file:src/main/webapp/WEB-INF/climatewatch-profileConfig-test.xml"})
 @Transactional
@@ -29,6 +34,18 @@ public abstract class AbstractSpringContextTest extends
         AbstractTransactionalJUnit4SpringContextTests {
     
     Logger log = Logger.getLogger(getClass());
+    
+    @Autowired
+    private EmailService emailService;
+    
+    @Before
+    public void abstractSpringContextTestSetup() {
+        // as the EmailService bean is a singleton we need to clear our 
+        // mock implementation - see climatewatch-email-test.xml - before
+        // each test
+        MockEmailService mockEmailService = (MockEmailService)emailService;
+        mockEmailService.clearEmails();
+    }
     
     @After
     public final void cleanupStreams() {

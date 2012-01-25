@@ -86,7 +86,7 @@ public class PublicController extends AbstractController {
     @RequestMapping(value="/index.html", method = RequestMethod.GET)
     public ModelAndView index(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView view = new ModelAndView("index");
-        view.addObject("portalList", portalDAO.getPortals());
+        view.addObject("portalList", portalDAO.getActivePortals());
         return view;
     }
 }

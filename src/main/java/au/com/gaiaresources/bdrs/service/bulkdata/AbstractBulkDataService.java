@@ -788,13 +788,15 @@ public abstract class AbstractBulkDataService {
                 rec.setUser(recordedBy);
 
                 if (!recordUpload.isGPSLocationName()) {
-                    //log.info("Not a gps location");
+                    // log.info("Not a gps location");
+                    
                     Location loc;
                     if (recordUpload.getLocationId() != null) {
                         loc = locationPkMap.get(recordUpload.getLocationId());
                     } else {
                         loc = locationNameMap.get(recordUpload.getLocationName());
                     }
+                    
                     rec.setLocation(loc);
                 }
                 if (recordUpload.hasLatitudeLongitude()) {

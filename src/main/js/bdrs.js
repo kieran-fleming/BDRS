@@ -366,13 +366,18 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
     // duck punch in persistentLayers - will not be removed when other layers
     // are cleared from the map
     map.persistentLayers = new Array();
+	
+	// This stops the user from reaching zoom level '0' which wraps around
+	// the world several times.
+	var MIN_GOOGLE_ZOOM_LEVEL = 1;
     
     if (mapOptions.isPublic === true) {
         var layers =  [];
         if(window.G_PHYSICAL_MAP !== undefined && window.G_PHYSICAL_MAP !== null) {
 	        var gphy = new OpenLayers.Layer.Google('Google Physical', {
 	            type: G_PHYSICAL_MAP,
-	            sphericalMercator: true
+	            sphericalMercator: true,
+                MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
 	        });
 	        layers.push(gphy);
         }
@@ -382,7 +387,8 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
 	        {
 	            type: G_NORMAL_MAP,
 	            numZoomLevels: 20,
-	            sphericalMercator: true
+	            sphericalMercator: true,
+                MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
 	        });
 	        layers.push(gmap);
         }
@@ -392,7 +398,8 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
 	        ghyb = new OpenLayers.Layer.Google('Google Hybrid', {
 	            type: G_HYBRID_MAP,
 	            numZoomLevels: 20,
-	            sphericalMercator: true
+	            sphericalMercator: true,
+				MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
 	        });
 	        layers.push(ghyb);
         }
@@ -401,7 +408,8 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
 	        var gsat = new OpenLayers.Layer.Google('Google Satellite', {
 	            type: G_SATELLITE_MAP,
 	            numZoomLevels: 22,
-	            sphericalMercator: true
+	            sphericalMercator: true,
+                MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
 	        });
 	        layers.push(gsat);
         }
@@ -1821,8 +1829,15 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
                 var key = recordAttrKeys[i];
                 var value;
                 if (key === 'when') {
-                    value = new Date(parseInt(item[key], 10));
-                    value = bdrs.util.formatDate(value);
+					// Only show the date if non null else we get 'NaN' in the formatted
+					// date string. The following actually omits the 'when' row
+					var dateTicks = item.when;
+					if (dateTicks !== null && dateTicks !== undefined) {
+					    value = new Date(parseInt(dateTicks, 10));
+                        value = bdrs.util.formatDate(value);
+					} else {
+						value = "";
+					}
                 }
                 else 
                     if (key === 'species' && item[key]) {
@@ -1869,7 +1884,7 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
             }    
         }
         
-        var table = jQuery("<table></table>").width('100%').append(tbody);
+		var table = jQuery("<table></table>").append(tbody);
         table.addClass("kmlDescriptionTable");
         var tableDiv = jQuery("<div></div>").append(table);
         tableDiv.addClass("popupPage" + itemIndex);
@@ -1918,20 +1933,20 @@ bdrs.map.displayPopupPage = function(contentState){
     jQuery(".popupPage" + contentState.currentPage).show();
     if (contentState.currentPage == contentState.itemArray.length - 1) {
         // hide the right arrow
-        jQuery(".shiftContentRight").hide();
+        jQuery(".shiftContentRight").css("visibility", "hidden");
     }
     else {
         // show the right arrow
-        jQuery(".shiftContentRight").show();
+        jQuery(".shiftContentRight").css("visibility", "visible");
     }
     
     if (contentState.currentPage === 0) {
         // hide the left arrow
-        jQuery(".shiftContentLeft").hide();
+        jQuery(".shiftContentLeft").css("visibility", "hidden");
     }
     else {
         // show the left arrow
-        jQuery(".shiftContentLeft").show();
+        jQuery(".shiftContentLeft").css("visibility", "visible");
     }
     
     contentState.popup.updateSize();
@@ -2392,14 +2407,17 @@ bdrs.map.createFeaturePopup = function(map, googleProjectionLonLatPos, featureAr
     
     // the final target....
     var content = jQuery("<span></span>");
-    var cyclerDiv = jQuery("<div></div>").addClass("textcenter").width('100%').appendTo(content);
+	var cyclerDiv = jQuery("<div></div>").addClass("textcenter").appendTo(content);
+	
     // only add the arrows if more than one total page
-    jQuery('<img src="' + bdrs.contextPath + '/images/icons/left.png" />').addClass("shiftContentLeft left").appendTo(cyclerDiv);
+	var leftShiftDiv = jQuery('<div></div>').addClass("shiftContentLeftContainer").appendTo(content);;
+	var rightShiftDiv = jQuery('<div></div>').addClass("shiftContentRightContainer textright").appendTo(content);
+    jQuery('<img src="' + bdrs.contextPath + '/images/icons/left.png" />').addClass("shiftContentLeft").appendTo(leftShiftDiv);
     jQuery("<span></span>").addClass("currentPage").appendTo(cyclerDiv);
-    jQuery("<span> of </span>").appendTo(cyclerDiv);
+    jQuery("<span>&nbsp;of&nbsp;</span>").appendTo(cyclerDiv);
     jQuery("<span></span>").addClass("totalPages").appendTo(cyclerDiv);
     // only add the arrows if more than one total page
-    jQuery('<img src="' + bdrs.contextPath + '/images/icons/right.png" />').addClass("shiftContentRight right").appendTo(cyclerDiv);
+    jQuery('<img src="' + bdrs.contextPath + '/images/icons/right.png" />').addClass("shiftContentRight").appendTo(rightShiftDiv);
     
     var popup = new OpenLayers.Popup.FramedCloud(options.popupName, googleProjectionLonLatPos, null, content.html(), null, true, options.onPopupClose);
     
@@ -2592,7 +2610,7 @@ bdrs.initColorPicker = function(){
  * @param {Object} formNode - the form we are currently submitting
  */
 bdrs.unbindDisableHandler = function(formNode) {
-	jQuery('input[type=submit]', formNode).unbind('click.disable');
+	jQuery('form[method=post] input[type=submit]', formNode).unbind('click.disable');
 }
 
 //disable form submit button on click to prevent double-click dual submission
@@ -2601,21 +2619,52 @@ bdrs.initSubmitDisabler = function() {
         return false;
     };
     jQuery("form").submit(function() {
-        jQuery('input[type=submit]', this).bind('click.disable', disabledClickHandler);
+        jQuery('form[method=post] input[type=submit]', this).bind('click.disable', disabledClickHandler);
     });
     
     // get form containing the input
-    var form = jQuery('input[type=submit]').parents('form');
+    var form = jQuery('form[method=post] input[type=submit]').parents('form');
     // remove the disabled attribute when any input on the form is changed
     // to allow a form with invalid entries to be submitted once values are changed
     var unbindDisableHandler = function() {
-        jQuery('input[type=submit]', form).unbind('click.disable');
+        jQuery('form[method=post] input[type=submit]', form).unbind('click.disable');
     };
     
     jQuery(form).delegate("input", "focus", unbindDisableHandler);
     jQuery(form).delegate("input", "change", unbindDisableHandler);
     jQuery(form).delegate("textarea", "focus", unbindDisableHandler);
     jQuery(form).delegate("textarea", "change", unbindDisableHandler);
+};
+
+/**
+ * Stops jQuery dialogs in IE7 being 100% screen width
+ * @param {Object} jqDialog the jquery dialog
+ */
+bdrs.fixJqDialog = function(dialogSelector) {
+
+	jQuery(dialogSelector).dialog().bind("dialogopen", function(event, ui) {
+        // fix for width:auto in IE
+        var jqDialog = jQuery(this);
+        var parent = jqDialog.parent();
+        var contentWidth = jqDialog.width();
+        parent.find('.ui-dialog-titlebar').each(function() {
+            jQuery(this).width(contentWidth);
+        });
+
+        // 28 pixels is a magic number that makes everything line up nicely.
+        parent.width(contentWidth + 28);
+        jqDialog.dialog('option', 'position', 'center');
+    
+        // fix for scrollbars in IE
+        jQuery('body').css('overflow', 'hidden');
+        jQuery('.ui-widget-overlay').css('width', '100%');
+    }).bind("dialogclose", function(event, ui) {
+        // fix for width:auto in IE
+        jQuery(this).parent().css("width", "auto");
+    
+        // fix for scrollbars in IE
+        jQuery('body').css('overflow', 'auto');
+    });
 };
 
 /**
@@ -2686,6 +2735,12 @@ bdrs.init = function(){
             }
         }
     });
+	
+    // Changing blockUI defaults
+    // this puts the block UI above all known items...
+    jQuery.blockUI.defaults.baseZ = 1070;
+	// CSS can be found in base.css in the theme.
+	jQuery.blockUI.defaults.css = {};
 };
 
 /*
@@ -2808,9 +2863,9 @@ bdrs.require("bdrs/util.js");
 bdrs.require("bdrs/preferences.js");
 bdrs.require("bdrs/contribute.js");
 bdrs.require("bdrs/location.js");
-bdrs.require("bdrs/attribute.js");
 bdrs.require("bdrs/dnd.js");
 bdrs.require("bdrs/map.js");
 bdrs.require("bdrs/model/attribute_type.js");
+bdrs.require("bdrs/attribute.js");
 bdrs.require("bdrs/url/urls.js");
 bdrs.require("bdrs/bulkdata/bulkdata.js");

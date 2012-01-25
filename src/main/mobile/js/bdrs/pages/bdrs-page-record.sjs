@@ -5,19 +5,19 @@ exports.OPTIONALLYTAXONOMIC = 'OPTIONALLYTAXONOMIC';
 /**
  * Invoked when the page is created.
  */
-exports.Create =  function() {
-    jQuery('#record-save').click(function (event) {
+exports.Init =  function() {
+	bdrs.mobile.Debug("bdrs-page-record Init");
+    jQuery('.record-save').click(function (event) {
         if(bdrs.mobile.validation.isValidForm('#record-form')) {
             bdrs.mobile.pages.record._record();
-            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
+            jQuery.mobile.changePage("#review", {showLoadMsg: false});
         }
     });
-    jQuery('#record-save-continue').click(function (event) {
+    jQuery('.record-save-continue').click(function (event) {
         if(bdrs.mobile.validation.isValidForm('#record-form')) {
             // Save the record.
             var record = bdrs.mobile.pages.record._record();
             bdrs.mobile.removeParameter("selected-record");
-            jQuery('.recent-taxa-widget').remove();
             
             // If we have a census method, then we continue back to the
             // parent census method.
@@ -39,11 +39,9 @@ exports.Create =  function() {
             } else if(record.parent() !== null) {
                 bdrs.mobile.setParameter('selected-record', record.parent().id);
             }
-            
-            exports.Show();
         }
     });
-    jQuery('#record-delete').click(function(event) {
+    jQuery('.record-delete').click(function(event) {
 
         var selectedRecordId = bdrs.mobile.getParameter('selected-record');
         if (selectedRecordId !== undefined) {
@@ -53,15 +51,22 @@ exports.Create =  function() {
             }
 
             bdrs.mobile.pages.record.markRecordForDelete(record);
-            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
+            jQuery.mobile.changePage("#review", {showLoadMsg: false});
         }
     });
-}
+};
+
+exports.BeforeShow = function() {
+	bdrs.mobile.Debug("bdrs-page-record BEFORESHOW");
+};
 
 /**
  * Invoked when the page is displayed.
  */
 exports.Show = function() {
+	bdrs.mobile.Debug("bdrs-page-record SHOW");
+	jQuery.mobile.showPageLoadingMsg();
+	jQuery('.bdrs-page-record').hide();
     var currentSurvey = bdrs.mobile.survey.getDefault();
     // If editing load the record from the database, otherwise create a blank 
     // record.
@@ -73,7 +78,7 @@ exports.Show = function() {
     var isNewRecord = false;
 
     if (selectedRecordId === undefined) {
-    	bdrs.mobile.Debug("create new empty record");
+    	//bdrs.mobile.Debug("create new empty record");
         record = new Record();
         record.deleted(false);
         isNewRecord = true;
@@ -84,6 +89,33 @@ exports.Show = function() {
         }
     } else {
     	bdrs.mobile.Debug("get record and get all the attribute values");
+/*    	currentSurvey.records().filter('deleted','=',false).prefetch('species').prefetch('censusMethod').filter('parent', '=', null).order('when', false).list(null,function(recordList){
+    		var prevRec;
+    		var nextRec;
+    		for(var i=0; i<recordList.length; i++) {
+    			var curRec = recordList[i]; 
+    			if(curRec.id === selectedRecordId) {
+    				nextRec = recordList[i + 1];
+    				break;
+    			}
+    			prevRec = curRec;
+    		}
+    		var prevRec_id;
+    		if (prevRec !== undefined) {
+    			prevRec_id = prevRec.id;
+    		} else {
+    			prevRec_id = '-1';
+    		}
+    		var nextRec_id;
+    		if (nextRec !== undefined) {
+    			nextRec_id = nextRec.id;
+    		} else {
+    			nextRec_id = '-1';
+    		}
+    		jQuery('.footer').empty();
+    		bdrs.template.render('recordNav',{'prev': prevRec_id,'next': nextRec_id}, '.footer');
+    	});*/
+    	
         waitfor(record) {
             Record.all().filter('id', '=', selectedRecordId).filter('deleted','=',false).prefetch('censusMethod').prefetch('parent').one(resume);
         }
@@ -188,10 +220,10 @@ exports.Show = function() {
     // Survey & Taxon Group Attributes
     ////////////////////////////////////
     if (currentSurvey !== null) {
-        jQuery.mobile.pageLoading(false);
+        jQuery.mobile.showPageLoadingMsg();
         bdrs.mobile.pages.record._insertSurveyAttributes(record, currentSurvey, attributeValueMap);
         bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
-        jQuery.mobile.pageLoading(true);
+        jQuery.mobile.hidePageLoadingMsg();
     } else {
         bdrs.mobile.Error('Current Survey ID not known');
         return;
@@ -246,8 +278,10 @@ exports.Show = function() {
 	    		break;
     	}
     }
-     
-}
+    
+    jQuery('.bdrs-page-record').fadeIn('fast', function(){jQuery.mobile.hidePageLoadingMsg();});
+    bdrs.template.restyle('#record');
+};
     
 /**
  * Invoked when the page is hidden.
@@ -268,6 +302,7 @@ exports.Hide = function() {
     
     jQuery('.recent-taxa-widget').remove();
     jQuery("#record-type").text('');
+    jQuery.mobile.loadingMessage = "Loading ...";
 }
 
 /**
@@ -441,7 +476,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                         var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record.parent(), record);
                         
                         if(isPointIntersect) {
-                            jQuery.mobile.changePage("#point-intersect");
+                            jQuery.mobile.changePage("#point-intersect", {showLoadMsg: false});
                         } else {
                             exports.Show();
                         }
@@ -484,7 +519,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
                     childRecord.deleted(false);
                     var isPointIntersect  = bdrs.mobile.pages.point_intersect.isPointIntersect(censusMethod, record, childRecord);
                     if(isPointIntersect) {
-                        jQuery.mobile.changePage("#point-intersect");
+                        jQuery.mobile.changePage("#point-intersect", {showLoadMsg: false});
                     } else {
                         exports.Show();
                     }
@@ -492,7 +527,7 @@ exports._insertSubCensusMethods = function(record, cmethod) {
             });
         }
         
-        bdrs.mobile.restyle(subCensusCollapsibleSet);
+         bdrs.template.restyle(subCensusCollapsibleSet);
         subCensusCollapsibleSet.show();
     }
 };
@@ -526,9 +561,9 @@ exports._insertTaxonGroupAttributes = function(taxon, attributeValueMap) {
             recAttrFormField = new bdrs.mobile.attribute.AttributeValueFormField(attributes[i]);
             recAttrFormField.toFormField('#record-taxongroup-attributes', attributeValueMap[attributes[i].id]);
         }
-        
         if(attributes.length > 0) {
-            taxonGroupAttrsCollapsible.show().trigger('expand');
+            taxonGroupAttrsCollapsible.show();
+        	bdrs.template.restyle('#record');
         }
     }
 };
@@ -617,7 +652,7 @@ exports._record = function() {
     // required dom elements. 
     jQuery(":focus").blur();
     
-    jQuery.mobile.pageLoading(false);
+    jQuery.mobile.showPageLoadingMsg();
     bdrs.mobile.Debug ('Record called');
 
     var record;
@@ -900,7 +935,7 @@ exports._record = function() {
     
     persistence.flush();
     
-    jQuery.mobile.pageLoading(true);
+    jQuery.mobile.hidePageLoadingMsg();
     
     return record;
 };
@@ -915,4 +950,39 @@ exports._getCensusMethodAttribute = function(cmethod, attrName, attrTypeCode) {
             list(resume);
     }
     return methodAttributes;
+};
+
+exports._goToRecord = function(recordId, direction) {
+	bdrs.mobile.Debug("Going to record = " + recordId + ", " + direction);
+	if (recordId !== '-1') {
+		bdrs.mobile.setParameter("selected-record", recordId);
+		//apply transition depending on direction
+//		jQuery('#record').fadeOut();
+		jQuery.mobile.changePage("#record", {allowSamePageTransition: true});
+//		jQuery('#record').fadeIn();
+	}	
+};
+
+/**
+ * Removes values from fields.
+ * @param elements an array of elements from which the values need to be removed.
+ */
+exports._removeFieldValues = function(elements) {
+	for(var i=0; i<elements.length; i++) {
+		var el = elements[i];
+		var type = el.type;
+	    var tag = el.tagName.toLowerCase(); // normalize case
+	    // it's ok to reset the value attr of text inputs,
+	    // password inputs, and textareas
+	    if (type == 'text' || type == 'password' || tag == 'textarea')
+	      jQuery(el).val("");
+	    // checkboxes and radios need to have their checked state cleared
+	    // but should *not* have their 'value' changed
+	    else if (type == 'checkbox' || type == 'radio')
+	    	jQuery(el).prop('checked', false);
+	    // select elements need to have their 'selectedIndex' property set to -1
+	    // (this works for both single and multiple select elements)
+	    else if (tag == 'select')
+	    	jQuery(el).prop('selectedIndex', -1);
+	}
 };

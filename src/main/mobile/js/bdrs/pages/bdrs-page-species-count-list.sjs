@@ -1,9 +1,9 @@
 /**
  * Event handlers for the login page. 
  */
-exports.Create = function() {
+exports.Init = function() {
     jQuery(".bdrs-page-species-count-list #species-count-list-add-button").click(function() {
-        jQuery.mobile.changePage("#species-count-edit", jQuery.mobile.defaultPageTransition, false, true);
+        jQuery.mobile.changePage("#species-count-edit", {showLoadMsg: false});
     });
 };
     
@@ -42,7 +42,7 @@ exports.Show = function() {
         listViewItem.find("#"+speciesCount.id).click(function(event) {
             bdrs.mobile.setParameter(bdrs.mobile.pages.species_count_edit.SPECIES_COUNT_ID_KEY, 
                                      jQuery(event.currentTarget).attr('id'));
-            jQuery.mobile.changePage("#species-count-edit", jQuery.mobile.defaultPageTransition, false, true);
+            jQuery.mobile.changePage("#species-count-edit", {showLoadMsg: false});
         });
         listViewItem.appendTo(listView);
     }

@@ -1265,6 +1265,73 @@ public class BulkDataServiceTest extends AbstractControllerTest {
 		Assert.assertEquals(0, errors.size());
 		Assert.assertEquals(2, bulkUpload.getRecordUploadList().size());
 	}
+	
+    @Test
+    public void testImportRecordAndMissingLocation() throws IOException,
+            ParseException, MissingDataException,
+            InvalidSurveySpeciesException, DataReferenceException {
+        setRequired(survey, false);
+        File spreadSheetTmp = File.createTempFile("BulkDataServiceTest.testImportRecordAndMissingLocation", ".xls");
+        FileOutputStream outStream = new FileOutputStream(spreadSheetTmp);
+        bulkDataService.exportSurveyTemplate(sesh, survey, outStream);
+        registerStream(outStream);
+
+        InputStream inStream = new FileInputStream(spreadSheetTmp);
+        Workbook wb = new HSSFWorkbook(inStream);
+        registerStream(inStream);
+
+        Sheet obSheet = wb.getSheet(AbstractBulkDataService.RECORD_SHEET_NAME);
+        // enter records starting at row 3
+
+        String locationName = "I am a new location";
+        
+        MyTestRow row = new MyTestRow();
+        row.setLocationName(locationName);
+        row.createRow(obSheet, 3);
+        
+        // Location Sheet
+        Sheet locSheet = wb
+                        .getSheet(AbstractBulkDataService.LOCATION_SHEET_NAME);
+        Assert.assertNotNull(locSheet);
+
+        Row locRow = locSheet.createRow(locSheet.getLastRowNum() + 1);
+        int colIndex = 0;
+        locRow.createCell(colIndex++); // Location ID
+        // Intentionally setting everything as strings to stress the format
+        // coercion
+        locRow.createCell(colIndex++).setCellValue(
+                        AbstractBulkDataService.LOCATION_SHEET_SURVEY_LOCATION); // Type
+        locRow.createCell(colIndex++).setCellValue(locationName); // Location
+                                                                                                                                        // Name
+        locRow.createCell(colIndex++).setCellValue("-20"); // Latitude
+        locRow.createCell(colIndex++).setCellValue("-20"); // Longitude
+        locRow.createCell(colIndex++).setCellValue("I am a little teapot"); // Attribute
+
+        FileOutputStream outStream2 = new FileOutputStream(spreadSheetTmp);
+        wb.write(outStream2);
+        registerStream(outStream2);
+
+        FileInputStream inStream2 = new FileInputStream(spreadSheetTmp);
+        registerStream(inStream2);
+
+        BulkUpload bulkUpload = bulkDataService.importBulkData(survey, inStream2);
+
+        Assert.assertEquals(1, bulkUpload.getRecordUploadList().size());
+
+        sessionFactory.getCurrentSession().getTransaction().commit();
+        // we need a new one to use our DAOs.
+        sessionFactory.getCurrentSession().beginTransaction();
+
+        bulkDataService.saveRecords(user, bulkUpload, true);
+
+        Assert.assertEquals(1, recDAO.countAllRecords().intValue());
+        Assert.assertEquals(1, survey.getLocations().size());
+        
+        Location loc = locationDAO.getLocationByName(survey.getName(), locationName);
+        
+        List<Record> recList = recDAO.getRecords(loc);
+        Assert.assertEquals(1, recList.size());
+    }
 
 	@Test
 	public void testImportRecordDateTime() throws IOException, ParseException,

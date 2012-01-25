@@ -6,9 +6,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import au.com.gaiaresources.bdrs.config.AppContext;
+import au.com.gaiaresources.bdrs.controller.RenderController;
+import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 /**
  * Helper for holding constants used across the board for record forms
@@ -17,15 +21,56 @@ import au.com.gaiaresources.bdrs.model.user.User;
  *
  */
 public class RecordWebFormContext {
+    
+    /**
+     * Request param - requests for an editable form
+     */
     public static final String PARAM_EDIT = "editForm";
+    /**
+     * Model key - is the form editable
+     */
     public static final String MODEL_EDIT = "editEnabled";
+    /**
+     * Model key - for the RecordWebFormContext
+     */
     public static final String MODEL_WEB_FORM_CONTEXT = "recordWebFormContext";
+    /**
+     * Request param - is the form in preview mode
+     */
     public static final String PARAM_PREVIEW = "preview";
-    
+    /**
+     * Request param - the survey to open the form with.
+     */
     public static final String PARAM_SURVEY_ID = "surveyId";
-    
+    /**
+     * Msg code - cannot edit form due to auth failure
+     */
     public static final String MSG_CODE_EDIT_AUTHFAIL = "bdrs.record.edit.authfail";
+    /**
+     * Msg code - cannot view form due to auth failure
+     */
     public static final String MSG_CODE_VIEW_AUTHFAIL = "bdrs.record.view.authfail";
+    /**
+     * Request param - passed when the POST should redirect to a blank version of the same
+     * form that has just been posted
+     */
+    public static final String PARAM_SUBMIT_AND_ADD_ANOTHER = "submitAndAddAnother";
+    /**
+     * Request param - redirect url to use after record form post.
+     */
+    public static final String PARAM_REDIRECT_URL = "redirecturl";
+        
+    /**
+     * Url for survey redirect, see RenderController. This needs refactoring !
+     * This actually causes a compile time circular dependency but java can compile anyway so...
+     * it's ok for now ?
+     */
+    public static final String SURVEY_RENDER_REDIRECT_URL = RenderController.SURVEY_RENDER_REDIRECT_URL;
+    
+    /**
+     * Request param - census method ID used to open the form.
+     */
+    public static final String PARAM_CENSUS_METHOD_ID = "censusMethodId";
     
     // From MySightingsController - the query parameter record ID.
     // Not refering to MySightings directly here since we may introduce
@@ -170,5 +215,51 @@ public class RecordWebFormContext {
         if (r != null) {
             mv.addObject(MODEL_RECORD_ID, r.getId());
         }
+    }
+        
+    /**
+     * Returns the Redirect model and view
+     * 
+     * @param request - HttpServletRequest from record form post
+     * @param r - the persisted record
+     * @return ModelAndView
+     */
+    public static ModelAndView getSubmitRedirect(HttpServletRequest request, Record r) {
+        
+        Survey survey = r.getSurvey();
+        CensusMethod cm = r.getCensusMethod();
+        RedirectionService redirectionService = AppContext.getBean(RedirectionService.class);
+        
+        ModelAndView mv;
+        if (request.getParameter(PARAM_SUBMIT_AND_ADD_ANOTHER) != null) {
+            mv = new ModelAndView(new RedirectView(
+                    SURVEY_RENDER_REDIRECT_URL, true));
+            mv.addObject(PARAM_SURVEY_ID, survey.getId());
+            if (cm != null) {
+                mv.addObject(PARAM_CENSUS_METHOD_ID, cm.getId());   
+            }
+        } else {
+            // Normal submit case:
+            if (request.getSession().getAttribute(PARAM_REDIRECT_URL) != null) {
+                mv = new ModelAndView("redirect:"
+                        + request.getSession().getAttribute(PARAM_REDIRECT_URL));
+            } else if (request.getParameter(PARAM_REDIRECT_URL) != null) { 
+                mv = new ModelAndView("redirect:"
+                        + request.getParameter(PARAM_REDIRECT_URL));
+            } else {
+                switch (survey.getFormSubmitAction()) {
+                case STAY_ON_FORM:
+                    mv = new ModelAndView(new RedirectView(redirectionService.getViewRecordUrl(r), true));   
+                    break;
+                case MY_SIGHTINGS:
+                default:
+                    mv = new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(survey), true));
+                    // highlight the record that has been created...
+                    RecordWebFormContext.addRecordHighlightId(mv, r);
+                    break;
+                }
+            }
+        }
+        return mv;
     }
 }

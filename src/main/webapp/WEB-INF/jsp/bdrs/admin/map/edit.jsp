@@ -89,7 +89,7 @@
     <tiles:insertDefinition name="geoMapLayerGrid">
            <tiles:putAttribute name="widgetId" value="addMapLayerGrid"/>
            <tiles:putAttribute name="multiselect" value="false"/>
-           <tiles:putAttribute name="scrollbars" value="true" />
+           <tiles:putAttribute name="scrollbars" value="false" />
     </tiles:insertDefinition>
 </div>
 
@@ -173,8 +173,9 @@
             modal: true,
             autoOpen: false,
             zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
+			resizable: false,
             buttons: {
-                "Ok": function() {
+                "OK": function() {
                     var rowId = addMapLayerGrid_GridHelper.getSelected();                    
                     // single select so...
                     if (rowId) {
@@ -199,6 +200,7 @@
                 }
             }
         });
+		bdrs.fixJqDialog('#addMapLayerDialog');
         
         $( "#addMapLayerBtn" )
             .click(function() {

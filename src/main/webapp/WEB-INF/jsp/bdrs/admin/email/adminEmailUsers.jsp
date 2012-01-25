@@ -73,8 +73,10 @@
 <script type="text/javascript">
     jQuery(document).ready(function() {
 		// set the popups to only open on command, not page open
-        $('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
-        $('#popupDialog').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false });
+        jQuery('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false, resizable: false, });
+		bdrs.fixJqDialog('#savePopup');
+        jQuery('#popupDialog').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false, resizable: false, });
+		bdrs.fixJqDialog('#popupDialog');
 		
         // add the variable selector to myHtmlSettings before adding them to the markup editor
     	bdrs.admin.myHtmlSettings.markupSet.push(
@@ -95,38 +97,37 @@
                       ]
                 });
 
-    	$('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
+    	jQuery('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
     	
-        $("#saveTemplate").click(function() {
+        jQuery("#saveTemplate").click(function() {
             // use the template name from the popup dialog
-            var templateName = "email/" + $('#saveTemplateName').val();
-            $('#savePopup').dialog('close');
+            var templateName = "email/" + jQuery('#saveTemplateName').val();
+            jQuery('#savePopup').dialog('close');
             bdrs.admin.adminEditContent.saveContent(templateName);
         });
 
-        $("#submitEmail").click(function() {
+        jQuery("#submitEmail").click(function() {
             sendEmail();
         });
     });
 
-    changeTemplate = function() {
+    var changeTemplate = function() {
         // set the subject to the template name less the "email/" prefix
         var selTemplate = bdrs.admin.adminEditContent.getKey();
-        $("#subject").val(bdrs.admin.insertSpaces(selTemplate.substr(6)));
+        jQuery("#subject").val(bdrs.admin.insertSpaces(selTemplate.substr(6)));
         bdrs.admin.onSelectContentEditorChange();
-    }
+    };
 
     // show the contacts dialog and set the width & height here to override
     // automatic dialog settings
-    showPopupDialog = function() {
-    	$('#popupDialog').dialog('open');
-    	$('#popupDialog').dialog({ height: 420 });
-        $('#popupDialog').dialog({ width: 400 });
-    }
+    var showPopupDialog = function() {
+    	jQuery('#popupDialog').dialog({ height: 420, width: 400 });
+		jQuery('#popupDialog').dialog('open');
+    };
 
-    addAddressees = function() {
+    var addAddressees = function() {
         // get all of the selected addresses and add them to the toUsers input area
-        var s = $("#tree").getCheckedNodes();
+        var s = jQuery("#tree").getCheckedNodes();
         if(s !=null) {
             // remove any non-email addresses from the list
             for (var i = s.length-1; i >= 0; i--) {
@@ -138,26 +139,28 @@
         }
         else
             s = "";
-        $('#toUsers').val(s);
+        jQuery('#toUsers').val(s);
         
         // close the dialog
-        $('#popupDialog').dialog('close');
-    }
+        jQuery('#popupDialog').dialog('close');
+    };
 
-    sendEmail = function() {
+    var sendEmail = function() {
         jQuery.ajax(bdrs.contextPath + "/admin/sendMessage.htm", 
         {
             type: "POST",
-            data: { to: $('#toUsers').val(), subject: $('#subject').val(), 
+            data: { to: jQuery('#toUsers').val(), subject: jQuery('#subject').val(), 
                     content: bdrs.admin.adminEditContent.getTextarea().value}
         })
         .success(function(data) { 
-            bdrs.message.set("Email sent successfully");
+			bdrs.message.set("Email sent successfully");
         })
-        .error(function(data) { bdrs.message.set("Failed to send email") });
-    }
+        .error(function(data) {
+            bdrs.message.set("Failed to send email"); 
+        });
+    };
     
-    createTreeData = function(){
+    var createTreeData = function(){
         var node1 = createAllUsersNode();
 
         var node2 = createGroupsNode();
@@ -165,9 +168,9 @@
         var node3 = createProjectsNode();
         
         return [ node1, node2, node3 ];
-    }
+    };
 
-    createAllUsersNode = function() {
+    var createAllUsersNode = function() {
     	var node1 = createRootNode("All Users");
 
         jQuery.ajax({
@@ -178,9 +181,9 @@
         async: false
         });
         return node1;
-    }
+    };
 
-    createGroupsNode = function() {
+    var createGroupsNode = function() {
     	var node2 = createRootNode("Groups");
         jQuery.ajax({
             url: '${pageContext.request.contextPath}/webservice/user/getUsers.htm?queryType=group', 
@@ -191,9 +194,9 @@
         async: false
         });
         return node2;
-    }
+    };
 
-    createProjectsNode = function() {
+    var createProjectsNode = function() {
         var node3 = createRootNode("Projects");
         jQuery.ajax({
             url: '${pageContext.request.contextPath}/webservice/user/getUsers.htm?queryType=project', 
@@ -204,9 +207,9 @@
         async: false
         });
         return node3;
-    }
+    };
     
-    createRootNode = function(text) {
+    var createRootNode = function(text) {
     	var root = {
                 "id" : text,
                 "text" : text,
@@ -218,9 +221,9 @@
                 "hasChildren" : true
               };
         return root;
-    }
+    };
 
-    createUserNodes = function(idPrefix, users) {
+    var createUserNodes = function(idPrefix, users) {
     	var arr = [];
         for(var i=0; i<users.length; i++) {
               arr.push( {
@@ -235,9 +238,9 @@
               });
         }
         return arr;
-    }
+    };
 
-    createGroupProjectNodes = function(idPrefix, data) {
+    var createGroupProjectNodes = function(idPrefix, data) {
     	var arr = [];
         for(var i=0; i<data.length; i++) {
             var subArr = createUserNodes(idPrefix + "_user" + i + "-", data[i].users);
@@ -271,7 +274,7 @@
               
         }
         return arr;
-    }
+    };
     
     var userAgent = window.navigator.userAgent.toLowerCase();
     $.browser.msie8 = $.browser.msie && /msie 8\.0/i.test(userAgent);
@@ -282,13 +285,13 @@
         };
         o.cbiconpath = "${pageContext.request.contextPath}/images/wdTree/icons/";
         o.data = createTreeData();
-        $("#tree").treeview(o);
-    }   
+        jQuery("#tree").treeview(o);
+    };
     if( $.browser.msie6)
     {
         load();
     }
     else{
-        $(document).ready(load);
+        jQuery(document).ready(load);
     }
 </script>

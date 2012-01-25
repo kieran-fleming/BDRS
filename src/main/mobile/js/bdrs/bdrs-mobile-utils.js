@@ -321,26 +321,6 @@ bdrs.mobile.roundnumber = function(num, dec) {
 	return result;
 };
 
-bdrs.mobile.restyle = function(target) {
-    var element = jQuery(target);
-    element.find("button, input[type=button], input[type=submit], input[type=reset]").button();
-    element.find("input[type=text], input[type=number], textarea").textinput();
-    element.find("input[type=file]").textinput();
-    element.find("input[type=radio]").checkboxradio();
-    element.find("input[type=checkbox]").checkboxradio();
-    element.find("input[type=checkbox]").checkboxradio('refresh');
-    element.find("select").selectmenu();
-    element.find("[data-role=controlgroup]").controlgroup();
-    element.find("[data-role=fieldcontain]").fieldcontain();
-    element.find("[data-role=listview]").listview();
-    element.find("a[data-role=button]").button();
-    
-    element.find("[data-role=collapsible]").collapsible();
-    // Make sure to account for those collapsibles that do not specify data-collapsed.
-    element.find("[data-collapsed=true]").trigger('collapse');
-    element.find("[data-collapsed=false]").trigger('expand');
-};
-
 bdrs.mobile.guidGenerator = function() {
     var S4 = function() {
        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
@@ -43,6 +44,7 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.property.PropertyService;
 import au.com.gaiaresources.bdrs.service.web.AtlasService;
 
 public class TaxonomyManagementControllerTest extends AbstractControllerTest {
@@ -59,6 +61,9 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     
     @Autowired
     private SpeciesProfileDAO profileDAO;
+    
+    @Autowired
+    private PropertyService propService;
 
     private TaxonGroup taxonGroupBirds;
 
@@ -835,32 +840,27 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         return super.createUploadRequest();
     }
     
-    @Ignore
     @Test
     public void testImportOneShortProfile() throws Exception {
         testImportTaxon(SPECIES_PROFILES.get(0), true);
     }
     
-    @Ignore
     @Test
     public void testImportOneFullProfileOverrideShort() throws Exception {
         testImportTaxon(SPECIES_PROFILES.get(0), false);
     }
     
-    @Ignore
     @Test
     public void testImportOneFullProfile() throws Exception {
         testImportTaxon(SPECIES_PROFILES.get(1), false);
     }
     
-    @Ignore
     @Test
     public void testImportMultipleShortProfile() throws Exception {
         testImportTaxon(SPECIES_PROFILES.get(1) + "," +
                         SPECIES_PROFILES.get(2), true);
     }
     
-    @Ignore
     @Test
     public void testImportMultipleFullProfile() throws Exception {
         testImportTaxon(SPECIES_PROFILES.get(0) + "," +
@@ -870,7 +870,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
     private void testImportTaxon(String guids, boolean shortProfile) throws Exception {
         login("admin", "password", new String[] { Role.ADMIN });
 
-        request.setMethod("GET");
+        request.setMethod("POST");
         request.setRequestURI("/bdrs/admin/taxonomy/importNewProfiles.htm");
         
         request.setParameter("guids", guids);
@@ -878,24 +878,31 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
             request.setParameter("shortProfile", "on");
         }
         
-        ModelAndView mv = handle(request, response);
-        Assert.assertTrue(mv.getView() instanceof RedirectView);
-        RedirectView redirect = (RedirectView) mv.getView();
-        Assert.assertEquals("/bdrs/admin/taxonomy/listing.htm", redirect.getUrl());
+        handle(request, response);
         
         String[] guidSplit = guids.split(",");
         for (String guid : guidSplit) {
             compareTaxon(guid, shortProfile);
         }
+        
+        JSONObject json = JSONObject.fromObject(response.getContentAsString());
+        String message = json.getString(TaxonomyManagementController.JSON_KEY_MESSAGE);
+        JSONArray errorList = json.getJSONArray(TaxonomyManagementController.JSON_KEY_ERROR_LIST);
+        
+        Assert.assertNotNull("message cannot be null", message);
+        Assert.assertNotNull("error list cannot be null", errorList);
+        
+        Assert.assertEquals("error count mismatch", 0, errorList.size());
+        
+        String tmpl = propService.getMessage(TaxonomyManagementController.MSG_KEY_IMPORT_SUCCESS);
+        Assert.assertEquals("message mismatch", String.format(tmpl, guidSplit.length), message);
     }
 
-    @Ignore
     @Test
     public void testImportFromEdit() throws Exception {
         testImportProfileToTaxon(importSpecies.getId(), null);
     }
     
-    @Ignore
     @Test
     public void testImportFromEditWithGuid() throws Exception {
         testImportProfileToTaxon(importSpecies.getId(), 

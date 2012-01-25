@@ -67,6 +67,20 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
     }
     
     @Override
+    public List<Portal> getActivePortals() {
+        return this.getActivePortals(null, true);
+    }
+    
+    @Override
+    public List<Portal> getActivePortals(Session sesh, boolean isActive) {
+        if(sesh == null) {
+            sesh = getSessionFactory().getCurrentSession();
+        }
+        
+        return super.find(sesh, "from Portal p where p.active = ? order by p.name", isActive);
+    }
+    
+    @Override
     public PortalEntryPoint getPortalEntryPointByPattern(Integer portalId,
             String pattern) {
         return this.getPortalEntryPointByPattern(null, portalId, pattern);
@@ -174,24 +188,24 @@ public class PortalDAOImpl extends AbstractDAOImpl implements PortalDAO {
     }
     
     @Override
-    public Portal getPortal(boolean isDefault) {
-        return this.getPortal(null, isDefault);
+    public Portal getDefaultPortal() {
+        return this.getDefaultPortal(null);
     }
 
     @Override
-    public Portal getPortal(Session sesh, boolean isDefault) {
+    public Portal getDefaultPortal(Session sesh) {
         if(sesh == null) {
             sesh = getSessionFactory().getCurrentSession();
         }
         
-        List<Portal> portalList = find(sesh, "from Portal p where p.default = ?", isDefault);
+        List<Portal> portalList = find(sesh, "from Portal p where p.default = true and p.active = true");
         
         if(portalList.isEmpty()) {
             return null;
         }
         
         if(portalList.size() > 1) {
-            log.warn(String.format("More than one portals with default = \"%s\" found. Returning the first.", Boolean.valueOf(isDefault).toString()));
+            log.warn("More than one active and default portals found. Returning the first.");
         }
         
         return portalList.get(0);

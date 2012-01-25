@@ -8,151 +8,63 @@
 <jsp:useBean id="record" scope="request" type="au.com.gaiaresources.bdrs.model.record.Record" />
 <jsp:useBean id="survey" scope="request" type="au.com.gaiaresources.bdrs.model.survey.Survey" />
 
-<%-- Access the facade to retrieve the preference information --%>
-<jsp:useBean id="bdrsPluginFacade" scope="request" type="au.com.gaiaresources.bdrs.servlet.BdrsPluginFacade"></jsp:useBean>
-<c:set var="showScientificName" value="<%= bdrsPluginFacade.getPreferenceBooleanValue(\"taxon.showScientificName\") %>" />
-
 <h1><c:out value="${survey.name}"/></h1>
 <c:if test="${censusMethod != null}">
     <!-- using censusmethod description here in case we want to display no text / more indepth text -->
     <p><cw:validateHtml html="${censusMethod.description}"/></p>
 </c:if>
 
-<tiles:insertDefinition name="recordEntryMap">
-    <tiles:putAttribute name="survey" value="${survey}"/>
-    <tiles:putAttribute name="censusMethod" value="${censusMethod}"/>
-	<tiles:putAttribute name="mapEditable" value="${recordWebFormContext.editable}" />
-</tiles:insertDefinition>
-
-<c:if test="${ not preview and recordWebFormContext.editable}">
-    <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/tracker.htm" enctype="multipart/form-data">
+<c:if test="${parentRecordId != null or record.parentRecord != null or (censusMethod != null and !empty censusMethod.censusMethods)}">
+	<div class="controlPanel ie7">
+		<a id="record_tab_handle" class="tab_handle" href="javascript:void(0);">
+	        <div
+	            <c:choose>
+	                <c:when test="${ \"record\" == selectedTab }">
+	                    class="displayTab left displayTabSelected"
+	                </c:when>
+	                <c:otherwise>
+	                    class="displayTab left"
+	                </c:otherwise>
+	            </c:choose>
+	            >
+	            Record
+	        </div>
+	    </a>
+	    <a id="sub_record_tab_handle" class="tab_handle" href="javascript:void(0);">
+	        <div
+	            <c:choose>
+	                <c:when test="${ \"subRecord\" == selectedTab }">
+	                    class="displayTab left displayTabSelected"
+	                </c:when>
+	                <c:otherwise>
+	                    class="displayTab left"
+	                </c:otherwise>
+	            </c:choose>
+	            >
+	            Related Records
+	        </div>
+	    </a>
+		<div class="clear"></div>
+	</div>
 </c:if>
 
-    <input type="hidden" name="surveyId" value="${survey.id}"/>
-    <c:if test="${censusMethod != null}">
-    <input type="hidden" name="censusMethodId" value="${censusMethod.id}"/>
-    </c:if>
-    <c:if test="${record != null}">
-        <input type="hidden" name="recordId" value="${record.id}"/>
-    </c:if>
-    
-    <p class="error textcenter" id="wktMessage">
-    </p>
-	
-	<%-- only include the wkt input if we are drawing lines or polygons 
-	   if the wkt key/value pair exists in the post dictionary, the lat/lon
-	   fields will be ignored as the wkt entry takes precedence.
-	--%>
-	<c:if test="<%= !survey.isPredefinedLocationsOnly() %>" >
-	   <c:if test="${censusMethod != null and (censusMethod.drawLineEnabled or censusMethod.drawPolygonEnabled)}">
-	 	 <input type="hidden" name="wkt" value="${wkt}" />
-	   </c:if>
-	</c:if>
-    
-    <c:if test="${!survey.recordVisibilityModifiable}">
-        <input type="hidden" name="recordVisibility" value="${survey.defaultRecordVisibility}" />
-    </c:if>
-    
-    <table class="form_table tracker_form_table">
-        <tbody>
-     
-            <c:if test="${recordWebFormContext.editable and survey.recordVisibilityModifiable}">
-                <tr>
-                    <th title="Who will be able to view your record. \nOwner only means only you will be able to see the record. \nControlled will allow others to see that when and where you have contributed but no additional data will be supplied. \nFull public will show all details of the record to all other users.">Record Visibility</th>
-                    <td>
-                        <select name="recordVisibility">
-                            <c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
-                            <jsp:useBean id="recVis" type="au.com.gaiaresources.bdrs.model.record.RecordVisibility" />
-                                <option value="<%= recVis.toString() %>"
-                                <c:if test="<%= recVis.equals(record.getRecordVisibility()) %>">selected="selected"</c:if>
-                                >
-                                <%= recVis.getDescription() %></option>
-                            </c:forEach>
-                        </select>
-                    </td>
-                </tr>
-            </c:if>
-
-            <c:forEach items="${surveyFormFieldList}" var="formField">
-                <tiles:insertDefinition name="formFieldRenderer">
-                    <tiles:putAttribute name="formField" value="${ formField }"/>
-                    <tiles:putAttribute name="locations" value="${ locations }"/>
-                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
-                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
-					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
-                </tiles:insertDefinition>
-            </c:forEach>
-            
-            <c:forEach items="${taxonGroupFormFieldList}" var="formField">
-                <tiles:insertDefinition name="formFieldRenderer">
-                    <tiles:putAttribute name="formField" value="${ formField }"/>
-                    <tiles:putAttribute name="locations" value="${ locations }"/>
-                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
-                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
-					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
-                </tiles:insertDefinition>
-            </c:forEach>
-            
-            <c:forEach items="${censusMethodFormFieldList}" var="formField">
-                <tiles:insertDefinition name="formFieldRenderer">
-                    <tiles:putAttribute name="formField" value="${ formField }"/>
-                    <tiles:putAttribute name="locations" value="${ locations }"/>
-                    <tiles:putAttribute name="errorMap" value="${ errorMap }"/>
-                    <tiles:putAttribute name="valueMap" value="${ valueMap }"/>
-					<tiles:putAttribute name="editEnabled" value="${ recordWebFormContext.editable }"/>
-                </tiles:insertDefinition>
-            </c:forEach>
-        </tbody>
-    </table>
-
-<%-- the record form footer contains the 'form' close tag --%>
-<tiles:insertDefinition name="recordFormFooter">
-    <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />
-</tiles:insertDefinition>
-
 <script type="text/javascript">
-    jQuery(window).load(function() {
-        // Species Autocomplete
-		var recordIdElem = jQuery("[name=recordId]");
-		var speciesAutocompleteArgs = {
-            surveySpeciesSearchSelector: "#survey_species_search",
-		    speciesIdSelector: "[name=species]",
-		    taxonAttrRowSelector:"[name^=taxonGroupAttr_]",
-		    surveyId: jQuery("[name=surveyId]").val(),
-		    recordId: (recordIdElem.length > 0 && recordIdElem.val().length > 0) ? recordIdElem.val() : undefined,
-		    editable: "${recordWebFormContext.editable}",
-		    attributeTbodySelector: ".form_table tbody", 
-			showScientificName: ${showScientificName}
-		};
-		bdrs.contribute.initSpeciesAutocomplete(speciesAutocompleteArgs);
-		
-        
-        jQuery("#number").change(function(data) {
-            jQuery("#survey_species_search").trigger("blur");
-        });
-            
-        jQuery(".acomplete").autocomplete({
-            source: function(request, callback) {
-                var params = {};
-                params.ident = bdrs.ident;
-                params.q = request.term;
-                var bits = this.element[0].id.split('_');
-                params.attribute = bits[bits.length-1];
-                
-
-                jQuery.getJSON('${pageContext.request.contextPath}/webservice/attribute/searchValues.htm', params, function(data, textStatus) {
-                    callback(data);
-                });
-            },
-            minLength: 2,
-            delay: 300
-        });
-    });
-
-    /**
-     * Prepopulate fields
-     */
-     jQuery(function(){
-         bdrs.form.prepopulate();
-     });
+	jQuery(function() {
+		var selectedTab = "${selectedTab}";
+		var surveyId = "${survey.id}";
+		var censusMethodId = "${censusMethod.id}";
+		var recordId = "${record.id}";
+        bdrs.contribute.tracker.init(selectedTab, surveyId, censusMethodId, recordId);
+	});
 </script>
+
+ <c:choose>
+    <c:when test="${ \"record\" == selectedTab }">
+        <tiles:insertDefinition name="trackerRecordView">
+        </tiles:insertDefinition>        
+    </c:when>
+	<c:when test="${ \"subRecord\" == selectedTab }">
+        <tiles:insertDefinition name="trackerSubRecordView">
+        </tiles:insertDefinition>       
+    </c:when>
+</c:choose>

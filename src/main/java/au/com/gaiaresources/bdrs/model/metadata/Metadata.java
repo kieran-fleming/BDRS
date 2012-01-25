@@ -62,12 +62,34 @@ public class Metadata extends PortalPersistentImpl {
     public static final String RECORD_IS_MASTER = "record_is_master";
     public static final String RECORD_NOT_DUPLICATE = "record_is_not_duplicate";
     // Survey Keys
+    /**
+     * Form renderer type for the survey
+     */
     public static final String FORM_RENDERER_TYPE = "FormRendererType";
+    /**
+     * Logo for the survey
+     */
     public static final String SURVEY_LOGO = "SurveyLogo";
+    /**
+     * Can the survey only have pre defined locations
+     */
     public static final String PREDEFINED_LOCATIONS_ONLY = "PredefinedLocationsOnly";
+    /**
+     * Default record visibility for the survey
+     */
     public static final String DEFAULT_RECORD_VIS = "defaultRecordVisbility";
+    /**
+     * Is the record visibility modifiable by users for the survey
+     */
     public static final String RECORD_VIS_MODIFIABLE = "recordVisibilityModifiable";
+    /**
+     * Is a default census method provided for the survey
+     */
     public static final String DEFAULT_CENSUS_METHOD_FOR_SURVEY = "defaultCensusMethodProvidedForSurvey";
+    /**
+     * The post submit form action for the survey
+     */
+    public static final String FORM_SUBMIT_ACTION = "FormSubmitAction";
     
     // SpeciesProfile Keys
     public static final String SCIENTIFIC_NAME_SOURCE_DATA_ID = "ScientificNameSourceDataId";
@@ -81,8 +103,17 @@ public class Metadata extends PortalPersistentImpl {
     public static final String TAXON_KINGDOM = "TaxonKingdom";
     
     // Census Method Keys
+    /**
+     * Can we define a point on the map for this census method
+     */
     public static final String CENSUS_METHOD_POINT = "censusMethodPoint";
+    /**
+     * Can we define a line on the map for this census method
+     */
     public static final String CENSUS_METHOD_LINE = "censusMethodLine";
+    /**
+     * Can we define a polygon on the map for this census method
+     */
     public static final String CENSUS_METHOD_POLYGON = "censusMethodPolygon";
     
     // Record Property

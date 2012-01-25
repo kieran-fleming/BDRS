@@ -521,7 +521,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
         }
 
         // Test Save and Add Another 
-        request.setParameter("submitAndAddAnother", "submitAndAddAnother");
+        request.setParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER, "true");
         mv = handle(request, response);
         Assert.assertEquals(4, recordDAO.countAllRecords().intValue());
         

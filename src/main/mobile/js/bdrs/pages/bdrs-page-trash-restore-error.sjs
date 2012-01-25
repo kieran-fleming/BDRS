@@ -3,7 +3,7 @@ exports.INVALID_RECORD_KEY = "invalid-record";
 exports._RECORD_DESCRIPTOR_SELECTOR = "#trash-restore-error-record-descriptor";
 exports._PARENT_RECORD_DESCRIPTOR_SELECTOR = "#trash-restore-error-parent-descriptor";
 
-exports.Create = function() {
+exports.Init = function() {
     // do nothing
 };
     

@@ -41,9 +41,9 @@
     jQuery(function() {
 		var actionLinkFormatter = function(cellvalue, options, rowObject) {
 	        var links = new Array();
-			links.push('<a title="Edit account details" style="color:blue" href="${pageContext.request.contextPath}/admin/profile.htm?USER_ID=' + rowObject.id + '">Edit</a>');
+			links.push('<a title="Edit account details" class="fixedLink" href="${pageContext.request.contextPath}/admin/profile.htm?USER_ID=' + rowObject.id + '">Edit</a>');
 			<c:if test="${approveUsers}">
-			     links.push('<a title="Approve account" style="color:blue" href="javascript:approveUser(' + rowObject.id + ')">Approve</a>');
+			     links.push('<a title="Approve account" class="fixedLink" href="javascript:approveUser(' + rowObject.id + ')">Approve</a>');
 			</c:if>
 	        return links.join(" | ");
 	    };
@@ -68,7 +68,7 @@
 	            sortname: 'name',
 	            viewrecords: true,
 	            sortorder: "asc",
-	            caption:"User Listing"
+	            height: "100%"
 	    });
 	
 	    jQuery("#userList").jqGrid('navGrid','#pager2',{edit:false,add:false,del:false});

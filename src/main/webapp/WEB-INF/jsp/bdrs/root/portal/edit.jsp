@@ -48,6 +48,34 @@
                    </c:choose>
                 </td>
             </tr>
+            <tr>
+                <th><label for="default">Active:</label></th>
+                <td>
+                    <c:choose>
+                        <c:when test="${ (portal == context.portal) || portal.default }">
+                            <%-- It is not possible to deactivate your current portal --%>
+                            <c:choose>
+                                <c:when test="${ portal.active }">
+                                    <input type="hidden" name="active" value="true" checked="checked"/>
+                                    Yes
+                                </c:when>
+                                <c:otherwise>
+                                    <!-- I do not see how you got here but for the sake of completeness -->
+                                    <input type="hidden" name="active" value="true"/>
+                                    No
+                                </c:otherwise>
+                            </c:choose>
+                        </c:when>
+                        <c:otherwise>
+                            <input type="checkbox" name="active" value="true"
+                                <c:if test="${ portal.active }">
+                                    checked="checked"
+                                </c:if>
+                            />
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+            </tr>
 	    </tbody>
 	</table>
 	

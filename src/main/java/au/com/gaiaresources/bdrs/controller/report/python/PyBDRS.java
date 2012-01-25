@@ -8,10 +8,12 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
+import au.com.gaiaresources.bdrs.controller.report.python.model.PyCensusMethodDAO;
 import au.com.gaiaresources.bdrs.controller.report.python.model.PyRecordDAO;
 import au.com.gaiaresources.bdrs.controller.report.python.model.PySurveyDAO;
 import au.com.gaiaresources.bdrs.controller.report.python.model.PyTaxaDAO;
 import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.report.Report;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -35,6 +37,8 @@ public class PyBDRS {
     private PySurveyDAO pySurveyDAO;
     private PyTaxaDAO pyTaxaDAO;
     private PyRecordDAO pyRecordDAO;
+    private PyCensusMethodDAO pyCensusMethodDAO;
+    
     private FileService fileService;
     
     /**
@@ -47,7 +51,7 @@ public class PyBDRS {
      * @param taxaDAO retrieves taxon and taxon group related data.
      * @param recordDAO retrieves record related data.
      */
-    public PyBDRS(FileService fileService, Report report, User user, SurveyDAO surveyDAO, TaxaDAO taxaDAO, RecordDAO recordDAO) {
+    public PyBDRS(FileService fileService, Report report, User user, SurveyDAO surveyDAO, CensusMethodDAO censusMethodDAO, TaxaDAO taxaDAO, RecordDAO recordDAO) {
         this.fileService = fileService;
         this.report = report;
         
@@ -58,38 +62,52 @@ public class PyBDRS {
         this.pySurveyDAO = new PySurveyDAO(user, surveyDAO);
         this.pyTaxaDAO = new PyTaxaDAO(user, surveyDAO, taxaDAO);
         this.pyRecordDAO = new PyRecordDAO(user, recordDAO);
+        this.pyCensusMethodDAO = new PyCensusMethodDAO(censusMethodDAO);
     }
     
     /**
-     * @return the pySurveyDAO
+     * Returns the python wrapped for the {@link SurveyDAO}
+     * @return the pySurveyDAO the python wrapped {@link SurveyDAO}
      */
     public PySurveyDAO getSurveyDAO() {
         return pySurveyDAO;
     }
 
     /**
-     * @return the pyTaxaDAO
+     * Returns the python wrapped {@link TaxaDAO}
+     * @return the pyTaxaDAO the python wrapped {@link TaxaDAO}
      */
     public PyTaxaDAO getTaxaDAO() {
         return pyTaxaDAO;
     }
     
     /**
-     * @return the pyRecordDAO
+     * Returns the python wrapped {@link RecordDAO}
+     * @return the pyRecordDAO the python wrapped {@link RecordDAO}
      */
     public PyRecordDAO getRecordDAO() {
         return pyRecordDAO;
     }
     
     /**
-     * @return the user
+     * Returns the python wrapped {@link CensusMethodDAO}
+     * @return the user the python wrapped {@link CensusMethodDAO}
+     */
+    public PyCensusMethodDAO getCensusMethodDAO() {
+        return pyCensusMethodDAO;
+    }
+    
+    /**
+     * Returns a json serialized representation of the logged in {@link User}
+     * @return the user a json serialized representation of the logged in {@link User}
      */
     public JSONObject getUser() {
         return JSONObject.fromObject(user.flatten());
     }
-
+    
     /**
-     * @return the response
+     * Returns a representation of the server response to the client. 
+     * @return the response a representation of the server response to the browser.
      */
     public PyResponse getResponse() {
         return response;
@@ -115,5 +133,14 @@ public class PyBDRS {
             log.error("Unable to resolve absolute path to report.", ioe);
             throw new IllegalStateException(ioe);
         }
+    }
+    
+    /**
+     * Exposes the logger to the python report
+     * 
+     * @return
+     */
+    public Logger getLogger() {
+        return log;
     }
 }

@@ -1,10 +1,10 @@
 /**
  * Event handlers for the add site page. 
  */
-exports.Create = function() {
+exports.Init = function() {
 	jQuery('#add-site-save').click(function (event) {
 		record();
-		jQuery.mobile.changePage("#sites", jQuery.mobile.defaultPageTransition, false, true);
+		jQuery.mobile.changePage("#sites", {showLoadMsg: false});
 	});
 }
 	

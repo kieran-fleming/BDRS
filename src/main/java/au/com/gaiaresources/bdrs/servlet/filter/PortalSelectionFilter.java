@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -20,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.openid4java.util.HttpResponse;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -87,61 +85,100 @@ public class PortalSelectionFilter implements Filter {
                 rollbackRequired = true;
             }
             
+            // Get the raw portal from the session
             Object rawPortalId = httpRequest.getSession().getAttribute(PORTAL_ID_KEY);
+            Portal rawPortal = null;
+            if(rawPortalId != null) {
+                rawPortal= portalDAO.getPortal(sesh, new Integer(rawPortalId.toString()));
+            }
+            
+            // Determine if the raw portal is inactive
+            if(rawPortal == null) {
+                // If the raw portal cannot be found for whatever reason,
+                rawPortalId = null;
+            } else if(!rawPortal.isActive()) {
+                // if the raw portal is found but is deactivated
+                rawPortalId = null;
+                rawPortal = null;
+                httpRequest.getSession().invalidate();
+                sendRedirectToPortalHome(httpRequest, response, portalDAO.getDefaultPortal(sesh));
+            }
+
+            // If we have determined that the session has an invalid attribute,
+            // clean up the session.
+            if(rawPortalId == null) {
+                httpRequest.getSession().removeAttribute(PORTAL_ID_KEY);
+            }
+            
             String url = httpRequest.getRequestURL().toString();
             
             // Test if the servlet path has the form "/portal/<portal_pk>/.../..."
             Pattern restfulPortalPattern = Pattern.compile(RESTFUL_PORTAL_PATTERN_STR);
             Matcher servletPathMatcher = restfulPortalPattern.matcher(httpRequest.getServletPath());
             
+            // Attempt to get the portal from the database. 
+            // Note that the portalPk may be invalid (an int but not a pk)
+            Portal portal = null;
             if(servletPathMatcher.find()) {
                 int portalPk = Integer.parseInt(servletPathMatcher.group(2));
-                
-                Portal portal = portalDAO.getPortal(sesh, portalPk);
-                
+                portal = portalDAO.getPortal(sesh, portalPk);
+            }
+            
+            if(portal != null && portal.isActive()) {
                 httpRequest.getSession().setAttribute(PORTAL_ID_KEY, portal.getId());
                 requestContext.setPortal(portal);
-                
-                if(rawPortalId != null &&
-                        !portal.getId().equals(new Integer(rawPortalId.toString()))) {
+
+                if(rawPortal != null && !portal.getId().equals(rawPortal.getId())) {
                     httpRequest.getSession().invalidate();
                     String queryString = httpRequest.getQueryString();
                     String redirect = url + (queryString != null ? "?"+queryString : "");
                     sendRedirect(response, redirect);
                 }
             } else {
-                List<Portal> portalList = portalDAO.getPortals(sesh);
+                List<Portal> portalList = portalDAO.getActivePortals(sesh, true);
                 if (!portalList.isEmpty() && !response.isCommitted()) {
     
                     PortalMatches matches = portalMatcher.match(sesh, url);
                     Portal defaultPortal = matches.getDefaultPortal();
                     Portal matchedPortal = matches.getMatchedPortal();
                     PortalEntryPoint matchedEntryPoint = matches.getMatchedEntryPoint();
-    
+                    
                     // For each portal, test the entry points.
                     if (defaultPortal == null) {
-                        log.debug("No default Portal. Treating first portal as default.");
                         defaultPortal = portalList.get(0);
                     }
     
                     if (matchedPortal == null) {
-                        if (rawPortalId == null) {
-                            log.debug("URL does not match any known portal entry pattern. Using default portal.");
-                            matchedPortal = defaultPortal;
+                        if (rawPortal == null) {
+                            if(portal != null && !portal.isActive()) {
+                                // The URL contains an invalid portal ID,
+                                httpRequest.getSession().setAttribute(PORTAL_ID_KEY, defaultPortal.getId());
+                                sendRedirectToPortalHome(httpRequest, response, defaultPortal);
+                            } else {
+                                log.debug("URL does not match any known portal entry pattern. Using default portal.");
+                                matchedPortal = defaultPortal;
+                            }
                         } else {
-                            // The Portal ID has been set so there is nothing left to do.
-                            requestContext.setPortal(portalDAO.getPortal(sesh, new Integer(
-                                    rawPortalId.toString())));
-                            matchedPortal = null;
+                            if(portal != null && !portal.isActive()) {
+                                // We got here because we have a RESTful URL
+                                // but the portal is no longer active
+                                requestContext.setPortal(rawPortal);
+                                httpRequest.getSession().setAttribute(PORTAL_ID_KEY, rawPortal.getId());
+                                sendRedirectToPortalHome(httpRequest, response, rawPortal);
+                                //matchedPortal = null;
+                            } else {
+                                // The Portal ID has been set so there is nothing left to do.
+                                requestContext.setPortal(rawPortal);
+                                matchedPortal = null;
+                            }
                         }
                     } else {
                         // Assume that they are logged into Portal 1 and type in the URL
                         // that matches Portal 2, we want to log them out of Portal 1
                         // and redirect them to their desired URL which will take them
                         // to Portal 2.
-                        if (rawPortalId != null
-                                && !matchedPortal.getId().equals(new Integer(
-                                        rawPortalId.toString()))) {
+                        if (rawPortal != null
+                                && !matchedPortal.getId().equals(rawPortal.getId())) {
                             httpRequest.getSession().invalidate();
                             sendRedirect(response, url);
                         }
@@ -191,6 +228,12 @@ public class PortalSelectionFilter implements Filter {
         if (!response.isCommitted()) {
             chain.doFilter(request, response);
         }
+    }
+    
+    private void sendRedirectToPortalHome(HttpServletRequest httpRequest, 
+                                            ServletResponse response, 
+                                            Portal portal) throws IOException {
+        sendRedirect(response, String.format("%s/portal/%d/home.htm", httpRequest.getContextPath(), portal.getId()));
     }
 
     private void sendRedirect(ServletResponse response, String url)

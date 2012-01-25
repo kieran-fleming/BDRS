@@ -1,73 +1,13 @@
 exports.start = function() {
-    bdrs.template.render('footer', null, ".footer");
-    bdrs.template.render('header', null, ".header");
-    
+	
     //Add download app links if app is available
-    if(bdrs.mobile.getParameterByName("hasApp")){
+/*    if(bdrs.mobile.getParameterByName("hasApp")){
         //link on login page
         jQuery('#appLink').fadeIn('600').show('highlight');
         // link in settings menu
         jQuery('#settings ul').append("<li id=\"#settingsAppLink\"><a href=\"application.htm\" rel=\"external\"><h3>Install application</h3><p>Install as a native application</p></a></li>");
-    }
-
-    jQuery(".bdrs-page-login #login_button").click(function(event) {
-        jQuery.jsonp({
-                url: jQuery(".bdrs-page-login #url").val() + "/webservice/user/validate.htm",
-                data: jQuery(".bdrs-page-login #login_form").serializeArray(),
-                type: 'POST',
-                callbackParameter: 'callback',
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var transition = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
-                    jQuery.mobile.changePage("#login_error", transition, false, true);
-                },
-                success: function(data) {
-                    bdrs.mobile.Debug(JSON.stringify(data));
-                    
-                    // stuff into database
-                    var server_url = jQuery(".bdrs-page-login #url").val();
-                    // If the URL ends with a slash, don't add another one, otherwise add one.
-                    server_url = server_url[server_url.length-1] == '/' ? server_url : server_url + '/';
-                    server_url = server_url + "portal/" + data.portal_id;
-                    var t = new User({  name : data.user.name, 
-                                        ident : data.ident,
-                                        firstname: data.user.firstName,
-                                        lastname : data.user.lastName,
-                                        server_id : data.user.server_id,
-                                        portal_id : data.portal_id,
-                                        server_url: server_url });
-                    // add user locations to user
-                    for (var i = 0; i < data.location.length; i++){
-                        var location = data.location[i];
-                        var point = new bdrs.mobile.Point(location.location);
-                        t.locations().add(new Location({
-                            server_id : location.server_id,
-                            name : location.name,
-                            latitude : point.getLatitude(),
-                            longitude : point.getLongitude() }));
-                    }
-                    persistence.add(t);
-                    persistence.flush();
-                    bdrs.mobile.User = t;
-                    // change the page
-                    jQuery.mobile.changePage("#dashboard", jQuery.mobile.defaultPageTransition, false, true);
-                }
-        });
-    });
-    
-    User.all().count(function(number) { 
-        if (number > 0) { 
-            User.all().one(function(user) {
-                bdrs.mobile.User = user;
-            });
-        
-            if (jQuery(jQuery.mobile.activePage).attr('data-url') == 'dashboard') {
-                bdrs.mobile.pages.dashboard.Show();
-            } else {
-                jQuery.mobile.changePage("#dashboard", jQuery.mobile.defaultPageTransition, false, true);
-            }
-        }
-    });
-    
+    }*/
+	
     jQuery.datepicker.setDefaults({dateFormat : 'dd M yy'});
     
     // Phonegap events.
@@ -80,5 +20,23 @@ exports.start = function() {
     document.addEventListener("resume", function() {
     	bdrs.mobile.geolocation.enable();
     }, false);
-    //jQuery.mobile.changePage("#login", jQuery.mobile.defaultPageTransition, false, true);
+    
+    /* Onload there is no hastag unless someone has been trying to reload on a page with a hashtag.
+     * In that case set location to origin + path without hashtag en reload.
+     */
+	if(window.location.hash !== ""){
+		window.location.href = window.location.origin + window.location.pathname;
+	}
+    
+    //redirect user depending on login status
+	var theUser;
+	waitfor(theUser) {
+		User.all().one(resume);
+	}
+	bdrs.mobile.User = theUser;
+	if (bdrs.mobile.User === null || bdrs.mobile.User === undefined) {
+		jQuery.mobile.changePage("#login", {changeHash: false, transition: "fade", showLoadMsg: false});
+	} else {
+		jQuery.mobile.changePage("#dashboard", {changeHash: false, transition: "fade", showLoadMsg: false});
+	}
 };

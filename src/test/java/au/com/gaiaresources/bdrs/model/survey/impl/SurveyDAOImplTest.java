@@ -4,6 +4,7 @@
 package au.com.gaiaresources.bdrs.model.survey.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ import au.com.gaiaresources.bdrs.test.AbstractTransactionalTest;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+
 /**
  * @author kehan
  *
@@ -61,6 +63,8 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
     private Survey survey1;
     private Survey survey2;
     private Survey survey3;
+    private Survey survey4;
+    private Survey survey5;
     private TaxonGroup taxonGroup;
     private IndicatorSpecies speciesA;
     private IndicatorSpecies speciesB;
@@ -104,10 +108,10 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
         speciesB.setTaxonGroup(taxonGroup);
         speciesB = taxaDAO.save(speciesB);
         speciesC = new IndicatorSpecies();
-        speciesC.setCommonName("Indicator Species B");
-        speciesC.setScientificName("Indicator Species B");
+        speciesC.setCommonName("Indicator Species C");
+        speciesC.setScientificName("Indicator Species C");
         speciesC.setTaxonGroup(taxonGroup);
-        speciesC = taxaDAO.save(speciesB);
+        speciesC = taxaDAO.save(speciesC);
         species = new ArrayList<IndicatorSpecies>(2);
         species.add(speciesA);
         species.add(speciesB);
@@ -201,15 +205,34 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
         survey2 = surveyDAO.createSurvey("Survey2");
         survey2.setPublic(true);
         survey2.getUsers().add(user2);
+        Set<IndicatorSpecies> survey2Species = new HashSet<IndicatorSpecies>();
+        survey2Species.add(speciesC);
+        survey2.setSpecies(survey2Species);
         
         survey2.getGroups().add(group2);
         survey2 = surveyDAO.updateSurvey(survey2);
         
         survey3 = surveyDAO.createSurvey("Survey3");
         survey3.getGroups().add(group2);
-        survey3 = surveyDAO.updateSurvey(survey3);
         survey3.setPublic(false);
+        Set<IndicatorSpecies> survey3Species = new HashSet<IndicatorSpecies>();
+        survey3Species.add(speciesC);
+        survey3.setSpecies(survey3Species);
+        survey3 = surveyDAO.updateSurvey(survey3);
         
+        
+        // Public survey with all species included
+        survey4 = surveyDAO.createSurvey("Survey4");
+        survey4.setPublic(true);
+        survey4.setActive(true);
+        
+        survey5= surveyDAO.createSurvey("Survey5");
+        survey5.setPublic(true);
+        survey5.setActive(true);
+        Set<IndicatorSpecies> survey5Species = new HashSet<IndicatorSpecies>();
+        survey5Species.add(speciesC);
+        survey5.setSpecies(survey5Species);
+        survey5 = surveyDAO.updateSurvey(survey5);
     }
     
     /**
@@ -269,26 +292,26 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
             //And this should be speciesA
             Assert.assertEquals(speciesA, sp);
         }
-        speciesC.getRegions().add(regionA);
-        taxaDAO.save(speciesC);
+        speciesB.getRegions().add(regionA);
+        taxaDAO.save(speciesB);
         surveyDAO.save(survey1);
         //Now the cache should have expired
         Set<IndicatorSpecies> refreshedSpecies = surveyDAO.getSpeciesWithinSurveyLocations(survey1);
         Assert.assertEquals(2, refreshedSpecies.size());
         Assert.assertTrue("Returned set should contain species A", refreshedSpecies.contains(speciesA));
-        Assert.assertTrue("Returned set should contain species C", refreshedSpecies.contains(speciesC));
+        Assert.assertTrue("Returned set should contain species B", refreshedSpecies.contains(speciesB));
     }
     
     @Test
     public void testGetActiveSurveysForUser(){
-        testGetActiveSurveysForUser(user1, 3, survey1);
-        testGetActiveSurveysForUser(user1, 3, survey2);
-        testGetActiveSurveysForUser(user1, 3, survey3);
-        testGetActiveSurveysForUser(user2, 2, survey1);
-        testGetActiveSurveysForUser(user2, 2, survey2);
-        testGetActiveSurveysForUser(user3, 3, survey1);
-        testGetActiveSurveysForUser(user3, 3, survey2);
-        testGetActiveSurveysForUser(user3, 3, survey3);
+        testGetActiveSurveysForUser(user1, 5, survey1);
+        testGetActiveSurveysForUser(user1, 5, survey2);
+        testGetActiveSurveysForUser(user1, 5, survey3);
+        testGetActiveSurveysForUser(user2, 4, survey1);
+        testGetActiveSurveysForUser(user2, 4, survey2);
+        testGetActiveSurveysForUser(user3, 5, survey1);
+        testGetActiveSurveysForUser(user3, 5, survey2);
+        testGetActiveSurveysForUser(user3, 5, survey3);
         
     }
     private void testGetActiveSurveysForUser(User u, int expectedLength, Survey expectedSurvey){
@@ -329,6 +352,26 @@ public class SurveyDAOImplTest extends AbstractTransactionalTest {
         // will cause an error if hql injection is possible
         surveyDAO.getSpeciesForSurveySearch(survey1.getId(), "%Carnaby's%Black%");
         surveyDAO.getSpeciesForSurveySearch(survey1.getId(), ";drop table portal;");
+    }
+    
+    @Test
+    public void testGetActiveSurveysForUserWithSpecies() {
+        testGetActiveSurveysForUserWithSpecies(user1, null, speciesA, survey1, survey4);
+        testGetActiveSurveysForUserWithSpecies(user1, null, speciesC, survey2, survey3, survey4, survey5);
+    }
+    
+    private void testGetActiveSurveysForUserWithSpecies(User u, Group g, IndicatorSpecies s, Survey... expectedSurveys) {
+        List<Survey> expectedList = new ArrayList<Survey>(Arrays.asList(expectedSurveys));
+        List<Survey> surveys = surveyDAO.getActiveSurveysForUser(u, g, s);
+        
+        for (Survey ssss : surveys) {
+            log.debug("survey name : " + ssss.getName());
+        }
+        
+        Assert.assertEquals("lists should be equal length", expectedList.size(), surveys.size());
+        for (Survey surv : surveys) {
+            Assert.assertTrue("returned survey not in expected list", expectedList.contains(surv));
+        }
     }
     
     private void testGetActiveSurveysForUserWithGroupId(User u, Group group, int expectedLength, Survey expectedSurvey){

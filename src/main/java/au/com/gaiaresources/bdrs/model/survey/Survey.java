@@ -73,9 +73,11 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
     // record publish settings to whatever they choose. False means the records
     // will have the same publish level as the default record publish level for
     // the survey.
-    private static final boolean DEFAULT_RECORD_VISIBILITY_MODIFIABLE = true;
+    private static final boolean DEFAULT_RECORD_VISIBILITY_MODIFIABLE = false;
     
     private static final boolean DEFAULT_CENSUS_METHOD_PROVIDED_FOR_SURVEY = false;
+    
+    public static final SurveyFormSubmitAction DEFAULT_SURVEY_FORM_SUBMIT_ACTION = SurveyFormSubmitAction.MY_SIGHTINGS;
 
     /**
      * {@inheritDoc}
@@ -153,14 +155,26 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         return endDate != null ? (Date) endDate.clone() : null;
     }
 
+    /**
+     * Set the end date for the survey
+     * @param date Date
+     */
     public void setEndDate(Date date) {
         this.endDate = date != null ? (Date) date.clone() : null;
     }
     
+    /**
+     * Set the end date for the survey
+     * @param date String
+     */
     public void setEndDate(String date) {
         setEndDate(DateUtils.getDate(date));
     }
 
+    /**
+     * Get the locations for the survey
+     * @return List<Location>
+     */
     @CompactAttribute
     @ManyToMany(fetch = FetchType.LAZY)
     @IndexColumn(name = "pos")
@@ -168,10 +182,18 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         return locations;
     }
 
+    /**
+     * Set the locations for the survey
+     * @param locations List<Location>
+     */
     public void setLocations(List<Location> locations) {
         this.locations = locations;
     }
 
+    /**
+     * Gets the users for the survey
+     * @return Set<User>
+     */
     // Many to many is a work around (read hack) to prevent a unique
     // constraint being applied on the user_id.
     @ManyToMany
@@ -179,31 +201,55 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         return users;
     }
 
+    /**
+     * Sets the users for the survey
+     * @param users Set<User>
+     */
     public void setUsers(Set<User> users) {
         this.users = users;
     }
 
+    /**
+     * Gets the species for the survey
+     * @return Set<IndicatorSpecies>
+     */
     @CompactAttribute
     @ManyToMany(fetch=FetchType.LAZY)
     public Set<IndicatorSpecies> getSpecies() {
         return species;
     }
 
+    /**
+     * Sets the species for the survey
+     * @param species Set<IndicatorSpecies>
+     */
     public void setSpecies(Set<IndicatorSpecies> species) {
         this.species = species;
     }
 
     // Many to many is a work around (read hack) to prevent a unique
     // constraint being applied on the user_id.
+    /**
+     * Gets the user groups for the survey
+     * @return Set<Group>
+     */
     @ManyToMany
     public Set<Group> getGroups() {
         return groups;
     }
 
+    /**
+     * Sets the groups for the survey
+     * @param groups Set<Group>
+     */
     public void setGroups(Set<Group> groups) {
         this.groups = groups;
     }
 
+    /**
+     * Gets the attributes for the survey
+     * @return List<Attribute>
+     */
     @CompactAttribute
     @OneToMany
     @IndexColumn(name = "pos")
@@ -211,44 +257,76 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         return attributes;
     }
 
+    /** 
+     * Sets the attributes for the survey
+     * @param attributes List<Attribute>
+     */
     public void setAttributes(List<Attribute> attributes) {
         this.attributes = attributes;
     }
 
+    /**
+     * Is the survey publically viewable
+     * @return boolean
+     */
     @Column(name = "PUBLIC")
     public boolean isPublic() {
         return this.publik;
     }
 
+    /**
+     * Set if the survey is publically viewable
+     * @param publik boolean
+     */
     public void setPublic(boolean publik) {
         this.publik = publik;
     }
 
     // Many to many is a work around (read hack) to prevent a unique
     // constraint being applied on the metadata id.
+    /**
+     * Get the survey metadata
+     * @return Set<Metadata>
+     */
     @ManyToMany(fetch = FetchType.LAZY)
     public Set<Metadata> getMetadata() {
         metadataLookup = null;
         return metadata;
     }
 
+    /**
+     * Set the survey metadata
+     * @param metadata Set<Metadata>
+     */
     public void setMetadata(Set<Metadata> metadata) {
         metadataLookup = null;
         this.metadata = metadata;
     }
     
     /**
-     * {@inheritDoc}
+     * Get the census methods for the survey
+     * @return List<CensusMethod>
      */
     @ManyToMany
     @IndexColumn(name = "pos")
     public List<CensusMethod> getCensusMethods() {
         return this.censusMethods;
     }
+    
+    /**
+     * Set the census methods for the survey
+     * @param cmList List<CensusMethod>
+     */
     public void setCensusMethods(List<CensusMethod> cmList) {
         this.censusMethods = cmList;
     }
 
+    /**
+     * Sets the form renderer type of this survey
+     * 
+     * @param rendererType - enum, form renderer type
+     * @return Metadata object - you must save this explicitly with a MetadataDAO
+     */
     @Transient
     public Metadata setFormRendererType(SurveyFormRendererType rendererType) {
         Metadata md = getMetadataByKey(Metadata.FORM_RENDERER_TYPE);
@@ -270,18 +348,86 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         return md;
     }
 
+    /**
+     * Returns the form renderer type for this survey
+     * 
+     * @return SurveyFormRendererType
+     */
     @Transient
     public SurveyFormRendererType getFormRendererType() {
         Metadata md = getMetadataByKey(Metadata.FORM_RENDERER_TYPE);
         return md == null ? SurveyFormRendererType.DEFAULT : SurveyFormRendererType.valueOf(md.getValue());
     }
     
+    /**
+     * Sets the survey form submit action for this survey. Uses the passed in 
+     * MetadataDAO to save the metadata. The actual metadata is returned only
+     * for convenience.
+     * 
+     * @param value - The survey form submit action
+     * @param mdDAO - The DAO used to save the Metadata object
+     * @return Metadata - the metadata object that is persisted
+     */
+    @Transient
+    public Metadata setFormSubmitAction(SurveyFormSubmitAction value, MetadataDAO mdDAO) {
+        if (value == null) {
+            throw new IllegalArgumentException("value cannot be null");
+        } 
+
+        if (mdDAO == null) {
+            throw new IllegalArgumentException("mdDAO cannot be null");
+        }
+        
+        Metadata md = getMetadataByKey(Metadata.FORM_SUBMIT_ACTION);
+
+        // Find the metadata or create it.
+        if(md == null) {
+            md = new Metadata();
+            md.setKey(Metadata.FORM_SUBMIT_ACTION);
+            // default value: full public (as it is for the Atlas).
+            md.setValue(DEFAULT_SURVEY_FORM_SUBMIT_ACTION.toString());
+        }
+
+        // Set the value and add it to the set.
+        md.setValue(value.toString());
+        
+        if (!metadataContainsKey(md)) {
+            metadata.add(md);
+        }
+        // save it!
+        return mdDAO.save(md);
+    }
+    
+    /**
+     * Returns the form submit action for this survey.
+     * 
+     * @return SurveyFormSubmitAction enum
+     */
+    @Transient
+    public SurveyFormSubmitAction getFormSubmitAction() {
+        Metadata md = getMetadataByKey(Metadata.FORM_SUBMIT_ACTION);
+        return md == null ? DEFAULT_SURVEY_FORM_SUBMIT_ACTION : SurveyFormSubmitAction.valueOf(md.getValue());
+    }
+    
+    /**
+     * Returns whether this survey is limited to predefined locations only
+     * 
+     * @return Boolean, true if the survey is limited to predefined locations. false otherwise.
+     */
     @Transient
     public boolean isPredefinedLocationsOnly() {
         Metadata md = getMetadataByKey(Metadata.PREDEFINED_LOCATIONS_ONLY);
         return md != null && Boolean.parseBoolean(md.getValue());
     }
 
+    /**
+     * Returns a Metadata object by it's key. In most cases this shouldn't be
+     * required as there are helper getter/setters for Survey settings that
+     * are stored as Metadata.
+     * 
+     * @param key - The Metadata key to retrieve
+     * @return Metadata
+     */
     @Transient
     public Metadata getMetadataByKey(String key) {
         if(key == null) {
@@ -318,7 +464,7 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
      */
     @Transient
     public Metadata setDefaultRecordVisibility(RecordVisibility value, MetadataDAO mdDAO) {
-		if (value == null) {
+        if (value == null) {
             throw new IllegalArgumentException("value cannot be null");
         } 
 

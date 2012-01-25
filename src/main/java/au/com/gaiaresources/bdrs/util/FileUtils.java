@@ -31,6 +31,8 @@ public class FileUtils {
     
     private static final Logger log = Logger.getLogger(FileUtils.class);
     
+    private static int MAX_FILENAME_LENGTH = 200;
+    
     public static String getContentType(InputStream inputStream) throws FileNotFoundException {
         try {
             ContentHandler contenthandler = new BodyContentHandler();
@@ -203,5 +205,27 @@ public class FileUtils {
                 reader.close();
             }
         }
+    }
+    
+    /**
+     * Take a string and turn it into a safe filename. Only includes alphanumerics.
+     * You must append the extension after using this method.
+     * Returns a string of max length 200
+     * 
+     * @param str string to convert
+     * @return the safe filename
+     */
+    public static String getSafeFilename(String str) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : str.toCharArray()) {
+            if (Character.isLetterOrDigit(c)) {
+                sb.append(c);
+                // limit the size of the returned string...
+                if (sb.length() >= MAX_FILENAME_LENGTH) {
+                    break;
+                }
+            }
+        }
+        return sb.toString();
     }
 }

@@ -83,7 +83,7 @@ public abstract class PersistentImpl implements Persistent,
     @Column(name = "UPDATED_AT")
     @Override
     public Date getUpdatedAt() {
-        return updatedAt;
+        return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
     public void setUpdatedAt(Date updatedAt) {

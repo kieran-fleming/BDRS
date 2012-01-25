@@ -40,6 +40,7 @@ import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
+import au.com.gaiaresources.bdrs.model.survey.SurveyFormSubmitAction;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
@@ -84,6 +85,11 @@ public class SurveyBaseController extends AbstractController {
     // admins can always alter the record visibility
     public static final String PARAM_RECORD_VISIBILITY_MODIFIABLE = "recordVisModifiable";
     
+    /**
+     * Request parameter, the form submit action for the survey.
+     */
+    public static final String PARAM_FORM_SUBMIT_ACTION = "formSubmitAction";
+    
     public static final String SURVEY_LISTING_URL = "/bdrs/admin/survey/listing.htm";
 
     @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
@@ -123,6 +129,24 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
+    /**
+     * Handler for posting the survey setup form
+     * 
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param surveyId Survey ID
+     * @param name Name of the survey
+     * @param description Description of the survey
+     * @param active Is the survey active?
+     * @param rendererType SurveyFormRendererType
+     * @param surveyDate Start date for the survey
+     * @param surveyEndDate End date for the survey
+     * @param defaultRecordVis Default record visibility for the survey
+     * @param recordVisMod Is the record visibility modifiable by users 
+     * @param formSubmitAction The form submit action for the survey
+     * @return ModelAndView
+     * @throws IOException
+     */
     @RequestMapping(value = "/bdrs/admin/survey/edit.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyEdit(
             MultipartHttpServletRequest request,
@@ -135,7 +159,8 @@ public class SurveyBaseController extends AbstractController {
             @RequestParam(value = "surveyDate", required = true) Date surveyDate,
             @RequestParam(value = "surveyEndDate", required = false) String surveyEndDate,
             @RequestParam(value = PARAM_DEFAULT_RECORD_VISIBILITY, required = true) String defaultRecordVis,
-            @RequestParam(value = PARAM_RECORD_VISIBILITY_MODIFIABLE, defaultValue="false") boolean recordVisMod) 
+            @RequestParam(value = PARAM_RECORD_VISIBILITY_MODIFIABLE, defaultValue="false") boolean recordVisMod,
+            @RequestParam(value = PARAM_FORM_SUBMIT_ACTION, required = true) String formSubmitAction) 
         throws IOException {
 
         Survey survey;
@@ -161,6 +186,7 @@ public class SurveyBaseController extends AbstractController {
         
         survey.setDefaultRecordVisibility(RecordVisibility.parse(defaultRecordVis), metadataDAO);
         survey.setRecordVisibilityModifiable(recordVisMod, metadataDAO);
+        survey.setFormSubmitAction(SurveyFormSubmitAction.valueOf(formSubmitAction), metadataDAO);
         
         // A list of metadata to delete. To maintain referential integrity,
         // the link between survey and metadata must be broken before the 

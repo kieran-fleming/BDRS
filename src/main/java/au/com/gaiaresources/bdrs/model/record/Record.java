@@ -282,11 +282,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
      * @return {@link Date}
      */
     public Date getWhen() {
-        return when;
+        return when != null ? new Date(when.getTime()) : null;
     }
 
     public void setWhen(Date when) {
-        this.when = when;
+        this.when = when != null ? new Date(when.getTime()) : null;
         if (when == null) {
         	this.time = null;
         } else {
@@ -325,11 +325,11 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
      * @return {@link Date}
      */
     public Date getLastDate() {
-        return lastDate;
+        return lastDate != null ? new Date(lastDate.getTime()) : null;
     }
 
     public void setLastDate(Date when) {
-        this.lastDate = when;
+        this.lastDate = when != null ? new Date(when.getTime()) : null;
         if (when == null) {
         	this.lastTime = null;
         } else {

@@ -57,7 +57,7 @@
             colModel:[
                 {name:'name',index:'name'},
                 {name:'description', index:'description'}
-                <c:if test="${showActions}">,{name:'action', width:'20%', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
+                <c:if test="${showActions}">,{name:'action', width:'31px', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
             ],
             autowidth: true,
             jsonReader : { repeatitems: false },
@@ -66,15 +66,14 @@
             pager: '#${widgetId}Pager',
             sortname: 'name',
             viewrecords: true,
-            sortorder: "asc",
+            sortorder: "asc"
             <c:if test="${multiselect == true}">         
-                multiselect: true,
+                ,multiselect: true
             </c:if>
             <c:if test="${scrollbars != true}">
-                width: '100%',
-                height: '100%',
+                ,width: '100%'
+                ,height: '100%'
             </c:if>
-            caption:"Map Layer Listing"
     });
     
     <c:if test="${scrollbars != true}">

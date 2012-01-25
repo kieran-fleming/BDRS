@@ -1,0 +1,37 @@
+/* Contains IE7 specific CSS styles that must be applied no matter the theme */
+
+/**
+ * To fix IE7 specific inputs overflowing the attribute table
+ */
+.table_input_container {
+    display:inline-block;
+}
+
+/**
+ * Overriding the width - needs to be a little shorter in IE7 else we still have
+ * overlap
+ */
+.attribute_input_table tbody td input[type=text],
+.attribute_input_table tbody td select {
+    width: 91%;
+    word-wrap: normal;
+}
+
+/******************************/
+/* Styling for the map popups */
+/******************************/
+.shiftContentLeftContainer {
+    margin-top: -15px;
+}
+
+.shiftContentRightContainer {
+    margin-top: -17px;
+	padding-right: 5px;
+}
+
+/******************************/
+/* fix for tab control panel  */
+/******************************/
+.controlPanel.ie7 {
+	padding-top: 1em;
+}

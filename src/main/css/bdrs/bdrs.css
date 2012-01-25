@@ -77,6 +77,10 @@
     padding-right: 1em;
 }
 
+.trackerRelatedRecordsSection {
+	padding-left: 0.5em;
+}
+
 /*****************************************/
 /* Styling for the popups in viewMap.jsp */
 /*****************************************/
@@ -102,6 +106,14 @@
 #content .olFramedCloudPopupContent tbody th {
     text-align: right;
     padding-right: 1em;
+}
+
+.shiftContentLeftContainer {
+	margin-top: -1.5em;
+}
+
+.shiftContentRightContainer {
+	margin-top: -1.8em;
 }
 
 /***********************************************/
@@ -579,9 +591,14 @@ legend {
 /* used when you want the buttons to appear to the right of a form.
  */
 .buttonPanelRight{
-	position:relative;
-	float:right;
-	top:-47px;
+	/* Using negative margin here because having a float:right element inside a 
+	 * jquery-ui dialog will cause the dialog to blow up to 100% screen width
+	 * in IE7. Using a negative margin like this allows us to bump up the 
+	 * button panel without taking it out of normal document flow.
+	 * 
+	 * Yes, i know it's a hack.
+	 */
+	margin-top:-47px;
 }
 
 .widgetSearchForm {
@@ -607,11 +624,6 @@ html {
 /* so the embedded widget blend seamlessly into target page */
 html.embed {
     background: transparent;
-}
-
-.maximise {
-    width: 100%;
-    height: 100%;
 }
 
 h1 {
@@ -693,7 +705,7 @@ table {
     padding: 20px;
 }
 
-a:link, a:visited {
+a:link, a:visited, a:visited.neverVisited {
     color:#0088CC;
 }
 
@@ -830,6 +842,15 @@ input[disabled] {
 /************************************/
 /* Admin Survey Taxonomy, Users     */
 /************************************/
+
+table.surveyOptionTable th {
+    width:45%;
+}
+
+table.surveyOptionTable td {
+	width:55%;
+}
+
 #userSelectionTypeFieldSet,
 #speciesListTypeFieldSet {
     padding-left: 4em;
@@ -867,6 +888,19 @@ ul.ui-menu li.ui-menu-item {
 
 #locationTable input {
     width: 100%;
+}
+
+/************************************/
+/* Attribute input styling          */                               
+/************************************/
+
+/* For lining up the ketchup popup to the input */
+input[type=text].speciesIdInput {
+    visibility:hidden;
+    width:0px;
+    padding:0px 0 0 0;
+    margin:0 0 0 -9px;
+    border-width:0;
 }
 
 /************************************/
@@ -1405,10 +1439,6 @@ div.alaSightingsTableHeaderDoubleLineArrows {
     padding: 0.2em;
 }
 
-#sightings_tabs {
-    padding-top: 1em;
-}
-
 .pagenumber {
     padding-left: 0.5em;
     padding-right: 0.5em;
@@ -1690,6 +1720,13 @@ ul.menu ul ul ul ul li a{
 }
 
 /***************************/
+/* breadcrumbs             */
+/***************************/
+.breadcrumbSeparator {
+	font-weight:bold;
+}
+
+/***************************/
 /* General cursor style    */
 /***************************/
 .cursorPointer {
@@ -1721,4 +1758,28 @@ ul.menu ul ul ul ul li a{
     -khtml-border-radius: 8px;
     -moz-border-radius: 8px;
     border-radius: 8px;
+}
+
+/*******************/
+/* blockUI styling */
+/*******************/
+div.blockUI.blockMsg.blockPage {
+    width: 30%;
+    top: 40%;
+    left: 35%;
+    text-align: center;
+    color: #000;
+    cursor: wait;
+    border: none;
+    padding: 15px;
+    background: #000000;
+    -webkit-border-radius: 8px;
+    -khtml-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    opacity: .5;
+}
+
+div.blockUI.blockMsg.blockPage h1 {
+    color:white;
 }

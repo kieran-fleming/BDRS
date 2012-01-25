@@ -30,8 +30,13 @@ jQuery(function() {
 	});
 	
 	// Dialog create events
-	jQuery("div[data-role*='dialog']").live('pagecreate', function(event, ui) {
-		bdrs.mobile.pages.Dispatcher.call(this, 'create');
+	jQuery("div[data-role*='dialog']").live('pageinit', function(event, ui) {
+		bdrs.mobile.pages.Dispatcher.call(this, 'init');
+	});
+	
+	// Page beforeshow events
+	jQuery("div[data-role*='page']").live('pagebeforeshow', function(event, ui) {
+			bdrs.mobile.pages.Dispatcher.call(this, 'beforeShow');
 	});
 
 	// Page show events
@@ -44,9 +49,9 @@ jQuery(function() {
 	});
 	
 	// Page create events
-	jQuery("div[data-role*='page']").live('pagecreate', function(event, ui) {
+	jQuery("div[data-role*='page']").live('pageinit', function(event, ui) {
 		// Execute individual page logic
-		bdrs.mobile.pages.Dispatcher.call(this, 'create');
+		bdrs.mobile.pages.Dispatcher.call(this, 'init');
 	});
 	
 	// Page hide events
@@ -65,7 +70,7 @@ jQuery(function() {
 /**
  * Each content portion needs to have the class 'bdrs-page-blah' where blah is the page name defined
  * in the corresponding javascript file. eg, the login page content section has class
- * bdrs-page-login and this will call object bdrs.mobile.pages.login.Show|Create|Hide()
+ * bdrs-page-login and this will call object bdrs.mobile.pages.login.Show|Init|Hide()
  */
 bdrs.mobile.pages.Dispatcher = function(eventType) {
 	var thisPage = this;
@@ -79,10 +84,12 @@ bdrs.mobile.pages.Dispatcher = function(eventType) {
 	else {
 		pageTag = pageTag[0].toLowerCase().substring('bdrs-page-'.length).replace(/\-/g, "_");
 		if (typeof bdrs.mobile.pages[pageTag] == 'object') {
-			if (eventType === 'show' && typeof bdrs.mobile.pages[pageTag].Show === 'function') {
+			if (eventType === 'beforeShow' && typeof bdrs.mobile.pages[pageTag].BeforeShow === 'function') {
+				bdrs.mobile.pages[pageTag].BeforeShow.call(thisPage);
+			} else if (eventType === 'show' && typeof bdrs.mobile.pages[pageTag].Show === 'function') {
 				bdrs.mobile.pages[pageTag].Show.call(thisPage);
-			} else if (eventType === 'create' && typeof bdrs.mobile.pages[pageTag].Create === 'function') {
-				bdrs.mobile.pages[pageTag].Create.call(thisPage);
+			} else if (eventType === 'init' && typeof bdrs.mobile.pages[pageTag].Init === 'function') {
+				bdrs.mobile.pages[pageTag].Init.call(thisPage);
 			} else if (eventType === 'hide' && typeof bdrs.mobile.pages[pageTag].Hide === 'function') {
 				bdrs.mobile.pages[pageTag].Hide.call(thisPage);
 			}

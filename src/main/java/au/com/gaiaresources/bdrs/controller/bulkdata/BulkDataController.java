@@ -50,6 +50,7 @@ import au.com.gaiaresources.bdrs.spatial.ShapefileAttributeParser;
 import au.com.gaiaresources.bdrs.spatial.ShapefileRecordKeyLookup;
 import au.com.gaiaresources.bdrs.spatial.ShapefileToRecordEntryTransformer;
 import au.com.gaiaresources.bdrs.spatial.ShapefileType;
+import au.com.gaiaresources.bdrs.util.FileUtils;
 
 @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
@@ -102,12 +103,7 @@ public class BulkDataController extends AbstractController {
         Survey survey = surveyDAO.getSurvey(surveyPk);
 
         // Make the survey name a safe filename.
-        StringBuilder filename = new StringBuilder();
-        for (char c : survey.getName().toCharArray()) {
-            if (Character.isLetterOrDigit(c)) {
-                filename.append(c);
-            }
-        }
+        StringBuilder filename = new StringBuilder(FileUtils.getSafeFilename(survey.getName()));
         filename.append("_template_");
         filename.append(System.currentTimeMillis());
         filename.append(".xls");

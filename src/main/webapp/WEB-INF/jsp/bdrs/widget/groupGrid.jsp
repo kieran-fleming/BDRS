@@ -51,15 +51,14 @@
             pager: '#${widgetId}Pager',
             sortname: 'name',
             viewrecords: true,
-            sortorder: "asc",
+            sortorder: "asc"
             <c:if test="${multiselect == true}">
-                multiselect: true,
+                ,multiselect: true
             </c:if>
             <c:if test="${scrollbars != true}">
-                width: '100%',
-                height: '100%',
+                ,width: '100%'
+                ,height: '100%'
             </c:if>
-            caption:"Group Listing"
     });
     
     <c:if test="${scrollbars != true}">

@@ -61,7 +61,7 @@
                 {name:'publish', index:'publish', width:'30'},
                 {name:'hidePrivateDetails', index:'hidePrivateDetails', width:'30'},
                 {name:'weight', index:'weight', width:'30'}
-                <c:if test="${showActions}">,{name:'action', width:'30', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
+                <c:if test="${showActions}">,{name:'action', width:'44', sortable:false, formatter:${widgetId}_GridHelper.actionLinkFormatter}</c:if>
             ],
             autowidth: true,
             jsonReader : { repeatitems: false },
@@ -70,15 +70,14 @@
             pager: '#${widgetId}Pager',
             sortname: 'name',
             viewrecords: true,
-            sortorder: "asc",
+            sortorder: "asc"
             <c:if test="${multiselect == true}">         
-                multiselect: true,
+                ,multiselect: true
             </c:if>
             <c:if test="${scrollbars != true}">
-                width: '100%',
-                height: '100%',
+                ,width: '100%'
+                ,height: '100%'
             </c:if>
-            caption:"Map Listing"
     });
     
     <c:if test="${scrollbars != true}">

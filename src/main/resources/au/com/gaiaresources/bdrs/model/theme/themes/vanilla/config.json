@@ -1,6 +1,6 @@
 {
     "css_files" : [
-        "redmond/jquery-ui-1.8.11.custom.css",
+        "jqueryUiTheme/jquery-ui-1.8.16.custom.css",
         "css/base.css"
     ],
     
@@ -8,7 +8,7 @@
     ],
     
     "js_files" : [
-        "redmond/jquery-ui-1.8.11.custom.min.js"
+        "jqueryUiTheme/jquery-ui-1.8.16.custom.min.js"
     ],
     
     "theme_pages" : [
@@ -377,6 +377,11 @@
             "key"   : "style.table.border.color",
             "value" : "#484848"
         },
+		{
+		    "type"  : "COLOR",
+			"key"   : "style.table.highlight.color",
+			"value" : "#FFECA3"
+		},
         {
             'type'  : 'TEMPLATE',
             'key'   : 'template.dashboard',
@@ -406,6 +411,11 @@
             'type'  : 'TEMPLATE',
             'key'   : 'template.fieldguide.grouplisting',
             'value' : 'templates/public/groupListing.vm'
+        },
+        {
+            'type'  : 'TEMPLATE',
+            'key'   : 'template.fieldguide.taxalisting',
+            'value' : 'templates/public/taxaListing.vm'
         },
         {
             'type'  : 'TEMPLATE',

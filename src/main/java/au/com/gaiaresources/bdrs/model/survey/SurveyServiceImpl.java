@@ -48,12 +48,14 @@ public class SurveyServiceImpl implements SurveyService {
     public Set<CensusMethod> catalogCensusMethods(Survey survey) {
         Set<CensusMethod> result = new LinkedHashSet<CensusMethod>();
         for (CensusMethod cm : survey.getCensusMethods()) {
-            if (result.contains(cm)) {
-                continue;
-            }
-            result.add(cm);
-            for (CensusMethod innerCm : cm.getCensusMethods()) {
-                catalogCensusMethodsRecursive(innerCm, result);   
+            if (cm != null) {
+                if (result.contains(cm)) {
+                    continue;
+                }
+                result.add(cm);
+                for (CensusMethod innerCm : cm.getCensusMethods()) {
+                    catalogCensusMethodsRecursive(innerCm, result);   
+                }    
             }
         }
         return result;

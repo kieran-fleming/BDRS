@@ -4,7 +4,7 @@ import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
 import au.com.gaiaresources.bdrs.deserialization.record.RecordKeyLookup;
 
 public class TrackerFormRecordKeyLookup implements RecordKeyLookup {
-
+    
     @Override
     public String getCensusMethodAttributePrefix() {
         return TrackerController.CENSUS_METHOD_ATTRIBUTE_PREFIX;
@@ -108,5 +108,10 @@ public class TrackerFormRecordKeyLookup implements RecordKeyLookup {
     @Override
     public String getRecordVisibilityKey() {
         return TrackerController.PARAM_RECORD_VISIBILITY;
+    }
+    
+    @Override
+    public String getParentRecordIdKey() {
+        return TrackerController.PARAM_PARENT_RECORD_ID;
     }
 }

@@ -4,17 +4,25 @@ exports.FIELD_GUIDE_VISIBILITY_SETTINGS_KEY = "display-field-guide";
 exports.DEFAULT_IDENTIFY_TOOL_VISIBILITY = 'false';
 exports.IDENTIFY_TOOL_VISIBILITY_SETTINGS_KEY = "display-identify-tool";
 
-exports.Create = function() {
+exports.Init = function() {
+	bdrs.mobile.Debug("Init DashBoard");
+	bdrs.template.renderCallback('header', {}, '.header', function(){
+	});
     bdrs.mobile.pages.dashboard._initDashboardConfiguration();
     persistence.flush();
 };
 
+exports.BeforeShow = function() {
+	bdrs.mobile.Debug("BeforeShow DashBoard");
+};
+
 exports.Show = function() {
+	bdrs.mobile.Debug("Show DashBoard");
     if(!bdrs.mobile.pages.clock_warning.isShown()) {
-        var transition = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
-        jQuery.mobile.changePage("#clock-warning", transition);
+        jQuery.mobile.changePage("#clock-warning", {transition: 'none'});
     }
-            
+    bdrs.template.restyle('#dashboard');
+
     jQuery('.dashboard-status').empty();
     Settings.findBy('key', 'current-survey' , function(settings) {
         if (settings != null) {
@@ -98,7 +106,7 @@ exports.refreshDashboard = function(fieldGuideSetting, identifyToolSetting) {
     }
     
     dashboardList.listview('refresh');
-}
+};
 
 exports._initDashboardConfiguration = function() {
     var fieldGuideSetting = bdrs.mobile.pages.dashboard._initialiseSetting(

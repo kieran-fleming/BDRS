@@ -283,9 +283,35 @@
     </div>
 </form>
 
+<div id="htmlEditorDialog" title="HTML Editor">
+    <label>Edit the HTML content that you want to display in the editor below: </label>
+    <textarea id="markItUp"></textarea>
+</div>
+
 <script type="text/javascript">
     jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
         bdrs.dnd.attachTableDnD('#identification_input_table');
+        
+        jQuery( "#htmlEditorDialog" ).dialog({
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+            resizable: false,
+            buttons: {
+                Cancel: function() {
+                    jQuery( this ).dialog( "close" );
+                },
+                "Clear": function() {
+                    jQuery('#markItUp')[0].value = "";
+                },
+                "OK": function() {
+                    bdrs.attribute.saveAndUpdateContent(jQuery("#markItUp")[0]);
+                    jQuery( this ).dialog( "close" );
+                }
+            }
+        });
+        bdrs.fixJqDialog("#htmlEditorDialog");
+        jQuery('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
     });
 </script>

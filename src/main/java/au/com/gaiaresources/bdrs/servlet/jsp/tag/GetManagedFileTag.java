@@ -19,7 +19,7 @@ public class GetManagedFileTag extends TagSupport {
     private String var; 
     
     @SuppressWarnings("unused")
-    private Logger log = Logger.getLogger(this.getClass());
+    private transient Logger log = Logger.getLogger(this.getClass());
     
     public int doEndTag() throws JspException {
         

@@ -69,13 +69,14 @@
 		                    </c:choose>
 		                />
 		                <!-- The styling below is to ensure the ketchup validation box popups up aligned to the input above -->
-		                <input type="text"
+		                <input type="text" class="speciesIdInput
 		                    <c:choose>
 		                        <c:when test="${ formField.required }"> 
-		                            class="validate(required)"
+		                            validate(required)
 		                        </c:when>
 		                    </c:choose>
-		                    name="${ formPrefix }species" value="${ formField.record.species.id }" style="visibility:hidden;width:0px;padding:0px 0 0 0;margin:0 0 0 -10px;border-width:0;"/>
+							"
+		                    name="${ formPrefix }species" value="${ formField.record.species.id }"/>
 		            </c:when>
 		            <c:when test="<%= formField.getSurvey().getSpecies().size() == 1 %>">
 		                <input type="hidden" name="${ formPrefix }species" value="<%= formField.getSurvey().getSpecies().iterator().next().getId() %>"/>

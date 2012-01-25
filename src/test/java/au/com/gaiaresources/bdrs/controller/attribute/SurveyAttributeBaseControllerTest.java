@@ -8,6 +8,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
     CensusMethod m1;
     CensusMethod m2;
     CensusMethod m3;
+    
+    private Logger log = Logger.getLogger(getClass());
 
     @Before
     public void setUp() throws Exception {
@@ -264,9 +267,14 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
                 request.addParameter("add_attribute", String.valueOf(index));
                 params.put(String.format("add_weight_%d", index), String.valueOf(curWeight));
                 String name = String.format("%s_%s_%d", attrType.toString(), scope.toString(), index);
-                params.put(String.format("add_name_%d", index), name);
-                params.put(String.format("add_description_%d", index), name
-                        + "_description");
+                
+                // horizontal rules do not have a name or description parameter
+                if (!attrType.equals(AttributeType.HTML_HORIZONTAL_RULE)) {
+                    params.put(String.format("add_name_%d", index), name);
+                    params.put(String.format("add_description_%d", index), name
+                               + "_description");
+                }
+                
                 params.put(String.format("add_typeCode_%d", index), attrType.getCode());
                 params.put(String.format("add_scope_%d", index), scope.toString());
 
@@ -283,7 +291,7 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
             params.put(String.format(RecordProperty.METADATA_KEY_TEMPLATE, type.getName(), RecordPropertySetting.WEIGHT.toString()), String.valueOf(curWeight));
             curWeight = curWeight + 100;
         }
-                
+
         // no value...
         //params.put(SurveyAttributeBaseController.PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, "false")
         
@@ -308,7 +316,12 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         index = 0;
         for (Attribute attribute : actualSurvey.getAttributes()) {
             Assert.assertEquals(Integer.parseInt(params.get(String.format("add_weight_%d", index))), attribute.getWeight());
-            Assert.assertEquals(params.get(String.format("add_name_%d", index)), attribute.getName());
+            String expectedName = params.get(String.format("add_name_%d", index)); 
+            // Name and description are treated differently. Description was previously nullable
+            // while name is not. In order not to introduce new null pointer errors when operating
+            // on the name of an attribute, keeping the attribute name non nullable. However it means
+            // we have to do funky stuff like this:
+            Assert.assertEquals(expectedName != null ? expectedName : "", attribute.getName());
             Assert.assertEquals(params.get(String.format("add_description_%d", index)), attribute.getDescription());
             Assert.assertEquals(params.get(String.format("add_typeCode_%d", index)), attribute.getTypeCode());
             Assert.assertEquals(AttributeScope.valueOf(params.get(String.format("add_scope_%d", index))), attribute.getScope());
@@ -330,6 +343,41 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         
         Assert.assertEquals(false, survey.isDefaultCensusMethodProvided());
     }
+    
+    @Test
+    public void testSubmitSurveyAttributesAddingIgnoreEmptyName() throws Exception {
+        login("admin", "password", new String[] { Role.ADMIN });
+        request.setMethod("POST");
+        request.setRequestURI("/bdrs/admin/survey/editAttributes.htm");
+
+        int curWeight = 0;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("surveyId", survey.getId().toString());
+        
+        int index = 0;
+        
+        request.addParameter("add_attribute", String.valueOf(index));
+        params.put(String.format("add_weight_%d", index), String.valueOf(curWeight));
+        String name = String.format("%s_%s_%d", AttributeType.INTEGER.toString(), AttributeScope.RECORD.toString(), index);
+        
+        params.put(String.format("add_description_%d", index), name + "_description");
+        
+        params.put(String.format("add_typeCode_%d", index), AttributeType.INTEGER.getCode());
+        params.put(String.format("add_scope_%d", index), AttributeScope.RECORD.toString());
+
+        request.addParameters(params);
+        
+        ModelAndView mv = handle(request, response);
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView redirect = (RedirectView) mv.getView();
+        Assert.assertEquals("/bdrs/admin/survey/listing.htm", redirect.getUrl());
+
+        Survey actualSurvey = surveyDAO.get(new Integer(params.get("surveyId")));
+        Assert.assertEquals(survey.getId(), actualSurvey.getId());
+        
+        // because there is no name parameter for the submitted attribute it should be ignored....
+        Assert.assertTrue("Survey should have no attributes", survey.getAttributes().isEmpty());
+    }
 
     @Test
     public void testSubmitSurveyAttributesEditing() throws Exception {
@@ -340,7 +388,11 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
                 
                 attr = new Attribute();
                 attr.setRequired(true);
-                attr.setName(attrType.toString());
+                if (!attrType.equals(AttributeType.HTML_HORIZONTAL_RULE)) {
+                    attr.setName(attrType.toString());    
+                } else {
+                    attr.setName("");
+                }
                 attr.setTypeCode(attrType.getCode());
                 attr.setScope(scope);
                 attr.setTag(false);
@@ -360,6 +412,7 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
                 attributeList.add(attr);
             }
         }
+        
         survey.setAttributes(attributeList);
         survey = surveyDAO.save(survey);
         
@@ -373,8 +426,10 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         params.put("surveyId", survey.getId().toString());
         for(Attribute attribute : survey.getAttributes()){
             params.put(String.format("weight_%d", attribute.getId()), String.valueOf(curWeight));
-            params.put(String.format("description_%d", attribute.getId()), attribute.getDescription() + " Edited");
-            params.put(String.format("name_%d", attribute.getId()), attribute.getName() + " Edited");
+            if (attribute.getType() != AttributeType.HTML_HORIZONTAL_RULE) {
+                params.put(String.format("description_%d", attribute.getId()), attribute.getDescription() + " Edited");
+                params.put(String.format("name_%d", attribute.getId()), attribute.getName() + " Edited");
+            }
             params.put(String.format("typeCode_%d", attribute.getId()), attribute.getTypeCode());
             params.put(String.format("scope_%d", attribute.getId()), attribute.getScope().toString());
             request.addParameter("attribute", attribute.getId().toString());
@@ -403,7 +458,12 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
 
         for (Attribute attribute : actualSurvey.getAttributes()) {
             Assert.assertEquals(Integer.parseInt(params.get(String.format("weight_%d", attribute.getId()))), attribute.getWeight());
-            Assert.assertEquals(params.get(String.format("name_%d", attribute.getId())), attribute.getName());
+            // Name and description are treated differently. Description was previously nullable
+            // while name is not. In order not to introduce new null pointer errors when operating
+            // on the name of an attribute, keeping the attribute name non nullable. However it means
+            // we have to do funky stuff like this:
+            String expectedName = params.get(String.format("name_%d", attribute.getId())); 
+            Assert.assertEquals(expectedName != null ? expectedName : "", attribute.getName());
             Assert.assertEquals(params.get(String.format("description_%d", attribute.getId())), attribute.getDescription());
             Assert.assertEquals(params.get(String.format("typeCode_%d", attribute.getId())), attribute.getTypeCode());
             Assert.assertEquals(AttributeScope.valueOf(params.get(String.format("scope_%d", attribute.getId()))), attribute.getScope());
@@ -416,6 +476,54 @@ public class SurveyAttributeBaseControllerTest extends AbstractControllerTest {
         }
         
         Assert.assertEquals(true, survey.isDefaultCensusMethodProvided());
+    }
+    
+    @Test
+    public void testIgnoredEditAttributeNoName() throws Exception {
+        List<Attribute> attributeList = new ArrayList<Attribute>();
+        // Add an integer attribute with no name which will be ignored because it will
+        // be edited to have an empty name parameter
+        Attribute attrToBeIgnored = new Attribute();
+        attrToBeIgnored.setRequired(true);
+        attrToBeIgnored.setName("willBeIgnored");
+        attrToBeIgnored.setTypeCode(AttributeType.INTEGER.getCode());
+        attrToBeIgnored.setScope(AttributeScope.RECORD);
+        attrToBeIgnored.setTag(false);
+        attrToBeIgnored = attributeDAO.save(attrToBeIgnored);
+        attributeList.add(attrToBeIgnored);
+        
+        survey.setAttributes(attributeList);
+        survey = surveyDAO.save(survey);
+        
+        login("admin", "password", new String[] { Role.ADMIN });
+        request.setMethod("POST");
+        request.setRequestURI("/bdrs/admin/survey/editAttributes.htm");
+        request.setParameter("surveyId", survey.getId().toString());
+        
+        int curWeight = 0;
+        Map<String, String> params = new HashMap<String, String> ();
+        params.put("surveyId", survey.getId().toString());
+        
+        // intentionally leaving name out
+        params.put(String.format("weight_%d", attrToBeIgnored.getId()), String.valueOf(curWeight));
+        params.put(String.format("description_%d", attrToBeIgnored.getId()), attrToBeIgnored.getDescription() + " Edited");
+        params.put(String.format("typeCode_%d", attrToBeIgnored.getId()), attrToBeIgnored.getTypeCode());
+        params.put(String.format("scope_%d", attrToBeIgnored.getId()), attrToBeIgnored.getScope().toString());
+        request.addParameter("attribute", attrToBeIgnored.getId().toString());
+        
+        params.put(SurveyAttributeBaseController.PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, "true");
+        
+        request.addParameters(params);
+
+        ModelAndView mv = handle(request, response);
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView redirect = (RedirectView) mv.getView();
+        Assert.assertEquals("/bdrs/admin/survey/listing.htm", redirect.getUrl());
+
+        Survey actualSurvey = surveyDAO.get(new Integer(params.get("surveyId")));
+        Assert.assertEquals(survey.getId(), actualSurvey.getId());
+        
+        Assert.assertTrue("survey attribute list should be empty", survey.getAttributes().isEmpty());
     }
 
     @Test

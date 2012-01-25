@@ -14,6 +14,7 @@
 	        <tr>
 	            <th>Portal Name</th>
 	            <th>Is Default</th>
+	            <th>Is Active</th>
 	        </tr>
 	    </thead> 
 	    <tbody>
@@ -34,6 +35,16 @@
 	                        </c:otherwise>
 	                    </c:choose>
 	                </td>
+	                <td>
+                        <c:choose>
+                            <c:when test="${ portal.active }">
+                                Yes
+                            </c:when>
+                            <c:otherwise>
+                                &nbsp;
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
 	            </tr>
 	        </c:forEach>
 	    </tbody>

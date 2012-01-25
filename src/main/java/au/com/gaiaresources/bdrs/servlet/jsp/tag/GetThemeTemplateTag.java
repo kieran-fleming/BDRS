@@ -34,14 +34,16 @@ import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 @Configurable
 public class GetThemeTemplateTag extends TagSupport {
     
-    private Formatter formatter = new Formatter();
+    private static final long serialVersionUID = 1L;
+    
+    private transient Formatter formatter = new Formatter();
     
     /**
      * The key of the theme element containing the name of the template to use.
      */
     private String key;
     
-    private Logger log = Logger.getLogger(this.getClass());
+    private transient Logger log = Logger.getLogger(this.getClass());
     
     @SuppressWarnings("unchecked")
     public int doEndTag() {

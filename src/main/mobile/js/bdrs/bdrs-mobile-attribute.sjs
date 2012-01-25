@@ -35,8 +35,50 @@ exports.behaviour[exports.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE] = function(e
 	//TODO: Make abstract so other datasources can be used
     jQuery(element).autocomplete({
         source: function(request, response) {
+    	
+    		var cutspace_cutapostrophe = request.term;
+    		cutspace_cutapostrophe = cutspace_cutapostrophe.replace(' ', '');
+    		cutspace_cutapostrophe = cutspace_cutapostrophe.replace('\'', '');
+    		
+    		var space2dash = request.term;
+    		space2dash = space2dash.replace(' ', '-');
+    		
+    		var cutapostrophe = request.term;
+    		cutapostrophe = cutapostrophe.replace('\'', '');
+    		
+    		var cutdash = request.term;
+    		cutdash = cutdash.replace('-', '');
+    		
+    		var dash2space = request.term;
+    		dash2space = dash2space.replace('-', ' ');
+    		
+    		var dash2space_addapostrophe = request.term;
+    		dash2space_addapostrophe = dash2space_addapostrophe.replace('-', ' ');
+    		var spaceIndex = dash2space_addapostrophe.indexOf(' ');
+    		var checkforApostrophe = spaceIndex > 0 ? dash2space_addapostrophe.charAt(spaceIndex + 2) : '\'';
+    		if (checkforApostrophe !== '\'') {
+    			var startstring = dash2space_addapostrophe.substring(0,spaceIndex +2);
+    			var endstring =  dash2space_addapostrophe.substring(spaceIndex +2);
+    			dash2space_addapostrophe = startstring + '\'' + endstring;
+    		}
+    		
+    		
     		//get species for current survey
-    		bdrs.mobile.survey.getDefault().species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(null,function(speciesList){
+    		//bdrs.mobile.survey.getDefault().species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).limit(5).list(null,function(speciesList){
+    		bdrs.mobile.survey.getDefault().species().filter('scientificName','like','%' + request.term + '%').or(new persistence.PropertyFilter('commonName','like','%' + request.term + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + cutspace_cutapostrophe + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + cutspace_cutapostrophe + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + space2dash + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + space2dash + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + cutapostrophe + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + cutapostrophe + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + cutdash + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + cutdash + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + dash2space + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + dash2space + '%')).
+    		or(new persistence.PropertyFilter('scientificName','like','%' + dash2space_addapostrophe + '%')).
+    		or(new persistence.PropertyFilter('commonName','like','%' + dash2space_addapostrophe + '%')).
+    		limit(5).list(null,function(speciesList){
     			var names = [];
     			speciesList.forEach(function(aSpecies){
     				//add the names of the found species to the response
@@ -45,8 +87,8 @@ exports.behaviour[exports.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE] = function(e
     			response(names);
     		});
         },
-        change: function(event, ui) {
-            jQuery.mobile.pageLoading(false);
+        close: function(event, ui) {
+            jQuery.mobile.showPageLoadingMsg();
             
             var scientificName = jQuery(element).val();
             var taxon;
@@ -56,13 +98,32 @@ exports.behaviour[exports.type.STRING_AUTOCOMPLETE_WITH_DATASOURCE] = function(e
 
             bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
             
-            jQuery.mobile.pageLoading(true);
+            jQuery.mobile.hidePageLoadingMsg();
         },
         open: function(event, ui){
         	jQuery('.ui-autocomplete').css('z-index',100);
+        	jQuery('.ui-menu-item .ui-corner-all').css('min-height','30px');
+        	jQuery('.ui-menu-item .ui-corner-all').css('line-height','30px');
+        	jQuery('.ui-menu-item .ui-corner-all').css('text-align','center')
+        },
+        change: function(event, ui) {
+            jQuery.mobile.showPageLoadingMsg();
+            
+            var scientificName = jQuery(element).val();
+            var taxon;
+            waitfor(taxon) {
+                Species.all().filter('scientificName', '=', scientificName).one(resume);
+            }
+
+            bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
+            
+            jQuery.mobile.hidePageLoadingMsg();
         },
         html: true
     });
+    
+    //Adds recent taxa below speciesfield
+    new bdrs.mobile.widget.RecentTaxaWidget(2).after(element);
 };
 
 /**
@@ -158,6 +219,18 @@ exports.behaviour[exports.type.STRING_WITH_VALID_VALUES] = function(element, opt
 			});
 		}
 	}
+};
+
+
+/**
+ * Attaches behaviour to barcode input.
+ *  @param element to which the behaviour needs to be attached.
+ */
+exports.behaviour[exports.type.BARCODE] = function(element, options) {
+    	jQuery('#record-btn-'+ options.tmplId).click(function(){
+    		var scanId = jQuery(this).attr('id');
+    		bdrs.phonegap.barcode.scan(scanId);
+    	});
 };
 
 /**
@@ -279,23 +352,13 @@ exports.AttributeValueFormField = function(attribute) {
 					tmplParams.value = record.number();
 				}
 			}
-		    //Special handling for input boxes with integer range requirement	
-			var optionTmplParams = [];
-			
+		    //Special handling for input boxes with integer range requirement
 			var attrOpts;
             waitfor(attrOpts) {
                 attribute.options().list(resume);
             }
-            
-		    var opt;
-		    var optString= "";
-		    for(var i=0; i<attrOpts.length; i++) {
-		        opt = attrOpts[i];
-		        optString += opt.value() + " ";
-		    }
-		    
-		    tmplParams[0].minmax = optString;
-            
+		    tmplParams[0].min = attrOpts[0] !== undefined ? attrOpts[0].value() : "";
+		    tmplParams[0].max = attrOpts[1] !== undefined ? attrOpts[1].value() : "";
 		} else if (bdrs.mobile.attribute.type.IMAGE === attribute.typeCode()) {
 		
 		    if (bdrs.mobile.cameraExists()) {
@@ -322,9 +385,9 @@ exports.AttributeValueFormField = function(attribute) {
             optString = optString.slice(0,-1);
             // prepend the '^' and append the '$' to make the js validation match java validation
 			tmplParams[0].regExp = "^" + optString + "$";
-			
 			if (bdrs.phonegap.isPhoneGap()) {
 		        tmplName = tmplName+"-btn";
+		        options.tmplId = attribute.id;
             }
             
 		} else if (bdrs.mobile.attribute.type.SINGLE_CHECKBOX === attribute.typeCode()) {
@@ -392,14 +455,14 @@ exports.AttributeValueFormField = function(attribute) {
 					}
 				}
 				bdrs.mobile.attribute.behaviour[attribute.typeCode()](element, options);
-				bdrs.mobile.restyle(target);
+				 bdrs.template.restyle(target);
 				 if(jQuery.isFunction(callback)) {
 				    	callback();
 				    }
 			});
 		}else{
 			bdrs.template.renderCallback(tmplName, tmplParams, target, function(){
-				bdrs.mobile.restyle(target);
+				 bdrs.template.restyle(target);
 			});
 		}
     };

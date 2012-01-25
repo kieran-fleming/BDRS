@@ -51,6 +51,7 @@
         <put-list-attribute name="customJavaScript">
         	<add-attribute>bdrs/review/downloadSightingsWidget.js</add-attribute>
             <add-attribute>bdrs/review/mySightings.js</add-attribute>
+			<add-attribute>bdrs/review/record.js</add-attribute>
         </put-list-attribute>
     </definition>
 
@@ -146,10 +147,19 @@
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/render/default/tracker.jsp"/>
         <put-attribute name="maps" value="true"/>
         <put-list-attribute name="customJavaScript">
-            
+            <add-attribute>bdrs/contribute/tracker.js</add-attribute>
+			<add-attribute>bdrs/review/record.js</add-attribute>
         </put-list-attribute>
     </definition>
+	
+	<!-- Tracker record view -->
+	<definition name="trackerRecordView" template="/WEB-INF/jsp/bdrs/user/record/render/default/trackerRecordView.jsp">
+    </definition>
     
+	<!-- Tracker sub record view -->
+    <definition name="trackerSubRecordView" template="/WEB-INF/jsp/bdrs/user/record/render/default/trackerSubRecordView.jsp">
+    </definition>
+	
     <!-- Atlas -->
     <definition name="atlas" extends="user-template">
         <put-attribute name="title" value="Record a Sighting"/>
@@ -278,6 +288,15 @@
         <put-attribute name="title" value="Contact Record Owner" />
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/message/messageUser.jsp" />
 		<put-attribute name="maps" value="true"/>
+        <put-list-attribute name="customJavaScript">
+        </put-list-attribute>
+    </definition>
+	
+	<!-- 'record now' survey chooser -->
+	<definition name="recordNowSurveyChooser" extends="template">
+		<put-attribute name="title" value="Choose a Survey" />
+        <put-attribute name="content" value="/WEB-INF/jsp/bdrs/user/record/recordNowChooseSurvey.jsp" />
+        <put-attribute name="maps" value="false"/>
         <put-list-attribute name="customJavaScript">
         </put-list-attribute>
     </definition>

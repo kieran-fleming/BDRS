@@ -15,7 +15,6 @@
 </c:if>
 
 <cw:getContent key="user/recordSightingMapDescription" />
-<div id="record_base_map_hover_tip">&nbsp;</div>
 
 <div class="clear"></div>
 

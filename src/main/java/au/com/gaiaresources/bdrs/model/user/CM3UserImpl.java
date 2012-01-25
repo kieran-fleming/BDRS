@@ -51,7 +51,7 @@ public class CM3UserImpl extends User {
 		this.name = name;
 	}
 	public String[] getRoles() {
-		return roles;
+	    return roles;
 	}
 	public void setRoles(String[] roles) {
 		this.roles = roles;

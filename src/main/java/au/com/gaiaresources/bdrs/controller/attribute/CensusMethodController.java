@@ -38,12 +38,37 @@ import au.com.gaiaresources.bdrs.security.Role;
 @Controller
 public class CensusMethodController extends AbstractController {
     
+    /**
+     * url : get census method for survey
+     */
     public static final String GET_CENSUS_METHOD_FOR_SURVEY_URL = "/bdrs/user/censusMethod/getSurveyCensusMethods.htm";
+    /**
+     * url : edit census method
+     */
     public static final String EDIT_URL = "/bdrs/admin/censusMethod/edit.htm";
-    
+    /**
+     * url : search census methods
+     */
+    public static final String CENSUS_METHOD_SEARCH_URL="/bdrs/admin/censusMethod/search.htm";
+    /**
+     * url : get census method table row via ajax
+     */
+    public static final String CENSUS_METHOD_ADD_AJAX_ROW_URL="/bdrs/admin/censusMethod/ajaxAddSubCensusMethod.htm";
+    /**
+     * Request parameter - survey ID
+     */
     public static final String PARAM_SURVEY_ID = "surveyId";
+    /**
+     * Request parameter - draw point control enabled for census method
+     */
     public static final String PARAM_DRAW_POINT_ENABLED = "drawPoint";
+    /**
+     * Request parameter - draw line control enabled for census method
+     */
     public static final String PARAM_DRAW_LINE_ENABLED = "drawLine";
+    /**
+     * Request parameter - draw polygon control enabled for census method
+     */
     public static final String PARAM_DRAW_POLYGON_ENABLED = "drawPolygon";
     
     @Autowired
@@ -163,7 +188,17 @@ public class CensusMethodController extends AbstractController {
         return new ModelAndView(new RedirectView("/bdrs/admin/censusMethod/listing.htm", true));
     }
     
-    @RequestMapping(value="/bdrs/admin/censusMethod/search.htm", method = RequestMethod.GET)
+    /**
+     * Jqgrid compliant census method search
+     * 
+     * @param request - HttpServletRequest 
+     * @param response - HttpServletResponse
+     * @param name - Name of census method
+     * @param taxonomic - Taxonomic setting of census method
+     * @param surveyId - Gets the census methods assigned to this survey ID.
+     * @throws Exception
+     */
+    @RequestMapping(value=CENSUS_METHOD_SEARCH_URL, method = RequestMethod.GET)
     public void searchService(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="name", required=false) String name,
             @RequestParam(value="taxonomic", required=false) Boolean taxonomic,
@@ -224,7 +259,7 @@ public class CensusMethodController extends AbstractController {
     
     // AL - I'm doing it this way to use the tile as a template since we have no javascript templating at the moment and 
     // it keeps it consistent with the rest of the form. Yes I know it's inefficient.
-    @RequestMapping(value="/bdrs/admin/censusMethod/ajaxAddSubCensusMethod.htm", method = RequestMethod.GET)
+    @RequestMapping(value=CENSUS_METHOD_ADD_AJAX_ROW_URL, method = RequestMethod.GET)
     public ModelAndView addSubCensusMethod(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="id", required=true) Integer id) {
         CensusMethod cm = cmDAO.get(id);

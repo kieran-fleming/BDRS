@@ -1,7 +1,7 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 }
 	
 exports.Show = function() {
@@ -18,7 +18,7 @@ exports.Show = function() {
         
         this.handler = function(event) {
         	bdrs.mobile.setParameter('censusMethodId', methodId);
-			jQuery.mobile.changePage("#record", jQuery.mobile.defaultPageTransition, false, true);
+			jQuery.mobile.changePage("#record", {showLoadMsg: false});
         }
         return this;
 	};

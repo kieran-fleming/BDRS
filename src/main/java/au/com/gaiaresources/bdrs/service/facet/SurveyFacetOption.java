@@ -32,4 +32,11 @@ public class SurveyFacetOption extends FacetOption {
     public Predicate getPredicate() {
         return Predicate.eq("record.survey.id", survey.getId());
     }
+    
+    /**
+     * @return the survey that this facet option represents
+     */
+    public Survey getSurvey() {
+        return survey;
+    }
 }

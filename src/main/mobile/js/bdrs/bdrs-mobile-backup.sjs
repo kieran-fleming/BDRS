@@ -4,19 +4,19 @@
  */
 exports.backupToJSON = function() {
 	
-	jQuery.mobile.pageLoading(false);
+	jQuery.mobile.showPageLoadingMsg();
 	
 	var paths = navigator.fileMgr.getRootPaths();
 	var location = paths[0] + "external_sd/bdrsMobileBu.txt";
 	var writer = new FileWriter(location);
 	writer.onwrite = function(){
 		//console.log("backup was succesfull");
-		jQuery.mobile.pageLoading(true);
+		jQuery.mobile.hidePageLoadingMsg();
 	};
 	
 	writer.onfail = function(){
 		//console.log("backup failed");
-		jQuery.mobile.pageLoading(true);
+		jQuery.mobile.hidePageLoadingMsg();
 	}
 	
 	persistence.dumpToJson(function(dump) {

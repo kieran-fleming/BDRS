@@ -8,7 +8,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
@@ -61,14 +59,48 @@ import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 @Controller
 public class YearlySightingsController extends AbstractController {
 
+    /**
+     * Url for the yearly sightings form
+     */
     public static final String YEARLY_SIGHTINGS_URL = "/bdrs/user/yearlySightings.htm";
     
+    /**
+     * Query parameter for the survey ID
+     */
     public static final String PARAM_SURVEY_ID = "surveyId";
+    
+    /**
+     * Query parameter for the record ID
+     */
     public static final String PARAM_RECORD_ID = "recordId";
+    
+    /**
+     * Query parameter for the location ID
+     */
     public static final String PARAM_LOCATION_ID = "locationId";
     
+    /**
+     * View name for the yearly sightings form
+     */
     public static final String YEARLY_SIGHTINGS_FORM_VIEW_NAME = "yearlySightings";
     
+    /**
+     * Msg code to be used when successfully submitting a form and redirecting
+     * to the same form
+     */
+    public static final String MSG_CODE_SUCCESS_STAY_ON_FORM = "bdrs.yearlySightings.save.success.stayOnForm";
+    
+    /**
+     * Msg code to be used when successfully submitting a form and redirecting
+     * to the my sightings page.
+     */
+    public static final String MSG_CODE_SUCCESS_MY_SIGHTINGS = "bdrs.yearlySightings.save.success.mySightings";
+    
+    /**
+     * Msg code to be used when successfully submitting a form and redirecting
+     * to a new, empty, recording form.
+     */
+    public static final String MSG_CODE_SUCCESS_ADD_ANOTHER = "bdrs.yearlySightings.save.success.addAnother";    
     
     private Logger log = Logger.getLogger(getClass());
 
@@ -82,9 +114,6 @@ public class YearlySightingsController extends AbstractController {
     private AttributeDAO attributeDAO;
     @Autowired
     private FileService fileService;
-    
-    @Autowired
-    private RedirectionService redirectionService;
     
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
 
@@ -295,9 +324,23 @@ public class YearlySightingsController extends AbstractController {
             }
         }
         
-        // highlight the last record...
-        ModelAndView mv = new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(survey), true));
-        RecordWebFormContext.addRecordHighlightId(mv, recToDisplay);
+        ModelAndView mv = RecordWebFormContext.getSubmitRedirect(request, recToDisplay);
+        
+        if (request.getParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER) != null) {
+            mv.addObject("surveyId", survey.getId());
+            getRequestContext().addMessage(MSG_CODE_SUCCESS_ADD_ANOTHER);
+        } else {
+            switch (survey.getFormSubmitAction()) {
+            case MY_SIGHTINGS:
+                getRequestContext().addMessage(MSG_CODE_SUCCESS_MY_SIGHTINGS);
+                break;
+            case STAY_ON_FORM:
+                getRequestContext().addMessage(MSG_CODE_SUCCESS_STAY_ON_FORM);
+                break;
+            default:
+                throw new IllegalStateException("Submit form action not handled : " + survey.getFormSubmitAction());
+            }
+        }
         return mv;
     }
 

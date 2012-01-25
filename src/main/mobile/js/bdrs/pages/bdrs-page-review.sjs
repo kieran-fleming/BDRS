@@ -1,7 +1,7 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 }
 
 exports.recordSyncListener = function() {
@@ -34,7 +34,6 @@ exports.Show = function() {
     var isModified;
         
     var now = new Date();
-    
     for(var i=0; i<records.length; i++) {
         rec = records[i];
         
@@ -59,7 +58,7 @@ exports.Show = function() {
         };
         
         waitfor(recordReviewItem) {
-            bdrs.template.renderOnlyCallback('recordReviewItem', tmplParams, resume);        
+            bdrs.template.renderOnlyCallback('recordReviewItem', tmplParams, resume);     
         };
         
         recordReviewItem.appendTo(recordListElem);
@@ -68,7 +67,7 @@ exports.Show = function() {
         anchor.jqmData('recordId', rec.id);
         anchor.click(function(event) {
             bdrs.mobile.setParameter("selected-record", jQuery(event.currentTarget).jqmData("recordId"));
-            jQuery.mobile.changePage("#record");
+            jQuery.mobile.changePage("#record", {showLoadMsg: false});
         });
         
     }

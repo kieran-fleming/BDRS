@@ -149,7 +149,7 @@ public class TaxonGroupManagementController extends AbstractController {
         taxonGroup.setAttributes(attributeList);
         
         // -- The basic stuff --
-        taxonGroup.setName(name);
+        taxonGroup.setName(name.trim());
         taxonGroup.setBehaviourIncluded(behaviourIncluded);
         taxonGroup.setFirstAppearanceIncluded(firstAppearanceIncluded);
         taxonGroup.setLastAppearanceIncluded(lastAppearanceIncluded);

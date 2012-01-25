@@ -6,16 +6,16 @@
 	<!-- css -->
     <link type="text/css" rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.11.custom.css"/>
     <link type="text/css" rel="stylesheet" href="css/jquery-ui-timepicker.css"/>
-    <link type="text/css" rel="stylesheet" href="css/jquery.mobile-1.0b2.min.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jquery.mobile-1.0.min.css"/>
     <link type="text/css" rel="stylesheet" href="css/bdrs-mobile.css"/>
     <link type="text/css" rel="stylesheet" href="css/bdrs-mobile-small.css"/>
     
 	<!-- jquery + oni apollo (async to sync) -->
-    <script type="text/javascript" charset="utf-8" src="js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-1.6.4.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.ui.timepicker.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.ui.autocomplete.html.js"></script>
-    <script type="text/javascript" charset="utf-8">
+    <script type="text/javascript">
         jQuery(document).bind("mobileinit", function() {
             jQuery.extend(jQuery.mobile , {
                 defaultPageTransition: 'none',
@@ -23,7 +23,7 @@
             });
         });
     </script>
-    <script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0b2.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0.min.js"></script>
 
 
     <script type="text/javascript" charset="utf-8" src="js/jquery.tmpl.min.js"></script>
@@ -35,7 +35,7 @@
 	<script type="application/javascript" src="js/bdrs/bdrs-mobile-phonegap.js"></script>
 
     <!-- Platform specific -->
-    <script type="text/javascript" charset="utf-8" src="js/phonegap.0.9.6.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/phonegap-1.3.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/phonegap-testplugin.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/barcodescanner.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/nativedb.js"></script>
@@ -65,7 +65,7 @@
     <script type="application/javascript" src="js/bdrs/bdrs-mobile-media.js"></script>
     
     <!-- Mobile application pages -->
-    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-login.js"></script>
+    <script type="application/javascript" src="js/bdrs/pages/bdrs-page-splash.js"></script>
     <script type="application/javascript" src="js/bdrs/pages/bdrs-page-clock-warning.js"></script>
     <script type="application/javascript" src="js/bdrs/pages/bdrs-page-choose-survey.js"></script>
             
@@ -73,7 +73,6 @@
         
         var sjsInit = function() {
 	        require.path = "./js/bdrs/";
-
             bdrs.template = require("bdrs-mobile-template");
 
 	        bdrs.mobile.attribute = require("bdrs-mobile-attribute");
@@ -88,6 +87,7 @@
 	        bdrs.mobile.syncService.init();
 	
 	        require.path = "./js/bdrs/pages/";
+			bdrs.mobile.pages.login = require("bdrs-page-login");
 	        bdrs.mobile.pages.dashboard = require("bdrs-page-dashboard");
 	        bdrs.mobile.pages.guide = require("bdrs-page-guide");
 	        bdrs.mobile.pages.species_list = require("bdrs-page-species-list");
@@ -112,11 +112,16 @@
 	        bdrs.mobile.pages.trash = require("bdrs-page-trash");
 	        bdrs.mobile.pages.trash_restore_error = require("bdrs-page-trash-restore-error");
 	        bdrs.mobile.pages.trash_delete_confirm = require("bdrs-page-trash-delete-confirm");
-	        
+			bdrs.mobile.pages.about = require("bdrs-page-about");
+
+			require.path = "./theme/js/";
+			bdrs.mobile.theme = require("bdrs-theme-init");
+
             require.path = "./js/bdrs/";
             bdrs.mobile.init = require("bdrs-mobile-init");
-            bdrs.mobile.init.start();
+			bdrs.mobile.init.start();
         };
+
         if(bdrs.database.ready === true) {
             sjsInit();
         } else {
@@ -146,72 +151,60 @@
 </head>
 <body>
 
-<!-- Load page  
-<div data-role="page" id="splash" data-theme="a"> 
-    <div data-role="content" class="bdrs-page-splash">
-    	<div id="loadingContent">
-    		<img alt="logo" src="images/web_hi_res_300.png">
-            <div>BDRS Loading ...</div>
+<!-- Load page-->  
+<div data-role="page" id="splash"> 
+    	<div data-role="content"  class="bdrs-page-splash splash">
+    		<img alt="splash logo" src="theme/images/splash.png"/>
     	</div>
-    </div> /content
-</div> /page-->
+    	
+</div>
+<!--/page-->
 
 <!-- Login page -->
 <div data-role="page" id="login" data-theme="b"> 
- 
-    <div data-role="header" class="t" data-theme="b"> 
-        <a href="application.htm" data-role="button" data-theme="b" rel="external" id="appLink" style="display:none;">download app</a>
-        <h1>Login</h1>
-    </div><!-- /header --> 
-    
-    <div data-role="content" class="bdrs-page-login">
-        
-            <form id="login_form" action="" method="post">
-                <p id="loginWelcome" class="center">Welcome the the ALA Citizen Science Mobile Tool<br/>    
-                Please enter your Biological Data Recording Service URL and your login credentials</p>
-                <label for="portalName">Portal Name</label><input type="text" name="portalName" id="portalName" value="Biological Data Recording System"/>
-                <label for="url">BDRS URL</label><input type="text" name="url" id="url" value="http://localhost:8080/BDRS/"/>
-                <label for="username">Username</label><input type="text" name="username" id="username" value="admin"/>
-                <label for="password">Password</label><input type="password" name="password" id="password" value="password"/>
+    <div id="loginHeader" class="header" data-role="header" data-theme="b">
+    	<h1>Login</h1>
+    </div>
+    <div data-role="content" class="bdrs-page-login" data-theme="b">
+            <form id="login_form" method="post">
+                <p id="loginWelcome" class="center"></p>
+                <div id="portalNameField" data-role="fieldcontain"></div>
+                <div id="portalUrlField" data-role="fieldcontain"></div>
+                <div data-role="fieldcontain">
+                	<label for="username">Username</label>
+                	<input type="text" name="username" id="username" value=""/>
+                </div>
+                <div data-role="fieldcontain">
+                	<label for="password">Password</label>
+                	<input type="password" name="password" id="password" value=""/>
+                </div>
             </form>
             <button id="login_button">Login</button>
-        
-    </div><!-- /content --> 
-    
-    <div data-role="footer" class="footer" data-theme="b">
-    </div><!-- /footer --> 
-    
-</div><!-- /page --> 
+    </div>
+</div>
+<!-- /page --> 
  
 <!-- Login Error Dialog Page --> 
-<div data-role="page" id="login_error" data-theme="b"> 
- 
+<div data-role="page" id="login_error" data-fullscreen="true" data-theme="b"> 
     <div data-role="header" data-theme="b"> 
         <h1>Error</h1> 
-    </div><!-- /header --> 
-    
+    </div> 
     <div data-role="content" class="bdrs-page-login-error"> 
         <h2>Unable to Login</h2>
         <p>We were unable to log you in using the details you provided, please try again.</p> 
-        <a href="#login" data-role="button" data-rel="back">Return</a>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+        <a href="#login" data-role="button">Return</a>
+    </div> 
+</div>
+<!-- /page --> 
  
 <!-- Dashboard page --> 
 <div data-role="page" id="dashboard" data-theme="b"> 
- 
     <div data-role="header" data-theme="b" data-backbtn="false"> 
         <h1>Dashboard</h1>
-    </div><!-- /header --> 
-    <div data-role="content" class="bdrs-page-dashboard">   
+    </div> 
+    <div data-role="content" class="bdrs-page-dashboard content">   
         <div class="dashboard-status"></div>
-        
-        <p id="dashboard-info">
-            
-        </p>
+        <p id="dashboard-info"></p>
         <ul data-role="listview" data-inset="true">
             <li>
                 <a href="#sites">
@@ -249,37 +242,35 @@
                     <p>Configure the application</p>
                 </a>
             </li>
+             <li>
+                <a href="#about">
+                    <h3>About</h3>
+                    <p>Backgound information</p>
+                </a>
+            </li>
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Choose current survey dialog --> 
-<div data-role="page" id="choose-survey" data-theme="b"> 
- 
+<div data-role="page" id="choose-survey" data-theme="b">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Choose Survey</h1>
-    </div><!-- /header --> 
-    
+    </div> 
     <div data-role="content" class="bdrs-page-choose-survey" data-spliticon="plus">
         <h3>Choose from the following surveys</h3>
         <ul data-role="listview" data-inset="true" class="surveyList">
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page -->
+    </div> 
+</div>
+<!-- /page -->
 
 <!-- Survey Description Dialog --> 
-<div data-role="dialog" id="clock-warning" data-transition="slidedown"> 
- 
+<div data-role="dialog" id="clock-warning" data-transition="slidedown">  
     <div data-role="header" data-theme="b"> 
         <h1>Verify Time Settings</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-clock-warning">   
         <h2>Verify the Date and Time of your Device</h2>
         <h3 id="clock-warning-current-datetime"></h3>
@@ -290,19 +281,15 @@
             Records and sightings created on this device will be time 
             stamped with the date and time from the device.
         </p> 
-    </div><!-- /content --> 
-    <!-- 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div>/footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Map Page --> 
-<!--div data-role="dialog" data-transition="pop" id="mobilemap" data-theme="b" style="height:80%"> 
- 
+<!--div data-role="dialog" data-transition="pop" id="mobilemap" data-theme="b" style="height:80%">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Map</h1>
     </div> 
-    
     <div data-role="content" class="bdrs-page-record" style="height:80%">
         <div id="container">    
         <div id="card">
@@ -324,69 +311,58 @@
         </div>
         </div>
     </div> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div> 
-</div --><!-- /page --> 
+</div -->
+<!-- /page --> 
 
 <!-- Recording Step 1 Page --> 
-<div data-role="page" id="record" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="record" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Sighting</h1>
-    </div><!-- /header --> 
-    
+    </div> 
     <div data-role="content" class="bdrs-page-record">  
         <h2><span id="record-type"></span>&nbsp;Record&nbsp;<span id="record-sibling-count"></span></h2> 
-        
-        <div id="record-form" action="" method="post">
+        <div id="record-form">
             <!--div data-inline="true" class="center">
                 <a data-inline="true" data-rel="dialog" data-role="button" onclick="setTimeout(&#39;setup(&quot;lonlat&quot;)&#39;,1000);window.location='index.html#mobilemap';">Select Lat/Lon From Map</a>
             </div-->
             <span id="record-survey-attributes"></span>
-            <div data-role="collapsible" data-collapsed="true">
+            <div data-role="collapsible" data-collapsed="false">
                 <h1>Taxon Group Attributes</h1>
                 <span id="record-taxongroup-attributes"></span>
             </div>
             <!--<span id="record-method-attributes"></span>-->
-            <div data-role="collapsible" data-collapsed="true">
+            <div data-role="collapsible" data-collapsed="false">
                 <h1>Census Method Attributes</h1>
                 <span id="record-method-attributes"></span>
             </div>
             <!-- Sub Method Container -->
-            <div id="record-sub-methods" data-role="collapsible-set" data-collapsed="true"></div>            
+            <div id="record-sub-methods" data-role="collapsible-set" data-collapsed="false"></div>
+            <div data-inline="true" class="center">
+            	<a id="record-delete" href="javascript: void(0);" class="secondaryAction delete">Delete</a>
+            	<button data-inline="true" class="record-save">Save</button>
+            	<button data-inline="true" class="record-save-continue">Save and Continue</button>
+        	</div>  
         </div>
-        <div data-inline="true" class="center">
-            <a id="record-delete" href="javascript: void(0);" class="secondaryAction delete">Delete</a>
-            <button data-inline="true" id="record-save">Save</button>
-            <button data-inline="true" id="record-save-continue">Save and Continue</button>
-        </div>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div>
+    <!--<div data-role="footer" data-theme="b" class="footer"></div> -->
+    </div>
+<!-- /page --> 
 
 <!-- Point Intersect --> 
-<div data-role="page" id="point-intersect" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="point-intersect" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Point Intersect</h1>
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-point-intersect"> 
         <h2><span id="point-intersect-type"></span>&nbsp;Point&nbsp;<span id="point-intersect-sibling-count"></span></h2> 
-        
         <!-- Whats up with that? A form that is a div with a method? -->
-        <div id="point-intersect-form" action="" method="post">
-
-            <div data-role="collapsible" data-collapsed="true" id ="point-intersect-survey-attributes"></div>
+        <div id="point-intersect-form">
+            <div data-role="collapsible" data-collapsed="false" id ="point-intersect-survey-attributes"></div>
             <!-- Substrate -->
             <div id="point-intersect-substrate-attributes" data-role="fieldcontain">
                 <span id="point-intersect-substrate-point-number"></span>
-                <fieldset data-role="controlgroup" data-type="horizontal" data-role="fieldcontain" id='point-intersect-substrate'></fieldset>
+                <fieldset data-role="controlgroup" data-type="horizontal" id='point-intersect-substrate'></fieldset>
             </div>
-            
             <!-- Species Table -->
             <input type="hidden" id="pi-obs-index" value="0"/>
             <div class="ui-grid-b ui-bar ui-bar-b" id="point-intersect-species-table">
@@ -398,67 +374,55 @@
                 </div>
                 <span id="point-intersect-species-table-content"></span>
             </div>
-            
             <!-- Taxonomy Quick List -->
             <div data-inline="true" id='point-intersect-taxonomy-quicklist'></div>
+            <div data-inline="true" class="center">
+	            <a id="pi-delete-substrate" href="javascript: void(0);" class="secondaryAction delete">Delete</a>
+	            <button data-inline="true" id="point-intersect-save">Finish Transect</button>
+	            <button data-inline="true" id="point-intersect-save-continue">Next Point</button>
+        	</div>
         </div>
-        
-        <div data-inline="true" class="center">
-            <a id="pi-delete-substrate" href="javascript: void(0);" class="secondaryAction delete">Delete</a>
-            <button data-inline="true" id="point-intersect-save">Finish Transect</button>
-            <button data-inline="true" id="point-intersect-save-continue">Next Point</button>
-        </div>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Census Method (Record) Page --> 
-<div data-role="page" id="censusMethod" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="censusMethod" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Record</h1>
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-censusmethods">   
         <div class="dashboard-status"></div>
         <h2>Record</h2> 
         <p>Select the type of record that you wish to create</p>
         <ul data-role="listview" data-inset="true" class="censusMethodList">
         </ul>
-    </div><!-- /content --> 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Sub Sample Page --> 
-<div data-role="page" id="subsample" data-theme="b"> 
- 
+<div data-role="page" id="subsample" data-theme="b">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Sub Sample</h1>
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-subsample">   
-        <form id="subsample-form" action="" method="post">
+        <form id="subsample-form" >
             <h2>Sub Sample</h2> 
         </form>
         <div data-inline="true" class="center">
-            <button data-inline="true" id="record-save">Save</button>
-            <button data-inline="true" id="record-save-continue">Save and Continue</button>
+            <button data-inline="true" class="record-save">Save</button>
+            <button data-inline="true" class="record-save-continue">Save and Continue</button>
         </div>
-    </div><!-- /content --> 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Sites Page --> 
-<div data-role="page" id="sites" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="sites" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Sites</h1>
-    </div><!-- /header --> 
-    
+    </div> 
     <div data-role="content" class="bdrs-page-sites">   
         <h2>Sites</h2> 
         <p>Select a site to start collecting site data</p>
@@ -467,39 +431,32 @@
         <div data-inline="true" class="center">
             <a href="#add-site" data-role="button">Add Site</a>
         </div>
-    </div><!-- /content --> 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div>
+</div>
+<!-- /page --> 
 
 <!-- Site Page --> 
-<div data-role="page" id="site" data-theme="b"> 
- 
+<div data-role="page" id="site" data-theme="b">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Site</h1>
-    </div><!-- /header --> 
-    
+    </div> 
     <div data-role="content" class="bdrs-page-site">
-        <form id="site-form" action="" method="post">
-            <fieldset data-role="controlgroup" data-type="horizontal" data-role="fieldcontain" class="censusControlGroup">
-            </fieldset>
+        <form id="site-form">
+            <fieldset data-type="horizontal" data-role="fieldcontain" class="censusControlGroup"></fieldset>
             <ul data-role="listview" data-inset="true" class="methodList">
             </ul>
         </form>
-    </div><!-- /content --> 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Add Site Page --> 
-<div data-role="page" id="add-site" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="add-site" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Add Site</h1>
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-add-site">    
-        <form id="subsample-form" action="" method="post">
+        <form id="add-site-form">
             <h2>Add Site</h2> 
             <p class="center">Please enter site details below</p>
             <div data-role="fieldcontain"><label for="add-site-id">Site ID</label><input type="text" name="add-site-id" id="add-site-id"/></div>
@@ -509,89 +466,70 @@
         <div data-inline="true" class="center">
             <button data-inline="true" id="add-site-save">Save</button>
         </div>
-    </div><!-- /content --> 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 
 <!-- Field Guide --> 
-<div data-role="page" id="guide" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="guide" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Field Guide</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-guide">   
         <h2>Field Guide</h2>
         <p>Work in progress, here is a list of the taxon groups to choose from...</p>
         <ul data-role="listview" data-inset="true" class="taxonList">
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div>
+</div>
+<!-- /page --> 
 
 <!-- Species List Page (Field Guide page 2) --> 
-<div data-role="page" id="species-list" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="species-list" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Field Guide</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-species-list">    
         <h2>Species List</h2>
         <p>Work in progress, here is a list of species for the chosen group...</p>
         <ul data-role="listview" data-inset="true" class="taxonList">
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Species Page (Field Guide page 3) --> 
-<div data-role="page" id="species" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="species" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Field Guide</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-species"> 
         <h2>Species Page</h2>
         <p>Work in progress, here is some basic information about your chosen species.</p>
         <ul data-role="listview" data-inset="true" class="taxonList">
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- ID Tool --> 
-<div data-role="page" id="id" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="id" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Identify</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-id">  
         <h2>Identify</h2> 
         <p>Not yet implemented</p>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div>
+</div>
+<!-- /page --> 
 
 <!-- ID Tool --> 
-<div data-role="page" id="review" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="review" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Review</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-review">  
         <h2>Review</h2>
         <p>Not yet implemented, in the meantime, here's a records list</p>
@@ -606,40 +544,33 @@
                 </a>
             </li>
         </ul>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div>
+</div>
+<!-- /page --> 
 
 <!-- Statistics --> 
-<div data-role="page" id="statistics" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="statistics" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Statistics</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-statistics">  
         <h2>Statistics</h2>
         <span id="statistics-record"></span>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Settings --> 
-<div data-role="page" id="settings" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="settings" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Settings</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-settings">    
         <h2>Settings</h2>
         <ul data-role="listview" data-inset="true">
             <li>
-                <a href="#download-surveys"><h3>Download Surveys</h3>
+                <a href="#download-surveys">
+                	<h3>Download Surveys</h3>
                     <p>Download surveys to your device</p>
                 </a>
             </li>
@@ -679,38 +610,44 @@
         <button class="dump_db">Dump Database to JSON File</button>
         <button class="reload">Reload</button>
         <button class="settings_test">Test big JSON</button>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page -->
+    </div> 
+</div>
+<!-- /page -->
+
+<!-- Settings --> 
+<div data-role="page" id="about" data-theme="b" data-add-back-btn="true">  
+    <div data-role="header" data-theme="b" class="header"> 
+        <h1>About</h1> 
+    </div> 
+    <div data-role="content" class="bdrs-page-about">
+    	<div id="templatedContent"></div>
+	    <p>
+	    	Background image <a href="http://www.flickr.com/photos/tyson1978/5525334326/in/photostream/">Pilbara Ngurra</a> by <a href="http://www.flickr.com/photos/tyson1978/">tysonA</a> licenced under <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/">Creative Commons Attribution-ShareAlike 2.0 Generic (CC BY-SA 2.0)</a>.
+	    </p>
+    </div>
+</div>
+<!-- /page -->
 
 <!-- Download Surveys --> 
-<div data-role="page" id="download-surveys" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="download-surveys" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b" class="header"> 
         <h1>Surveys</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-download-surveys">    
         <h3>Add or remove surveys</h3>
         <div data-role="fieldcontain" class="surveyListContainer">
-            <fieldset data-role="controlgroup" class="surveyList">
-            </fieldset>
+        	<p id="noSurvey">We were not able to retrieve your surveys from the server. Please check the connection and try again.</p>
+            <fieldset data-role="controlgroup" class="surveyList"></fieldset>
         </div>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page -->
+    </div> 
+</div>
+<!-- /page -->
 
 <!-- Delete Survey Confirmation Dialog -->  
-<div data-role="dialog" id="survey-delete-confirm" data-transition="slidedown"> 
- 
+<div data-role="dialog" id="survey-delete-confirm" data-transition="slidedown">
     <div data-role="header" data-theme="b"> 
         <h1>Confirm Delete</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-survey-delete-confirm">   
         <h2>Confirm Delete</h2>
         <h3>
@@ -723,36 +660,26 @@
         <div class="center">
             <button id="survey-delete-confirm-button">Delete</button>
         </div>
-
-    </div><!-- /content --> 
-    <!-- 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div>/footer --> 
-</div><!-- /page -->
-
+	</div>
+</div>
+<!-- /page -->
 
 <!-- Dump Data --> 
-<div data-role="page" id="dump-data" data-theme="b" data-add-back-btn="true"> 
- 
+<div data-role="page" id="dump-data" data-theme="b" data-add-back-btn="true">  
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Dump Data</h1>
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-dump-data">
         <div class="data"></div>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Logging --> 
-<div data-role="page" id="log-settings" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="log-settings" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Logging Configuration</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-logging">
         <div data-role="fieldcontain">
             <fieldset data-role="controlgroup">
@@ -770,19 +697,15 @@
                 <option value="4">Debug</option>
             </select>
         </div>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Server Synchronization --> 
-<div data-role="page" id="sync-settings" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="sync-settings" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Server Synchronization Settings</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-sync-settings">
         <div data-role="fieldcontain">
             <fieldset data-role="controlgroup">
@@ -795,74 +718,54 @@
             <input type="number" id="sync-settings-polling-period" name="sync-settings-polling-period"/>
         </div>
         <button id="sync-settings-sync-now">Synchronize Now</button>
-    </div><!-- /content --> 
-    
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Species Count List--> 
-<div data-role="page" id="species-count-list" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="species-count-list" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Species Count</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-species-count-list">
         <h2>Species Count</h2>
         <p>Create/Edit Field Species and manage taxonomic quicklists</p>
-        
         <span id="species-count-list-listview"></span>  
-
-
         <button id="species-count-list-add-button">Add Field Species</button>
-    </div><!--/content --> 
-
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Species Count Edit--> 
-<div data-role="page" id="species-count-edit" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="species-count-edit" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1><span class="species-count-edit-taskname"></span> Species Count</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-species-count-edit">
         <h2><span class="species-count-edit-taskname"></span> Species Count</h2>
-
         <div class="speciesEntryField" data-role="fieldcontain">
             <label for="speciescount-species">Species</label>
             <input class="validate required" type="text" name="speciescount-species" id="speciescount-species"/>
         </div>
-
         <div data-role="fieldcontain">
             <label for="speciescount-usercount">User Count</label>
             <input class="validate required" type="number" name="speciescount-usercount" id="speciescount-usercount"/>
         </div>  
-
         <div data-inline="true" class="center">
             <button data-inline="true" id="species-count-edit-reset-button">Reset</button>
             <button data-inline="true" id="species-count-edit-save-button">Save</button>
         </div>
-        
-    </div><!--/content --> 
-
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Configure Dashboard--> 
-<div data-role="page" id="configure-dashboard" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="configure-dashboard" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Configure Dashboard</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-configure-dashboard">
         <h2>Configure Dashboard</h2>
-
         <div data-role="fieldcontain">
             <label for="fieldguide">Field Guide</label>
             <select name="fieldguide" id="fieldguide" data-role="slider">
@@ -870,7 +773,6 @@
                 <option value="false">Hide Field Guide</option>
             </select> 
         </div>
-
         <div data-role="fieldcontain">
             <label for="identify">Identify</label>
             <select name="identify" id="identify" data-role="slider">
@@ -878,24 +780,18 @@
                 <option value="false">Hide Identification Tool</option>
             </select> 
         </div>
-
         <div data-inline="true" class="center">
             <button data-inline="true" id="configure-dashboard-save-button">Save</button>
         </div>
-        
-    </div><!--/content --> 
-
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Trash Can -->
-<div data-role="page" id="trash" data-theme="b" data-add-back-btn="true"> 
-    
+<div data-role="page" id="trash" data-theme="b" data-add-back-btn="true">     
     <div data-role="header" data-theme="b"  class="header"> 
         <h1>Trash Can</h1>
-    </div><!-- /header --> 
-
+    </div>
     <div data-role="content" class="bdrs-page-trash">
         <h2>Trash Can</h2>
         <p>
@@ -907,7 +803,6 @@
             <strong>Note:</strong> Deleting an observation on this device will not remove
             the observation from the server if it has been uploaded.
         </p>
-
         <div data-inline="true" class="left">
             <button data-inline="true" id="trash-select-all">Select All</button>
             <button data-inline="true" id="trash-select-none">Select None</button>
@@ -920,20 +815,15 @@
             <button data-inline="true" id="trash-delete">Delete</button>
             <button data-inline="true" id="trash-restore">Restore</button>
         </div>
-        
-    </div><!--/content --> 
-
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div><!-- /footer --> 
-</div><!-- /page --> 
+    </div> 
+</div>
+<!-- /page --> 
 
 <!-- Restoration Error Dialog --> 
-<div data-role="dialog" id="trash-restore-error" data-transition="slidedown"> 
- 
+<div data-role="dialog" id="trash-restore-error" data-transition="slidedown">  
     <div data-role="header" data-theme="b"> 
         <h1>Restoration Error</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-trash-restore-error">   
         <h2>Restoration Error</h2>
         <p>Unable to restore</p>
@@ -945,19 +835,15 @@
             To correct this error, mark the parent record for restoration
             or deselect the child record.
         </p> 
-    </div><!-- /content --> 
-    <!-- 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div>/footer --> 
-</div><!-- /page -->
+    </div> 
+</div>
+<!-- /page -->
 
 <!-- Delete Confirmation Dialog --> 
-<div data-role="dialog" id="trash-delete-confirm" data-transition="slidedown"> 
- 
+<div data-role="dialog" id="trash-delete-confirm" data-transition="slidedown">  
     <div data-role="header" data-theme="b"> 
         <h1>Confirm Delete</h1> 
-    </div><!-- /header --> 
-    
+    </div>
     <div data-role="content" class="bdrs-page-trash-delete-confirm">   
         <h2>Confirm Delete</h2>
         <h3>
@@ -970,12 +856,9 @@
         <div class="center">
             <button id="trash-delete-confirm-button">Delete</button>
         </div>
-
-    </div><!-- /content --> 
-    <!-- 
-    <div data-role="footer" data-theme="b" class="footer"> 
-    </div>/footer --> 
-</div><!-- /page -->
+    </div> 
+</div>
+<!-- /page -->
 
 </body>
 </html>

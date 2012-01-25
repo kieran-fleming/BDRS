@@ -1,11 +1,11 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
     // Server Polling
     var enablePollingInput = jQuery("#sync-settings-enable-polling");
     enablePollingInput.attr("checked", bdrs.mobile.connectivity.isPollingEnabled());
-    bdrs.mobile.restyle(enablePollingInput.parent());
+     bdrs.template.restyle(enablePollingInput.parent());
     enablePollingInput.change(bdrs.mobile.pages.sync_settings._pollingActionChanged);
 
     // Polling Period

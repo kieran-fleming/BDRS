@@ -12,9 +12,9 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
@@ -60,7 +59,6 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeValueUtil;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 import au.com.gaiaresources.bdrs.util.StringUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -102,8 +100,9 @@ public abstract class SingleSiteController extends AbstractController {
     
     public static final String ROW_VIEW = "singleSiteMultiTaxaRow";
     
-    public static final String MSG_CODE_SUCCESS = "bdrs.record.singlesitemultitaxa.save.success";
-    public static final String MSG_CODE_SUCCESS_ADD_ANOTHER = "bdrs.record.singlesitemultitaxa.save.successAddAnother";
+    public static final String MSG_CODE_SUCCESS_MY_SIGHTINGS = "bdrs.record.singlesitemultitaxa.save.success.mySightings";
+    public static final String MSG_CODE_SUCCESS_STAY_ON_FORM = "bdrs.record.singlesitemultitaxa.save.success.stayOnForm";
+    public static final String MSG_CODE_SUCCESS_ADD_ANOTHER = "bdrs.record.singlesitemultitaxa.save.success.addAnother";
     
     /**
      * The survey scoped form fields that may be populated with attribute
@@ -148,9 +147,6 @@ public abstract class SingleSiteController extends AbstractController {
     private FileService fileService;
 
     private FormFieldFactory formFieldFactory = new FormFieldFactory();
-
-    @Autowired
-    private RedirectionService redirectionService;
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -377,22 +373,23 @@ public abstract class SingleSiteController extends AbstractController {
             }
         }
 
-        ModelAndView mv;
+        ModelAndView mv = RecordWebFormContext.getSubmitRedirect(request, record);
 
-        if (request.getParameter("submitAndAddAnother") != null) {
-            mv = new ModelAndView(new RedirectView(
-                    "/bdrs/user/surveyRenderRedirect.htm", true));
+        if (request.getParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER) != null) {
             mv.addObject("surveyId", survey.getId());
-
             getRequestContext().addMessage(MSG_CODE_SUCCESS_ADD_ANOTHER, new Object[] { records.size() });
         } else {
-            // highlight the last record to be added
-            mv = new ModelAndView(new RedirectView(
-                    redirectionService.getMySightingsUrl(survey), true));
-            RecordWebFormContext.addRecordHighlightId(mv, record);
-            getRequestContext().addMessage(MSG_CODE_SUCCESS, new Object[] { records.size() });
+            switch (survey.getFormSubmitAction()) {
+            case MY_SIGHTINGS:
+                getRequestContext().addMessage(MSG_CODE_SUCCESS_MY_SIGHTINGS, new Object[] { records.size() });
+                break;
+            case STAY_ON_FORM:
+                getRequestContext().addMessage(MSG_CODE_SUCCESS_STAY_ON_FORM, new Object[] { records.size() });
+                break;
+            default:
+                throw new IllegalStateException("Submit form action not handled : " + survey.getFormSubmitAction());
+            }
         }
-
         return mv;
     }
 

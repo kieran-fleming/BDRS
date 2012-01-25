@@ -13,23 +13,25 @@
         </thead>
         <tbody>
             <c:forEach items="${portalList}" var="portal">
-                <tr>
-                    <td>
-                        <a href="${pageContext.request.contextPath}/portal/${portal.id}/home.htm">
-                            ${portal.name}
-                        </a>
-                    </td>
-                    <td class="textcenter">
-                        <c:if test="${portal.default}">
-                            <img class="vertmiddle" src="${pageContext.request.contextPath}/images/icons/yes.png" alt="Yes"/>
-                        </c:if>
-                    </td>
-                    <td class="textcenter">
-                        <c:if test="${context.portal == portal}">
-                            <img class="vertmiddle" src="${pageContext.request.contextPath}/images/icons/yes.png" alt="Yes"/>
-                        </c:if>
-                    </td>
-                </tr>
+                <c:if test="${ portal.active }">
+	                <tr>
+	                    <td>
+	                        <a href="${pageContext.request.contextPath}/portal/${portal.id}/home.htm">
+	                            ${portal.name}
+	                        </a>
+	                    </td>
+	                    <td class="textcenter">
+	                        <c:if test="${portal.default}">
+	                            <img class="vertmiddle" src="${pageContext.request.contextPath}/images/icons/yes.png" alt="Yes"/>
+	                        </c:if>
+	                    </td>
+	                    <td class="textcenter">
+	                        <c:if test="${context.portal == portal}">
+	                            <img class="vertmiddle" src="${pageContext.request.contextPath}/images/icons/yes.png" alt="Yes"/>
+	                        </c:if>
+	                    </td>
+	                </tr>
+                </c:if>
             </c:forEach>
         </tbody>
     </table>

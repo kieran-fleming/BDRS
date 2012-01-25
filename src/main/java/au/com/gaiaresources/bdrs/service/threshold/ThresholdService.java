@@ -66,7 +66,7 @@ public class ThresholdService implements ConditionOperatorHandler {
      * applied to perform a comparison. Simple datatypes are defined as those
      * that only involve a single value such as a string or a number.
      */
-    public static Map<Class<?>, Operator[]> SIMPLE_TYPE_TO_OPERATOR_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, Operator[]>() {
+    public static final Map<Class<?>, Operator[]> SIMPLE_TYPE_TO_OPERATOR_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, Operator[]>() {
         {
             put(String.class, new Operator[] { Operator.EQUALS, Operator.CONTAINS });
             put(Integer.class, new Operator[] { Operator.EQUALS });
@@ -83,7 +83,7 @@ public class ThresholdService implements ConditionOperatorHandler {
      * that involve more than one value such as a key/value pair and hence
      * require a more intricate comparison operation.
      */
-    public static Map<Class<?>, ComplexTypeOperator> COMPLEX_TYPE_TO_OPERATOR_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ComplexTypeOperator>() {
+    public static final Map<Class<?>, ComplexTypeOperator> COMPLEX_TYPE_TO_OPERATOR_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ComplexTypeOperator>() {
         {
             put(AttributeValue.class, new RecordAttributeOperator());
         }
@@ -94,7 +94,7 @@ public class ThresholdService implements ConditionOperatorHandler {
      * be taken if the conditions are met. All classes in the
      * {@link #THRESHOLD_CLASSES} must be specified as keys in this map.
      */
-    public static Map<Class<?>, ActionType[]> CLASS_TO_ACTION_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ActionType[]>() {
+    public static final Map<Class<?>, ActionType[]> CLASS_TO_ACTION_MAP = Collections.unmodifiableMap(new HashMap<Class<?>, ActionType[]>() {
         {
             put(IndicatorSpecies.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION });
             put(Record.class, new ActionType[] { ActionType.EMAIL_NOTIFICATION, 

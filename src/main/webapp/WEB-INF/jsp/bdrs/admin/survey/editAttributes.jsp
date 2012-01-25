@@ -4,13 +4,6 @@
 
 <%@page import="au.com.gaiaresources.bdrs.controller.attribute.RecordPropertyAttributeFormField"%>
 
-<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/sets/html/style.css" />
-<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/skins/markitup/style.css" />
-
-<script type="text/javascript" src="${pageContext.request.contextPath}/js/markitup/jquery.markitup.js"></script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/attribute.js"></script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/admin.js"></script>
-
 <h2>Edit Project: Choose Fields</h2>
 <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/survey/editAttributes.htm">
     <input type="hidden" name="surveyId" value="${survey.id}"/>
@@ -35,8 +28,8 @@
 	                <th>Field Type</th>
 	                <th>Mandatory</th>
 	                <th>Scope</th>
-	                <th>Options (separated by comma)</th>
-	                <th>Hide / Delete</th>
+	                <th>Options</th>
+	                <th>Hide&nbsp;/<br/>Delete</th>
 	            </tr>
 	        </thead>
 	        <tbody>
@@ -109,9 +102,7 @@
         <input type="submit" class="form_action" name="saveAndPreview" value="Save And Preview"/>
         <input type="submit" class="form_action" name="saveAndContinue" value="Save And Continue"/>
     </div>
-
 </form>
-
 
 <!--  DIALOGS GO HERE  ! -->
 <div id="addCensusMethodDialog" title="Add Sub Census Methods">
@@ -130,57 +121,66 @@
 <script type="text/javascript">
     jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
+		bdrs.attribute.setAttributeWeights('#attribute_input_table');
         
         bdrs.dnd.attachTableDnD('#censusMethod_input_table');
-        
-        $( "#addCensusMethodDialog" ).dialog({
+		        
+        jQuery( "#addCensusMethodDialog" ).dialog({
             width: 'auto',
             modal: true,
             autoOpen: false,
             zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
+			resizable: false,
             buttons: {
-                "Ok": function() {
+                "OK": function() {
                     var selected = addCensusMethodGrid_GridHelper.getSelected();                    
                     // single select so...
                     bdrs.censusMethod.addCensusMethodRow("#censusMethod_input_table", selected);
-                    $( this ).dialog( "close" );
+                    jQuery( this ).dialog( "close" );
                 },
                 Cancel: function() {
-                    $( this ).dialog( "close" );
+                    jQuery( this ).dialog( "close" );
                 }
             }
         });
-        $( "#htmlEditorDialog" ).dialog({
+		bdrs.fixJqDialog("#addCensusMethodDialog");
+
+        jQuery( "#htmlEditorDialog" ).dialog({
             width: 'auto',
             modal: true,
             autoOpen: false,
+			resizable: false,
             buttons: {
                 Cancel: function() {
-                    $( this ).dialog( "close" );
+                    jQuery( this ).dialog( "close" );
                 },
                 "Clear": function() {
-                    $('#markItUp')[0].value = "";
+                    jQuery('#markItUp')[0].value = "";
                 },
-                "Ok": function() {
-                    bdrs.attribute.saveAndUpdateContent($("#markItUp")[0]);
-                    $( this ).dialog( "close" );
+                "OK": function() {
+                    bdrs.attribute.saveAndUpdateContent(jQuery("#markItUp")[0]);
+                    jQuery( this ).dialog( "close" );
                 }
             }
         });
-        $( "#addCensusMethodBtn" )
+		bdrs.fixJqDialog("#htmlEditorDialog");
+		
+        jQuery( "#addCensusMethodBtn" )
             .click(function() {
                 addCensusMethodGrid_GridHelper.reload();
-                $( "#addCensusMethodDialog" ).dialog( "open" );
+                jQuery( "#addCensusMethodDialog" ).dialog( "open" );
         });
 
-        $('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
+        jQuery('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
 
         // Census method expand/collapse
         jQuery("#censusMethodToggle").click(function() {
             var canSee = jQuery("#censusMethodWrapper").css('display') === 'none';
             jQuery("#censusMethodToggle").text(canSee ? "Click here to hide Census Method selection" : "Click here to add a Census Method to your Project");
-            
             jQuery("#censusMethodWrapper").slideToggle();
         });
+		
+		// trigger the onchange events on all of the type fields to initialise tooltips and validation.
+		jQuery(".attrTypeSelect").change();
     });
 </script>

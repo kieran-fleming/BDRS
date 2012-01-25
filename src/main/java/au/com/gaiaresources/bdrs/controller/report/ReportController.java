@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
@@ -39,6 +38,7 @@ import au.com.gaiaresources.bdrs.controller.file.DownloadFileController;
 import au.com.gaiaresources.bdrs.controller.report.python.PyBDRS;
 import au.com.gaiaresources.bdrs.controller.report.python.PyResponse;
 import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.report.Report;
 import au.com.gaiaresources.bdrs.model.report.ReportDAO;
@@ -161,6 +161,8 @@ public class ReportController extends AbstractController {
     @Autowired
     private SurveyDAO surveyDAO;
     @Autowired
+    private CensusMethodDAO censusMethodDAO;
+    @Autowired
     private TaxaDAO taxaDAO;
     @Autowired
     private RecordDAO recordDAO;
@@ -241,6 +243,15 @@ public class ReportController extends AbstractController {
                         
                         // Move the python report code to the target directory.
                         File targetReportDir = fileService.getTargetDirectory(report, Report.REPORT_DIR, true);
+                        if (targetReportDir.exists()) {
+                            log.warn("Target directory exists, attempting to delete : " + targetReportDir.getAbsolutePath());
+                            try {
+                                org.apache.commons.io.FileUtils.deleteDirectory(targetReportDir);    
+                            } catch (IOException ioe) {
+                                log.error("Failed to delete target report directory", ioe);
+                            }
+                        }
+                        
                         boolean renameSuccess = reportDir.renameTo(targetReportDir);
                         if(!renameSuccess) {
                             log.warn("Failed to rename report directory: "+reportDir.getAbsolutePath());
@@ -336,7 +347,7 @@ public class ReportController extends AbstractController {
             File reportDir = fileService.getTargetDirectory(report, Report.REPORT_DIR, true);
             
             // Setup the parameters to send to the Python report.
-            PyBDRS bdrs = new PyBDRS(fileService, report, getRequestContext().getUser(), surveyDAO, taxaDAO, recordDAO);
+            PyBDRS bdrs = new PyBDRS(fileService, report, getRequestContext().getUser(), surveyDAO, censusMethodDAO, taxaDAO, recordDAO);
             JSONObject jsonParams = toJSONParams(request);
             
             // Fire up a new Python interpreter
@@ -366,7 +377,7 @@ public class ReportController extends AbstractController {
                 // Set the content type of the python report. This is HTML 
                 // by default
                 response.setContentType(pyResponse.getContentType());
-
+                
                 // If the content type is HTML then we can treat it as text,
                 // otherwise we simply treat it as raw bytes.
                 if(PyResponse.HTML_CONTENT_TYPE.equals(pyResponse.getContentType())) {
@@ -385,7 +396,6 @@ public class ReportController extends AbstractController {
                     // Treat the data as a byte array and simply squirt them
                     // down the pipe.
                     byte[] content = pyResponse.getContent();
-                    
                     response.setContentLength(content.length);
                     ServletOutputStream outputStream = response.getOutputStream();
                     outputStream.write(content);

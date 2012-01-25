@@ -1,7 +1,7 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 };
 
 /*exports.BeforeShow = function() {
@@ -54,7 +54,7 @@ exports.Show = function() {
 				bdrs.mobile.setParameter('censusMethodId', id);
 				bdrs.mobile.Debug('set current census method to : ' + id);
 				// at this stage, we have set the site, the census method, and we should be able to head off to the recording form.
-				jQuery.mobile.changePage("#record", jQuery.mobile.defaultPageTransition, false, true);
+				jQuery.mobile.changePage("#record", {showLoadMsg: false});
 			}
 			return this;
 		};

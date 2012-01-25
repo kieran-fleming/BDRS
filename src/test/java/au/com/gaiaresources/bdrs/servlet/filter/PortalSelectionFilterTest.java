@@ -12,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockFilterChain;
-import org.springframework.test.web.ModelAndViewAssert;
-import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
@@ -274,6 +272,66 @@ public class PortalSelectionFilterTest extends AbstractControllerTest {
         
         Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
         Assert.assertEquals(currentPortal.getId(), new Integer(portalId.toString()));
+    }
+    
+    @Test
+    public void testDeactivatedPortalSelection() throws Exception {
+        createTestPortals(true, "");
+        Portal defaultPortal = portalDAO.getPortalByName(null, "default");
+        
+        Portal deactivated = portalDAO.getPortalByName(null, "other");
+        deactivated.setActive(false);
+        deactivated = portalDAO.save(deactivated);
+        
+        request.setMethod("GET");
+        request.setRequestURI(String.format("/portal/%d/home.htm", deactivated.getId()));
+        filter.doFilter(request, response, chain);
+        
+        Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
+        Assert.assertEquals(defaultPortal.getId(), new Integer(portalId.toString()));
+    }
+    
+    @Test
+    public void testDeactivatedLoggedInPortalSelection() throws Exception {
+        createTestPortals(true, "");
+        Portal currentPortal = RequestContextHolder.getContext().getPortal();
+        currentPortal.setActive(false);
+        currentPortal = portalDAO.save(currentPortal);
+        
+        request.setMethod("GET");
+        request.setRequestURI(String.format("/portal/%d/map/mySightings.htm", currentPortal.getId()));
+        filter.doFilter(request, response, chain);
+        
+        Portal defaultPortal = portalDAO.getDefaultPortal();
+        if(defaultPortal == null || (defaultPortal != null && !defaultPortal.isActive())) {
+            System.err.println("grabbing first active portal");
+            defaultPortal = portalDAO.getActivePortals().get(0);
+        }
+        
+        // Reassigned over to the default portal
+        Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
+        Assert.assertEquals(defaultPortal.getId(), new Integer(portalId.toString()));
+    }
+    
+    @Test
+    public void testDeactivatedDefaultPortalSelection() throws Exception {
+        createTestPortals(true, "");
+        Portal defaultPortal = portalDAO.getPortalByName(null, "default");
+        defaultPortal.setActive(false);
+        defaultPortal = portalDAO.save(defaultPortal);
+        
+        request.setMethod("GET");
+        request.setRequestURI(String.format("/portal/%d/home.htm", defaultPortal.getId()));
+        filter.doFilter(request, response, chain);
+        
+        Portal expectedPortal = portalDAO.getDefaultPortal();
+        if(expectedPortal == null || (expectedPortal != null && !expectedPortal.isActive())) {
+            expectedPortal = portalDAO.getActivePortals().get(0);
+        }
+        
+        // Reassigned over to the default portal
+        Object portalId = request.getSession().getAttribute(PortalSelectionFilter.PORTAL_ID_KEY);
+        Assert.assertEquals(expectedPortal.getId(), new Integer(portalId.toString()));
     }
     
     @Test

@@ -9,19 +9,15 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.JAXBException;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
@@ -33,12 +29,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.map.RecordDownloadFormat;
 import au.com.gaiaresources.bdrs.controller.map.RecordDownloadWriter;
 import au.com.gaiaresources.bdrs.db.impl.SortOrder;
 import au.com.gaiaresources.bdrs.db.impl.SortingCriteria;
-import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
@@ -54,8 +48,6 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.bulkdata.BulkDataService;
-import au.com.gaiaresources.bdrs.util.KMLUtils;
 import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
@@ -161,7 +153,7 @@ public class MySightingsController extends SightingsController {
                                         @RequestParam(defaultValue = DEFAULT_RECORD_ID, required = false, value = QUERY_PARAM_RECORD_ID) int recordId,
                                         @RequestParam(defaultValue = DEFAULT_GROUP_ID, value = QUERY_PARAM_TAXON_GROUP_ID, required = true) int taxonGroupId,
                                         @RequestParam(defaultValue = DEFAULT_TAXON_SEARCH, value = QUERY_PARAM_TAXON_SEARCH, required = true) String taxonSearch,
-                                        @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required = true) boolean userRecordsOnly,
+                                        @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required = false) boolean userRecordsOnly,
                                         @RequestParam(defaultValue = DEFAULT_SORT_COL, value = QUERY_PARAM_SORT_BY, required = true) String sortBy,
                                         @RequestParam(defaultValue = DEFAULT_SORT_ORDER, value = QUERY_PARAM_SORT_ORDER, required = true) String sortOrderStr,
                                         @RequestParam(defaultValue = DEFAULT_DOWNLOAD_FORMAT, value = QUERY_PARAM_DOWNLOAD_FORMAT, required = false) String[] downloadFormat,
@@ -251,7 +243,7 @@ public class MySightingsController extends SightingsController {
                                 @RequestParam(value = QUERY_PARAM_TAXON_SEARCH, required = true) String taxonSearch,
                                 @RequestParam(value = QUERY_PARAM_START_DATE, required = true) Date startDate,
                                 @RequestParam(value = QUERY_PARAM_END_DATE, required = true) Date endDate,
-                                @RequestParam(value = QUERY_PARAM_USER_RECORDS_ONLY, required=true) boolean userRecordsOnly,
+                                @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required=false) boolean userRecordsOnly,
                                 @RequestParam(value = QUERY_PARAM_LIMIT, required = true) int limit) throws IOException {
         
         User user = getRequestContext().getUser();
@@ -299,7 +291,7 @@ public class MySightingsController extends SightingsController {
                                 @RequestParam(value = QUERY_PARAM_TAXON_SEARCH, required = true) String taxonSearch,
                                 @RequestParam(value = QUERY_PARAM_START_DATE, required = true) Date startDate,
                                 @RequestParam(value = QUERY_PARAM_END_DATE, required = true) Date endDate,
-                                @RequestParam(value = QUERY_PARAM_USER_RECORDS_ONLY, required=true) boolean userRecordsOnly,
+                                @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required=false) boolean userRecordsOnly,
                                 @RequestParam(value = QUERY_PARAM_LIMIT, required = true) int limit,
                                 @RequestParam(value = QUERY_PARAM_SORT_BY, required = true) String sortBy,
                                 @RequestParam(value = QUERY_PARAM_SORT_ORDER, required = true) String sortOrderStr,
@@ -391,7 +383,7 @@ public class MySightingsController extends SightingsController {
                                 @RequestParam(value = QUERY_PARAM_TAXON_SEARCH, required = true) String taxonSearch,
                                 @RequestParam(value = QUERY_PARAM_START_DATE, required = true) Date startDate,
                                 @RequestParam(value = QUERY_PARAM_END_DATE, required = true) Date endDate,
-                                @RequestParam(value = QUERY_PARAM_USER_RECORDS_ONLY, required=true) boolean userRecordsOnly,
+                                @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required=false) boolean userRecordsOnly,
                                 @RequestParam(value = QUERY_PARAM_LIMIT, required = true) int limit,
                                 @RequestParam(value = QUERY_PARAM_SORT_BY, required = true) String sortBy,
                                 @RequestParam(value = QUERY_PARAM_SORT_ORDER, required = true) String sortOrderStr) throws Exception {
@@ -432,7 +424,7 @@ public class MySightingsController extends SightingsController {
                                     @RequestParam(value = QUERY_PARAM_TAXON_SEARCH, required = true) String taxonSearch,
                                     @RequestParam(value = QUERY_PARAM_START_DATE, required = true) Date startDate,
                                     @RequestParam(value = QUERY_PARAM_END_DATE, required = true) Date endDate,
-                                    @RequestParam(value = QUERY_PARAM_USER_RECORDS_ONLY, required = true) boolean userRecordsOnly,
+                                    @RequestParam(defaultValue = DEFAULT_USER_RECORDS_ONLY, value = QUERY_PARAM_USER_RECORDS_ONLY, required = false) boolean userRecordsOnly,
                                     @RequestParam(value = QUERY_PARAM_LIMIT, required = true) int limit,
                                     @RequestParam(value = QUERY_PARAM_SORT_BY, required = true) String sortBy,
                                     @RequestParam(value = QUERY_PARAM_SORT_ORDER, required = true) String sortOrderStr, 
@@ -443,14 +435,21 @@ public class MySightingsController extends SightingsController {
 
         RecordFilter filter = getRecordFilter(surveyId, taxonGroupId, taxonSearch, startDate, endDate, user, userRecordsOnly, limit, false);
         ScrollableRecords sr = getScrollableRecords(filter, sortBy, sortOrder);
-        this.downloadSightings(request, response, downloadFormat, sr, surveyId);
+        
+        List<Survey> surveyList;
+        if (surveyId == 0) {
+            surveyList = surveyDAO.getActiveSurveysForUser(user);
+        } else {
+            surveyList = new ArrayList<Survey>();
+            surveyList.add(surveyDAO.get(surveyId));
+        }
+        this.downloadSightings(request, response, downloadFormat, sr, surveyList);
     }
     
 
     
     private ScrollableRecords getScrollableRecords(RecordFilter filter,
             String sortBy, SortOrder sortOrder) {
-
         List<SortingCriteria> sc = new ArrayList<SortingCriteria>(1);
         sc.add(new SortingCriteria(sortBy, sortOrder));
 

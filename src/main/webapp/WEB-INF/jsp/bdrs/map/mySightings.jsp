@@ -10,8 +10,8 @@
     <a id="search_criteria_expand_collapse" class="right criteria_link" href="javascript:void(0);" title="Expand or collapse the search criteria">Collapse</a>
 </div>
 <form id="search_criteria_form">
-    <div id="search_critieria_container" class="input_container clear align_radio align_checkbox">
-    	<input id="permalink_input" class="right" type="text" style="display:none;"/>
+    <div id="search_criteria_container" class="input_container clear align_radio align_checkbox">
+        <input id="permalink_input" class="right" type="text" style="display:none;"/>
         <a id="permalink_link" class="right criteria_link" href="javascript:void(0);" title="Direct link to this page (including criteria)">Link to this page</a>
         <h3>Search Criteria</h3>
         <div class="clear searchCriteriaSpacer">
@@ -53,14 +53,14 @@
                         </label>
                     </th>
                     <td>
-                    	<input id="limit" class="validate(positiveInteger)" type="text" name="limit" value="${ limit }" placeholder="e.g. 300"/>
-						<div>
-							<input id="show_all" type="checkbox" name="limit" value="0"/>
-	                        <label for="show_all">
-	                            Show all
-	                        </label>
-	                        <em id="limit_warning" style="display:none;">Warning: Large datasets may take a long time</em>
-						</div>
+                        <input id="limit" class="validate(positiveInteger)" type="text" name="limit" value="${ limit }" placeholder="e.g. 300"/>
+                        <div>
+                            <input id="show_all" type="checkbox" name="limit" value="0"/>
+                            <label for="show_all">
+                                Show all
+                            </label>
+                            <em id="limit_warning" style="display:none;">Warning: Large datasets may take a long time</em>
+                        </div>
                     </td>
                 </tr>
                 <%-- Section Two --%>
@@ -113,8 +113,7 @@
                         </label>
                     </th>
                     <td>
-                        <input id="taxon_id" type="text" placeholder="e.g. Kangaroo" name="taxon_search" title="Enter the common or scientific name to search only for that species, otherwise leave blank for all species" value="<c:out value="${  taxon_search }"/>
-                        "/>
+                        <input id="taxon_id" type="text" placeholder="e.g. Kangaroo" name="taxon_search" title="Enter the common or scientific name to search only for that species, otherwise leave blank for all species" value="<c:out value="${ taxon_search }"/>"/>
 
                     </td><%-- When Row 2 --%>
                     <th>
@@ -130,7 +129,7 @@
                 </tr>
                 <tr>
                     <th class="interrogative" colspan="2">
-                        Who
+                        <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_SUPERVISOR,ROLE_POWER_USER">Who</sec:authorize>
                     </th>
                     <th class="interrogative" colspan="2">
                         Order
@@ -138,34 +137,37 @@
                 </tr>
                 <tr>
                     <th>
-                        <label for="my_records">
-                            Owner
-                        </label>
+                        <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_SUPERVISOR,ROLE_POWER_USER">
+                            <label for="my_records">
+                                Owner
+                            </label>
+                        </sec:authorize>
                     </th>
                     <td>
-                        <fieldset>
-                            <div>
-                                <input id="my_records" type="radio" name="user_records_only" checked="checked" value="true"/>
-                                <label for="my_records">
-                                    Only for me
-                                </label>
-                            </div>
-                            <sec:authorize ifAnyGranted="ROLE_ADMIN, ROLE_ROOT">
+                        <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_SUPERVISOR,ROLE_POWER_USER">
+                            <fieldset>
                                 <div>
-                                    <input type="radio" id="all_records" name="user_records_only" value="false"
-                                    <c:if test="${ not user_records_only }">
-                                        checked="checked"
-                                    </c:if>
-                                    />
-                                    <label for="all_records">
-                                        All public records
+                                    <input id="my_records" type="radio" name="user_records_only" checked="checked" value="true"/>
+                                    <label for="my_records">
+                                        Only for me
                                     </label>
                                 </div>
-                            </sec:authorize>
-                        </fieldset>
+                                
+                                    <div>
+                                        <input type="radio" id="all_records" name="user_records_only" value="false"
+                                        <c:if test="${ not user_records_only }">
+                                            checked="checked"
+                                        </c:if>
+                                        />
+                                        <label for="all_records">
+                                            All public records
+                                        </label>
+                                    </div>
+                            </fieldset>
+                        </sec:authorize>
                     </td>
                     <th>
-                        <label for="my_records">
+                        <label for="sort_by">
                             Attribute
                         </label>
                     </th>
@@ -248,7 +250,7 @@
     <div class="searchCriteriaSpacer">
     </div>
     <div class="input_container">
-        <div id="sightings_tabs" class="controlPanel">
+        <div class="controlPanel ie7">
             <a id="map_tab_handle" class="tab_handle" href="javascript:void(0);">
                 <div
                     <c:choose>

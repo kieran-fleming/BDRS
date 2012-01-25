@@ -19,7 +19,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.portal.PortalEntryPoint;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalMatches;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilter;
 import au.com.gaiaresources.bdrs.servlet.filter.PortalSelectionFilterMatcher;
@@ -56,6 +56,11 @@ public class PortalController extends AbstractController {
     public static final String PORTAL_ENTRY_POINT_ADD_PATTERN_TMPL = "add_entryPoint_pattern_%d";
     public static final String PORTAL_ENTRY_POINT_ADD_REDIRECT_TMPL = "add_entryPoint_redirect_%d";
     
+    /**
+     * Error message code used when an attempt to change the portal active state is denied.
+     */
+    public static final String PORTAL_ACTIVE_STATE_CHANGE_DENIED = "bdrs.portal.active.denied";
+    
     private PortalSelectionFilterMatcher portalFilterMatcher;
     
     @Autowired
@@ -72,6 +77,11 @@ public class PortalController extends AbstractController {
         portalFilterMatcher = new PortalSelectionFilterMatcher(portalDAO);
     }
 
+    /**
+     * Displays a page listing all active and inactive portals in the system.
+     * @param request the browser request
+     * @param response the server response.
+     */
     @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/root/portal/listing.htm", method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request,
@@ -82,6 +92,12 @@ public class PortalController extends AbstractController {
         return mv;
     }
     
+    /**
+     * Displays a page that permits editing of the portal with the specified primary key.
+     * @param request the browser request
+     * @param response the server response
+     * @param pk the primary key of the portal to be displayed
+     */
     @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/root/portal/edit.htm", method = RequestMethod.GET)
     public ModelAndView edit(   HttpServletRequest request, 
@@ -102,7 +118,20 @@ public class PortalController extends AbstractController {
         mv.addObject("portalEntryPointList", portalEntryPointList);
         return mv;
     }
-    
+
+    /**
+     * Updates the portal with the specified primary key.
+     * 
+     * @param request the browser request
+     * @param response the server response.
+     * @param pk the primary key of the portal to be updated.
+     * @param name the new name of the portal.
+     * @param isDefault true if the portal is the new default portal, false otherwise.
+     * @param isActive true if the portal is currently in use, false otherwise.
+     * @param add_portalEntryPointIndexes an array of indexes containing new portal entry points.
+     * @param portalEntryPointPks an array of existing portal entry points (those that have not been deleted via the browser)
+     * @throws Exception
+     */
     @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/root/portal/edit.htm", method = RequestMethod.POST)
     public ModelAndView editSubmit( HttpServletRequest request, 
@@ -110,12 +139,12 @@ public class PortalController extends AbstractController {
         @RequestParam(value="portalId", required=false, defaultValue="0") int pk,
         @RequestParam(value="name", required=true) String name,
         @RequestParam(value="default", required=false, defaultValue="false") boolean isDefault,
+        @RequestParam(value="active", required=false, defaultValue="false") boolean isActive,
         @RequestParam(value="add_portalEntryPoint", required=false) int[] add_portalEntryPointIndexes,
         @RequestParam(value="portalEntryPoint_id", required=false) int[] portalEntryPointPks) throws Exception {
-        
         try {
             Portal portal = parsePortalEditForm(getRequestContext().getHibernate(),
-                                            request, pk, name, isDefault, add_portalEntryPointIndexes, portalEntryPointPks);
+                                            request, pk, name, isDefault, isActive, add_portalEntryPointIndexes, portalEntryPointPks);
             getRequestContext().addMessage("bdrs.portal.save.success", new Object[]{portal.getName()});
             return new ModelAndView(new RedirectView("/bdrs/root/portal/listing.htm", true));
         } catch (IllegalArgumentException e) {
@@ -154,6 +183,12 @@ public class PortalController extends AbstractController {
         }
     }
 
+    /**
+     * Returns a HTML snippet for a new portal entry point form. 
+     * @param request the browser request.
+     * @param response the server response.
+     * @param index the unique adding index for the portal entry point fields.
+     */
     @RolesAllowed( { Role.ROOT })
     @RequestMapping(value = "/bdrs/root/portal/ajaxAddPortalEntryPoint.htm", method = RequestMethod.GET)
     public ModelAndView ajaxAddPortalEntryPoint(HttpServletRequest request, HttpServletResponse response,
@@ -177,6 +212,7 @@ public class PortalController extends AbstractController {
                                                 @RequestParam(value="portalId", required=false, defaultValue="0") int pk,
                                                 @RequestParam(value="name", required=true) String name,
                                                 @RequestParam(value="default", required=false, defaultValue="false") boolean isDefault,
+                                                @RequestParam(value="active", required=false, defaultValue="true") boolean isActive,
                                                 @RequestParam(value="add_portalEntryPoint", required=false) int[] add_portalEntryPointIndexes,
                                                 @RequestParam(value="portalEntryPoint_id", required=false) int[] portalEntryPointPks,
                                                 @RequestParam(value="testUrl", required=true) String testUrl) throws Exception {
@@ -193,7 +229,7 @@ public class PortalController extends AbstractController {
         sesh.beginTransaction();
         
         try {
-            parsePortalEditForm(sesh, request, pk, name, isDefault, add_portalEntryPointIndexes, portalEntryPointPks);
+            parsePortalEditForm(sesh, request, pk, name, isDefault, isActive, add_portalEntryPointIndexes, portalEntryPointPks);
         } catch (IllegalArgumentException e) {
             log.warn("Error while mocking portal save for testing entry point: " + e.getMessage());
         }
@@ -222,7 +258,7 @@ public class PortalController extends AbstractController {
     }
     
     private Portal parsePortalEditForm(Session sesh, HttpServletRequest request, int pk,
-            String name, boolean isDefault, int[] add_portalEntryPointIndexes,
+            String name, boolean isDefault, boolean isActive, int[] add_portalEntryPointIndexes,
             int[] portalEntryPointPks) throws Exception {
         
         Portal portal = portalDAO.getPortal(sesh, pk);
@@ -237,13 +273,22 @@ public class PortalController extends AbstractController {
         portal.setName(name);
         if(isDefault) {
             // Only one default portal is allowed.
-            Portal defaultPortal = portalDAO.getPortal(true);
+            Portal defaultPortal = portalDAO.getDefaultPortal();
             if(defaultPortal != null) {
                 defaultPortal.setDefault(false);
                 defaultPortal = portalDAO.save(sesh, defaultPortal);
             }
         }
         portal.setDefault(isDefault);
+        
+        // You cannot change the active state of the portal that you are currently using.
+        RequestContext context = getRequestContext();
+        if(portal != null && portal.getId() != null && 
+                portal.getId().equals(context.getPortal().getId())) {
+            isActive = portal.isActive();
+            context.addMessage(PORTAL_ACTIVE_STATE_CHANGE_DENIED);
+        }
+        portal.setActive(isActive);
         
         portal = portalDAO.save(sesh, portal);
         

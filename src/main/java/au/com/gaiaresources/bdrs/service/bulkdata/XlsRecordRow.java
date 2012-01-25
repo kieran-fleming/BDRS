@@ -367,7 +367,10 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
     protected int writeRowDate(Row row, Record rec, int colIndex) {
         Cell when = row.createCell(colIndex++);
         when.setCellStyle(getCellStyleByKey(STYLE_DATE_CELL));
-        when.setCellValue(rec.getWhen());
+        Date dateWhen = rec.getWhen();
+        if (dateWhen != null) {
+            when.setCellValue(rec.getWhen());    
+        }
         return colIndex;
     }
 
@@ -609,7 +612,10 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
             if (!locationRecordProperty.isHidden()) {
             	colIndex = readRowLocation(survey, row, recUpload, colIndex);
             	if (locationRecordProperty.isRequired()) {
-            		if ((recUpload.getLocationId() == null || recUpload.getLocationName() == null || recUpload.getLocationName().equalsIgnoreCase("")) && !recUpload.isGPSLocationName()) {
+            		if (((recUpload.getLocationId() == null && recUpload.getLocationName() == null) || 
+            		        recUpload.getLocationName().equalsIgnoreCase("")) && 
+            		        !recUpload.isGPSLocationName()) {
+            		    
             			throw new IllegalArgumentException(
                         "The location id and location name are required.");
             		}

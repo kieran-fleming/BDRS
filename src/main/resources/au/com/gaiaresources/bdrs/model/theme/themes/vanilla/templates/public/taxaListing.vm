@@ -1,0 +1,62 @@
+<h1>${taxonGroup.name}</h1>
+<p>
+To view more detailed information for a species, please click on either the name or thumbnail of the species you want to view.
+</p>
+<p>
+To record a sighting of a species click on the <i><b>Record Now</b></i> button in the row for the species you'd like to record.
+</p>
+
+<table id="taxaList"></table>
+<div id="pager2"></div>
+
+<script type="text/javascript">
+
+    jQuery(function() {
+        var actionLinkFormatter = function(cellvalue, options, rowObject) {
+            return '<form method="get" action="${pageContext.request.contextPath}/bdrs/user/taxonSurveyRenderRedirect.htm">' + 
+                         '<div class="buttonpanel">' +
+                           '<input type="hidden" name="speciesId" value="' + rowObject.id +'">' + 
+                           '<input type="hidden" name="redirectURL" value="${pageContext.request.contextPath}/fieldguide/taxon.htm?id=' + rowObject.id +'">' + 
+                           '<input class="button form_action" type="submit" value="Record Now">' + 
+                         '</div>' + 
+                       '</form>';
+        };
+        
+        var thumbnailFormatter = function(cellvalue, options, rowObject) {
+            if (cellvalue != undefined && cellvalue != '') {
+                return '<a href="${pageContext.request.contextPath}/fieldguide/taxon.htm?id=' + rowObject.id +'">' + 
+                          '<img class="max_size_img" src="${pageContext.request.contextPath}/files/downloadByUUID.htm?uuid=' + cellvalue + '"/>' +
+                       '</a>';
+            }
+            return '';
+        };
+        
+        var nameLinkFormatter = function(cellvalue, options, rowObject) {
+            return '<a href="${pageContext.request.contextPath}/fieldguide/taxon.htm?id=' + rowObject.id +'">' + cellvalue + '</a>';
+        };
+        
+        jQuery("#taxaList").jqGrid({
+                url: '${pageContext.request.contextPath}/fieldguide/listTaxa.htm?groupId=${taxonGroup.id}',
+                datatype: "json",
+                mtype: "GET",
+                colNames:['Scientific Name','Common Name', '', ''],
+                colModel:[
+                    {name:'scientificName',index:'scientificName', width:150, classes:'scientificName', formatter:nameLinkFormatter},
+                    {name:'commonName',index:'commonName', width:150, formatter: nameLinkFormatter},
+                    {name:'thumbnail', index:'thumbnail', sortable:false, formatter:thumbnailFormatter, align:'center'},
+                    {name:'actions', width:170, sortable:false, formatter:actionLinkFormatter, align:'center'}
+                ],
+                autowidth: true,
+                jsonReader : { repeatitems: false },
+                rowNum:50,
+                rowList:[10,20,30,40,50,100],
+                pager: '#pager2',
+                sortname: 'scientificName',
+                viewrecords: true,
+                sortorder: "asc",
+                width: '100%',
+                height: "100%"
+        });
+        jQuery(".ui-jqgrid-bdiv").css('overflow-x', 'hidden');
+    });
+</script>

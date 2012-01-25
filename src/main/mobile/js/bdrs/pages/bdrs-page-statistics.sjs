@@ -1,4 +1,4 @@
-exports.Create = function() {
+exports.Init = function() {
 	
 }
 	

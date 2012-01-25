@@ -165,6 +165,22 @@ public interface SurveyDAO extends TransactionDAO {
      * @return survey
      */
     List<Survey> getActiveSurveysForUser(User user, Group group);
+    
+    /**
+     * Find all surveys that are active, and is public or user is in the survey
+     * or group and the survey is part of a particular group
+     * 
+     * @param user
+     *            the user to search for.
+     * @param group
+     *            the group to limit the search by
+     * @param species
+     *            the species that the survey must possess or, the survey must have all species allowed     
+     * @return survey
+     */
+    List<Survey> getActiveSurveysForUser(User user, Group group, IndicatorSpecies species);
+    
+    
     /**
      * Find all species attached to the specified survey where the scientific
      * name or common name contains the 'species' string fragment.

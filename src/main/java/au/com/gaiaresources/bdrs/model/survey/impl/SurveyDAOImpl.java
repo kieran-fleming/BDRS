@@ -132,7 +132,12 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
     public List<Survey> getActiveSurveysForUser(User user) {
         return getActiveSurveysForUser(user, null);
     }
+    
     public List<Survey> getActiveSurveysForUser(User user, Group group) {
+        return getActiveSurveysForUser(user, group, null);
+    }
+    
+    public List<Survey> getActiveSurveysForUser(User user, Group group, IndicatorSpecies species) {
         StringBuilder builder = new StringBuilder();
         // Find all surveys that are active, and
         // public or
@@ -151,11 +156,17 @@ public class SurveyDAOImpl extends AbstractDAOImpl implements SurveyDAO {
         if(group != null){
             builder.append(" and g = :group");
         }
+        if (species != null) {
+            builder.append(" and (s.species is empty or :species in elements(s.species))");
+        }
         builder.append("   order by s.name");
         Query q = getSession().createQuery(builder.toString());
         q.setParameter("user", user);
         if(group != null){
             q.setParameter("group", group);
+        }
+        if (species != null) {
+            q.setParameter("species", species);
         }
         return q.list();
     }

@@ -41,7 +41,5 @@ PhoneGap.addConstructor(function() {
 	
 	//Register the javascript plugin with PhoneGap
 	PhoneGap.addPlugin('bdrs', new BDRSPlugin());
-	 
-	//Register the native class of plugin with PhoneGap
-	PluginManager.addService("BDRSPlugin","au.com.gaiaresources.bdrs.mobile.android.BDRSPlugin");
+	
 });

@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -36,14 +35,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.model.group.Group;
-import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
-import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
-import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 
@@ -58,14 +52,6 @@ public class RecordMapController extends AbstractController {
 
     @Autowired
     private RecordDAO recordDAO;
-    @Autowired
-    private TaxaDAO taxaDAO;
-    @Autowired
-    private UserDAO userDAO;
-    @Autowired
-    private SurveyDAO surveyDAO;
-    @Autowired
-    private GroupDAO groupDAO;
 
     public RecordMapController() {
         super();
@@ -100,36 +86,6 @@ public class RecordMapController extends AbstractController {
         ModelAndView mv = new ModelAndView("recordTracker");
         mv.addObject("recordDateList", new ArrayList<Date>(recordDates));
         return mv;
-    }
-
-    @RequestMapping(value = "/map/recordBaseMap.htm", method = RequestMethod.GET)
-    public ModelAndView showRecordBaseMap(HttpServletRequest request, HttpServletResponse response) {
-
-        ModelAndView mv = new ModelAndView("recordBaseMap");
-        User user = getRequestContext().getUser();
-
-        List<User> users;
-        Set<Group> groups = new HashSet<Group>();
-        if(user.isAdmin()) {
-            users = userDAO.getUsers();
-
-            groups.addAll(groupDAO.getAllGroups());
-        }
-        else {
-            users = new ArrayList<User>(1);
-            users.add(user);
-
-            groups.addAll(groupDAO.getGroupsForAdmin(user));
-            groups.addAll(groupDAO.getGroupsForUser(user));
-        }
-
-        mv.addObject("surveys", surveyDAO.getSurveys(user));
-        mv.addObject("users", users);
-        mv.addObject("taxonGroups", taxaDAO.getTaxonGroups());
-        mv.addObject("groups", groups);
-
-        return mv;
-
     }
 
     @RequestMapping(value = "/map/addRecordBaseMapLayer.htm", method = RequestMethod.GET)

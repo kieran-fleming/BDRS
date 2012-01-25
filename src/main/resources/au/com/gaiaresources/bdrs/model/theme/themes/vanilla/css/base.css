@@ -23,10 +23,34 @@ body {
 .wrapper {
     width: ${style.content.width};
 }
+
 /************************************/
-/* Button Styling                   */
+/* Font styling for text inputs     */
 /************************************/
-input[type=submit],input[type=button] {
+
+/* this needs to be defined separately or we don't properly override the
+ * yui resets due to css specificity
+ */
+input, select, textarea {
+    font-family: ${style.content.font};
+}
+
+
+/* On IE9 on the it appears the text and password
+ * input types are of different heights if left to
+ * the defaults.
+ */
+input[type=text],input[type=password] {
+	height: 14px;
+}
+
+/***********************************************/
+/* Button Styling                              */
+/* restyle jquery buttons - class is ui-button */
+/***********************************************/
+
+input[type=submit],input[type=button],
+button[type=button].ui-button {
     color: ${style.form.button.color};
     font-weight: bold;
     margin: 0px 8px 0px 8px;
@@ -44,6 +68,15 @@ input[type=submit],input[type=button] {
     border-radius: 6px;
 }
 
+.ui-button .ui-button-text { 
+    display: block; 
+	line-height: normal;
+	font-size: 12px;
+	height: auto;
+	padding: 0;
+	margin: 0;
+}
+
 input[type=submit][disabled].form_action,
 input[type=button][disabled].form_action,
 input[type=submit][disabled].form_action:active,
@@ -57,45 +90,45 @@ input[type=button][disabled].form_action:hover {
 }
 
 /* Form Actions */
-input[type=submit].form_action,input[type=button].form_action {
+input[type=submit].form_action,input[type=button].form_action,
+button[type=button].ui-button {
     /* Fallback */
     background-color: ${style.form.button.gradient.color.top};
     
+	/* Background svg for IE9 */
+	background: ${style.form.button.gradient.color.top} url(${asset}/css/buttonGradient.svg) 0 0 no-repeat;
+
     /* Color Gradient */
-    background-image: -moz-linear-gradient(top, ${style.form.button.gradient.color.top}, ${style.form.button.gradient.color.bottom});
-    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, ${style.form.button.gradient.color.top}),
+    background: -moz-linear-gradient(top, ${style.form.button.gradient.color.top}, ${style.form.button.gradient.color.bottom});
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0, ${style.form.button.gradient.color.top}),
         color-stop(1, ${style.form.button.gradient.color.bottom}) );
-    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
-        startColorstr = ${style.form.button.gradient.color.top}, endColorstr = ${style.form.button.gradient.color.bottom} );
-    -ms-filter:
-        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=${style.form.button.gradient.color.top}, endColorstr=${style.form.button.gradient.color.bottom})"
-        ;
+	background: linear-gradient(top, ${style.form.button.gradient.color.top}, ${style.form.button.gradient.color.bottom});
+		
     /* Drop Shadow */
     box-shadow: 0px 0px 2px ${style.form.button.shadow.color};
     -moz-box-shadow: 0px 0px 2px ${style.form.button.shadow.color};
     -webkit-box-shadow: 0px 0px 2px ${style.form.button.shadow.color};
-    
-    /* No Shadows for IE. If you put in drop shadows, check that the gradient still works */
 }
 
-input[type=submit].form_action:hover,input[type=button].form_action:hover { 
+input[type=submit].form_action:hover,input[type=button].form_action:hover,
+button[type=button].ui-button:hover { 
     /* Fallback */
     background-color: ${style.form.button.hover.gradient.color.top};
     
-    background-image: -moz-linear-gradient(top, ${style.form.button.hover.gradient.color.top}, ${style.form.button.hover.gradient.color.bottom});
-    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, ${style.form.button.hover.gradient.color.top}),
+	/* Background svg for IE9 */
+	background: ${style.form.button.hover.gradient.color.top} url(${asset}/css/buttonGradientHover.svg) 0 0 no-repeat;
+
+    background: -moz-linear-gradient(top, ${style.form.button.hover.gradient.color.top}, ${style.form.button.hover.gradient.color.bottom});
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0, ${style.form.button.hover.gradient.color.top}),
         color-stop(1, ${style.form.button.hover.gradient.color.bottom}) );
-    filter: progid : DXImageTransform.Microsoft.gradient ( GradientType = 0,
-        startColorstr = ${style.form.button.hover.gradient.color.top}, endColorstr = ${style.form.button.hover.gradient.color.bottom} );
-    -ms-filter:
-        "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=${style.form.button.hover.gradient.color.top}, endColorstr=${style.form.button.hover.gradient.color.bottom})"
-        ;
 }
 
 input[type=submit].form_action:active,
 input[type=button].form_action:active,
 input[type=submit].form_action:focus,
-input[type=button].form_action:focus {
+input[type=button].form_action:focus,
+button[type=button].ui-button:active,
+button[type=button].ui-button:focus {
     background-image: none;
     background-color: ${style.form.button.gradient.color.bottom};
 }
@@ -442,22 +475,82 @@ ul.menu ul ul ul ul li a{
     color: ${style.messagebanner.text.color};
 }
 
-/************************************/
-/*     Data Table Styling           */
-/************************************/
-.datatable th {
+/*************************************************/
+/*     Data Table Styling                        */
+/* and styling jqGrid to look like a data table  */
+/*************************************************/
+
+/* datatable and jqgrid header */
+.datatable th,
+table.ui-jqgrid-htable th.ui-state-default.ui-th-column.ui-th-ltr {
     color: ${style.table.header.text.color};
-    background-color: ${style.table.header.background.color};
+    background: ${style.table.header.background.color};
     font-weight: bold;
     border: ${style.table.header.border.width} ${style.table.header.border.style} ${style.table.header.border.color};
 }
 
-.datatable td {
+.datatable td,
+.ui-jqgrid tr.ui-row-ltr td {
    border: ${style.table.border.width} ${style.table.border.style} ${style.table.border.color};
 }
 
-.datatable th a {
+tr.ui-widget-content {
+    border: ${style.table.border.width} ${style.table.border.style} ${style.table.border.color};
+}
+
+.datatable th a,
+table.ui-jqgrid-btable th a {
     color: ${style.table.header.text.color};
+}
+
+div.ui-jqgrid.ui-corner-all {
+	-moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -khtml-border-radius: 0px;
+    border-radius: 0px;
+}
+
+/* jqgrid footer / pager */
+div.ui-jqgrid-pager.ui-state-default,
+div.ui-state-default.ui-jqgrid-hdiv {
+	-moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -khtml-border-radius: 0px;
+    border-radius: 0px;
+	background: ${style.table.header.background.color};
+}
+
+/* hide the close 'x' in the jquery ui dialogs */
+/* removing the hidden for now since there are some dialogs
+ * with no ok / cancel buttons
+ */
+a.ui-dialog-titlebar-close.ui-corner-all {
+	/*display: none;*/
+}
+
+/* no horizontal scrollbar for jqgrid */
+.ui-jqgrid .ui-jqgrid-bdiv {
+    position: relative; 
+    margin: 0em; 
+    padding:0; 
+    /*overflow: auto;*/ 
+    overflow-x:hidden; 
+    overflow-y:auto; 
+    text-align:left;
+}
+
+/* row highlight styling */
+tr.ui-state-highlight.ui-widget-content {
+	background: ${style.table.highlight.color};
+	border: ${style.table.border.width} ${style.table.border.style} ${style.table.border.color};
+}
+
+/************************************************/
+/* jquery-ui dialog adjustments to look better  */
+/* with bdrs style buttons                      */
+/************************************************/
+.ui-dialog .ui-dialog-buttonpane {
+	padding-top: 7px;
 }
 
 /**************************/
@@ -531,6 +624,14 @@ a:link.delete {
 a:visited.delete {
     color:${style.anchor.delete.visited.color};
     text-decoration: ${style.anchor.visited.decoration};
+}
+
+/* links with this style will stay the same even after being visited */
+a:link.fixedLink,
+a:visited.fixedLink,
+a:hover.fixedLink {
+	color:${style.anchor.link.color};
+    text-decoration: ${style.anchor.link.decoration};
 }
 
 /************************************/

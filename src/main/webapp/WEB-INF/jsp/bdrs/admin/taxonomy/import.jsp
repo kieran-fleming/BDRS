@@ -6,7 +6,7 @@
 
 <div class="atlas_import_container">
     <cw:getContent key="admin/taxonomy/listing" />
-    <form method="POST" action="${pageContext.request.contextPath}/bdrs/admin/taxonomy/importNewProfiles.htm" onsubmit="importALAProfile();">
+    <form id="importTaxonForm" method="POST" action="${pageContext.request.contextPath}/bdrs/admin/taxonomy/importNewProfiles.htm">
             <div class="input_container">
         <table class="form_table">
                 <tbody>
@@ -35,17 +35,20 @@
             </table>
             
             <div class="buttonpanel textright">
-                <input class="form_action" type="submit" value="Import Taxon"/>
+                <input class="form_action" type="button" value="Import Taxon" onclick="importALAProfile();" />
             </div>
-    </div>
-        </form>
+        </div>
+    </form>
 </div>
 
 <script type="text/javascript">
+	
+	jQuery(function() {
+		bdrs.taxonomy.initTaxonGroupAutocomplete("#taxonGroup", "#taxonGroupPk");
+	});	
+	
     var importALAProfile = function() { 
-        if (jQuery('#guidList').val()) {
-            return confirm("Are you sure? Existing entries imported from ALA will be replaced!")
-        }
-        return false;
-    }
+	   bdrs.taxonomy.importALAProfile('#guidList', '#taxonGroup', '#shortProfile');
+    };
+	
 </script>

@@ -32,12 +32,14 @@ import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
+import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.facet.AttributeFacet;
 import au.com.gaiaresources.bdrs.service.facet.Facet;
 import au.com.gaiaresources.bdrs.service.facet.FacetOption;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
 import au.com.gaiaresources.bdrs.service.facet.SurveyFacet;
+import au.com.gaiaresources.bdrs.service.facet.SurveyFacetOption;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 import au.com.gaiaresources.bdrs.util.StringUtils;
@@ -279,14 +281,25 @@ public class AdvancedReviewSightingsController extends SightingsController{
         
         List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         
+        SurveyFacet surveyFacet = facetService.getFacetByType(facetList, SurveyFacet.class);
+        
+        // list of surveys to download
+        List<Survey> surveyList = surveyFacet.getSelectedSurveys();
+               
+        // In the case that no surveys are selected to filter by - we will use
+        // all the surveys available for the accessing user
+        if (surveyList.isEmpty()) {
+            surveyList = surveyDAO.getActiveSurveysForUser(user);
+        }
+        
+        // I think 'surveyId' is not used for AdvancedReview but is used for MySightings
         ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
                                                      surveyId,
                                                      request.getParameter(SORT_BY_QUERY_PARAM_NAME), 
                                                      request.getParameter(SORT_ORDER_QUERY_PARAM_NAME),
                                                      request.getParameter(SEARCH_QUERY_PARAM_NAME));
         
-        // using 0 as the survey id parameter in the case of a null survey id
-        downloadSightings(request, response, downloadFormat, sc, surveyId != null ? surveyId.intValue() : 0);
+        downloadSightings(request, response, downloadFormat, sc, surveyList);
     }
 
     long countMatchingRecords(List<Facet> facetList, Integer surveyId, String searchText) {
@@ -309,15 +322,14 @@ public class AdvancedReviewSightingsController extends SightingsController{
         
         for(Facet f : facetList) {
             Predicate p = f.getPredicate();
-            if (f instanceof AttributeFacet && p != null) {
-                // attribute facet predicates create an additional join to the attributes/attribute 
-                // tables to accomodate multiple attribute values
-                int attributesIndex = ((AttributeFacet)f).getFacetIndex();
-                hqlQuery.leftJoin("record.attributes", "recordAttribute" + attributesIndex);
-                hqlQuery.leftJoin("recordAttribute" + attributesIndex + ".attribute", "attribute" + attributesIndex);
-            } 
-            
-            if (p != null){
+            if (p != null) {
+                if (f instanceof AttributeFacet) {
+                    // attribute facet predicates create an additional join to the attributes/attribute 
+                    // tables to accomodate multiple attribute values
+                    int attributesIndex = ((AttributeFacet)f).getFacetIndex();
+                    hqlQuery.leftJoin("record.attributes", "recordAttribute" + attributesIndex);
+                    hqlQuery.leftJoin("recordAttribute" + attributesIndex + ".attribute", "attribute" + attributesIndex);
+                }
                 hqlQuery.and(p);
             }
         }

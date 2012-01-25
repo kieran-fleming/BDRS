@@ -24,8 +24,8 @@ public class EmailActionHandler implements ActionHandler {
     protected EmailService emailService;
     protected PropertyService propertyService;
 
-    private final String SIMPLE_PROPERTY_TEMPLATE = " %s \'%s\'\r\n";
-    private final String COMPLEX_PROPERTY_TEMPLATE = " %s %s \'%s\' %s %s \'%s\'\r\n";
+    private static final String SIMPLE_PROPERTY_TEMPLATE = " %s \'%s\'\r\n";
+    private static final String COMPLEX_PROPERTY_TEMPLATE = " %s %s \'%s\' %s %s \'%s\'\r\n";
 
     /**
      * Creates a new <code>EmailActionHandler</code>

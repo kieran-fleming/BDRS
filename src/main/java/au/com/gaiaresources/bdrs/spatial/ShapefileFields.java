@@ -1,5 +1,10 @@
 package au.com.gaiaresources.bdrs.spatial;
 
+/**
+ * Class for holding constants used for shape file fields to avoid
+ * circular compile dependencies.
+ *
+ */
 public class ShapefileFields {
     public static final String THE_GEOM = "the_geom";
     
@@ -29,6 +34,8 @@ public class ShapefileFields {
     public static final String SURVEY_ATTRIBUTE_PREFIX = "";
     public static final String CENSUS_METHOD_ATTRIBUTE_PREFIX = "";
     public static final String TAXON_ATTRIBUTE_PREFIX = "";
+    
+    public static final String PARENT_RECORD_ID = "pRecId";
     
     public static final int MAX_FIELD_LENGTH = 10;
 }

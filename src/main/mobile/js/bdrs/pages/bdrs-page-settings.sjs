@@ -1,12 +1,12 @@
 /**
  * Event handlers for the Settings page. 
  */
-exports.Create = function() {
+exports.Init = function() {
 	// Enable the reset database button
 	jQuery('.bdrs-page-settings .reset_database').click(function() {
     	persistence.reset( function () {
 	   		persistence.schemaSync( function () {
-	   			jQuery.mobile.changePage("#login", "none", false, true);
+	   			jQuery.mobile.changePage("#login", {transition: "none", showLoadMsg: false});
 	   			alert("Database Cleared");
 	   			window.location="index.html";
 	   		});
@@ -76,9 +76,9 @@ exports.Create = function() {
   	});
   	
   	jQuery(".bdrs-page-settings .dump_db").click(function() {
-  	    jQuery.mobile.pageLoading(false);
+  	    jQuery.mobile.showPageLoadingMsg();
         bdrs.mobile.fileMgr.dumpToJson();
-        jQuery.mobile.pageLoading(true);
+        jQuery.mobile.hidePageLoadingMsg();
   	});
   	
   	

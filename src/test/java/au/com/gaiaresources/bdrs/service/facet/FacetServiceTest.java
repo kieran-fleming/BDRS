@@ -150,6 +150,14 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         }
     }
     
+    @Test
+    public void testGetFacetByType() {
+        User user = userDAO.getUser("admin");
+        List<Facet> facetList = facetService.getFacetList(user, EMPTY_PARAMETER_MAP);
+        Assert.assertTrue("Expect facet to be of type SurveyFacet", facetService.getFacetByType(facetList, SurveyFacet.class) instanceof SurveyFacet);
+        Assert.assertTrue("Expect facet to be of type MonthFacet", facetService.getFacetByType(facetList, MonthFacet.class) instanceof MonthFacet);
+    }
+    
     private Map<Class<? extends Facet>, List<Facet>> createFacetTypeMapping(List<Facet> facetList) {
         Map<Class<? extends Facet>, List<Facet>> facetTypes = new HashMap<Class<? extends Facet>, List<Facet>>();
         for(Facet facet : facetList) {

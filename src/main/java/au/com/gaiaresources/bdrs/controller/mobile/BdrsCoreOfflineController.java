@@ -182,8 +182,8 @@ public class BdrsCoreOfflineController extends AbstractController {
             HttpServletRequest request) {
         Set<String> urlSet = new HashSet<String>();
         Set<String> urls = new HashSet<String>();
-        Set<IndicatorSpeciesAttribute> speciesAtts = new HashSet<IndicatorSpeciesAttribute>();
-        List<? extends SpeciesProfile> infoItems = new ArrayList<SpeciesProfile>();
+        Set<IndicatorSpeciesAttribute> speciesAtts;
+        List<? extends SpeciesProfile> infoItems;
         for (IndicatorSpecies s : species) {
         	boolean hasThumb = false;
         	boolean hasImage = false;

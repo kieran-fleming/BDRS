@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.util.StringUtils;
+
 import edu.emory.mathcs.backport.java.util.Collections;
 
 import au.com.gaiaresources.bdrs.controller.record.TrackerController;
@@ -138,15 +140,16 @@ public abstract class AbstractAttributeDictionaryFactory implements
 
     /**
      * Adds the attribute/key pair to the map.
-     * @param map
-     * @param existingKeys
-     * @param key
-     * @param attribute
-     * @param attributeSource
+     * @param map attribute to their key
+     * @param existingKeys set of existing keys
+     * @param key the key to add
+     * @param attribute the attribute to add
+     * @param attributeSource what object type owns the attribute
      */
     protected void addKey(Map<Attribute, String> map, Set<String> existingKeys, String key, Attribute attribute, String attributeSource) {
-        if (key == null) {
-            throw new NullPointerException("Error: key cannot be null!");
+        if (!StringUtils.hasLength(key)) {
+            // ignore if this attribute has no key
+            return;
         }
         if (existingKeys.add(key)) {
             map.put(attribute, key);

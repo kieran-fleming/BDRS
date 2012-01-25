@@ -1,5 +1,5 @@
 
-exports.Create = function() {
+exports.Init = function() {
     jQuery('#trash-select-all').click(exports._select_all);
     jQuery('#trash-select-none').click(exports._select_none);
     jQuery('#trash-select-toggle').click(exports._select_toggle);
@@ -36,7 +36,7 @@ exports.Show = function() {
 
     fieldset.append(content);
     
-    bdrs.mobile.restyle(fieldset.parent());
+     bdrs.template.restyle(fieldset.parent());
 };
 
 exports.Hide = function() {
@@ -83,7 +83,7 @@ exports._select_all = function() {
     exports._get_checkboxes().prop('checked', function( i, val ) {
         return true;
     });
-    bdrs.mobile.restyle(exports._get_fieldset());
+     bdrs.template.restyle(exports._get_fieldset());
 };
 
 /**
@@ -93,7 +93,7 @@ exports._select_none = function() {
     exports._get_checkboxes().prop('checked', function( i, val ) {
         return false;
     });
-    bdrs.mobile.restyle(exports._get_fieldset());
+     bdrs.template.restyle(exports._get_fieldset());
 };
 
 /**
@@ -103,14 +103,14 @@ exports._select_toggle = function() {
     var checkboxes = exports._get_checkboxes().prop('checked', function( i, val ) {
         return !val;
     });
-    bdrs.mobile.restyle(exports._get_fieldset());
+     bdrs.template.restyle(exports._get_fieldset());
 };
 
 /**
  * Permanently deletes all selected records.
  */
 exports._delete = function() {
-    jQuery.mobile.changePage("#trash-delete-confirm", "slidedown");
+    jQuery.mobile.changePage("#trash-delete-confirm", {showLoadMsg: false, transition: "slidedown"});
 };
 
 /**
@@ -162,7 +162,7 @@ exports.delete_records_confirmed = function() {
     persistence.flush();
 
     jQuery.mobile.hidePageLoadingMsg();
-    jQuery.mobile.changePage("#review");
+    jQuery.mobile.changePage("#review", {showLoadMsg: false});
 };
 
 /**
@@ -282,7 +282,7 @@ exports._restore = function() {
         persistence.flush();
 
         jQuery.mobile.hidePageLoadingMsg();
-        jQuery.mobile.changePage("#review");
+        jQuery.mobile.changePage("#review", {showLoadMsg: false});
     } else {
         // Something was not valid.
         bdrs.mobile.Debug("Unable to restore "+invalid_record.id+" because the parent has been deleted.");
@@ -290,8 +290,8 @@ exports._restore = function() {
 
         // Show the error dialog
         bdrs.mobile.setParameter(bdrs.mobile.pages.trash_restore_error.INVALID_RECORD_KEY, invalid_record);
-        var transition = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
-        jQuery.mobile.changePage("#trash-restore-error", transition);
+        var trans = jQuery.mobile.defaultPageTransition === 'none' ? 'none' : 'slidedown';
+        jQuery.mobile.changePage("#trash-restore-error", {showLoadMsg: false, transition: trans});
     }
 };
 

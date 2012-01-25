@@ -375,7 +375,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testSearchService() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/admin/censusMethod/search.htm");
+        request.setRequestURI(CensusMethodController.CENSUS_METHOD_SEARCH_URL);
        
         request.setParameter(JqGridDataHelper.MAX_PER_PAGE_PARAM, "1");
         request.setParameter(JqGridDataHelper.REQUESTED_PAGE_PARAM, "3");
@@ -395,7 +395,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testSearchServiceWithSurvey() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/admin/censusMethod/search.htm");
+        request.setRequestURI(CensusMethodController.CENSUS_METHOD_SEARCH_URL);
        
         // should have 0 matches
         request.setParameter("surveyId", "3");
@@ -416,7 +416,7 @@ public class CensusMethodControllerTest extends AbstractControllerTest {
     @Test
     public void testAjaxAddRow() throws Exception {
         request.setMethod("GET");
-        request.setRequestURI("/bdrs/admin/censusMethod/ajaxAddSubCensusMethod.htm");
+        request.setRequestURI(CensusMethodController.CENSUS_METHOD_ADD_AJAX_ROW_URL);
         request.setParameter("id", m1.getId().toString());
         
         ModelAndView mv = this.handle(request,response);

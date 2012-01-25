@@ -1,8 +1,11 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 }
+
+exports.BeforeShow = function() {
+};
 	
 exports.Show = function() {
 	var Callback =  function(id) {
@@ -10,7 +13,7 @@ exports.Show = function() {
 		
 		this.handler = function(event) {
 			bdrs.mobile.setParameter('taxonGroup', id);
-			jQuery.mobile.changePage("#species-list", jQuery.mobile.defaultPageTransition, false, true);
+			jQuery.mobile.changePage("#species-list", {showLoadMsg: false});
 		}
 		return this;
 	};

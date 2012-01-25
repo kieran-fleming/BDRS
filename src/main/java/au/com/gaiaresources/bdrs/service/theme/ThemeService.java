@@ -85,6 +85,7 @@ public class ThemeService {
         tempSet.add("application/json");
         tempSet.add("application/javascript");
         tempSet.add("application/xml");
+        tempSet.add("image/svg+xml");
         
         PATTERN_REPLACE_CONTENT_TYPES = Collections.unmodifiableSet(tempSet);
     }

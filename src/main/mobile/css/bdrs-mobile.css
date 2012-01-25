@@ -84,14 +84,30 @@ ul h1, ul h2, ul h3, ul h4 {
 	display: inline-block;
 }
 
-/* css to style jqm collapsible contentbox for point fields, becomes obsolete from jqm rc1+ when data-content-theme element comes into effect*/
-.temp-content-box-styles {
-	border: 1px solid black;
-	border-radius: 10px;
-	padding: 0px 8px 0px 8px;
-	background-color: #ffffff;
+#splash {
+	background: url("../theme/images/splashBg.jpg") no-repeat center center fixed;
+	background-color: #000000;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	text-align: center;	
 }
 
-#loadingContent {
-	text-align: center;
+.splash, .splash img {
+	padding: 0px;
+}
+
+.bdrs-page-splash {
+	background: none;
+}
+
+.bdrs-page-about img{
+	display: block;
+	margin: auto;
+}
+
+/* Overrides jqm field container style that adds a thin line under an input when pagewidth is below 480px */
+.ui-br {
+	border-bottom: 0px;
 }

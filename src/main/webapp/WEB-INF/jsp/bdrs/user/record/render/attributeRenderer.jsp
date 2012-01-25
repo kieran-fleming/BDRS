@@ -548,27 +548,7 @@
 		            class="image_file"
 		            onchange="bdrs.util.file.imageFileUploadChangeHandler(this);jQuery('#${inputName}').val(jQuery(this).val());"
 		        />
-		        <script type="text/javascript">
-		            /**
-		             * This script creates a link that clears the image from the record
-		             * attribute. The link should only appear if javascript is enabled 
-		             * on the browser so we create an insert the script using javascript.
-		             * No script... no link.
-		             */
-		            jQuery(function() {
-		                var elem = jQuery("<a></a>");
-		                elem.attr({
-		                    "href": "javascript: void(0)",
-		                    "class": "clearLink"
-		                });
-		                elem.text('Clear');
-		                elem.click(function() {
-		                    jQuery('#${inputName}, #${fileInputName}').attr('value','');
-		                    jQuery('#${ formPrefix }attribute_img_${ formField.attribute.id }').remove();
-		                });
-		                jQuery('[name=${fileInputName}]').after(elem);
-		            });
-		        </script>
+				<a href="javascript:void(0)" class="clearLink" onclick="jQuery('#${inputName}, #${fileInputName}').attr('value',''); jQuery('#${ formPrefix }attribute_img_${ formField.attribute.id }').remove();">Clear</a>
 		    </c:when>
 		</c:choose>
     </c:when>
@@ -603,27 +583,7 @@
 		            class="data_file"
 		            onchange="jQuery('#${inputName}').val(jQuery(this).val());"
 		        />
-		        <script type="text/javascript">
-		            /**
-		             * This script creates a link that clears the image from the record
-		             * attribute. The link should only appear if javascript is enabled 
-		             * on the browser so we create an insert the script using javascript.
-		             * No script... no link.
-		             */
-		            jQuery(function() {
-		                var elem = jQuery("<a></a>");
-		                elem.attr({
-		                    "href": "javascript: void(0)",
-		                    "class": "clearLink"
-		                });
-		                elem.text('Clear');
-		                elem.click(function() {
-		                    jQuery('#${inputName}, #${fileInputName}').attr('value','');
-		                    jQuery('#${sectionName}').remove();
-		                });
-		                jQuery('[name=${fileInputName}]').after(elem);
-		            });
-		        </script>
+				<a href="javascript:void(0)" class="clearLink" onclick="jQuery('#${inputName}, #${fileInputName}').attr('value',''); jQuery('#${sectionName}').remove();" >Clear</a>
 		    </c:when>
 		    <c:otherwise>
 		        <%-- do nothing --%>

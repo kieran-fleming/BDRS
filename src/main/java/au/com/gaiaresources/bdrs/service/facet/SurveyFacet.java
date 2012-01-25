@@ -1,5 +1,7 @@
 package au.com.gaiaresources.bdrs.service.facet;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import net.sf.json.JSONObject;
@@ -58,5 +60,23 @@ public class SurveyFacet extends AbstractFacet {
                 super.addFacetOption(new SurveyFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions));
             }
         }
+    }
+    
+    /**
+     * 
+     * @return A list of surveys that have been selected in the facet
+     */
+    public List<Survey> getSelectedSurveys() {
+        List<Survey> result = new ArrayList<Survey>();
+        for (FacetOption facetOpt : getFacetOptions()) {
+            // we know the internal implementation must be a SurveyFacetOption
+            if (facetOpt instanceof SurveyFacetOption) {
+                SurveyFacetOption sfo = (SurveyFacetOption)facetOpt;
+                if (sfo.isSelected()) {
+                    result.add(sfo.getSurvey());
+                }
+            }
+        }    
+        return result;
     }
 }

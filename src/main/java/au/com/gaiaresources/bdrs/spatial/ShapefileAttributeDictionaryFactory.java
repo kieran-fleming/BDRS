@@ -64,7 +64,8 @@ public class ShapefileAttributeDictionaryFactory extends AbstractAttributeDictio
 
     protected void addKey(Map<Attribute, String> map, Set<String> existingKeys, String baseKey, Attribute attribute, String attributeSource) {
         if (!StringUtils.hasLength(baseKey)) {
-            throw new IllegalArgumentException("arg key cannot be null or empty");
+            // Ignore the attribute if it does not have a meaningful baseKey
+            return;
         }
         // prefix with underscore if key starts with a number
         if (Character.isDigit(baseKey.charAt(0))) {

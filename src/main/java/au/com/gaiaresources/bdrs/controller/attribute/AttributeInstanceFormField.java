@@ -23,6 +23,8 @@ public class AttributeInstanceFormField extends AbstractAttributeFormField {
     private String weightName;
 
     private Collection<AttributeOption> optionsToDelete = null;
+    
+    private static final String EMPTY_ATTRIBUTE_NAME = "";
 
     /**
      * Creates and populates a new <code>Attribute</code>.
@@ -42,7 +44,9 @@ public class AttributeInstanceFormField extends AbstractAttributeFormField {
         this.attributeDAO = attributeDAO;
 
         this.attribute = new Attribute();
-        this.attribute.setName(getParameter(parameterMap, String.format("add_name_%d",index)));
+        // We now can support empty names for horizontal rule attribute types.
+        String nameParam = getParameter(parameterMap, String.format("add_name_%d",index));
+        this.attribute.setName(nameParam != null ? nameParam : EMPTY_ATTRIBUTE_NAME);
         this.attribute.setDescription(getParameter(parameterMap, String.format("add_description_%d",index)));
         this.attribute.setTypeCode(getParameter(parameterMap, String.format("add_typeCode_%d",index)));
         this.attribute.setRequired(getParameter(parameterMap, String.format("add_required_%d",index)) != null);
@@ -86,7 +90,9 @@ public class AttributeInstanceFormField extends AbstractAttributeFormField {
         this(attributeDAO, attribute);
 
         int attributePk = attribute.getId();
-        this.attribute.setName(getParameter(parameterMap, String.format("name_%d",attributePk)));
+        // We now can support empty names for horizontal rule attribute types.
+        String nameParam = getParameter(parameterMap, String.format("name_%d",attributePk));
+        this.attribute.setName(nameParam != null ? nameParam : EMPTY_ATTRIBUTE_NAME);
         this.attribute.setDescription(getParameter(parameterMap, String.format("description_%d",attributePk)));
         this.attribute.setTypeCode(getParameter(parameterMap, String.format("typeCode_%d",attributePk)));
         this.attribute.setRequired(getParameter(parameterMap, String.format("required_%d",attributePk)) != null);

@@ -53,6 +53,7 @@ public class HandlerExceptionResolver implements org.springframework.web.servlet
                 // add the message
                 RequestContextHolder.getContext().addMessage(ex.getMessage());
             }
+            logger.warn("Access denied exception", ex);
 
         } else {
             // Error has occured, request rollback

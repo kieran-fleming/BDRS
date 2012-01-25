@@ -1,6 +1,6 @@
 exports.DELETE_SURVEY_CONFIRM_BUTTON_SELECTOR = "#survey-delete-confirm-button";
 
-exports.Create = function() {
+exports.Init = function() {
 	jQuery(exports.DELETE_SURVEY_CONFIRM_BUTTON_SELECTOR).click(function() {
         var page = jQuery('#survey-delete-confirm');
         var sid = bdrs.mobile.getParameter('deleting-survey-id');
@@ -10,7 +10,7 @@ exports.Create = function() {
     	} else {
     		bdrs.mobile.Error(removeResult.errorMsg);
     	}
-    	jQuery.mobile.pageLoading(true);
+    	jQuery.mobile.hidePageLoadingMsg();
         page.dialog('close');
     });
 };
@@ -24,6 +24,5 @@ exports.Hide = function() {
 		Survey.findBy('server_id', sid, resume);
 	}
 	jQuery('#checkbox-' + sid).prop('checked', survey.local());
-	bdrs.mobile.restyle('.bdrs-page-download-surveys .surveyListContainer');
-	
+	bdrs.template.restyle('.bdrs-page-download-surveys .surveyListContainer');
 };

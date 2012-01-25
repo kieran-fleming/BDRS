@@ -1,0 +1,34 @@
+<html>
+    <body>
+        <p>Hi ${userFirstName} ${userLastName},</p>
+        
+        <p>
+            I'm one of the administrators of the ${portal.getName()}. Recently, you recorded 
+            a sighting in the system under a project that has moderation turned on. 
+            What this means is that the administrators are given the option to review 
+            that record.
+        </p>
+        
+        <p>
+            I've reviewed your record(s) and released them from the moderation cycle. 
+            You can see your records by clicking on the links below.
+        </p>
+        
+        <ul>
+        #foreach( ${viewRecordUrl} in ${viewRecordUrlList} )
+            <li><a href="${bdrsApplicationUrl}${viewRecordUrl}">${bdrsApplicationUrl}${viewRecordUrl}</a></li>
+        #end
+        </ul>
+        
+        <p>
+            If you choose to make more edits, then this system will recommence 
+            moderation and one of the administrators will review the record again.
+        </p>
+        <p>
+            Thanks for your contribution to the ${portal.getName()}!
+        </p>
+        <p>
+            ${moderatorFirstName} ${moderatorLastName}
+        </p>
+    </body>
+</html>

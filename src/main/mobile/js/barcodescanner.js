@@ -108,5 +108,4 @@ BarcodeScanner.prototype.encode = function(type, data, success, fail, options) {
 
 PhoneGap.addConstructor(function() {
 	PhoneGap.addPlugin('barcodeScanner', new BarcodeScanner());
-	PluginManager.addService("BarcodeScanner","com.beetight.barcodescanner.BarcodeScanner");
 });

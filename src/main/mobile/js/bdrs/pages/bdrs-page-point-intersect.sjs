@@ -18,11 +18,11 @@ exports._last_height = {};
 /**
  * Invoked when the page is created.
  */
-exports.Create =  function() {
+exports.Init =  function() {
     jQuery("#point-intersect-save").click(function() {
         if(bdrs.mobile.validation.isValidForm('#point-intersect-form')) {
             bdrs.mobile.pages.point_intersect._savePoint();
-            jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
+            jQuery.mobile.changePage("#review", {showLoadMsg: false});
         }
     });
     
@@ -40,7 +40,8 @@ exports.Create =  function() {
     
     jQuery("#pi-delete-substrate").click(function() {
         bdrs.mobile.pages.record.markRecordForDelete(exports._point_data.substrateRecord);
-        jQuery.mobile.changePage("#review", jQuery.mobile.defaultPageTransition, false, true);
+        jQuery.mobile.changePage("#review", {showLoadMsg: false});
+        
     });
     
     jQuery('#record-gps').click(function (event) {
@@ -234,18 +235,18 @@ exports.Show = function() {
         var btn = jQuery(event.currentTarget);
         var scientificName = btn.val();
         exports._insertObservationRow(null, exports._getSpeciesByScientificName(scientificName));
-        bdrs.mobile.restyle('#point-intersect');
+         bdrs.template.restyle('#point-intersect');
     });
     
     
-    bdrs.mobile.restyle('#point-intersect');
+     bdrs.template.restyle('#point-intersect');
     
     
     if (currentSurvey !== null) {
-        jQuery.mobile.pageLoading(false);
+        jQuery.mobile.showPageLoadingMsg();
         exports._insertSurveyAttributes(record, currentSurvey, attributeValueMap);
         bdrs.mobile.pages.record._insertTaxonGroupAttributes(record.species(), attributeValueMap);
-        jQuery.mobile.pageLoading(true);
+        jQuery.mobile.hidePageLoadingMsg();
     } else {
         bdrs.mobile.Error('Current Survey ID not known');
         return;
@@ -509,7 +510,7 @@ exports._savePoint = function() {
     // required dom elements. 
     jQuery(":focus").blur();
     
-    jQuery.mobile.pageLoading(false);
+    jQuery.mobile.showPageLoadingMsg();
 	bdrs.mobile.Debug ('Save Point Called');
 	
 	var attributeValueMap = {};
@@ -864,7 +865,7 @@ exports._savePoint = function() {
     }
 
 	persistence.flush();
-	jQuery.mobile.pageLoading(true);
+	jQuery.mobile.hidePageLoadingMsg();
 };
 
 exports._getSpeciesByScientificName = function(scientificName) {

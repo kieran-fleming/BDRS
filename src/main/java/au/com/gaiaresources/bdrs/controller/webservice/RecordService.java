@@ -34,6 +34,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
+import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
@@ -48,10 +50,27 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 
 @Controller
 public class RecordService extends AbstractController {
+
+    /**
+     * URL for jqgrid compliant ajax request for retrieving child records
+     */
+    public static final String AJAX_GET_CHILD_RECORD_URL = "/webservice/record/getChildRecords.htm"; 
+    
+    /**
+     * Request parameter for parent record ID
+     */
+    public static final String PARAM_PARENT_RECORD_ID = "parentRecordId";
+    
+    /**
+     * Request parameter for census method ID
+     */
+    public static final String PARAM_CENSUS_METHOD_ID = "censusMethodId";
+
     private Logger log = Logger.getLogger(getClass());
     @Autowired
     private SurveyDAO surveyDAO;
@@ -839,5 +858,39 @@ public class RecordService extends AbstractController {
         jsonReturnObject.element("uploadResponse", onlineRecordIds);
         response.setContentType("application/json");
         response.getWriter().write(jsonReturnObject.toString());
+    }
+    
+    /**
+     * JqGrid compliant service for retrieving child records
+     * 
+     * @param request - HttpServletRequest
+     * @param response - HttpServletResponse
+     * @param parentRecordId - parent to retrieve children for
+     * @param censusMethodId - census method to search for inside the children
+     * @throws Exception
+     */
+    @RequestMapping(value = AJAX_GET_CHILD_RECORD_URL, method = RequestMethod.GET)
+    public void getChildRecords(HttpServletRequest request, HttpServletResponse response,
+            @RequestParam(value=PARAM_PARENT_RECORD_ID, required=false) Integer parentRecordId,
+            @RequestParam(value=PARAM_CENSUS_METHOD_ID, required=false) Integer censusMethodId) throws Exception {
+        
+        JqGridDataHelper jqGridHelper = new JqGridDataHelper(request);
+        PaginationFilter filter = jqGridHelper.createFilter(request);
+        
+        User accessingUser = getRequestContext().getUser();
+        
+        PagedQueryResult<Record> queryResult = recordDAO.getChildRecords(filter, parentRecordId, censusMethodId, accessingUser);
+        
+        JqGridDataBuilder builder = new JqGridDataBuilder(jqGridHelper.getMaxPerPage(), queryResult.getCount(), jqGridHelper.getRequestedPage());
+
+        if (queryResult.getCount() > 0) {
+            for (Record rec : queryResult.getList()) {
+                JqGridDataRow row = new JqGridDataRow(rec.getId());
+                // Set flatten depth to 1 so we can access the species common name
+                row.addValues(rec.flatten(1));
+                builder.addRow(row);
+            }
+        }
+        this.writeJson(request, response, builder.toJson());
     }
 }

@@ -592,7 +592,8 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         attrList.add(createAttribute(namePrefix + "_10", AttributeType.FILE, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_11", AttributeType.IMAGE, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_12", AttributeType.HTML, attrRequired, scope));
-        attrList.add(createAttribute(namePrefix + "_13", AttributeType.HTML_COMMENT, attrRequired, scope));
+        // HTML comments do not have a name in the database, use an empty string.
+        attrList.add(createAttribute("", AttributeType.HTML_COMMENT, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_14", AttributeType.HTML_HORIZONTAL_RULE, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_15", AttributeType.REGEX, attrRequired, scope));
         return attrList;

@@ -81,10 +81,18 @@ exports.RecentTaxaWidget = function(limit) {
         fieldsetElem.find("[type=radio]:last").attr("checked","checked");
 
         // Attach the change handler to each radio. On change, update the
-        // autocomplete input. Blur the input to trigger generation of necessary
+        // autocomplete input. Generation of necessary
         // taxon group attributes.        
         fieldsetElem.find("[type=radio]").change(function() {
-            jQuery(target).find("[type=text]").val(fieldsetElem.find(":checked").val()).blur();
+        	var scientificName = fieldsetElem.find(":checked").val();
+            jQuery(target).val(scientificName).blur();
+           /* jQuery.mobile.showPageLoadingMsg();
+            var taxon;
+            waitfor(taxon) {
+                Species.all().filter('scientificName', '=', scientificName).one(resume);
+            }
+            bdrs.mobile.pages.record._insertTaxonGroupAttributes(taxon, {});
+            jQuery.mobile.hidePageLoadingMsg();*/
         });
         
         // Set this style for correct rendering.
@@ -96,13 +104,13 @@ exports.RecentTaxaWidget = function(limit) {
     this.after = function(target) {
         var fieldset = this.createFieldset(target);
         jQuery(target).after(fieldset);
-        bdrs.mobile.restyle(fieldset.parent());
+         bdrs.template.restyle(fieldset.parent());
     };
     
     this.before = function(target) {
         var fieldset = this.createFieldset(target);
         jQuery(target).before(fieldset);
-        bdrs.mobile.restyle(fieldset.parent());
+         bdrs.template.restyle(fieldset.parent());
     }
 
     return this;

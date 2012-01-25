@@ -1,7 +1,7 @@
 /**
  * Event handlers for the logging page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
     
     jQuery("#logLevel").change(function(event){ 
     

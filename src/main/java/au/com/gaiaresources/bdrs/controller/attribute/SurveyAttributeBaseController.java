@@ -263,10 +263,8 @@ public class SurveyAttributeBaseController extends AbstractController {
         RecordFormValidator validator = new RecordFormValidator(propertyService, taxaDAO);
         if(request.getParameterValues("attribute") != null) {
             for(String rawAttrPk : request.getParameterValues("attribute")) {
-                // Disallow blank names
-                if(rawAttrPk != null && !rawAttrPk.isEmpty() &&
-                        !request.getParameter("name_"+rawAttrPk).isEmpty()) {
 
+                if(rawAttrPk != null && !rawAttrPk.isEmpty()) {
                     attr = taxaDAO.getAttribute(Integer.parseInt(rawAttrPk));
                     AttributeFormField formField = formFieldFactory.createAttributeFormField(attributeDAO, attr, request.getParameterMap());
                     Attribute newAttr = ((AttributeInstanceFormField)formField).getAttribute();
@@ -275,11 +273,16 @@ public class SurveyAttributeBaseController extends AbstractController {
                             newAttr.getType().equals(AttributeType.HTML_COMMENT)) {
                         isValid &= parser.validate(validator, "description_"+rawAttrPk, null, newAttr, request.getParameterMap(), null);
                     }
-                    if (isValid) {
-                        attr = (Attribute) formField.save();
-                        attributeList.add(attr);
-                    } else {
-                        failAttributeList.add(newAttr);
+                    
+                    if (AttributeType.HTML_HORIZONTAL_RULE.equals(newAttr.getType()) || !StringUtils.isEmpty(request.getParameter("name_"+rawAttrPk))) {
+                        // everything EXCEPT horizontal rule needs a valid name field.
+                        // if name field doesn't exist, ignore
+                        if (isValid) {
+                            attr = (Attribute) formField.save();
+                            attributeList.add(attr);
+                        } else {
+                            failAttributeList.add(newAttr);
+                        }
                     }
                 }
             }
@@ -288,9 +291,8 @@ public class SurveyAttributeBaseController extends AbstractController {
         // Create new Attributes
         if(request.getParameter("add_attribute") != null) {
             for(String rawIndex : request.getParameterValues("add_attribute")) {
-                if(rawIndex != null && !rawIndex.isEmpty() &&
-                        !request.getParameter("add_name_"+rawIndex).isEmpty()) {
-                    
+
+                if(rawIndex != null && !rawIndex.isEmpty()) {
                     int index = Integer.parseInt(rawIndex);
                     AttributeFormField formField = formFieldFactory.createAttributeFormField(attributeDAO, index, request.getParameterMap());
                     Attribute newAttr = ((AttributeInstanceFormField)formField).getAttribute();
@@ -299,10 +301,14 @@ public class SurveyAttributeBaseController extends AbstractController {
                             newAttr.getType().equals(AttributeType.HTML_COMMENT)) {
                         isValid &= parser.validate(validator, "add_description_"+rawIndex, null, newAttr, request.getParameterMap(), null);
                     }
-                    if (isValid) {
-                        attributeList.add((Attribute)formField.save());
-                    } else {
-                        failAttributeList.add(newAttr);
+                    if (AttributeType.HTML_HORIZONTAL_RULE.equals(newAttr.getType()) || !StringUtils.isEmpty(request.getParameter("add_name_"+rawIndex))) {
+                        // everything EXCEPT horizontal rule needs a valid name field.
+                        // if name field doesn't exist, ignore
+                        if (isValid) {
+                            attributeList.add((Attribute)formField.save());
+                        } else {
+                            failAttributeList.add(newAttr);
+                        }
                     }
                 }
             }

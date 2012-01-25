@@ -75,7 +75,27 @@ bdrs.taxonomy.initListing = function(taxonAutocompleteSelector,
         delay: 300
     });
     
-    // Taxon Group autocomplete.
+    bdrs.taxonomy.initTaxonGroupAutocomplete(groupAutocompleteSelector, groupPkSelector);
+    
+    html5media.configureFlowplayer = function (tag, element, config) {
+        if(tag === 'audio') {
+            config.clip.type = 'audio';
+        }
+        config.plugins.controls.all = false;
+        config.plugins.controls.play = true;
+        config.plugins.controls.scrubber = true;
+        config.plugins.controls.volume = true;
+    }
+};
+
+/**
+ * Initialises the taxon group auto complete input
+ * 
+ * @param {Object} groupAutocompleteSelector - selector for the text input that the user types in
+ * @param {Object} groupPkSelector - selector for the hidden input that is filled by the taxon group pk
+ */
+bdrs.taxonomy.initTaxonGroupAutocomplete = function(groupAutocompleteSelector, groupPkSelector) {
+	// Taxon Group autocomplete.
     jQuery(groupAutocompleteSelector).autocomplete({
         source: function(request, callback) {
             var params = {};
@@ -106,16 +126,6 @@ bdrs.taxonomy.initListing = function(taxonAutocompleteSelector,
         minLength: 2,
         delay: 300
     });
-    
-    html5media.configureFlowplayer = function (tag, element, config) {
-        if(tag === 'audio') {
-            config.clip.type = 'audio';
-        }
-        config.plugins.controls.all = false;
-        config.plugins.controls.play = true;
-        config.plugins.controls.scrubber = true;
-        config.plugins.controls.volume = true;
-    }
 };
 
 /**
@@ -547,4 +557,70 @@ bdrs.taxonomy.addNewProfile = function(newProfileIndexSelector, profileTableSele
     jQuery.get(bdrs.contextPath+'/bdrs/admin/taxonomy/ajaxAddProfile.htm', params, function(data) {
         jQuery(profileTableSelector).find("tbody").append(data);
     });
+};
+
+bdrs.taxonomy.importALAProfile = function(guidListSelector, taxonGroupNameSelector, shortProfileSelector) { 
+    if (jQuery(guidListSelector).val()) {
+        if (!confirm("Are you sure? Existing entries imported from ALA will be replaced!")) {
+            return false;
+        }
+    }
+    if (!jQuery(taxonGroupNameSelector).val()) {
+        if (!confirm("Are you sure you want to import these without a Taxon Group? They will end up in the Taxon Group called Life if you do this.")) {
+            return false;
+        }
+    }
+    
+    var BLOCKER_TEXT = "The import is now running. ";
+    var guidString = jQuery(guidListSelector).val(); 
+    var guidArray = guidString ? guidString.split(",") : [];
+    var taxonGroupName = jQuery(taxonGroupNameSelector).val();
+    var shortProfile = jQuery(shortProfileSelector).val();
+    
+    jQuery.blockUI({ message: '<h1 id="blockerMessage">' + BLOCKER_TEXT + '0 / '+ guidArray.length +'</h1>' });
+    
+    // current index
+    var i = 0;
+    var successCount = 0;
+    var errorList = [];
+    
+    // Use closures and recursion to queue up our ajax requests.
+    var ajaxImportFunc = function(guidArray, taxonGroupName, shortProfile) {
+        jQuery.ajax({
+            url: bdrs.contextPath + "/bdrs/admin/taxonomy/importNewProfiles.htm",
+            type: "POST",
+            data: {
+                "guids": guidArray[i],
+                "taxonGroup": taxonGroupName,
+                "shortProfile": shortProfile
+            },
+            success: function(data) {
+                if (data.errorList.length === 0) {
+                  ++successCount;   
+                } else {
+                    // we process guids one at a time so if there is an error
+                    // we know there will only be 1.
+                    errorList.push(data.errorList[0]);
+                }
+            },
+            error: function() {
+                errorList.push("Error communicating with the server.");
+            },
+            complete: function() {
+                jQuery('#blockerMessage').text(BLOCKER_TEXT + (i+1) +' / '+ guidArray.length);
+                ++i;
+                if (i < guidArray.length) {
+                    ajaxImportFunc(guidArray, taxonGroupName, shortProfile);
+                } else {
+                    jQuery.unblockUI();
+                    bdrs.message.set("Successfully imported " + successCount + " species.");
+                    for (var j=0; j<errorList.length; ++j) {
+                        bdrs.message.append(errorList[j]);  
+                    }
+                }
+            }
+        });
+    };
+    // kick off our first item...
+    ajaxImportFunc(guidArray, taxonGroupName, shortProfile);
 };

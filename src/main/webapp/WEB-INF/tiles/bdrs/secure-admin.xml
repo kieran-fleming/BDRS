@@ -146,9 +146,13 @@
         <put-attribute name="title" value="Survey"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/survey/editAttributes.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customCss">
+            <add-attribute>../js/markitup/sets/html/style.css</add-attribute>            
+            <add-attribute>../js/markitup/skins/markitup/style.css</add-attribute>
+        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
-            
+            <add-attribute>markitup/jquery.markitup.js</add-attribute>            
+            <add-attribute>bdrs/admin.js</add-attribute>            
         </put-list-attribute>
     </definition>
 
@@ -279,8 +283,13 @@
         <put-attribute name="title" value="Edit Taxon Group"/>
         <put-attribute name="content" value="/WEB-INF/jsp/bdrs/admin/taxongroup/editTaxonGroup.jsp"/>
         <put-attribute name="maps" value="false"/>
-        <put-list-attribute name="customCss"></put-list-attribute>
+        <put-list-attribute name="customCss">
+            <add-attribute>../js/markitup/sets/html/style.css</add-attribute>            
+            <add-attribute>../js/markitup/skins/markitup/style.css</add-attribute>
+        </put-list-attribute>
         <put-list-attribute name="customJavaScript">
+            <add-attribute>markitup/jquery.markitup.js</add-attribute>            
+            <add-attribute>bdrs/admin.js</add-attribute>            
         </put-list-attribute>
     </definition>
     

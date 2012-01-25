@@ -99,7 +99,7 @@ public class FacetService {
                             Facet facet = builder.createFacet(recordDAO, parameterMap, user, configParams);
                             facetList.add(facet);
                         } catch(JSONException ex) {
-                            log.error(String.format("The configuration parameter at index %d for preference key %s is not a JSON object.", i, pref.getKey()));
+                            log.error(String.format("The configuration parameter at index %d for preference key %s is not a JSON object or is improperly configured: %s", i, pref.getKey(), pref.getValue()));
                         }
                     }
                 } catch(JSONException je) {
@@ -110,6 +110,21 @@ public class FacetService {
         }
         Collections.sort(facetList, new FacetWeightComparator());
         return facetList;
+    }
+    
+    /**
+     * Gets a facet by type from the specified list of facets.
+     * @param facetList - the list of facets to search.
+     * @param facetClazz - the facet class to return
+     * @return the facet if found, otherwise null
+     */
+    public <C extends Facet> C getFacetByType(List<Facet> facetList, Class<C> facetClazz) {
+        for (Facet f : facetList) {
+            if (f.getClass().equals(facetClazz)) {
+                return (C)f;
+            }
+        }
+        return null;
     }
     
     /**

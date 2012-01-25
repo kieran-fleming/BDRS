@@ -6,7 +6,7 @@ bdrs.mobile.pages.clock_warning = {
 
     _isShown: false,
 
-	Create: function() {},
+	Init: function() {},
 	
 	Show: function() {
 	    jQuery("#clock-warning-current-datetime").text(new Date().toString());
@@ -14,6 +14,8 @@ bdrs.mobile.pages.clock_warning = {
 	
 	Hide: function() {
     	bdrs.mobile.pages.clock_warning._isShown = true;
+    	jQuery.mobile.changePage("#dashboard", {showLoadMsg: false, changeHash: false});
+    	bdrs.template.restyle('#dashboard');
 	},
 	
 	isShown: function() {

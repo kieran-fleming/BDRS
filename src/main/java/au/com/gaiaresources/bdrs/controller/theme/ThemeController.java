@@ -595,7 +595,7 @@ public class ThemeController extends AbstractDownloadFileController {
         Portal portal = getRequestContext().getPortal();
         // if no portal in the request context, use the default portal.
         if (portal == null) {
-            portal = portalDAO.getPortal(true);
+            portal = portalDAO.getDefaultPortal();
 			if (portal == null) {
 	            response.getWriter().write("Error reverting default theme : no portal specified and no default portal found!");
 	            return;

@@ -91,9 +91,10 @@ $.fn.ketchup.validation('digits', function(element, value) {
   else return false;
 });
 
+var ketchupIntegerRegex = /^\-?\d+(\.[0]*)?$/;
 
 $.fn.ketchup.validation('integer', function(element, value) {
-  if(/^\-?\d+$/.test(value)) return true;
+  if(ketchupIntegerRegex.test(value)) return true;
   else return false;
 });
 
@@ -102,7 +103,7 @@ $.fn.ketchup.validation('integerOrBlank', function(element, value) {
         // blank
         return true;
     } else {
-        if(/^\-?\d+$/.test(value)){
+        if(ketchupIntegerRegex.test(value)){
             return true;
         } else {
             return false;
@@ -110,12 +111,14 @@ $.fn.ketchup.validation('integerOrBlank', function(element, value) {
     }
 });
 
+var ketchupPostiveIntegerRegex = /^\d+(\.[0]*)?$/;
+
 $.fn.ketchup.validation('positiveIntegerOrBlank', function(element, value) {
     if(value.length === 0) {
         // blank
         return true;
     } else {
-        if(/^\d+$/.test(value)) {
+        if(ketchupPostiveIntegerRegex.test(value)) {
             return true;
         } else {
             return false;
@@ -124,7 +127,7 @@ $.fn.ketchup.validation('positiveIntegerOrBlank', function(element, value) {
 });
 
 $.fn.ketchup.validation('positiveInteger', function(element, value) {
-    if(/^\d+$/.test(value)) {
+    if(ketchupPostiveIntegerRegex.test(value)) {
         return true;
     } else {
         return false;
@@ -132,7 +135,7 @@ $.fn.ketchup.validation('positiveInteger', function(element, value) {
 });
 
 $.fn.ketchup.validation('positiveIntegerLessThanOneMillion', function(element, value) {
-    if(/^\d+$/.test(value)) {
+    if(ketchupPostiveIntegerRegex.test(value)) {
         var v = parseInt(value, 10);
         return v < 1000000;
     } else {
@@ -144,7 +147,7 @@ $.fn.ketchup.validation('positiveIntegerLessThanOneMillionOrBlank', function(ele
     if(element.val().length === 0) {
         return true;
     } else {
-	    if(/^\d+$/.test(value)) {
+	    if(ketchupPostiveIntegerRegex.test(value)) {
 	        var v = parseInt(value, 10);
 	        return v < 1000000;
 	    } else {
@@ -319,12 +322,12 @@ $.fn.ketchup.validation('optionallyTaxonomicSpeciesAndNumber', function(element,
     return isValid;
 });
 
-var hexColorRegex = new RegExp('#[0-9A-F]{6}', 'i');
+var hexColorRegex = new RegExp('^#[0-9A-F]{6}$', 'i');
 $.fn.ketchup.validation('color', function(element, value, otherSelector) {
     return hexColorRegex.test(value);
 });
 
-var uuidRegex = new RegExp('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
+var uuidRegex = new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
 $.fn.ketchup.validation('uuid', function(element, value, otherSelector) {
     return uuidRegex.test(value);
 });
@@ -346,7 +349,7 @@ $.fn.ketchup.validation('regExpOrBlank', function(element, value, regExp, origRe
 });
 
 // 24 hour time
-var timeRegex = new RegExp('[012]?\\d:\\d\\d$');
+var timeRegex = new RegExp('^[012]?\\d:\\d\\d$');
 
 $.fn.ketchup.validation('time', function(element, value) {
 	return timeRegex.test(value);
@@ -356,5 +359,29 @@ $.fn.ketchup.validation('timeOrBlank', function(element, value) {
 	if (element.val().length === 0) {
 		return true;
 	}
-	return timeRegex.test(value); 
+	return timeRegex.test(value);
+});
+
+var attrOptionIntWithRangeRegex = /^([\d]+),([\d]+)$/;
+
+$.fn.ketchup.validation('attrOptionIntWithRange', function(element, value) {
+	if (element.val().length === 0) {
+		return true;
+	}
+	if (attrOptionIntWithRangeRegex.test(value)) {
+	   	var match = attrOptionIntWithRangeRegex.exec(value);
+		var lower = parseInt(match[1]);
+		var upper = parseInt(match[2]);
+		return lower < upper;
+	} else {
+		return false;
+	}
+});
+
+var attrOptionCommaSeparatedRegex = /^([\w\s;:'"]+)(,[\w\s;:'"]+)+$/;
+$.fn.ketchup.validation('attrOptionCommaSeparated', function(element, value) {
+    if (element.val().length === 0) {
+        return true;
+    }
+    return attrOptionCommaSeparatedRegex.test(value);
 });

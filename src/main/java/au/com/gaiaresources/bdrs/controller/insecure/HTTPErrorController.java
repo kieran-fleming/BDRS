@@ -16,7 +16,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.email.EmailService;
 
-
 @Controller
 public class HTTPErrorController {
     public static final String NOT_FOUND_URL = "/error/404.htm";
@@ -38,7 +37,8 @@ public class HTTPErrorController {
         // redirect to the proper 404 page. The redirect is performed in order
         // to fix the url displayed by the browser.
 
-        ModelAndView view = new ModelAndView(new RedirectView("/error/404.htm", true));
+        RedirectView redirect = new RedirectView("/error/404.htm", true);
+        ModelAndView view = new ModelAndView(redirect);
         return view;
     }
 
@@ -58,12 +58,16 @@ public class HTTPErrorController {
             log.error("Failed to send error e-mail.", t);
         }
 
-        ModelAndView view = new ModelAndView(new RedirectView("/error/500.htm", true));
+        RedirectView redirect = new RedirectView("/error/500.htm", true);
+        ModelAndView view = new ModelAndView(redirect);
         return view;
     }
 
     @RequestMapping(value = NOT_FOUND_URL, method = RequestMethod.GET)
-    public ModelAndView handle404(HttpServletRequest req) {
+    public ModelAndView handle404(HttpServletRequest req, HttpServletResponse response) {
+        
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        
     	ModelAndView view;
     	if ((req.getSession().getAttribute("sessionType") != null) 
     			&& req.getSession().getAttribute("sessionType").equals("mobile")) {
@@ -71,12 +75,16 @@ public class HTTPErrorController {
     	} else {
     		view = new ModelAndView("error");
     	}
-        view.addObject("statusCode", 404);
+    	
+        view.addObject("statusCode", HttpServletResponse.SC_NOT_FOUND);
         return view;
     }
 
     @RequestMapping(value = "/error/500.htm", method = RequestMethod.GET)
-    public ModelAndView handle500(HttpServletRequest req) {
+    public ModelAndView handle500(HttpServletRequest req, HttpServletResponse response) {
+        
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        
     	ModelAndView view;
     	if ((req.getSession().getAttribute("sessionType") != null) 
     			&& req.getSession().getAttribute("sessionType").equals("mobile")) {
@@ -84,7 +92,7 @@ public class HTTPErrorController {
     	} else {
     		view = new ModelAndView("error");
     	}
-    	view.addObject("statusCode", 500);
+    	view.addObject("statusCode", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         return view;
     }
 }

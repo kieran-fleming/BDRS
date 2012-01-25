@@ -1,7 +1,7 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 }
 	
 exports.Show = function() {

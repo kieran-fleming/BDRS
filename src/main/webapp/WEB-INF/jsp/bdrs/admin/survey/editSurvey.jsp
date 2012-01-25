@@ -4,6 +4,7 @@
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
 <%@page import="au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType"%>
+<%@page import="au.com.gaiaresources.bdrs.model.survey.SurveyFormSubmitAction"%>
 <%@page import="au.com.gaiaresources.bdrs.model.metadata.Metadata"%>
 <jsp:useBean id="survey" type="au.com.gaiaresources.bdrs.model.survey.Survey" scope="request"/>
 <c:choose>
@@ -22,7 +23,7 @@
         <input type="hidden" name="surveyId" value="${survey.id}"/>
     </c:if>
     <div class="input_container">
-        <table class="form_table">
+        <table class="form_table surveyOptionTable">
             <tbody>
                 <tr>
                     <th>Name:</th>
@@ -108,64 +109,6 @@
                         </a>                    
                     </td>
                 </tr>
-                
-                <tr>
-                    <th>Form Type:</th>
-                    <td>
-                        <fieldset>
-                            <c:forEach items="<%=SurveyFormRendererType.values()%>" var="rendererType">
-                                <jsp:useBean id="rendererType" type="au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType" />
-                                <div>
-                                    <input onchange="editSurveyPage.rendererTypeChanged(jQuery(this));" type="radio" class="vertmiddle" name="rendererType"
-                                        id="<%= rendererType.toString() %>"
-                                        value="<%= rendererType.toString() %>"
-                                        <c:if test="<%= rendererType.equals(survey.getFormRendererType()) || (survey.getFormRendererType() == null && SurveyFormRendererType.DEFAULT.equals(rendererType)) %>">
-                                            checked="checked"
-                                        </c:if>
-                                        <c:if test="<%= !rendererType.isEligible(survey) %>">
-                                            disabled="disabled"
-                                        </c:if>
-                                    />
-                                    <label for="<%= rendererType.toString() %>">
-                                        <%= rendererType.getName() %>
-                                    </label>
-                                </div>
-                            </c:forEach>
-                        </fieldset>
-                    </td>
-                </tr>
-                <tr>
-                    <th title="The default visibility setting when creating a new record">Default Record Visibility:</th>
-                    <td>
-                        <fieldset>
-                            <c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
-                                <jsp:useBean id="recVis" type="au.com.gaiaresources.bdrs.model.record.RecordVisibility" />
-                                <div>
-                                    <input type="radio" class="vertmiddle" name="defaultRecordVis"
-                                        id="<%= recVis.toString() %>"
-                                        value="<%= recVis.toString() %>"
-                                        <c:if test="<%= recVis.equals(survey.getDefaultRecordVisibility()) %>">
-                                            checked="checked"
-                                        </c:if>
-                                    />
-                                    <label for="<%= recVis.toString() %>">
-                                        <%= recVis.getDescription() %>
-                                    </label>
-                                </div>
-                            </c:forEach>
-                        </fieldset>
-                    </td>
-                </tr>
-                <tr>
-                    <th title="Whether non-admins can change the visibility of their records">Record visibility modifiable by users:</th>
-                    <td>
-                        <input type="checkbox" name="recordVisModifiable" value="true"
-                            <c:if test="${survey.recordVisibilityModifiable}">
-                                checked="checked"
-                            </c:if>
-                        />
-                    </td>
-                </tr>
                 <tr>
                     <th title="Is the survey accessible for read access">Publish:</th>
                     <td>
@@ -178,6 +121,97 @@
                 </tr>
             </tbody>
         </table>
+		
+		<div class="right">
+        <a id="advancedToggle" href="javascript: void(0);">Click here to see the advanced settings for your project</a>
+        </div>
+		<div class="clear"></div>
+		
+		<div id="advancedSettings" style="display:none">
+			<table class="form_table surveyOptionTable">
+				<tbody>
+					<tr>
+	                    <th>Form Type:</th>
+	                    <td>
+	                        <fieldset>
+	                            <c:forEach items="<%=SurveyFormRendererType.values()%>" var="rendererType">
+	                                <jsp:useBean id="rendererType" type="au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType" />
+	                                <div title="<%= rendererType.getDescription() %>">
+	                                    <input onchange="editSurveyPage.rendererTypeChanged(jQuery(this));" type="radio" class="vertmiddle" name="rendererType"
+	                                        id="<%= rendererType.toString() %>"
+	                                        value="<%= rendererType.toString() %>"
+	                                        <c:if test="<%= rendererType.equals(survey.getFormRendererType()) || (survey.getFormRendererType() == null && SurveyFormRendererType.DEFAULT.equals(rendererType)) %>">
+	                                            checked="checked"
+	                                        </c:if>
+	                                        <c:if test="<%= !rendererType.isEligible(survey) %>">
+	                                            disabled="disabled"
+	                                        </c:if>
+	                                    />
+	                                    <label for="<%= rendererType.toString() %>">
+	                                        <%= rendererType.getName() %>
+	                                    </label>
+	                                </div>
+	                            </c:forEach>
+	                        </fieldset>
+	                    </td>
+	                </tr>
+					<tr>
+	                    <th title="The action the website will take after clicking the 'Submit' button on the recording form">Submit Action:</th>
+	                    <td>
+	                        <fieldset>
+	                            <c:forEach items="<%=SurveyFormSubmitAction.values()%>" var="formAction">
+	                                <jsp:useBean id="formAction" type="au.com.gaiaresources.bdrs.model.survey.SurveyFormSubmitAction" />
+	                                <div>
+	                                    <input type="radio" class="vertmiddle" name="formSubmitAction"
+	                                        id="<%= formAction.toString() %>"
+	                                        value="<%= formAction.toString() %>"
+	                                        <c:if test="<%= formAction.equals(survey.getFormSubmitAction()) %>">
+	                                            checked="checked"
+	                                        </c:if>
+	                                    />
+	                                    <label for="<%= formAction.toString() %>">
+	                                        <%= formAction.getName() %>
+	                                    </label>
+	                                </div>
+	                            </c:forEach>
+	                        </fieldset>
+	                    </td>
+	                </tr>
+					<tr>
+	                    <th title="The default visibility setting when creating a new record">Default Record Visibility:</th>
+	                    <td>
+	                        <fieldset>
+	                            <c:forEach items="<%=au.com.gaiaresources.bdrs.model.record.RecordVisibility.values()%>" var="recVis">
+	                                <jsp:useBean id="recVis" type="au.com.gaiaresources.bdrs.model.record.RecordVisibility" />
+	                                <div>
+	                                    <input type="radio" class="vertmiddle" name="defaultRecordVis"
+	                                        id="<%= recVis.toString() %>"
+	                                        value="<%= recVis.toString() %>"
+	                                        <c:if test="<%= recVis.equals(survey.getDefaultRecordVisibility()) %>">
+	                                            checked="checked"
+	                                        </c:if>
+	                                    />
+	                                    <label for="<%= recVis.toString() %>">
+	                                        <%= recVis.getDescription() %>
+	                                    </label>
+	                                </div>
+	                            </c:forEach>
+	                        </fieldset>
+	                    </td>
+	                </tr>
+					<tr>
+	                    <th title="Whether non-admins can change the visibility of their records">Record visibility modifiable by users:</th>
+	                    <td>
+	                        <input type="checkbox" name="recordVisModifiable" value="true"
+	                            <c:if test="${survey.recordVisibilityModifiable}">
+	                                checked="checked"
+	                            </c:if>
+	                        />
+	                    </td>
+	                </tr>
+				</tbody>
+			</table>
+		</div>
     
         <div class="textright buttonpanel">
             <input type="submit" class="form_action" value="Save"/>
@@ -211,5 +245,12 @@
     
     jQuery(function() {
         editSurveyPage.rendererTypeChanged();
+		
+		// Census method expand/collapse
+        jQuery("#advancedToggle").click(function() {
+            var canSee = jQuery("#advancedSettings").css('display') === 'none';
+            jQuery("#advancedToggle").text(canSee ? "Click here to hide the advanced settings for your project" : "Click here to see the advanced settings for your project");
+            jQuery("#advancedSettings").slideToggle();
+        });
     });
 </script>

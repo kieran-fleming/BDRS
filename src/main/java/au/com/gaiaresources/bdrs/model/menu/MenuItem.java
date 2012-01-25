@@ -166,7 +166,7 @@ public class MenuItem implements Comparable<MenuItem>, Serializable {
         } else if ("Bulk Data".equals(thatName)) {
             return -1;
         } else {
-            return thisName.compareTo(thatName);
+            return thisName.compareToIgnoreCase(thatName);
         }
     }
     

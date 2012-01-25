@@ -72,6 +72,7 @@ public class PyResponse {
     public void setContent(byte[] content) {
         this.content = Arrays.copyOf(content, content.length);
     }
+
     /**
      * @return the isStandalone
      */

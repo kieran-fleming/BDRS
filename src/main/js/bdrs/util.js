@@ -174,6 +174,7 @@ bdrs.util.maximise = function(triggerSelector, contentSelector, maximiseLabel, m
     if(content.hasClass("maximise")) {
         content.unwrap();
         content.removeClass("maximise");
+        jQuery('body').css('overflow', 'auto');
         trigger.text(maximiseLabel);
         jQuery(document).unbind('keyup');
     } else {
@@ -186,8 +187,10 @@ bdrs.util.maximise = function(triggerSelector, contentSelector, maximiseLabel, m
             right: 0,
             padding: "2em 2em 2em 2em",
             backgroundColor: 'white',
-            zIndex: 1500
+            zIndex: 1500,
+            overflow: 'auto'
         });
+        jQuery('body').css('overflow', 'hidden');
         content.addClass("maximise");
         trigger.text(minimiseLabel);
         

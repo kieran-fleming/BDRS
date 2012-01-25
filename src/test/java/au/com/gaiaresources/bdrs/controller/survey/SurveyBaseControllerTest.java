@@ -28,6 +28,7 @@ import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.survey.SurveyFormSubmitAction;
 import au.com.gaiaresources.bdrs.security.Role;
 
 public class SurveyBaseControllerTest extends AbstractControllerTest {
@@ -89,6 +90,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         params.put("rendererType", "DEFAULT");
         params.put(Metadata.SURVEY_LOGO, imgTmp.getName());
         params.put(SurveyBaseController.PARAM_DEFAULT_RECORD_VISIBILITY, RecordVisibility.CONTROLLED.toString());
+        params.put(SurveyBaseController.PARAM_FORM_SUBMIT_ACTION, SurveyFormSubmitAction.STAY_ON_FORM.toString());
         
         // no value...
         //params.put(SurveyBaseController.PARAM_RECORD_VISIBILITY_MODIFIABLE, "false");
@@ -114,6 +116,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         
         Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
         Assert.assertEquals(false, survey.isRecordVisibilityModifiable());
+        Assert.assertEquals("form submit action mismatch", SurveyFormSubmitAction.STAY_ON_FORM, survey.getFormSubmitAction());
     }
     
     /**
@@ -148,6 +151,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         params.put(Metadata.SURVEY_LOGO, imgTmp.getName());
         params.put(SurveyBaseController.PARAM_DEFAULT_RECORD_VISIBILITY, RecordVisibility.CONTROLLED.toString());
         params.put(SurveyBaseController.PARAM_RECORD_VISIBILITY_MODIFIABLE, "true");
+        params.put(SurveyBaseController.PARAM_FORM_SUBMIT_ACTION, SurveyFormSubmitAction.MY_SIGHTINGS.toString());
         
         request.setParameters(params);
         
@@ -170,6 +174,7 @@ public class SurveyBaseControllerTest extends AbstractControllerTest {
         
         Assert.assertEquals(RecordVisibility.CONTROLLED, survey.getDefaultRecordVisibility());
         Assert.assertEquals(true, survey.isRecordVisibilityModifiable());
+        Assert.assertEquals("form submit action mismatch", SurveyFormSubmitAction.MY_SIGHTINGS, survey.getFormSubmitAction());
     }
 
     @Override

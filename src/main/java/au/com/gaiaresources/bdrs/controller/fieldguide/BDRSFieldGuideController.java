@@ -17,8 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataBuilder;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataHelper;
+import au.com.gaiaresources.bdrs.controller.webservice.JqGridDataRow;
+import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.db.impl.SortOrder;
+import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
+import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 
@@ -73,6 +79,51 @@ public class BDRSFieldGuideController  extends AbstractController {
         return mv;
     }
     
+    @RequestMapping(value = "/fieldguide/listTaxa.htm", method = RequestMethod.GET)
+    public void asyncListTaxa(HttpServletRequest request,
+                                HttpServletResponse response,
+                                @RequestParam(value="groupId", required=true) int groupPk) throws Exception {
+
+        TaxonGroup taxonGroup = taxaDAO.getTaxonGroup(groupPk);
+        JqGridDataHelper jqGridHelper = new JqGridDataHelper(request);       
+        PaginationFilter filter = jqGridHelper.createFilter(request);
+        
+        PagedQueryResult<IndicatorSpecies> queryResult = taxaDAO.getIndicatorSpecies(taxonGroup, filter);
+        
+        JqGridDataBuilder builder = new JqGridDataBuilder(jqGridHelper.getMaxPerPage(), queryResult.getCount(), jqGridHelper.getRequestedPage());
+
+        if (queryResult.getCount() > 0) {
+            for (IndicatorSpecies species : queryResult.getList()) {
+                JqGridDataRow row = new JqGridDataRow(species.getId());
+                row
+                .addValue("scientificName", species.getScientificName())
+                .addValue("commonName", species.getCommonName())
+                .addValue("thumbnail", getSpeciesThumbnail(species));
+                builder.addRow(row);
+            }
+        }
+        response.setContentType("application/json");
+        response.getWriter().write(builder.toJson());
+    }
+    
+    private String getSpeciesThumbnail(IndicatorSpecies species) {
+        SpeciesProfile imgProfile = null;
+        boolean isThumbnail = false;
+        for(SpeciesProfile profile : species.getInfoItems()) {
+            // use the first image found or first thumbnail found
+            if((imgProfile == null && profile.isImgType()) || (!isThumbnail && profile.isThumbnailType())) {
+                imgProfile = profile;
+                isThumbnail = profile.isThumbnailType();
+            }
+        }
+        
+        if(imgProfile != null) {
+            return imgProfile.getContent();
+        } else {
+            return "";
+        }
+    }
+
     @RequestMapping(value = "/fieldguide/taxon.htm", method = RequestMethod.GET)
     public ModelAndView viewTaxon(  HttpServletRequest request,
                                     HttpServletResponse response,

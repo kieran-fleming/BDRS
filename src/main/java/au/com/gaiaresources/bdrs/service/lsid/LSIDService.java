@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.service.lsid;
 
+import java.io.InputStream;
 import java.util.Properties;
 
 import javax.annotation.PostConstruct;
@@ -18,7 +19,14 @@ public class LSIDService {
     @PostConstruct
     public void init() throws Exception {
         lsidProperties = new Properties();
-        lsidProperties.load(getClass().getResourceAsStream("lsid.properties"));
+        InputStream iStream = getClass().getResourceAsStream("lsid.properties");
+        try {
+            lsidProperties.load(iStream);
+        } finally {
+            if (iStream != null) {
+                iStream.close();
+            }
+        }
     }
 
     public Lsid toLSID(Persistent persistent) {

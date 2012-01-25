@@ -31,7 +31,7 @@ import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 public class Session implements org.hibernate.classic.Session {
     private static final long serialVersionUID = 1858108706839266005L;
      
-    private Logger log = Logger.getLogger(getClass());
+    private transient Logger log = Logger.getLogger(getClass());
     private org.hibernate.classic.Session session;
 
     public Session(org.hibernate.classic.Session session) {

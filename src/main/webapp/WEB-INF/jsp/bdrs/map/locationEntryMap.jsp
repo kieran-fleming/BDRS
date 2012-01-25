@@ -9,8 +9,6 @@
 <tiles:useAttribute name="survey" classname="au.com.gaiaresources.bdrs.model.survey.Survey" ignore="true"/>
 <tiles:useAttribute name="censusMethod" ignore="true"/>
 
-<div id="record_base_map_hover_tip">&nbsp;</div>
-
 <div class="map_wrapper locations_map left" id="map_wrapper">
     <div id="base_map" class="defaultmap review_map"></div>
     <div id="geocode" class="geocode"></div>

@@ -5,20 +5,25 @@ import java.util.Date;
 import java.util.Map;
 import org.apache.log4j.Logger;
 
+import au.com.gaiaresources.bdrs.config.AppContext;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertySetting;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 public enum SurveyFormRendererType {
 	
-    DEFAULT("Default"),
+    // Order the enum in alphabetical order so it is displayed properly
+    // on the survey editing page.
     ATLAS("Atlas of Living Australia"),
-    YEARLY_SIGHTINGS("Yearly Sightings"),
+    DEFAULT("Default"),
+    SINGLE_SITE_ALL_TAXA("Single-Site All Species"),
     SINGLE_SITE_MULTI_TAXA("Single-Site Multi-Species"),
-    SINGLE_SITE_ALL_TAXA("Single-Site All Species");
+    YEARLY_SIGHTINGS("Yearly Sightings");
+    
     Logger log = Logger.getLogger(getClass());
     private String name;
 
@@ -149,6 +154,30 @@ public enum SurveyFormRendererType {
             default:
                 Date endDate = survey.getEndDate();
                 return endDate != null ? endDate : new Date();
+        }
+    }
+    
+    /**
+     * Returns some text that describes any survey settings that are required for a survey form type
+     * to be eligible for use.
+     * 
+     * @return 
+     */
+    public String getDescription() {
+        PropertyService propService = AppContext.getBean(PropertyService.class);
+        switch (this) {
+        case YEARLY_SIGHTINGS:
+            return propService.getMessage("SurveyFormRendererType.yearlySightingsFormDescription");
+        case DEFAULT:
+            return propService.getMessage("SurveyFormRendererType.trackerFormDescription");
+        case ATLAS:
+            return propService.getMessage("SurveyFormRendererType.atlasFormDescription");
+        case SINGLE_SITE_MULTI_TAXA:
+            return propService.getMessage("SurveyFormRendererType.ssmtDescription");
+        case SINGLE_SITE_ALL_TAXA:
+            return propService.getMessage("SurveyFormRendererType.ssatDescription");
+        default:
+            return "";
         }
     }
 

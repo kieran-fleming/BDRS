@@ -492,7 +492,7 @@ public class Condition extends PortalPersistentImpl {
     @Transient
     private Boolean booleanValue(String val) {
         String ssv = singleStringValue(val);
-        return ssv != null ? Boolean.parseBoolean(ssv) : null;
+        return Boolean.valueOf(ssv);
     }
     
     @Transient

@@ -53,6 +53,7 @@ bdrs.model.taxa.attributeType.INTEGER = new bdrs.model.taxa.attributeType.Attrib
 bdrs.model.taxa.attributeType.INTEGER_WITH_RANGE = new bdrs.model.taxa.attributeType.AttributeType('INTEGER_WITH_RANGE', 'IR', 'Integer Range');
 bdrs.model.taxa.attributeType.DECIMAL = new bdrs.model.taxa.attributeType.AttributeType('DECIMAL', 'DE', 'Decimal');
 bdrs.model.taxa.attributeType.BARCODE = new bdrs.model.taxa.attributeType.AttributeType('BARCODE', 'BC', 'Bar Code');
+bdrs.model.taxa.attributeType.REGEX = new bdrs.model.taxa.attributeType.AttributeType('REGEX', 'RE', 'Regular Expression');
 bdrs.model.taxa.attributeType.DATE = new bdrs.model.taxa.attributeType.AttributeType('DATE', 'DA', 'Date');
 bdrs.model.taxa.attributeType.TIME = new bdrs.model.taxa.attributeType.AttributeType('TIME', 'TM', 'Time');
 bdrs.model.taxa.attributeType.STRING = new bdrs.model.taxa.attributeType.AttributeType('STRING', 'ST', 'Short Text');

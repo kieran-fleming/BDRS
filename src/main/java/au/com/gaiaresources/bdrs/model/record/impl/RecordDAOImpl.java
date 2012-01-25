@@ -208,7 +208,24 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     public List<Record> getRecords(Location userLocation) {
         return find("from Record r where r.location = ?", userLocation);
     }
+    
+    @Override
+    public List<Record> getRecordIntersect(Geometry intersectGeom) {
+        return this.getRecordIntersect(intersectGeom, 
+                                       RecordVisibility.PUBLIC, false);
+    }
 
+    @Override
+    public List<Record> getRecordIntersect(Geometry intersectGeom,
+            RecordVisibility visibility, boolean held) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("from Record rec where intersects(:geom, rec.geometry) = true and rec.recordVisibility = :vis and rec.held = :held");
+        Query q = getSession().createQuery(builder.toString());
+        q.setParameter("geom", intersectGeom, GeometryUserType.TYPE);
+        q.setParameter("vis", visibility);
+        q.setParameter("held", held);
+        return (List<Record>) q.list();
+    }
 
     @Override
     public List<Record> getRecords(Geometry withinGeom) {
@@ -1188,7 +1205,42 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         return (Record)q.uniqueResult();
     }
     
-    
+    @Override
+    public PagedQueryResult<Record> getChildRecords(PaginationFilter filter, Integer parentId, Integer censusMethodId, User accessingUser) {
+        
+        if (parentId == null) {
+            throw new IllegalArgumentException("Integer, parentId, cannot be null");
+        }
+        
+        HqlQuery q;
+        String sortTargetAlias = "r";
+        
+        // need to left join species in the case species is null - we still want the record returned.
+        q = new HqlQuery("select r from Record r left join r.species");
+        
+        if (parentId != null) {
+            q.and(Predicate.eq("r.parentRecord.id", parentId));
+        }
+        if (censusMethodId != null) {
+            q.and(Predicate.eq("r.censusMethod.id", censusMethodId));
+        }
+        
+        Predicate publicViewPredicate = Predicate.eq("r.recordVisibility", RecordVisibility.PUBLIC).and(Predicate.eq("r.held", false));
+        
+        // add user visibility parameters here
+        if (accessingUser != null) {
+            if (!accessingUser.isAdmin()) {
+                // logged in user, non admin
+                q.and(Predicate.eq("r.user", accessingUser).or(publicViewPredicate));
+            }
+            // else, admins can see everything and no additional predicate is required
+        } else {
+            // anonymouse user
+            q.and(publicViewPredicate);
+        }
+
+        return new QueryPaginator<Record>().page(this.getSession(), q.getQueryString(), q.getParametersValue(), filter, sortTargetAlias);
+    }
 }
 
 

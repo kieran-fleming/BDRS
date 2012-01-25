@@ -1,0 +1,30 @@
+/* Form Actions */
+input[type=submit].form_action,input[type=button].form_action,
+button[type=button].ui-button {
+    /* Fallback */
+    background-color: ${style.form.button.gradient.color.top};
+
+    filter:progid:DXImageTransform.Microsoft.Gradient(GradientType = 0,
+        StartColorstr =${style.form.button.gradient.color.top}, EndColorstr =${style.form.button.gradient.color.bottom} );
+}
+
+input[type=submit].form_action:hover,input[type=button].form_action:hover,
+button[type=button].ui-button:hover { 
+    /* Fallback */
+    background-color: ${style.form.button.hover.gradient.color.top};
+    
+    filter:progid:DXImageTransform.Microsoft.Gradient(GradientType = 0,
+        StartColorstr = ${style.form.button.hover.gradient.color.top}, EndColorstr = ${style.form.button.hover.gradient.color.bottom} );
+}
+
+input[type=submit][disabled].form_action,
+input[type=button][disabled].form_action,
+input[type=submit][disabled].form_action:active,
+input[type=button][disabled].form_action:active,
+input[type=submit][disabled].form_action:hover,
+input[type=button][disabled].form_action:hover,
+button[type=button][disabled].ui-button:active,
+button[type=button][disabled].ui-button:hover {
+    filter: none;
+}
+

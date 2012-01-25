@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
-import net.sf.json.JSONObject;
-
 import org.apache.log4j.Logger;
 import org.hibernate.Filter;
 import org.junit.Test;
@@ -55,7 +53,7 @@ public class PortalControllerTest extends AbstractControllerTest {
     @Test
     public void testPortalEdit() throws Exception {
         
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
         portalDAO.save(defaultPortal);
@@ -81,7 +79,7 @@ public class PortalControllerTest extends AbstractControllerTest {
     @Test
     public void testPortalEditSubmit() throws Exception {
         
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
         portalDAO.save(defaultPortal);
@@ -95,6 +93,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         request.setParameter("portalId", portal.getId().toString());
         request.setParameter("name", "my portal edited");
         request.setParameter("default", String.valueOf(!portal.isDefault()));
+        request.setParameter("active", String.valueOf(!portal.isActive()));
         request.setParameter("testUrl", "http://example.com/BDRS/test/");
         
         // Edit existing entry points.
@@ -126,6 +125,7 @@ public class PortalControllerTest extends AbstractControllerTest {
         Portal actual = portalDAO.getPortal(portal.getId());
         Assert.assertEquals(request.getParameter("name"), actual.getName());
         Assert.assertEquals(request.getParameter("default"), String.valueOf(actual.isDefault()));
+        Assert.assertEquals(request.getParameter("active"), String.valueOf(actual.isActive()));
         for(PortalEntryPoint actualEntry : portalDAO.getPortalEntryPoints(actual)) {
             if(actualEntry.getRedirect().endsWith("edited")) {
                 Assert.assertEquals(request.getParameter(String.format(PortalController.PORTAL_ENTRY_POINT_EDIT_PATTERN_TMPL, actualEntry.getId())), 
@@ -144,11 +144,60 @@ public class PortalControllerTest extends AbstractControllerTest {
     }
     
     @Test
+    public void testPortalEditCurrentPortalActiveStateSubmit() throws Exception {
+        
+        createTestPortals(false, "");
+        
+        login("root", "password", new String[] { Role.ROOT });
+        
+        request.setMethod("POST");
+        request.setRequestURI("/bdrs/root/portal/edit.htm");
+        request.setParameter("portalId", defaultPortal.getId().toString());
+        request.setParameter("name", "my portal edited");
+        request.setParameter("default", String.valueOf(!defaultPortal.isDefault()));
+        request.setParameter("active", String.valueOf(!defaultPortal.isActive()));
+        request.setParameter("testUrl", "http://example.com/BDRS/test/");
+        
+        // Edit existing entry points.
+        for(PortalEntryPoint entry : portalDAO.getPortalEntryPoints(defaultPortal)) {
+            if((entry.getId() % 2) == 0) {
+                // Edit this entry point.
+                request.addParameter("portalEntryPoint_id", entry.getId().toString());
+                request.setParameter(String.format(PortalController.PORTAL_ENTRY_POINT_EDIT_PATTERN_TMPL, entry.getId()), 
+                                     entry.getPattern().replace("myportal", "my\\ portal\\ edited"));
+                request.setParameter(String.format(PortalController.PORTAL_ENTRY_POINT_EDIT_REDIRECT_TMPL, entry.getId()), 
+                                     "http://www.example.com/edited");
+            } // Otherwise delete the entry point.
+        }
+        
+        ModelAndView mv = handle(request, response);
+        Assert.assertTrue(mv.getView() instanceof RedirectView);
+        RedirectView redirect = (RedirectView)mv.getView();
+        Assert.assertEquals("/bdrs/root/portal/listing.htm", redirect.getUrl());
+        
+        Portal actual = portalDAO.getPortal(defaultPortal.getId());
+        Assert.assertEquals(request.getParameter("name"), actual.getName());
+        Assert.assertEquals(request.getParameter("default"), String.valueOf(actual.isDefault()));
+        // This is the important assertion here,
+        // That the active state did NOT change.
+        Assert.assertEquals(request.getParameter("active"), String.valueOf(!actual.isActive()));
+        super.assertMessageCode(PortalController.PORTAL_ACTIVE_STATE_CHANGE_DENIED);
+        
+        for(PortalEntryPoint actualEntry : portalDAO.getPortalEntryPoints(actual)) {
+            Assert.assertEquals(request.getParameter(String.format(PortalController.PORTAL_ENTRY_POINT_EDIT_PATTERN_TMPL, actualEntry.getId())), 
+                                actualEntry.getPattern());
+            Assert.assertEquals(request.getParameter(String.format(PortalController.PORTAL_ENTRY_POINT_EDIT_REDIRECT_TMPL, actualEntry.getId())), 
+                                actualEntry.getRedirect());
+        }
+    }
+    
+    @Test
     public void testPortalAdd() throws Exception {
         
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
+        defaultPortal.setActive(true);
         portalDAO.save(defaultPortal);
         
         login("root", "password", new String[] { Role.ROOT });
@@ -168,7 +217,7 @@ public class PortalControllerTest extends AbstractControllerTest {
     @Test
     public void testPortalAddSubmit() throws Exception {
         
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
         portalDAO.save(defaultPortal);
@@ -224,7 +273,7 @@ public class PortalControllerTest extends AbstractControllerTest {
     @Test
     public void testAjaxAddPortalEntryPoint() throws Exception {
         
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         createTestPortals(false, "");
         defaultPortal.setDefault(true);
         portalDAO.save(defaultPortal);
@@ -258,7 +307,7 @@ public class PortalControllerTest extends AbstractControllerTest {
     
     @Test
     public void testPortalDoubleInit() throws Exception {
-        Portal defaultPortal = portalDAO.getPortal(true);
+        Portal defaultPortal = portalDAO.getDefaultPortal();
         Map<String, Preference> prefmap = prefDAO.getPreferences();
         int origCount = prefmap.size();
         ArrayList<String> origKeys = new ArrayList<String>();

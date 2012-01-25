@@ -9,7 +9,7 @@ exports.removingInProgress = false;
  * and stores them on the device.
  */
 exports.getAllRemote = function(callback) {
-    var response;
+    var response = [];
     waitfor(response) {
         var jqxhr = jQuery.ajax(
             {
@@ -19,38 +19,41 @@ exports.getAllRemote = function(callback) {
                 cache : false,
                 crossDomain : true,
                 dataType : "jsonp",
+                timeout : 10000,
                 data : {
                     "ident" : bdrs.mobile.User.ident()
                 },
                 success : resume,
-                error : function() {
-                    alert("error while trying to download surveys");
-                    resume();
+                error : function(jqXHR, textStatus, errorThrown){
+                	bdrs.mobile.Error("Failed to retrieve surveys from server: textStatus=" + textStatus + " & errorThrown=" + errorThrown);
+                	response = [];
+                	resume(response);
                 }
             }
         );
     }
     
-    for (var i=0; i < response.length; i++) {
-        // Tries to get the survey from local persistence
-        var survey;
-        waitfor(survey) {
-            Survey.findBy('server_id', String(response[i].id), resume);
-        }
-        // Adds the survey to local persistence if it is not already in there
-        if (survey === null) {
-            persistence.add(new Survey( {
-                server_id : response[i].id,
-                weight: response[i].weight,
-                name : response[i].name,
-                description : response[i].description,
-                active : response[i].active 
-            }));
-        }   
-        waitfor() {
-            persistence.flush(resume);
-        }
-    }
+	 for (var i=0; i < response.length; i++) {
+	        // Tries to get the survey from local persistence
+	    var survey;
+	    waitfor(survey) {
+	        Survey.findBy('server_id', String(response[i].id), resume);
+	    }
+	    // Adds the survey to local persistence if it is not already in there
+	    if (survey === null) {
+	        persistence.add(new Survey( {
+	            server_id : response[i].id,
+	            weight: response[i].weight,
+	            name : response[i].name,
+	            description : response[i].description,
+	            active : response[i].active 
+	        }));
+	    }   
+	    waitfor() {
+	        persistence.flush(resume);
+	    }
+	}
+    
     callback();
 },
 
@@ -66,7 +69,7 @@ exports.getAll = function(){
     }
     return allSurveys;
 
-},
+};
 
 /**
  * Retrieves data of a specific survey from the server
@@ -75,23 +78,20 @@ exports.getAll = function(){
  * @return  response    The local survey data or false when an error has occured.
  */
 exports.getRemote = function(id){
-
 	if (id == null || id == "") {
 		return {'errorMsg': "Parameter id is not valid"};
 	}
     //TODO: maybe move getting the 'complete local surveys' to a separate function in this file?
     // get all surveys that are completely downloaded to the device
     var allSurveys = bdrs.mobile.survey.getLocal();
-    
     // extract ids from surveys
     var surveysOnDeviceIds = [];
     for(var z=0; z<allSurveys.length; z++){
         surveysOnDeviceIds.push(allSurveys[z].server_id());
     }
-    
     bdrs.mobile.Debug("start survey download " + new Date());
     //retrieve data for requested survey from the server
-    var response;
+    var response = null;
     waitfor(response) {
         var jqxhr = jQuery.ajax(
             {
@@ -105,23 +105,18 @@ exports.getRemote = function(id){
                     "sid" : id,
                     "surveysOnDevice" : JSON.stringify(surveysOnDeviceIds)
                 },
-                timeout : 120000,
+                timeout : 240000,
                 success : resume,
-                error : resume
+                error : function(jqXHR, textStatus, errorThrown){
+                	bdrs.mobile.Error("Failed to retrieve surveys from server: textStatus=" + textStatus + " & errorThrown=" + errorThrown);
+                	resume(null);
+                }
             }
         );
     }
-    
-    if (response.status != undefined) {
-		return {'errorMsg': 'Error retrieving survey ' + response.status};
-    } else {
-        bdrs.mobile.Debug("finished survey download " + new Date());
-        //success
-        bdrs.mobile.Debug('Retrieved survey data package ' + response.status);
-        return response;
-    }
-    
-},
+    bdrs.mobile.Debug("finished survey download " + new Date());
+    return response;
+};
 
 exports._save_taxon_groups = function(rawTaxonGroupArray) {
     //persist taxonGroups and its attributes and attribute-options
@@ -324,7 +319,8 @@ exports._save_species = function(survey, taxonGroupMap, speciesMap,
 exports.save = function(id, data) {
 	
 	if (id == null || id == "" || data == null || data == "") {
-		return {"errorMsg" : "Survey save function received invalid parameters"};
+		bdrs.mobile.Error("bdrs.mobile.survey.save received invalid parameters");
+		return null;
 	}
     var start = new Date().getTime();
     //get the survey from the device of which we want to add data to
@@ -430,12 +426,12 @@ exports.save = function(id, data) {
     
     bdrs.mobile.Debug("finish survey download");
 
-    jQuery.mobile.pageLoading(true);
+    jQuery.mobile.hidePageLoadingMsg();
     
     var end = new Date().getTime();
     bdrs.mobile.Debug("Survey saved in: "+(end - start)+" ms");
     return survey;
-},
+};
 
 /**
  * Persists the flattened census method and any associated attribute or
@@ -582,7 +578,7 @@ exports._saveRecordProperties = function(survey, data) {
 	    }
 	}
 
-}
+};
 
 /**
  * Persists the locations them in the survey.
@@ -602,7 +598,7 @@ exports._saveLocations = function(survey, locations) {
             latitude : point.getLatitude(),
             longitude : point.getLongitude() }));
     }
-}
+};
 
 /**
  * Sets a specific survey as the default one.
@@ -639,7 +635,7 @@ exports.makeDefault = function(survey){
     
 	persistence.flush();   
 	
-}
+};
 
 /**
  * Gets the default survey.
@@ -655,7 +651,7 @@ exports.getDefault = function(){
         Survey.findBy('server_id', setting.value(), resume);
     }
     return survey
-}
+};
 
 
 
@@ -669,7 +665,7 @@ exports.getLocal = function(){
     	Survey.all().filter('local', '=', 'true').list(resume);
     }
     return localSurveys
-}
+};
 
 /**
  * Gets the survey by it's serverId.
@@ -682,7 +678,7 @@ exports.getByServerId = function(sid) {
 		Survey.findBy('server_id', sid, resume);
 	}
 	return clickedSurvey;
-}
+};
 
 /**
  * Removes the records from a survey
@@ -697,7 +693,7 @@ exports.removeRecords = function(survey) {
 	recordsList.forEach(function(recordToDelete){
 		bdrs.mobile.pages.trash._recurse_delete_record(recordToDelete);
 	});
-}
+};
 
 /**
  * Removes the profile from a particular species.
@@ -712,7 +708,7 @@ exports.removeSpeciesProfile = function(aSpecies) {
 	for (var g=0; g<infoItems.length; g++) {
 		persistence.remove(infoItems[g]);
 	}
-}
+};
 
 /**
  * Removes the species and their profile and count from a survey when not used by other surveys that exist on the device.
@@ -745,7 +741,7 @@ exports.removeSpecies = function(survey) {
 	for (var e=0; e<speciesCountToDelete.length; e++) {
 		persistence.remove(speciesCountToDelete[e]);
 	}
-}
+};
 
 /**
  * Removes all taxonGroups and their related attributes and atribute-options that do not have any species attached to them.
@@ -771,7 +767,7 @@ exports.removeTaxonGroups = function() {
 			persistence.remove(taxonGroup);
 		}
 	}
-}
+};
 
 /**
  * Removes censusmethods from the survey.
@@ -786,7 +782,7 @@ exports.removeCensusMethods = function (survey) {
 		var censusMethod = censusMethods[b];
 		bdrs.mobile.censusmethod.recurse_delete_censusmethod(censusMethod);
 	}
-}
+};
 
 /**
  * Removes a survey and all the related data that is not used by other surveys.
@@ -804,7 +800,7 @@ exports.remove = function(){
 	}
 	var syncEventListenerIsRemoved = bdrs.mobile.syncService.removeSyncListener(bdrs.mobile.survey.remove);
 	bdrs.mobile.survey.removingInProgress = true;
-	jQuery.mobile.pageLoading(false);
+	jQuery.mobile.showPageLoadingMsg();
 	var surveyToDelete;
 	waitfor(surveyToDelete) {
 		Survey.findBy('server_id', sid, resume);
@@ -846,4 +842,4 @@ exports.remove = function(){
 	});
 	bdrs.mobile.survey.removingInProgress = false;
 	return true;
-}
+};

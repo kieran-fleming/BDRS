@@ -3,18 +3,18 @@ exports.ADD_TASK_NAME = "Add";
 exports.EDIT_TASK_NAME = "Edit";
 
 
-exports.Create = function() {
+exports.Init = function() {
     // Add click handler to the save button
     jQuery("#species-count-edit-save-button").click(function() {
         bdrs.mobile.pages.species_count_edit._saveSpeciesCount(
-                bdrs.mobile.form.inputsToMap("#species-count-edit"), false);
-        jQuery.mobile.changePage("#species-count-list", jQuery.mobile.defaultPageTransition, false, true);
+        bdrs.mobile.form.inputsToMap("#species-count-edit"), false);
+        jQuery.mobile.changePage("#species-count-list", {showLoadMsg: false});
     });
 
     jQuery("#species-count-edit-reset-button").click(function() {
         bdrs.mobile.pages.species_count_edit._saveSpeciesCount(
                 bdrs.mobile.form.inputsToMap("#species-count-edit"), true);
-        jQuery.mobile.changePage("#species-count-list", jQuery.mobile.defaultPageTransition, false, true);
+        jQuery.mobile.changePage("#species-count-list", {showLoadMsg: false});
     });
 };
     
@@ -64,7 +64,7 @@ exports.Show = function() {
             response(names);
         },
         change: function(event, ui) {
-            jQuery.mobile.pageLoading(false);
+            jQuery.mobile.showPageLoadingMsg();
             
             var scientificName = jQuery('#speciescount-species').val();
             var taxon;
@@ -72,7 +72,7 @@ exports.Show = function() {
                 Species.all().filter('scientificName', '=', scientificName).one(resume);
             }
 
-            jQuery.mobile.pageLoading(true);
+            jQuery.mobile.hidePageLoadingMsg();
         },
         open: function(event, ui){
         	jQuery('.ui-autocomplete').css('z-index',100);

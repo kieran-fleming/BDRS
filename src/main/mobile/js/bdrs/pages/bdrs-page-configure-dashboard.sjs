@@ -2,15 +2,18 @@ exports.FIELD_GUIDE_SELECTOR = "#fieldguide";
 exports.IDENTIFY_TOOL_SELECTOR = "#identify";
 exports.SAVE_BUTTON_SELECTOR = "#configure-dashboard-save-button";
 
-exports.Create =  function() {
+exports.Init =  function() {
 
     var handler = function() {
         bdrs.mobile.pages.configure_dashboard._saveFeatureVisibility(
-            bdrs.mobile.form.inputsToMap("#configure-dashboard"));
-        jQuery.mobile.changePage("#settings", jQuery.mobile.defaultPageTransition, false, true);
+        bdrs.mobile.form.inputsToMap("#configure-dashboard"));
+        jQuery.mobile.changePage("#settings", {showLoadMsg: false});
     };
 
     jQuery(bdrs.mobile.pages.configure_dashboard.SAVE_BUTTON_SELECTOR).click(handler);
+};
+
+exports.BeforeShow = function() {
 };
     
 exports.Show = function() {

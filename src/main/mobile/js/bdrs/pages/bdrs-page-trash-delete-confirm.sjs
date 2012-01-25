@@ -1,6 +1,6 @@
 exports.DELETE_CONFIRM_BUTTON_SELECTOR = "#trash-delete-confirm-button";
 
-exports.Create = function() {
+exports.Init = function() {
     jQuery(exports.DELETE_CONFIRM_BUTTON_SELECTOR).click(function() {
         
         var page = jQuery('#trash-delete-confirm');

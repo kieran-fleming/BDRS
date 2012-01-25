@@ -23,7 +23,7 @@ public class SessionFactory implements org.hibernate.SessionFactory {
     private static final long serialVersionUID = 4314695889492006974L;
 
     @SuppressWarnings("unused")
-    private Logger log = Logger.getLogger(getClass());
+    private transient Logger log = Logger.getLogger(getClass());
     private org.hibernate.SessionFactory rawSessionFactory;
     
     public SessionFactory(org.hibernate.SessionFactory rawSf) {

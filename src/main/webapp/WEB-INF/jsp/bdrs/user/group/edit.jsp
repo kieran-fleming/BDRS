@@ -90,8 +90,9 @@
             modal: true,
             autoOpen: false,
             zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
+			resizable: false,
             buttons: {
-                "Ok": function() {
+                "OK": function() {
                     var selected = addUsersGridGrid.getSelected();
                     if (selected && selected.length > 0) {
 	                    var postParam = {
@@ -107,13 +108,15 @@
                 }
             }
         });
+		bdrs.fixJqDialog("#addUsersDialog");
         
         $( "#addGroupsDialog" ).dialog({
             width: 'auto', 
             modal: true,
             autoOpen: false,
+			resizable: false,
             buttons: {
-                "Ok": function() {
+                "OK": function() {
                     var selected = addGroupsGridGrid.getSelected();
                     if (selected && selected.length > 0) {
 	                    var postParam = {
@@ -129,6 +132,7 @@
                 }
             }
         });
+		bdrs.fixJqDialog("#addGroupsDialog");
         
         $( "#addUsers" )
             .click(function() {

@@ -153,7 +153,7 @@ public class RecordDeserializer {
                 // Unfortunately in shapefiles when you leave an integer field blank it becomes 
                 // a '0'. If we detect such a record_id we will create a new record.
                 if (recordIdInt == 0) {
-                    record = new Record();
+                    record = createNewRecord(entry, klu);
                 } else {
                     record = recordDAO.getRecord(recordIdInt);
                     
@@ -166,7 +166,7 @@ public class RecordDeserializer {
                     }
                 }
             } else {
-                record = new Record();
+                record = createNewRecord(entry, klu);
             }
 
             // check authorization!
@@ -628,5 +628,29 @@ public class RecordDeserializer {
         Map<String, String> errMap = new HashMap<String, String>(1);
         errMap.put(errorKey, errorMessage);
         rdr.setErrorMap(errMap);
+    }
+    
+    /**
+     * Create a new record and assign the parent record if required.
+     * 
+     * The parent record id can only be set at record creation.
+     * 
+     * @param entry RecordEntry object
+     * @param klu RecordKeyLookup interface
+     * @return the newly created Record
+     */
+    private Record createNewRecord(RecordEntry entry, RecordKeyLookup klu) {
+        Record rec = new Record();
+        Integer parentRecordId = 0;
+        String parentRecordIdString = entry.getValue(klu.getParentRecordIdKey());
+        if (StringUtils.notEmpty(parentRecordIdString)) {
+            try {
+                parentRecordId = Integer.valueOf(parentRecordIdString);    
+            } catch (NumberFormatException nfe) {
+                log.error("Failed to parse parent record id string : " + parentRecordIdString);
+            }   
+        }
+        rec.setParentRecord(recordDAO.getRecord(parentRecordId));
+        return rec;
     }
 }

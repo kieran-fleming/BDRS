@@ -35,7 +35,7 @@ public class PortalSelectionFilterMatcher {
         Pattern pattern;
         Matcher matcher;
         
-        for (Portal portal : portalDAO.getPortals(sesh)) {
+        for (Portal portal : portalDAO.getActivePortals(sesh, true)) {
             if (portal.isDefault()) {
                 if (defaultPortal == null) {
                     defaultPortal = portal;

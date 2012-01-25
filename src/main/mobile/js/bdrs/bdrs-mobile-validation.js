@@ -46,18 +46,16 @@ bdrs.mobile.validation.IntegerWithRangeValidator = function() {
 	
 	this.isValid = function(elem) {
 		
-		var rangeAttributes = elem.attr('range').split(' ');
-		
 		this.getHeader = function() {
 			return 'Invalid';
 		};
 		    
 	    this.getMessage = function() {
-	        return '${label} must be a number in the range of ' + rangeAttributes[0] + ' and ' + rangeAttributes[1];  
+	        return '${label} must be a number in the range of ' + elem.attr('min') + ' and ' + elem.attr('max');  
 	    };
 		
-	    var minRange = parseInt(rangeAttributes[0]);
-	    var maxRange = parseInt(rangeAttributes[1]);
+	    var minRange = parseInt(elem.attr('min'));
+	    var maxRange = parseInt(elem.attr('max'));
 	    var stringValue = elem.val();
 	    var theValue;
 	    if (stringValue === "") {

@@ -10,7 +10,7 @@ package au.com.gaiaresources.bdrs.deserialization.record;
  *
  */
 public interface RecordKeyLookup {
-    
+       
     /**
      * The bdrs survey id number
      * @return
@@ -145,4 +145,11 @@ public interface RecordKeyLookup {
      * @return
      */
     String getRecordVisibilityKey();
+    
+    /**
+     * The parent record's id number
+     * this can be empty
+     * @return
+     */
+    String getParentRecordIdKey();
 }

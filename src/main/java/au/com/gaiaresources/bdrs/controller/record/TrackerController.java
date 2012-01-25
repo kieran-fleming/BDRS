@@ -71,38 +71,182 @@ public class TrackerController extends AbstractController {
 
     private Logger log = Logger.getLogger(getClass());
     
+    /**
+     * Edit URL for the tracker form
+     */
     public static final String EDIT_URL = "/bdrs/user/tracker.htm";
-    
+    /**
+     * Prefix expected in parameter map entries for taxon group attributes
+     */
     public static final String TAXON_GROUP_ATTRIBUTE_PREFIX = "taxonGroupAttr_";
+    /**
+     * Prefix expected in parameter map entries for census method attributes
+     */
     public static final String CENSUS_METHOD_ATTRIBUTE_PREFIX = "censusMethodAttr_";
-    
+    /**
+     * Msg code - taxon and number required together
+     */
     public static final String TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE_KEY = "Tracker.TaxonAndNumberRequiredTogether";
-    public static final String TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE = "Species and number must both be blank, or both filled in.";
     
+    /**
+     * Default message - taxon and number required together
+     */
+    public static final String TAXON_AND_NUMBER_REQUIRED_TOGETHER_MESSAGE = "Species and number must both be blank, or both filled in.";
+    /**
+     * Request param, survey ID
+     */
     public static final String PARAM_SURVEY_ID = "surveyId";
+    /**
+     * Request param, census method ID
+     */
     public static final String PARAM_CENSUS_METHOD_ID = "censusMethodId";
+    /**
+     * Request param, species ID
+     */
     public static final String PARAM_SPECIES_ID = "species";
+    /**
+     * Request param, string of species to search for
+     */
     public static final String PARAM_SPECIES_NAME = "survey_species_search";
+    /**
+     * Request param, individual count
+     */
     public static final String PARAM_INDIVIDUAL_COUNT = "number";
+    /**
+     * Request param, existing record ID
+     */
     public static final String PARAM_RECORD_ID = "recordId";
+    /**
+     * Request param, notes
+     */
     public static final String PARAM_NOTES = "notes";
+    /**
+     * Request param, hour part of time
+     */
     public static final String PARAM_TIME_HOUR = "time_hour";
+    /**
+     * Request param, minute part of time
+     */
     public static final String PARAM_TIME_MINUTE = "time_minute";
+    /**
+     * Request param, date of record
+     */
     public static final String PARAM_DATE = "date";
+    /**
+     * Request param, latitude of record
+     */
     public static final String PARAM_LATITUDE = "latitude";
+    /**
+     * Request param, longitude of record
+     */
     public static final String PARAM_LONGITUDE = "longitude";
+    /**
+     * Request param, pre-canned location of record.
+     */
     public static final String PARAM_LOCATION = "location";
+    /**
+     * Request param, accuracy of the lat/lon of record
+     */
     public static final String PARAM_ACCURACY = "accuracyInMeters";
+    /**
+     * Request param, name of the pre-canned location of record
+     */
     public static final String PARAM_LOCATION_NAME = "locationName";
+    /**
+     * Request param, time the record was taken.
+     */
     public static final String PARAM_TIME = "time";
+    /**
+     * Request param, the wkt string representing the geographical location
+     * of the record
+     */
     public static final String PARAM_WKT = "wkt";
+    /**
+     * Request param - the visibility of the record.
+     */
     public static final String PARAM_RECORD_VISIBILITY = "recordVisibility";
     
+    /**
+     * Msg code to be used when the tracker form saves changes to an existing record
+     * and redirects to the my sightings form.
+     */
+    public static final String MSG_CODE_SAVE_EXISTING_SUCCESS_MY_SIGHTINGS = "bdrs.record.saveExisting.success.mySightings";
+    
+    /**
+     * Msg code to be used when the tracker form saves changes to an existing record
+     * and redirects to the editing form.
+     */
+    public static final String MSG_CODE_SAVE_EXISTING_SUCCESS_STAY_ON_FORM = "bdrs.record.saveExisting.success.stayOnForm";
+    
+    /**
+     * Msg code to be used when the tracker form saves a new record and redirects
+     * to the my sightings form.
+     */
+    public static final String MSG_CODE_SAVE_NEW_SUCCESS_MY_SIGHTINGS = "bdrs.record.save.success.mySightings";
+    
+    /**
+     * Msg code to be used when the tracker form saves a new record and redirects
+     * to the editing form.
+     */
+    public static final String MSG_CODE_SAVE_NEW_SUCCESS_STAY_ON_FORM = "bdrs.record.save.success.stayOnForm";
+    
+    /**
+     * Msg code to be used when the tracker form saves an existing record and redirects
+     * back to a new, empty, editing form
+     */
+    public static final String MSG_CODE_SAVE_EXISTING_SUCCESS_ADD_ANOTHER = "bdrs.record.saveExisting.success.addAnother";
+    
+    /**
+     * Msg code to be used when the tracker form saves a new record and redirects back
+     * to a new, empty, editing form
+     */
+    public static final String MSG_CODE_SAVE_SUCCESS_ADD_ANOTHER = "bdrs.record.save.success.addAnother";
+    
+    /**
+     * Selects the record tab
+     */
+    public static final String SELECT_TAB_RECORD = "record";
+    /**
+     * Selects the sub record tab
+     */
+    public static final String SELECT_TAB_SUB_RECORD = "subRecord";
+    /**
+     * Request param : used when we are creating a new record, assign the record
+     * with this ID as the parent record.
+     */
+    public static final String PARAM_PARENT_RECORD_ID = "parentRecordId";
+    /**
+     * Request param : which tab to show on the tracker form. Only has an effect 
+     * if the tabs are shown.
+     */
+    public static final String PARAM_SELECTED_TAB = "selectedTab";
+    /**
+     * Request param : when true sumbut opens a new form for the same survey.
+     */
+    public static final String PARAM_SUBMIT_AND_SWITCH_TO_SUB_RECORD_TAB = "submitAndSwitchToSubRecordTab";
+    /**
+     * Model key - WKT string of the record geographical location
+     */
     public static final String MV_WKT = "wkt";
+    /**
+     * Model key - error map of the record data that was just posted.
+     */
     public static final String MV_ERROR_MAP = "errorMap";
-    
+    /**
+     * Model key - parent record ID
+     */
+    public static final String MV_PARENT_RECORD_ID = "parentRecordId";
+    /**
+     * Model key - list of parent records, 0 index is the most senior.
+     */
+    public static final String MV_PARENT_RECORD_LIST = "parentRecordList";
+    /**
+     * Msg code - no survey error
+     */
     public static final String NO_SURVEY_ERROR_KEY = "bdrs.record.noSurveyError";
-    
+    /**
+     * View name - tracker view
+     */
     public static final String TRACKER_VIEW_NAME = "tracker";
 
     @Autowired
@@ -151,7 +295,9 @@ public class TrackerController extends AbstractController {
             @RequestParam(value = PARAM_RECORD_ID, required = false, defaultValue = "0") int recordId,
             @RequestParam(value = "guid", required = false) String guid,
             @RequestParam(value = PARAM_CENSUS_METHOD_ID, required = false, defaultValue = "0") Integer censusMethodId,
-            @RequestParam(value = "speciesId", required = false, defaultValue="0") Integer speciesId) {
+            @RequestParam(value = "speciesId", required = false, defaultValue="0") Integer speciesId,
+            @RequestParam(value = PARAM_PARENT_RECORD_ID, required = false) Integer parentRecordId,
+            @RequestParam(value = PARAM_SELECTED_TAB, required = false) String selectedTab) {
         Survey survey = surveyDAO.getSurvey(surveyId);
         if (survey == null) {
             return nullSurveyError();
@@ -310,6 +456,19 @@ public class TrackerController extends AbstractController {
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("taxonomic", taxonomic);
         mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
+        mv.addObject("parentRecordId", parentRecordId);
+        // default to the record tab
+        mv.addObject("selectedTab", StringUtils.hasLength(selectedTab) ? selectedTab : SELECT_TAB_RECORD);
+        
+        // make an ordered list of records to show the lineage of this record
+        // index 0 is the most senior record.
+        List<Record> parentRecordList = new ArrayList<Record>();
+        Record r = record;
+        while (r.getParentRecord() != null) {
+            parentRecordList.add(0, r.getParentRecord());
+            r = r.getParentRecord();
+        }
+        mv.addObject(MV_PARENT_RECORD_LIST, parentRecordList);
         
         if (StringUtils.hasLength(wktString)) {
             mv.addObject(MV_WKT, wktString);
@@ -341,7 +500,8 @@ public class TrackerController extends AbstractController {
             HttpServletResponse response,
             @RequestParam(value=PARAM_SURVEY_ID, required=true) int surveyPk,
             // We are allowing a null census method ID to indicate a default form
-            @RequestParam(value=PARAM_CENSUS_METHOD_ID, required=false, defaultValue="0") int censusMethodId) throws ParseException, IOException {
+            @RequestParam(value=PARAM_CENSUS_METHOD_ID, required=false, defaultValue="0") int censusMethodId,
+            @RequestParam(value=PARAM_SELECTED_TAB, required=false) String selectedTab) throws ParseException, IOException {
         Map<String, String[]> parameterMap = this.getModifiableParameterMap(request);
         
         Survey survey = surveyDAO.getSurvey(surveyPk);
@@ -425,31 +585,55 @@ public class TrackerController extends AbstractController {
         }
         
         ModelAndView mv;
-
-        if (request.getParameter("submitAndAddAnother") != null) {
+        
+        // Tracker form has a special case : switching tabs
+        if (request.getParameter(PARAM_SUBMIT_AND_SWITCH_TO_SUB_RECORD_TAB) != null) {
+            // A tab change has been requested
             mv = new ModelAndView(new RedirectView(
-                    "/bdrs/user/surveyRenderRedirect.htm", true));
-            mv.addObject("surveyId", survey.getId());            
-            mv.addObject("censusMethodId", Integer.valueOf(censusMethodId));
-            getRequestContext().addMessage(new Message(
-                    "bdrs.record.save.successAddAnother"));
+               "/bdrs/user/surveyRenderRedirect.htm", true));
+               mv.addObject("surveyId", survey.getId());
+               mv.addObject("censusMethodId", Integer.valueOf(censusMethodId));
+               mv.addObject("selectedTab", SELECT_TAB_SUB_RECORD);
+               // record has been saved successfully by this point so
+               // it must have a valid ID.
+               mv.addObject("recordId", res.getRecord().getId());
         } else {
-            if (request.getSession().getAttribute("redirecturl") != null) {
-                mv = new ModelAndView("redirect:"
-                        + request.getSession().getAttribute("redirecturl"));
-            } else if (request.getParameter("redirecturl") != null) { 
-            	mv = new ModelAndView("redirect:"
-                        + request.getParameter("redirecturl"));
-            	getRequestContext().addMessage(new Message("bdrs.record.save.success"));
-            } else {
-                mv = new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(survey),
-                        true));
-                getRequestContext().addMessage(new Message("bdrs.record.save.success"));
-            }
-            
-            RecordWebFormContext.addRecordHighlightId(mv, res.getRecord());
-        }
+            mv = RecordWebFormContext.getSubmitRedirect(request, res.getRecord());
 
+            if (request.getParameter(RecordWebFormContext.PARAM_SUBMIT_AND_ADD_ANOTHER) != null) {
+                if (StringUtils.hasLength(request.getParameter(TrackerController.PARAM_RECORD_ID))) {
+                    getRequestContext().addMessage(new Message(MSG_CODE_SAVE_EXISTING_SUCCESS_ADD_ANOTHER));
+                } else {
+                    getRequestContext().addMessage(new Message(MSG_CODE_SAVE_SUCCESS_ADD_ANOTHER));    
+                }
+            } else {
+                if (StringUtils.hasLength(request.getParameter(TrackerController.PARAM_RECORD_ID))) {
+                    switch (survey.getFormSubmitAction()) {
+                    case MY_SIGHTINGS:
+                        getRequestContext().addMessage(new Message(MSG_CODE_SAVE_EXISTING_SUCCESS_MY_SIGHTINGS));
+                        break;
+                    case STAY_ON_FORM:
+                        getRequestContext().addMessage(new Message(MSG_CODE_SAVE_EXISTING_SUCCESS_STAY_ON_FORM));
+                        break;
+                    default:
+                        throw new IllegalStateException("Case not handled for : " + survey.getFormSubmitAction());
+                    }
+                } else {
+                    switch (survey.getFormSubmitAction()) {
+                    case MY_SIGHTINGS:
+                        getRequestContext().addMessage(new Message(MSG_CODE_SAVE_NEW_SUCCESS_MY_SIGHTINGS));
+                        break;
+                    case STAY_ON_FORM:
+                        getRequestContext().addMessage(new Message(MSG_CODE_SAVE_NEW_SUCCESS_STAY_ON_FORM));
+                        break;
+                        default:
+                            throw new IllegalStateException("Case not handled for : " + survey.getFormSubmitAction());
+                    }
+                }
+            }
+        }
+        
+        RecordWebFormContext.addRecordHighlightId(mv, res.getRecord());
         return mv;
     }
     
@@ -515,6 +699,10 @@ public class TrackerController extends AbstractController {
         return mv;
     }
     
+    /**
+     * Error to display when the survey ID does not return a valid survey
+     * @return ModelAndView
+     */
     private ModelAndView nullSurveyError() {
         getRequestContext().addMessage(NO_SURVEY_ERROR_KEY);
         return new ModelAndView(new RedirectView(redirectionService.getMySightingsUrl(null), true));

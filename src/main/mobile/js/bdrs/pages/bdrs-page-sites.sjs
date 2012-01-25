@@ -1,7 +1,7 @@
 /**
  * Event handlers for the record page. 
  */
-exports.Create =  function() {
+exports.Init =  function() {
 }
 	
 exports.Show = function() {
@@ -16,7 +16,7 @@ exports.Show = function() {
         
         this.handler = function(event) {
         	bdrs.mobile.setParameter('siteId', siteId);
-			jQuery.mobile.changePage("#site", jQuery.mobile.defaultPageTransition, false, true);
+        	jQuery.mobile.changePage("#site", {showLoadMsg: false});
         }
         return this;
 	};

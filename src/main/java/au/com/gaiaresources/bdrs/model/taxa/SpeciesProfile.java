@@ -69,7 +69,8 @@ public class SpeciesProfile extends PortalPersistentImpl {
     
     public static final Map<String, String> SPECIES_PROFILE_TYPE_VALUES;
     public static final String[] SPECIES_PROFILE_FILE_TYPE_VALUES;
-    public static final String[] SPECIES_PROFILE_IMG_TYPE_VALUES;
+    private static final String[] SPECIES_PROFILE_IMG_TYPE_VALUES;
+    private static final String[] SPECIES_PROFILE_IMG_THUMB_TYPE_VALUES;
     
     static {
         Map<String, String> map = new HashMap<String, String>();
@@ -136,6 +137,19 @@ public class SpeciesProfile extends PortalPersistentImpl {
         
         Arrays.sort(imgTypes);
         SPECIES_PROFILE_IMG_TYPE_VALUES = imgTypes;
+        
+        String[] thumbTypes = {
+                SPECIES_PROFILE_IMAGE_40x40,
+                SPECIES_PROFILE_IMAGE_32x32,
+                SPECIES_PROFILE_IMAGE_16x16,
+                SPECIES_PROFILE_MAP_40x40,
+                SPECIES_PROFILE_SILHOUETTE_40x40,
+                SPECIES_PROFILE_THUMBNAIL, // This is for source that have a custom thumbnail, eg ALA.
+                SPECIES_PROFILE_THUMBNAIL_SMALL
+            };
+        
+        Arrays.sort(thumbTypes);
+        SPECIES_PROFILE_IMG_THUMB_TYPE_VALUES = thumbTypes;
     }
 	
     private String header;
@@ -211,6 +225,15 @@ public class SpeciesProfile extends PortalPersistentImpl {
         }
         
         return Arrays.binarySearch(SpeciesProfile.SPECIES_PROFILE_IMG_TYPE_VALUES, this.type) > -1;
+    }
+    
+    @Transient
+    public boolean isThumbnailType() {
+        if(this.type == null) {
+            return false;
+        }
+        
+        return Arrays.binarySearch(SpeciesProfile.SPECIES_PROFILE_IMG_THUMB_TYPE_VALUES, this.type) > -1;
     }
     
     @Transient

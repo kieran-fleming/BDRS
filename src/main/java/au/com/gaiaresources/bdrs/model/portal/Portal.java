@@ -22,6 +22,7 @@ public class Portal extends PersistentImpl {
     
     private String name;
     private boolean isDefault = false;
+    private boolean isActive = true;
 
     public Portal() {
         super();
@@ -43,5 +44,22 @@ public class Portal extends PersistentImpl {
     
     public void setDefault(boolean isDefault) {
         this.isDefault = isDefault;
+    }
+
+    /**
+     * Returns true if this portal is currently accessible, false otherwise.
+     * @return the isActive true if this portal is currently accessible, false otherwise.
+     */
+    @Column(name = "ISACTIVE", nullable = false)
+    public boolean isActive() {
+        return isActive;
+    }
+
+    /**
+     * Sets if this portal is accessible.
+     * @param isActive true if the portal is accessible, false otherwise.
+     */
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }

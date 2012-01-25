@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.email.impl;
 
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,7 +39,14 @@ public class EmailServiceImpl implements EmailService {
     
     public void init() throws Exception {
         emailProperties = new Properties();
-        emailProperties.load(EmailService.class.getResourceAsStream("email.properties"));
+        InputStream iStream = EmailService.class.getResourceAsStream("email.properties");
+        try {
+            emailProperties.load(iStream);    
+        } finally {
+            if (iStream != null) {
+                iStream.close();
+            }
+        }
     }
 
     @Override

@@ -147,34 +147,36 @@
 </div>
 
 <script type="text/javascript">
-    $(function() {
+    jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
         bdrs.dnd.attachTableDnD('#censusMethod_input_table');
         
-        $( "#addCensusMethodDialog" ).dialog({
+        jQuery( "#addCensusMethodDialog" ).dialog({
             width: 'auto',
             modal: true,
             autoOpen: false,
             zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
+			resizable: false,
             buttons: {
-                "Ok": function() {
+                "OK": function() {
                     var selected = addCensusMethodGrid_GridHelper.getSelected();
                     if (selected) {
                         // single select so...
                         bdrs.censusMethod.addCensusMethodRow("#censusMethod_input_table", selected);
                     }   
-                    $( this ).dialog( "close" );
+                    jQuery( this ).dialog( "close" );
                 },
                 Cancel: function() {
-                    $( this ).dialog( "close" );
+                    jQuery( this ).dialog( "close" );
                 }
             }
         });
+		bdrs.fixJqDialog("#addCensusMethodDialog");
         
-        $( "#addCensusMethodBtn" )
+        jQuery( "#addCensusMethodBtn" )
             .click(function() {
                 addCensusMethodGrid_GridHelper.reload();
-                $( "#addCensusMethodDialog" ).dialog( "open" );
+                jQuery( "#addCensusMethodDialog" ).dialog( "open" );
         });
     });
     

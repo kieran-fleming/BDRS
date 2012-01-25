@@ -121,4 +121,8 @@ public class ShapefileRecordKeyLookup implements RecordKeyLookup {
         return ShapefileFields.RECORD_VISIBILITY;
     }
 
+    @Override
+    public String getParentRecordIdKey() {
+        return ShapefileFields.PARENT_RECORD_ID;
+    }
 }

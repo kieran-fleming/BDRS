@@ -43,7 +43,7 @@
         <c:forEach var="cssFile" items="${customCSS}">
             <link rel="stylesheet" href="${pageContext.request.contextPath}/css/${cssFile}" type="text/css"/>
         </c:forEach>
-        
+		        
         <link rel="stylesheet" href="${pageContext.request.contextPath}/js/colorpicker/css/colorpicker.css" type="text/css"/>
         <script src="${pageContext.request.contextPath}/js/colorpicker/js/colorpicker.js" type="text/javascript"></script>
         
@@ -55,6 +55,9 @@
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.tablednd_0_5.js"></script>
 		
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/state-machine.min.js"></script>
+		
+		<%-- see http://www.timdown.co.uk/jshashtable/index.html --%>
+		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jshashtable/jshashtable-2.1.js"></script>
 		
 		<%-- 
 		    ninja date parsing, http://www.datejs.com/
@@ -86,6 +89,18 @@
 	            <script type="text/javascript" src="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/${ jsFile }"></script>
 	        </c:forEach>
         </c:if>
+		
+		<!-- IE7 specific styles and hard coded IE7 file in theme -->
+        <!--[if IE 7]>
+		    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bdrs/bdrs-ie7.css" type="text/css"/>
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/css/base-ie7.css" type="text/css">
+        <![endif]-->
+		
+		<!-- Hard coded IE8 file in theme -->
+        <!--[if IE 8]>
+		    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bdrs/bdrs-ie8.css" type="text/css"/>
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/files/download.htm?className=au.com.gaiaresources.bdrs.model.theme.Theme&id=${ theme.id }&fileName=<%= Theme.THEME_DIR_PROCESSED %>/css/base-ie8.css" type="text/css">
+        <![endif]-->
         
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-blockui/jquery.blockUI.js"></script>
 		<script type="text/javascript" src="${pageContext.request.contextPath}/js/jqPrint/jquery.jqprint.0.3.js"></script>

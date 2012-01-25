@@ -23,6 +23,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.bulkdata.BulkDataService;
+import au.com.gaiaresources.bdrs.util.FileUtils;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 public abstract class SightingsController extends AbstractController {
@@ -31,8 +32,8 @@ public abstract class SightingsController extends AbstractController {
 
     public static final String QUERY_PARAM_DOWNLOAD_FORMAT = "download_format";
     private static final String KML_FILENAME = "Records.kml";
-    private static final String SHAPEFILE_ZIP_ENTRY_FORMAT = "shp/Survey%d.zip";
-    private static final String XLS_ZIP_ENTRY_FORMAT = "xls/Survey%d.xls";
+    private static final String SHAPEFILE_ZIP_ENTRY_FORMAT = "shp/Survey%d_%s.zip";
+    private static final String XLS_ZIP_ENTRY_FORMAT = "xls/Survey%d_%s.xls";
     
     public static final String SIGHTINGS_DOWNLOAD_CONTENT_TYPE = "application/zip";
 
@@ -46,28 +47,20 @@ public abstract class SightingsController extends AbstractController {
      * For some scrollable records, create files in the requested download format and
      * zip them up
      * 
-     * @param request - the http request object
-     * @param response - the http response object
-     * @param downloadFormat - array containing the download formats
-     * @param sr - the scrollable records object
-     * @param surveyId - the requested survey id. can be 0 which indicates no survey specified.
+     * @param request - the http request object.
+     * @param response - the http response object.
+     * @param downloadFormat - array containing the download formats.
+     * @param sr - the scrollable records object.
+     * @param surveyList - the list of surveys to download.
      * @throws Exception
      */
     protected void downloadSightings(HttpServletRequest request, 
             HttpServletResponse response, 
             String[] downloadFormat, 
             ScrollableRecords sr, 
-            int surveyId) throws Exception {
+            List<Survey> surveyList) throws Exception {
         
         User user = getRequestContext().getUser();
-
-        List<Survey> surveyList;
-        if (surveyId == 0) {
-            surveyList = surveyDAO.getActiveSurveysForUser(user);
-        } else {
-            surveyList = new ArrayList<Survey>();
-            surveyList.add(surveyDAO.get(surveyId));
-        }
 
         if (response.isCommitted()) {
             return;
@@ -102,7 +95,7 @@ public abstract class SightingsController extends AbstractController {
                             sr.rewind();
                             
                             ZipEntry shpEntry = new ZipEntry(
-                                    String.format(SHAPEFILE_ZIP_ENTRY_FORMAT, survey.getId()));
+                                    String.format(SHAPEFILE_ZIP_ENTRY_FORMAT, survey.getId(), FileUtils.getSafeFilename(survey.getName())));
                             zos.putNextEntry(shpEntry);
 
                             // The writer impl will flush the session and disconnect the survey.
@@ -119,7 +112,7 @@ public abstract class SightingsController extends AbstractController {
                             sr.rewind();
                             
                             ZipEntry shpEntry = new ZipEntry(
-                                    String.format(XLS_ZIP_ENTRY_FORMAT, survey.getId()));
+                                    String.format(XLS_ZIP_ENTRY_FORMAT, survey.getId(), FileUtils.getSafeFilename(survey.getName())));
                             zos.putNextEntry(shpEntry);
 
                             // The writer impl will flush the session and disconnect the survey.

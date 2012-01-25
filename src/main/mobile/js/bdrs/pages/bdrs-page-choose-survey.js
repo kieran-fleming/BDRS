@@ -2,9 +2,8 @@
  * Event handlers for the login page. 
  */
 bdrs.mobile.pages.choose_survey = {
-	Create: function() {
+	Init: function() {
 		// code to run when page first created and cached, probably most of page's event bindings here
-		//alert('Login Page Create');
 	},
 	
 	Show: function() {

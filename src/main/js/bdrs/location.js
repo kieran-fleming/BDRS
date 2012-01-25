@@ -863,8 +863,8 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
             sortname: 'name',
             viewrecords: true,
             sortorder: "asc",
-            multiselect: true,
-            caption:"Locations Listing"
+			height:"100%",
+            multiselect: true
     });
     
     jQuery(pagerSelector).jqGrid('navGrid',pagerSelector,{edit:false,add:false,del:false});
@@ -879,7 +879,7 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
         zIndex: bdrs.MODAL_DIALOG_Z_INDEX,
 		resizable: false,
         buttons: {
-            "Ok": function() {
+            "OK": function() {
 				
 				var grid = jQuery(gridSelector);
 				var selected = grid.getGridParam('selarrrow');
@@ -905,6 +905,7 @@ bdrs.location.createGetSurveyLocationsForUserDialogGrid = function(gridSelector,
         },
         title: "Add Existing Location"
     });
+	bdrs.fixJqDialog(dialogSelector);
         
     jQuery(openDialogButtonSelector).click(function() {
         jQuery(dialogSelector).dialog( "open" );

@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
@@ -72,6 +73,26 @@ public class TaxonomyManagementController extends AbstractController {
 
     private static final String MV_ERROR_MAP = "errorMap";
     
+    /**
+     * Message property key
+     */
+    public static final String MSG_KEY_IMPORT_SUCCESS = "bdrs.taxon.import.success";
+    
+    /**
+     * Message property key
+     */
+    public static final String MSG_KEY_IMPORT_FAIL = "bdrs.taxon.import.fail";
+    
+    /**
+     * JSON key used to generate response
+     */
+    public static final String JSON_KEY_ERROR_LIST = "errorList";
+    
+    /**
+     * JSON key used to generate response
+     */
+    public static final String JSON_KEY_MESSAGE = "message";
+
     private Logger log = Logger.getLogger(getClass());
     
     @Autowired
@@ -458,7 +479,7 @@ public class TaxonomyManagementController extends AbstractController {
         IndicatorSpecies importTaxon = atlasService.importSpecies(taxon, guid, false, errorMap, null);
         if (importTaxon == null) {
             // return the error that caused the import to fail
-            String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
+            String tmpl = propertyService.getMessage(MSG_KEY_IMPORT_FAIL);
             getRequestContext().addMessage(String.format(tmpl, StringUtils.nullOrEmpty(guid) ? taxon.getGuid() : guid));
         } else {
             taxon = importTaxon;
@@ -547,10 +568,10 @@ public class TaxonomyManagementController extends AbstractController {
         mv.addObject("newProfileIndex", Integer.valueOf(index));
         return mv;
     }
-    
+
     @RolesAllowed( { Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/taxonomy/importNewProfiles.htm", method = RequestMethod.POST)
-    public ModelAndView edit(HttpServletRequest request,
+    public void importNewProfiles(HttpServletRequest request,
                              HttpServletResponse response,
                              @RequestParam(required=true, value="guids") String guids,
                              @RequestParam(required=false, value="shortProfile") String importShortProfile,
@@ -562,6 +583,9 @@ public class TaxonomyManagementController extends AbstractController {
         }
         
         getRequestContext().removeSessionAttribute(MV_ERROR_MAP);
+        
+        JSONArray errorList = new JSONArray();
+        
         String[] ids = guids.split(",");
         int speciesCount = 0;
         for (String id : ids) {
@@ -577,25 +601,26 @@ public class TaxonomyManagementController extends AbstractController {
             try {
             	sp = atlasService.importSpecies(id, !StringUtils.nullOrEmpty(importShortProfile), errorMap, taxonGroup);
             	if (sp != null) {
-            		log.debug("Successfully imported : " + sp.getScientificName() + ", " + sp.getCommonName());
+            		log.info("Successfully imported : " + sp.getScientificName() + ", " + sp.getCommonName());
             		successfulImport = true;
             	}
             } catch (JSONException jse) {
             	successfulImport = false;
             }
             if (successfulImport) {
-            	log.debug("Current import count : " + speciesCount);
             	speciesCount++;
             } else {
-            	String tmpl = propertyService.getMessage("bdrs.taxon.import.fail");
-                getRequestContext().addMessage(String.format(tmpl, id));
+            	String tmpl = propertyService.getMessage(MSG_KEY_IMPORT_FAIL);
+            	// fill our json array up with error messages...
+            	errorList.add(String.format(tmpl, id));
             }
         }
         
-        ModelAndView mv= new ModelAndView(new RedirectView("/bdrs/admin/taxonomy/listing.htm", true));
-        mv.addObject(MV_ERROR_MAP, errorMap);
-        String tmpl = propertyService.getMessage("bdrs.taxon.import.success");
-        getRequestContext().addMessage(String.format(tmpl, speciesCount));
-        return mv;
+        JSONObject result = new JSONObject();
+        result.put(JSON_KEY_ERROR_LIST, errorList);
+        String tmpl = propertyService.getMessage(MSG_KEY_IMPORT_SUCCESS);
+        result.put(JSON_KEY_MESSAGE, String.format(tmpl, speciesCount));
+        
+        this.writeJson(request, response, result.toString());
     }
 }

@@ -23,15 +23,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.controller.record.AtlasController;
-import au.com.gaiaresources.bdrs.controller.record.SingleSiteAllTaxaController;
-import au.com.gaiaresources.bdrs.controller.record.SingleSiteMultiTaxaController;
 import au.com.gaiaresources.bdrs.controller.record.TrackerController;
-import au.com.gaiaresources.bdrs.controller.record.YearlySightingsController;
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
@@ -44,6 +42,7 @@ import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfileDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
 
 /**
@@ -64,7 +63,35 @@ public class FieldGuideController extends AbstractController {
 
     @Autowired
     private SurveyDAO surveyDAO;
+    
+    
     public static final String PARAM_SPECIES_ID = "speciesId";
+    
+    /**
+     * GET param used to indicate a survey to redirect to so we can make a recording
+     */
+    public static final String PARAM_SURVEY_ID = "surveyId";
+    
+    /**
+     * URL
+     */
+    public static final String RECORD_NOW_SURVEY_REDIRECT_URL = "/bdrs/user/taxonSurveyRenderRedirect.htm";
+    
+    /**
+     * View name: allows a user to choose from a list of surveys to record the previously selected species
+     */
+    public static final String VIEW_RECORD_NOW_SURVEY_CHOOSER = "recordNowSurveyChooser";
+    
+    /**
+     * Key to use in model when returning a list of survey objects
+     */
+    public static final String MODEL_SURVEY_LIST = "surveyList";
+    
+    /**
+     * Key to use in model when returning the selected species object
+     */
+    public static final String MODEL_SPECIES = "species";
+    
     /**
      * Species Information Page
      * 
@@ -221,24 +248,39 @@ public class FieldGuideController extends AbstractController {
      */
     @RolesAllowed({Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN})
     @SuppressWarnings("unchecked")
-    @RequestMapping(value = "/bdrs/user/taxonSurveyRenderRedirect.htm", method = RequestMethod.GET)
+    @RequestMapping(value = RECORD_NOW_SURVEY_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView recordNow(HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            @RequestParam(value=PARAM_SURVEY_ID, required=false, defaultValue="0") int surveyId) {
         
         try {
             int speciesId = Integer.parseInt(request.getParameter(PARAM_SPECIES_ID));
             IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesId);
-            List<Survey> surveys = surveyDAO.getSurveys(species);
+            User accessingUser = getRequestContext().getUser();
+            List<Survey> surveys;
+            if (surveyId == 0) {
+                surveys = surveyDAO.getActiveSurveysForUser(accessingUser, null, species);
+            } else {
+                surveys = new ArrayList<Survey>(1);
+                Survey s = surveyDAO.get(surveyId);
+                if (s != null) {
+                    surveys.add(s);
+                }
+            }
+            
             if (surveys.size() < 1) {
                 // add a message that no surveys were found for the species
                 getRequestContext().addMessage("bdrs.survey.noneForTaxa", new String[]{species.getCommonName()});
                 log.warn("No surveys found for species id "+speciesId);
                 return new ModelAndView(new RedirectView(request.getParameter("redirectURL")), request.getParameterMap());
             } else if (surveys.size() > 1) {
-                // add a message that more than 1 surveys were found for the species
-                log.warn("Multiple surveys found for species id "+speciesId);
-                getRequestContext().addMessage("bdrs.survey.multipleForTaxa", new String[]{species.getCommonName()});
+                // Redirect to survey chooser so the use
+                ModelAndView surveyChooser = new ModelAndView(VIEW_RECORD_NOW_SURVEY_CHOOSER);
+                surveyChooser.addObject(MODEL_SURVEY_LIST, surveys);
+                surveyChooser.addObject(MODEL_SPECIES, species);
+                return surveyChooser;
             }
+            // Else, there is only one survey to add to : redirect to that survey!
             Survey survey = surveys.get(0);
             return getSurveyRenderRedirect(survey, request);
         } catch (Exception e) {
@@ -267,7 +309,7 @@ public class FieldGuideController extends AbstractController {
 
         ModelAndView mv = this.redirect(redirectURL);
         mv.addAllObjects(request.getParameterMap());
-        mv.addObject("surveyId", survey.getId());
+        mv.addObject(PARAM_SURVEY_ID, survey.getId());
         return mv;
     }
 }

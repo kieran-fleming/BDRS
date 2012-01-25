@@ -289,6 +289,16 @@ public interface RecordDAO extends TransactionDAO {
     void delete(AttributeValue recAttr);
     
     PagedQueryResult<Record> search(PaginationFilter filter, Integer surveyPk, List<Integer> userId);
+    
+    /**
+     * Get all child records. Can filter by census method id.
+     * 
+     * @param filter - pagination filter
+     * @param parentId - id of parent record
+     * @param censusMethodId - id of census method of the child record
+     * @return The child records in pagination friendly form.
+     */
+    PagedQueryResult<Record> getChildRecords(PaginationFilter filter, Integer parentId, Integer censusMethodId, User accessingUser);
 
     /**
      * Queries all records for a list of distinct taxon groups and the number of
@@ -437,4 +447,21 @@ public interface RecordDAO extends TransactionDAO {
      */
     public List<Pair<String, Long>> getDistinctAttributeValues(Session sesh,
             User user, String attributeName, int limit);
+
+    /**
+     * Returns a list of public records that intersect the specified geometry.
+     * @param intersectGeom the polygon that records must intersect
+     * @return a list of public records that intersect the specified geometry.
+     */
+    List<Record> getRecordIntersect(Geometry intersectGeom);
+
+    /**
+     * Returns a list of records that intersect the specified geometry.
+     * @param intersectGeom the polygon that records must intersect
+     * @param visibility the visibility of all records to be returned.
+     * @param held true if the record is held, false otherwise.
+     * @return a list of records that intersect the specified geometry.
+     */
+    List<Record> getRecordIntersect(Geometry intersectGeom,
+            RecordVisibility visibility, boolean held);
 }
