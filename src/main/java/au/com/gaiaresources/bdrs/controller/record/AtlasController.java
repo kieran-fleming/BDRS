@@ -189,7 +189,9 @@ public class AtlasController extends AbstractController {
                 }
             }
             
-            FormField fileFormField = formFieldFactory.createRecordFormField(survey, record, fileAttr, fileRecAttr);
+            // do NOT make a form field with a null attribute - it causes null pointer exceptions
+            // during JSP processing.
+            FormField fileFormField = fileAttr != null ? formFieldFactory.createRecordFormField(survey, record, fileAttr, fileRecAttr) : null;
             
             Map<String, String> errorMap = (Map<String, String>)getRequestContext().getSessionAttribute("errorMap");
             getRequestContext().removeSessionAttribute("errorMap");
