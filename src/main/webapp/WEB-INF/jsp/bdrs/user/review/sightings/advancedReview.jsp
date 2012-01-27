@@ -95,7 +95,7 @@
    jQuery(function() {
        // Insert click handlers to show and hide facet options
        <c:forEach var="facet" items="${ facetList }">
-           jQuery(".${ facet.prefix }_${ facet.queryParamName }Header").click(function() {
+           jQuery(".${ facet.prefix }_${ facet.queryParamName }_tree_node_handler").click(function() {
                jQuery(".${ facet.prefix }_${ facet.queryParamName }OptContainer").slideToggle("fast", function() {
                    var collapsed = jQuery(".${ facet.prefix }_${ facet.queryParamName }OptContainer").css("display") === "none";
                    var treeNode = jQuery(".${ facet.prefix }_${ facet.queryParamName }Header .tree_node");

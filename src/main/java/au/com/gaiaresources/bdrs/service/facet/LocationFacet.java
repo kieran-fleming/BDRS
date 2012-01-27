@@ -20,10 +20,6 @@ public class LocationFacet extends AbstractFacet {
      * The base name of the query parameter.
      */
     public static final String QUERY_PARAM_NAME = "location";
-    /**
-     * The human readable name of this facet.
-     */
-    public static final String DISPLAY_NAME = "Locations";
     
     /**
      * Limits the number of options to show in the facet.
@@ -32,13 +28,14 @@ public class LocationFacet extends AbstractFacet {
     
     /**
      * Creates a Location Facet.
+     * @param defaultDisplayName the default human readable name of this facet.
      * @param recordDAO used for retrieving the count of matching records.
      * @param parameterMap the map of query parameters from the browser.
      * @param user the user that is accessing the records.
      * @param userParams user configurable parameters provided in via the {@link Preference)}.
      */
-    public LocationFacet(RecordDAO recordDAO, Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-        super(QUERY_PARAM_NAME, DISPLAY_NAME, userParams);
+    public LocationFacet(String defaultDisplayName, RecordDAO recordDAO, Map<String, String[]> parameterMap, User user, JSONObject userParams) {
+        super(QUERY_PARAM_NAME, defaultDisplayName, userParams);
         
         setContainsSelected(parameterMap.containsKey(getInputName()));
         

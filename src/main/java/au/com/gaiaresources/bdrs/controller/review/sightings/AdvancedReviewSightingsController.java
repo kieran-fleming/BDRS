@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
-import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery.SortOrder;
+import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.kml.KMLWriter;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
@@ -39,7 +39,6 @@ import au.com.gaiaresources.bdrs.service.facet.Facet;
 import au.com.gaiaresources.bdrs.service.facet.FacetOption;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
 import au.com.gaiaresources.bdrs.service.facet.SurveyFacet;
-import au.com.gaiaresources.bdrs.service.facet.SurveyFacetOption;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 import au.com.gaiaresources.bdrs.util.StringUtils;

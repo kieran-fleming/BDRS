@@ -46,14 +46,18 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         List<Facet> facetList = facetService.getFacetList(user, EMPTY_PARAMETER_MAP);
         
         // We have the right number of facets
-        // remove one from the facet builder registry list because attributes facet
-        // only exists if a preference is set for the class
-        Assert.assertEquals(FacetService.FACET_BUILDER_REGISTRY.size()-1, facetList.size());
+        Assert.assertEquals(FacetService.FACET_BUILDER_REGISTRY.size(), facetList.size());
         
-        // Facets are correctly initialised with the default values.
+        // Facets are correctly initialised with the default values except
+        // for the attribute facet.
         for(Facet facet : facetList) {
-            Assert.assertEquals(Facet.DEFAULT_ACTIVE_CONFIG, facet.isActive());
-            Assert.assertEquals(Facet.DEFAULT_WEIGHT_CONFIG, facet.getWeight());
+            if(facet instanceof AttributeFacet) {
+                Assert.assertEquals(false, facet.isActive());
+                Assert.assertEquals(Facet.DEFAULT_WEIGHT_CONFIG, facet.getWeight());
+            } else {
+                Assert.assertEquals(Facet.DEFAULT_ACTIVE_CONFIG, facet.isActive());
+                Assert.assertEquals(Facet.DEFAULT_WEIGHT_CONFIG, facet.getWeight());
+            }
         }
         
         // Test that there are the right number of instances of each facet.
@@ -124,9 +128,6 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         // Test that each facet instance of the same type has a unique prefix and name
         Set<String> inputNameSet = new HashSet<String>();
         for(Facet facet : facetList) {
-            Assert.assertEquals(Facet.DEFAULT_ACTIVE_CONFIG, facet.isActive());
-            Assert.assertEquals(Facet.DEFAULT_WEIGHT_CONFIG, facet.getWeight());
-            
             // The input name is a combination of the prefix and the facet query param name.
             inputNameSet.add(facet.getInputName());
         }
@@ -137,16 +138,15 @@ public class FacetServiceTest extends AbstractTransactionalTest {
     
     @Test
     public void testInvalidUserConfig() {
-        // Select a random builder to invalidate the preference value
-        FacetBuilder builder = FacetService.FACET_BUILDER_REGISTRY.get(FacetService.FACET_BUILDER_REGISTRY.size()/2);
-        Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
-        pref.setValue("abcdef");
-        prefDAO.save(pref);
+        for(FacetBuilder builder : FacetService.FACET_BUILDER_REGISTRY) {
+            Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
+            pref.setValue("abcdef");
+            prefDAO.save(pref);
+        }
         
         User user = userDAO.getUser("admin");
         for(Facet facet : facetService.getFacetList(user, EMPTY_PARAMETER_MAP)) {
-            boolean isActive = !facet.getClass().equals(builder.getFacetClass());
-            Assert.assertEquals(isActive, facet.isActive());
+            Assert.assertEquals(false, facet.isActive());
         }
     }
     
@@ -156,6 +156,33 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         List<Facet> facetList = facetService.getFacetList(user, EMPTY_PARAMETER_MAP);
         Assert.assertTrue("Expect facet to be of type SurveyFacet", facetService.getFacetByType(facetList, SurveyFacet.class) instanceof SurveyFacet);
         Assert.assertTrue("Expect facet to be of type MonthFacet", facetService.getFacetByType(facetList, MonthFacet.class) instanceof MonthFacet);
+    }
+    
+    @Test
+    public void testFacetCustomNames() {
+        Map<Class<? extends Facet>, String> facetLookup = new HashMap<Class<? extends Facet>, String>();
+        
+        for(int i=0; i<FacetService.FACET_BUILDER_REGISTRY.size(); i++) {
+            FacetBuilder builder = FacetService.FACET_BUILDER_REGISTRY.get(i);
+            Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
+            JSONArray array = JSONArray.fromObject(pref.getValue());
+            String customName = String.format("Custom Name %s", pref.getId().toString());
+            for(int j=0; j<array.size(); j++) {
+                JSONObject obj = array.getJSONObject(j);
+                obj.put(Facet.JSON_NAME_KEY, customName);
+            }
+            
+            pref.setValue(array.toString());
+            prefDAO.save(pref);
+            
+            facetLookup.put(builder.getFacetClass(), customName);
+        }
+        
+        User user = userDAO.getUser("admin");
+        List<Facet> facetList = facetService.getFacetList(user, EMPTY_PARAMETER_MAP);
+        for(Facet facet : facetList) {
+            Assert.assertEquals(facetLookup.get(facet.getClass()), facet.getDisplayName());
+        }
     }
     
     private Map<Class<? extends Facet>, List<Facet>> createFacetTypeMapping(List<Facet> facetList) {

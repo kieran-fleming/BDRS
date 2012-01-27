@@ -26,16 +26,16 @@ public abstract class AbstractFacet implements Facet {
      * Creates a new instance of this class.
      * 
      * @param queryParamName the base name of query parameters
-     * @param displayName the human readable name of this facet.
+     * @param defaultDisplayName the human readable name of this facet.
      * @param userParams user configurable parameters provided in via the {@link Preference)}.
      */
-    public AbstractFacet(String queryParamName, String displayName, JSONObject userParams) {
+    public AbstractFacet(String queryParamName, String defaultDisplayName, JSONObject userParams) {
         this.queryParamName = queryParamName;
-        this.displayName = displayName;
         
-        weight = userParams.optInt(JSON_WEIGHT_KEY, DEFAULT_WEIGHT_CONFIG);
-        isActive = userParams.optBoolean(JSON_ACTIVE_KEY, DEFAULT_ACTIVE_CONFIG);
-        prefix = userParams.optString(JSON_PREFIX_KEY, DEFAULT_PREFIX_CONFIG);
+        this.weight = userParams.optInt(JSON_WEIGHT_KEY, DEFAULT_WEIGHT_CONFIG);
+        this.isActive = userParams.optBoolean(JSON_ACTIVE_KEY, DEFAULT_ACTIVE_CONFIG);
+        this.prefix = userParams.optString(JSON_PREFIX_KEY, DEFAULT_PREFIX_CONFIG);
+        this.displayName = userParams.optString(JSON_NAME_KEY, defaultDisplayName);
     }
     
     @Override
@@ -46,6 +46,20 @@ public abstract class AbstractFacet implements Facet {
     @Override
     public void setContainsSelected(boolean containsSelected) {
         this.containsSelected = containsSelected;
+    }
+
+    @Override
+    public boolean isAllSelected() {
+        if(facetOptions.isEmpty()) {
+            return false;
+        }
+        
+        for(FacetOption opt : facetOptions) {
+            if(!opt.isSelected()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

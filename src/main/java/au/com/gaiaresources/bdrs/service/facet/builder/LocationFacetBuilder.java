@@ -13,12 +13,17 @@ import au.com.gaiaresources.bdrs.service.facet.LocationFacet;
  * {@link LocationFacet}s.
  * @author stephanie
  */
-public class LocationFacetBuilder extends AbstractFacetBuilder {
+public class LocationFacetBuilder extends AbstractFacetBuilder<LocationFacet> {
     /**
      * Describes the function of this facet that will be used in the preference description.
      */
     public static final String FACET_DESCRIPTION = "Restricts records by location.";
 
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "Locations";
+    
     public LocationFacetBuilder() {
         super(LocationFacet.class);
     }
@@ -39,6 +44,11 @@ public class LocationFacetBuilder extends AbstractFacetBuilder {
     @Override
     public Facet createFacet(RecordDAO recordDAO,
             Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-        return new LocationFacet(recordDAO, parameterMap, user, userParams);
+        return new LocationFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams);
+    }
+
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
     }
 }

@@ -2,6 +2,8 @@ package au.com.gaiaresources.bdrs.service.facet;
 
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import edu.emory.mathcs.backport.java.util.Arrays;
 
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
@@ -15,10 +17,19 @@ import net.sf.json.JSONObject;
  * @author stephanie
  */
 public class AttributeFacet extends AbstractFacet {
+    
     /**
      * The base name of the query parameter.
      */
     public static final String QUERY_PARAM_NAME = "attribute_%s";
+    
+    /**
+     * The expected JSON key from user preferences indicating the 
+     * name of the attribute to be queried in the predicate. 
+     */
+    public static final String JSON_ATTRIBUTE_NAME_KEY = "attributeName";
+    
+    private Logger log = Logger.getLogger(getClass());
     
     /**
      * The name of the attribute that this facet will filter by.
@@ -29,32 +40,45 @@ public class AttributeFacet extends AbstractFacet {
     
     /**
      * Creates an instance of this facet.
+     * 
+     * @param defaultDisplayName the default human readable name of this facet.
      * @param recordDAO used for retrieving the count of matching records.
      * @param parameterMap the map of query parameters from the browser.
      * @param user the user that is accessing the records.
      * @param userParams user configurable parameters provided in via the {@link Preference)}.
      */
-    public AttributeFacet(RecordDAO recordDAO, Map<String, String[]> parameterMap, User user,
+    public AttributeFacet(String defaultDisplayName, RecordDAO recordDAO, Map<String, String[]> parameterMap, User user,
             JSONObject userParams, int facetIndex) {
-        super(String.format(QUERY_PARAM_NAME, userParams.getString("attributeName")), 
-              userParams.getString("attributeName"), userParams);
-        this.attributeName = userParams.getString("attributeName");
-        this.facetIndex = facetIndex;
+        // The query param name being passed to the super constructor here is
+        // just a placeholder. We need to check if the 'attributeName' attribute
+        // exists in the userParms. If it does not exist, the facet will be
+        // deactivated.
+        super(String.format(QUERY_PARAM_NAME, userParams.optString(JSON_ATTRIBUTE_NAME_KEY, "")), 
+              defaultDisplayName, userParams);
         
-        setContainsSelected(parameterMap.containsKey(getInputName()));
-        
-        String[] selectedOptions = parameterMap.get(getInputName());
-        if(selectedOptions == null) {
-            selectedOptions = new String[]{};
-        }
-        Arrays.sort(selectedOptions);
-        
-        // for now this just handles String type attributes, 
-        // later it should retrieve attribute objects vs count
-        // and determine which type of attribute options to add 
-        // based on the type of the attribute
-        for(Pair<String, Long> pair : recordDAO.getDistinctAttributeValues(null, user, this.attributeName, userParams.optInt("optionCount"))) {
-            super.addFacetOption(new StringAttributeFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions, facetIndex));
+        if(userParams.has(JSON_ATTRIBUTE_NAME_KEY)) {
+            this.attributeName = userParams.getString(JSON_ATTRIBUTE_NAME_KEY);
+            this.facetIndex = facetIndex;
+            
+            setContainsSelected(parameterMap.containsKey(getInputName()));
+            
+            String[] selectedOptions = parameterMap.get(getInputName());
+            if(selectedOptions == null) {
+                selectedOptions = new String[]{};
+            }
+            Arrays.sort(selectedOptions);
+            
+            // for now this just handles String type attributes, 
+            // later it should retrieve attribute objects vs count
+            // and determine which type of attribute options to add 
+            // based on the type of the attribute
+            for(Pair<String, Long> pair : recordDAO.getDistinctAttributeValues(null, user, this.attributeName, userParams.optInt("optionCount"))) {
+                super.addFacetOption(new StringAttributeFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions, facetIndex));
+            }
+        } else {
+            // The JSON object is malformed.
+            super.setActive(false);
+            log.info(String.format("Deactivating the AttributeFacet because the JSON configuration is missing the \"%s\" attribute.", JSON_ATTRIBUTE_NAME_KEY));
         }
     }
 

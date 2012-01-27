@@ -13,11 +13,16 @@ import au.com.gaiaresources.bdrs.service.facet.ModerationFacet;
  * {@link ModerationFacet}s.
  * @author stephanie
  */
-public class ModerationFacetBuilder extends AbstractFacetBuilder {
+public class ModerationFacetBuilder extends AbstractFacetBuilder<ModerationFacet> {
     /**
      * Describes the function of this facet that will be used in the preference description.
      */
     public static final String FACET_DESCRIPTION = "Restricts records to ones that are moderated.";
+    
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "Moderation Status";
     
     /**
      * Creates an instance of this class which will build an {@link AttributeFacet}.
@@ -31,7 +36,7 @@ public class ModerationFacetBuilder extends AbstractFacetBuilder {
      */
     @Override
     public Facet createFacet(RecordDAO recordDAO, Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-        return new ModerationFacet(recordDAO, parameterMap, user, userParams);
+        return new ModerationFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams);
     }
 
     /* (non-Javadoc)
@@ -40,5 +45,10 @@ public class ModerationFacetBuilder extends AbstractFacetBuilder {
     @Override
     public String getPreferenceDescription() {
         return buildPreferenceDescription(FACET_DESCRIPTION, getFacetParameterDescription());
+    }
+
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
     }
 }

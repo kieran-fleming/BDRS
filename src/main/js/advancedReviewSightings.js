@@ -380,9 +380,19 @@ bdrs.advancedReview.initMapView = function(formSelector, mapId, mapOptions, idSe
  * @param facetSelector jQuery selector for the facet container.
  */
 bdrs.advancedReview.initFacets = function(formSelector, facetSelector) {
-    jQuery(facetSelector).find('input[type=checkbox]').change(function() {
-        jQuery(formSelector).submit();
+    var facet = jQuery(facetSelector);
+    var form = jQuery(formSelector); 
+    facet.find('.facetOptions input[type=checkbox]').change(function() {
+        form.submit();
     });
+    
+    facet.find(".select_all input[type=checkbox]").change(function(evt) {
+        var select_all_elem = jQuery(evt.currentTarget);
+        var select_all = select_all_elem.prop("checked");
+        select_all_elem.parents(facetSelector).find('.facetOptions input[type="checkbox"]').prop("checked", select_all);
+        form.submit();        
+    });
+
 };
 
 /**

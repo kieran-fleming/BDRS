@@ -12,12 +12,16 @@ import au.com.gaiaresources.bdrs.service.facet.TaxonGroupFacet;
  * The concrete implementation of the {@link AbstractFacetBuilder} that creates
  * {@link TaxonGroupFacet}s.
  */
-public class TaxonGroupFacetBuilder extends AbstractFacetBuilder {
+public class TaxonGroupFacetBuilder extends AbstractFacetBuilder<TaxonGroupFacet> {
     
     /**
      * Describes the function of this facet that will be used in the preference description.
      */
     public static final String FACET_DESCRIPTION = "Represents taxonomic records based on the group of the associated organism.";
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "Species Group";
     
     /**
      * Creaes a new instance.
@@ -35,6 +39,13 @@ public class TaxonGroupFacetBuilder extends AbstractFacetBuilder {
     public Facet createFacet(RecordDAO recordDAO,
             Map<String, String[]> parameterMap, User user, JSONObject userParams) {
         
-        return new TaxonGroupFacet(recordDAO, parameterMap, user, userParams);
+        return new TaxonGroupFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams);
     }
+
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
+    }
+    
+    
 }

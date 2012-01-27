@@ -99,7 +99,7 @@ public class FacetService {
                             Facet facet = builder.createFacet(recordDAO, parameterMap, user, configParams);
                             facetList.add(facet);
                         } catch(JSONException ex) {
-                            log.error(String.format("The configuration parameter at index %d for preference key %s is not a JSON object or is improperly configured: %s", i, pref.getKey(), pref.getValue()));
+                            log.error(String.format("The configuration parameter at index %d for preference key %s is not a JSON object or is improperly configured: %s", i, pref.getKey(), pref.getValue()), ex);
                         }
                     }
                 } catch(JSONException je) {

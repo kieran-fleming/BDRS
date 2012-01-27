@@ -54,4 +54,10 @@ public interface FacetBuilder {
      * @return the class of the Facet that is created by this builder.
      */
     public Class<? extends Facet> getFacetClass();
+    
+    /**
+     * Returns the default human readable name of this facet.
+     * @return the default human readable name of this facet.
+     */
+    public String getDefaultDisplayName();
 }

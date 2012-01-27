@@ -12,7 +12,12 @@ import au.com.gaiaresources.bdrs.service.facet.YearFacet;
  * The concrete implementation of the {@link AbstractFacetBuilder} that creates
  * {@link YearFacet}s.
  */
-public class YearFacetBuilder extends AbstractFacetBuilder {
+public class YearFacetBuilder extends AbstractFacetBuilder<YearFacet> {
+    
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "Year";
     
     /**
      * Describes the function of this facet that will be used in the preference description.
@@ -34,7 +39,11 @@ public class YearFacetBuilder extends AbstractFacetBuilder {
     @Override
     public Facet createFacet(RecordDAO recordDAO,
             Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-        return new YearFacet(recordDAO, parameterMap, user, userParams);
+        return new YearFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams);
     }
     
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
+    }
 }

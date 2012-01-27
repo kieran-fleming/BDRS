@@ -13,11 +13,16 @@ import au.com.gaiaresources.bdrs.service.facet.Facet;
  * {@link AttributeFacet}s.
  * @author stephanie
  */
-public class AttributeFacetBuilder extends AbstractFacetBuilder {
+public class AttributeFacetBuilder extends AbstractFacetBuilder<AttributeFacet> {
     /**
      * Describes the function of this facet that will be used in the preference description.
      */
     public static final String FACET_DESCRIPTION = "Restricts records to ones with the selected attribute values.";
+    
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "AttributeFacet";
     
     private int facetIndex = 0;
     
@@ -33,7 +38,7 @@ public class AttributeFacetBuilder extends AbstractFacetBuilder {
      */
     @Override
     public Facet createFacet(RecordDAO recordDAO, Map<String, String[]> parameterMap, User user, JSONObject userParams) {
-        return new AttributeFacet(recordDAO, parameterMap, user, userParams, facetIndex++);
+        return new AttributeFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams, facetIndex++);
     }
 
     /* (non-Javadoc)
@@ -42,5 +47,10 @@ public class AttributeFacetBuilder extends AbstractFacetBuilder {
     @Override
     public String getPreferenceDescription() {
         return buildPreferenceDescription(FACET_DESCRIPTION, getFacetParameterDescription());
+    }
+
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
     }
 }

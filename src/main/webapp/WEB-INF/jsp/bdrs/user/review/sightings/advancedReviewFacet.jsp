@@ -9,9 +9,23 @@
 	   <%--
 	   <div class='tree_node <c:choose><c:when test="${ !facet.containsSelected }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
        --%>
-       <div class='tree_node <c:choose><c:when test="${ facet.displayName == 'Species Group' }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
-	   <c:out value="${ facet.displayName }"/>
+       <div class='${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer tree_node <c:choose><c:when test="${ facet.displayName == 'Species Group' }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
+       <span class="${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer">
+	       <c:out value="${ facet.displayName }"/>
+       </span>
+	   
+	   <div class="select_all right">
+	       <input id="${ facet.prefix }_${ facet.queryParamName }_select_all" 
+               class="vertmiddle"
+               type="checkbox"
+               <c:if test="${ facet.allSelected }">
+                   checked="checked"
+               </c:if>
+	       />
+	       <label class="vertmiddle" for="${ facet.prefix }_${ facet.queryParamName }_select_all">Select All</label>
+       </div>
     </h4>
+    
 	<div class="facetOptions ${ facet.prefix }_${ facet.queryParamName }OptContainer"
 	    <%-- Open the facet if it contains a selected option --%>
 	    <%-- c:if test="${ !facet.containsSelected }"> style="display:none"</c:if --%>

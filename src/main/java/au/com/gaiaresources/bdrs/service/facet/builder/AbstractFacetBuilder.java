@@ -15,36 +15,15 @@ import au.com.gaiaresources.bdrs.service.facet.Facet;
  * Provides handling for user configuration parameters that are common to all
  * facets.
  */
-public abstract class AbstractFacetBuilder implements FacetBuilder {
-    
-    /**
-     * Default facet configuration value for all subclasses.
-     */
-    public static final String DEFAULT_FACET_PREF_VALUE;
+public abstract class AbstractFacetBuilder<T extends Facet> implements FacetBuilder {
 
-    static {
-        try {
-            JSONObject prefValue = new JSONObject();
-            prefValue.put(Facet.JSON_ACTIVE_KEY, Facet.DEFAULT_ACTIVE_CONFIG);
-            prefValue.put(Facet.JSON_WEIGHT_KEY, Facet.DEFAULT_WEIGHT_CONFIG);
-
-            JSONArray configArray = new JSONArray();
-            configArray.add(prefValue);
-
-            DEFAULT_FACET_PREF_VALUE = configArray.toString();
-        } catch (JSONException je) {
-            // This is not possible;
-            throw new IllegalArgumentException(je);
-        }
-    }
-
-    private Class<? extends Facet> facetClass;
+    private Class<T> facetClass;
     
     /**
      * Creates a new instance of this class.
      * @param facetClass the class of facet that this builder shall create.
      */
-    public AbstractFacetBuilder(Class<? extends Facet> facetClass) {
+    public AbstractFacetBuilder(Class<T> facetClass) {
         this.facetClass = facetClass;
     }
     
@@ -54,6 +33,7 @@ public abstract class AbstractFacetBuilder implements FacetBuilder {
      */
     protected List<String> getFacetParameterDescription() {
         List<String> list = new ArrayList<String>();
+        list.add(Facet.NAME_CONFIG_DESCRIPTION);
         list.add(Facet.ACTIVE_CONFIG_DESCRIPTION);
         list.add(Facet.WEIGHT_CONFIG_DESCRIPTION);
         return list;
@@ -99,7 +79,24 @@ public abstract class AbstractFacetBuilder implements FacetBuilder {
         pref.setLocked(true);
         pref.setKey(getPreferenceKey());
         pref.setDescription(getPreferenceDescription());
-        pref.setValue(DEFAULT_FACET_PREF_VALUE);
+        pref.setValue(getDefaultPreferenceValue());
         return pref;
+    }
+    
+    private String getDefaultPreferenceValue() {
+        try {
+            JSONObject prefValue = new JSONObject();
+            prefValue.put(Facet.JSON_ACTIVE_KEY, Facet.DEFAULT_ACTIVE_CONFIG);
+            prefValue.put(Facet.JSON_WEIGHT_KEY, Facet.DEFAULT_WEIGHT_CONFIG);
+            prefValue.put(Facet.JSON_NAME_KEY, getDefaultDisplayName());
+
+            JSONArray configArray = new JSONArray();
+            configArray.add(prefValue);
+
+            return configArray.toString();
+        } catch (JSONException je) {
+            // This is not possible;
+            throw new IllegalArgumentException(je);
+        }
     }
 }

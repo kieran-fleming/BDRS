@@ -1239,7 +1239,6 @@ h3.field_guide_header {
 .facet h4 {
     line-height: 2em;
     background-color: #C2D1E0;
-    cursor: pointer;
 }
 
 .facet .tree_node {
@@ -1258,6 +1257,10 @@ h3.field_guide_header {
 
 .facet .tree_node_expanded {
     background-position: bottom right;
+}
+
+.facet .select_all {
+    padding: 0px 4px 0px 0px;
 }
 
 .facetCol {

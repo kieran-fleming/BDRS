@@ -13,12 +13,17 @@ import au.com.gaiaresources.bdrs.service.facet.UserFacet;
  * The concrete implementation of the {@link AbstractFacetBuilder} that creates
  * {@link UserFacet}s.
  */
-public class UserFacetBuilder extends AbstractFacetBuilder {
+public class UserFacetBuilder extends AbstractFacetBuilder<UserFacet> {
     
     /**
      * Describes the function of this facet that will be used in the preference description.
      */
     public static final String FACET_DESCRIPTION = "Restricts records to the selected set of users.";
+    
+    /**
+     * The human readable name of this facet.
+     */
+    public static final String DEFAULT_DISPLAY_NAME = "User";
     
     /**
      * Creaes a new instance.
@@ -36,6 +41,13 @@ public class UserFacetBuilder extends AbstractFacetBuilder {
     public Facet createFacet(RecordDAO recordDAO,
             Map<String, String[]> parameterMap, User user, JSONObject userParams) {
         
-        return new UserFacet(recordDAO, parameterMap, user, userParams);
+        return new UserFacet(DEFAULT_DISPLAY_NAME, recordDAO, parameterMap, user, userParams);
     }
+
+    @Override
+    public String getDefaultDisplayName() {
+        return DEFAULT_DISPLAY_NAME;
+    }
+    
+    
 }

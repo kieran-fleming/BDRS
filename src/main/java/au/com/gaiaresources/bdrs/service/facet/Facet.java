@@ -21,6 +21,10 @@ public interface Facet {
      * the sorting order of facets.
      */
     public static final String JSON_WEIGHT_KEY = "weight";
+    /**
+     * JSON key to retrieve the human readable name of the facet.
+     */
+    public static final String JSON_NAME_KEY = "name";
     
     /**
      * JSON key to retrieve the prefix for the facet. The prefix is prepended to
@@ -40,7 +44,10 @@ public interface Facet {
      * The default prefix that is prepended to all inputs.
      */
     public static final String DEFAULT_PREFIX_CONFIG = "";
-    
+    /**
+     * A string that describes what the 'name' user configuration parameter will do.
+     */
+    public static final String NAME_CONFIG_DESCRIPTION = String.format("<dd><code>%s</code> - the displayed name of this facet.", JSON_NAME_KEY);
     /**
      * A string that describes what the 'active' user configuration parameter will do.
      */
@@ -102,6 +109,14 @@ public interface Facet {
      * @return true if at least one of the options in this facet is currently selected, false otherwise.
      */
     public boolean isContainsSelected();
+    
+    /**
+     * Returns true if there are more than zero {@link FacetOption}s and 
+     * all options in this facet are currently selected, false otherwise.
+     * @return true if there are more than zero {@link FacetOption}s and 
+     * all options in this facet are currently selected, false otherwise.
+     */
+    public boolean isAllSelected();
     
     /**
      * Returns true if the Facet is active and should be shown in the UI.
