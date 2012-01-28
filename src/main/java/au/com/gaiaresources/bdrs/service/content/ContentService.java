@@ -80,6 +80,7 @@ public class ContentService {
         tmp.put("admin/emailUsers", CONTENT_PACKAGE + "admin_emailUsers.vm");
         tmp.put("admin/editProjects", CONTENT_PACKAGE + "admin_editProjects.vm");
         tmp.put("admin/editProject", CONTENT_PACKAGE + "admin_editProject.vm");
+        tmp.put("admin/editUser", CONTENT_PACKAGE + "admin_editUser.vm");
         tmp.put("admin/editProject/editTaxonomy", CONTENT_PACKAGE + "admin_editProject_editTaxonomy.vm");
         tmp.put("admin/editProject/chooseCensusMethods", CONTENT_PACKAGE + "admin_editProject_chooseCensusMethods.vm");
         tmp.put("admin/editProject/editLocations", CONTENT_PACKAGE + "admin_editProject_editLocations.vm");

@@ -6,14 +6,15 @@
 
 <c:if test="${editAs == 'user'}">
     <h1>My Profile</h1>
+    <cw:getContent key="user/profile/editProfile" />
 </c:if>
 <c:if test="${editAs == 'admin'}">
     <h1>Edit Details of <c:out value="${FIRST_NAME} ${LAST_NAME}" /> </h1>
+    <cw:getContent key="admin/editUser" />
 </c:if>
 
 <form method="POST">
     <input value="${USER_ID}" type="hidden" />
-    <cw:getContent key="user/profile/editProfile" />
     <div class="input_container">
         <c:if test="${editAs == 'admin'}">
             <jsp:useBean id="assignedRoles" type="java.util.ArrayList" scope="request"/>

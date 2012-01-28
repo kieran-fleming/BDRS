@@ -124,23 +124,25 @@ public class Condition extends PortalPersistentImpl {
     }
     
     public void setValue(String[] vals) {
-    	try {
-    		String[] copy = new String[vals.length];
-    		System.arraycopy(vals, 0, copy, 0, vals.length);
-    		Arrays.sort(copy);
-    		
-	    	StringWriter strWriter = new StringWriter();
-	    	CSVWriter writer = new CSVWriter(strWriter);
-	    	writer.writeNext(copy);
-	    	strWriter.close();
-	    	writer.close();
-	    	
-	    	this.value = strWriter.toString();
-	    	
-    	} catch(IOException ioe) {
-    		// Cannot Occur.
-    		throw new IOError(ioe);
-    	}
+        try {
+            String[] copy = new String[vals.length];
+            System.arraycopy(vals, 0, copy, 0, vals.length);
+            Arrays.sort(copy);
+            
+            StringWriter strWriter = new StringWriter();
+            // must specify the delimiter, quote, and line end chars to 
+            // prevent invalid line end character at the end of the value
+            CSVWriter writer = new CSVWriter(strWriter, ',', '"', "");
+            writer.writeNext(copy);
+            strWriter.close();
+            writer.close();
+            
+            this.value = strWriter.toString();
+            
+        } catch(IOException ioe) {
+            // Cannot Occur.
+            throw new IOError(ioe);
+        }
     }
 
     @Enumerated(EnumType.STRING)
@@ -497,19 +499,19 @@ public class Condition extends PortalPersistentImpl {
     
     @Transient
     public String[] stringArrayValue() {
-    	return stringArrayValue(this.value);
+        return stringArrayValue(this.value);
     }
 
     private String[] stringArrayValue(String val) {
-    	try {
-    	    CSVReader csvReader = new CSVReader(new StringReader(val));
-	        String[] array = csvReader.readNext();
-	        csvReader.close();
-	        return array;
-    	} catch(IOException ioe) {
-    	    // cannot occur
-    	    throw new IOError(ioe);
-    	}
+        try {
+            CSVReader csvReader = new CSVReader(new StringReader(val));
+            String[] array = csvReader.readNext();
+            csvReader.close();
+            return array;
+        } catch(IOException ioe) {
+            // cannot occur
+            throw new IOError(ioe);
+        }
     }
     
     private String singleStringValue(String val) {
@@ -518,15 +520,15 @@ public class Condition extends PortalPersistentImpl {
         }
         String[] sav = stringArrayValue(val);
         if (sav == null || sav.length == 0) {
-			return null;
-		}
-		if (sav.length > 1) {
-			log.warn("more than one item in string array value. total items : " + sav.length);
-		}
+            return null;
+        }
+        if (sav.length > 1) {
+            log.warn("more than one item in string array value. total items : " + sav.length);
+        }
         return sav[0];
     }
 
-	@Transient
+    @Transient
     public Integer intKey() {
         return intValue(this.key);
     }

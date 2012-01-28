@@ -31,7 +31,7 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
      *            the prefix to be prepended to input names.
      */
     TaxonAttributeFormField(Attribute attribute, 
-    		IndicatorSpeciesAttribute taxonAttribute, String prefix) {
+            IndicatorSpeciesAttribute taxonAttribute, String prefix) {
 
         super(prefix);
 
@@ -71,20 +71,20 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
         this.attribute = attribute;
     }
 
-	@Override
-	public TypedAttributeValue getAttributeValue() {
-		return this.taxonAttribute;
-	}
+    @Override
+    public TypedAttributeValue getAttributeValue() {
+        return this.taxonAttribute;
+    }
 
-	@Override
-	public void setAttributeValue(TypedAttributeValue attributeValue) {
-		if(!(attributeValue instanceof IndicatorSpeciesAttribute)) {
-			throw new IllegalArgumentException(String.format("Attribute Value %s is not an instance of IndicatorSpeciesAttribute", attributeValue));
-		} 
-		this.taxonAttribute = (IndicatorSpeciesAttribute) attributeValue;
-	}
+    @Override
+    public void setAttributeValue(TypedAttributeValue attributeValue) {
+        if(!(attributeValue instanceof IndicatorSpeciesAttribute)) {
+            throw new IllegalArgumentException(String.format("Attribute Value %s is not an instance of IndicatorSpeciesAttribute", attributeValue));
+        } 
+        this.taxonAttribute = (IndicatorSpeciesAttribute) attributeValue;
+    }
 
-	/**
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -99,5 +99,19 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
     @Override
     public boolean isModerationFormField() {
         return AttributeScope.isModerationScope(attribute.getScope());
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true; 
+        } else if (obj instanceof TaxonAttributeFormField) {
+            TaxonAttributeFormField that = (TaxonAttributeFormField) obj;
+            return (this.getTaxonAttribute().equals(that.getTaxonAttribute()) && 
+                    this.getAttribute().equals(that.getAttribute()) && 
+                    super.equals(obj));
+        }
+        
+        return false;
     }
 }
