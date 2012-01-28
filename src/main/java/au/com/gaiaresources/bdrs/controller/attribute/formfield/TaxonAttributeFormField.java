@@ -114,4 +114,9 @@ public class TaxonAttributeFormField extends AbstractFormField implements TypedA
         
         return false;
     }
+    
+    @Override
+    public int hashCode() {
+        return getTaxonAttribute().hashCode() + getAttribute().hashCode() + super.hashCode();
+    }
 }
