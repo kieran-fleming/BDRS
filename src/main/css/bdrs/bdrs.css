@@ -1786,3 +1786,24 @@ div.blockUI.blockMsg.blockPage {
 div.blockUI.blockMsg.blockPage h1 {
     color:white;
 }
+
+/**********************************************/
+/* allows multiple line high rows in a jqgrid
+/**********************************************/
+.auto-row-height-jqgrid  .ui-jqgrid  tr.jqgrow td {
+    white-space: normal;
+    height:auto;
+    vertical-align:top;
+    padding-top:2px;
+    font-size:0.9em;
+}
+
+.auto-row-height-jqgrid  .ui-jqgrid .ui-jqgrid-htable th div {
+    height:auto;
+    overflow:hidden;
+    padding-right:4px;
+    padding-top:2px;
+    position:relative;
+    vertical-align:text-top;
+    white-space:normal;
+}

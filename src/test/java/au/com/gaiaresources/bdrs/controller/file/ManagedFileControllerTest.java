@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import junit.framework.Assert;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -21,7 +22,10 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.security.UserDetails;
+import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.servlet.RequestContextHolder;
 
 public class ManagedFileControllerTest extends AbstractControllerTest {
@@ -32,6 +36,8 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
     @Before
     public void setUp() throws Exception {
         
+    	configureRequestContext();
+    	
         ManagedFile mf;
         
         mf = new ManagedFile();
@@ -64,7 +70,6 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
 
         ModelAndView mv = handle(request, response);
         ModelAndViewAssert.assertViewName(mv, "managedFileList");
-        ModelAndViewAssert.assertModelAttributeAvailable(mv, "managedFilePaginator");
     }
     
     @Test
@@ -272,8 +277,47 @@ public class ManagedFileControllerTest extends AbstractControllerTest {
         Assert.assertEquals(request.getParameter("license"), actual.getLicense());
     }
     
+    /**
+     * A pretty basic test of the search web service.
+     * Tests the imageOnly parmaeter is handled correctly and that the results are 
+     * appropriately coded in JSON format.
+     * I should figure out how to inject a mock DAO so I can test the other parameters are appropriately
+     * passed to the DAO...
+     */
+    @Test
+    public void testSearchService() throws Exception {
+    	login("admin", "password", new String[] { Role.ADMIN });
+    	
+    	request.setMethod("GET");
+    	request.setRequestURI(ManagedFileController.MANAGED_FILE_SEARCH_AJAX_URL);
+    	request.setParameter("imagesOnly", "True");
+    	handle(request, response);
+    	
+    	Assert.assertEquals("application/json", response.getContentType());
+    	
+    	JSONObject result = (JSONObject) JSONSerializer.toJSON(response.getContentAsString());
+        JSONArray files = result.getJSONArray("rows");
+    	Assert.assertEquals(1, files.size());
+    	JSONObject file = (JSONObject)files.get(0);
+    	Assert.assertEquals("test_image.png", file.get("filename"));
+    	Assert.assertEquals("This is a test image", file.get("description"));
+    	Assert.assertNotNull(file.get("updatedAt"));
+    	Assert.assertEquals("admin admin", file.get("updatedBy.name"));
+    	
+    }
+    
     @Override
     protected MockHttpServletRequest createMockHttpServletRequest() {
         return super.createUploadRequest();
     }
+    
+    /**
+	 * Associates the admin user with the request context so the managed files we create have non-null
+	 * valid createdBy/updatedBy properties.
+	 */
+	private void configureRequestContext() {
+		User admin = userDAO.getUser("admin");
+		RequestContext ctx = RequestContextHolder.getContext();
+		ctx.setUserDetails(new UserDetails(admin));
+	}
 }

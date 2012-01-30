@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -20,10 +19,8 @@ import com.vividsolutions.jts.geom.Geometry;
 // I don't particularly like this since we need to instantiate
 // QueryPaginator every time we want to use it with a different
 // type
-public class QueryPaginator<T extends PersistentImpl> {
-
-    private Logger log = Logger.getLogger(getClass());
-    
+public class QueryPaginator<T> {
+ 
     private void applyArgToQuery(Query query, Object[] args) {
         if (args == null) {
             return;
@@ -38,8 +35,8 @@ public class QueryPaginator<T extends PersistentImpl> {
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private void applyArgToQuery(Query query, Map<String, Object> args) {
+    @SuppressWarnings("rawtypes")
+	private void applyArgToQuery(Query query, Map<String, Object> args) {
         if (args == null) {
             return;
         }
@@ -86,7 +83,8 @@ public class QueryPaginator<T extends PersistentImpl> {
         String countHql = "select count(*) "
                 + HqlUtil.removeSelect(HqlUtil.removeOrders(hql));
 
-        List countlist = argArray != null ? find(session, countHql, argArray) : find(session, countHql, argMap); 
+        @SuppressWarnings("rawtypes")
+		List countlist = argArray != null ? find(session, countHql, argArray) : find(session, countHql, argMap); 
 
         int totalCount = ((Long) countlist.get(0)).intValue();
         if (totalCount < 1) {

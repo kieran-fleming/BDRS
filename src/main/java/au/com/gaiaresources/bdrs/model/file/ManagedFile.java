@@ -36,6 +36,9 @@ import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 @AttributeOverride(name = "id", column = @Column(name = "MANAGED_FILE_ID"))
 public class ManagedFile extends PortalPersistentImpl {
 
+	/** Image files will have a content type starting with image. e.g image/jpg, image/png */
+	public static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
+	
     private String uuid = UUID.randomUUID().toString();
     
     private String filename;
