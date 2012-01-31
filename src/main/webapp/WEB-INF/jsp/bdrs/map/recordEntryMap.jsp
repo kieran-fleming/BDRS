@@ -48,7 +48,7 @@
         bdrs.map.initWktOnChangeValidation('input[name=wkt]', '#wktMessage');
         
         var layerName = bdrs.survey.location.LAYER_NAME;
-        bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }});
+        bdrs.map.initBaseMap('base_map', { geocode: { selector: '#geocode' }, hideShowMapLink : true});
         bdrs.map.addLocationLayer(bdrs.map.baseMap, bdrs.survey.location.LOCATION_LAYER_NAME);
     
         <c:choose>

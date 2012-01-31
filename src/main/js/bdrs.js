@@ -121,6 +121,10 @@ bdrs.map.SCROLL_ZOOM_COOKIE = 'cookie.map.zoomscroll';
 bdrs.map.SCROLL_ZOOM_DEFAULT = 'true';
 bdrs.map.SCROLL_ZOOM_ENABLED_VALUE = 'true';
 
+// Used by the hide/show map functionality
+bdrs.map.HIDE_MAP_LABEL = 'Hide Map';
+bdrs.map.SHOW_MAP_LABEL = 'Show Map';
+
 bdrs.isIE7 = function() {
     return ($.browser.msie  && parseInt($.browser.version) == 7);
 };
@@ -281,6 +285,7 @@ bdrs.map.selectedRecord = null;
 bdrs.map.initBaseMap = function(mapId, options){
     var mapOptions = {
         isPublic: true,
+        hideShowMapLink: false,
         enlargeMapLink: true,
         zoomLock: true,
         ajaxFeatureLookup: false
@@ -442,7 +447,7 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
     }
     
     // Create the enlarge/collapse map and zoom lock elements if required.
-    bdrs.map.addControlPanel(map, mapOptions.enlargeMapLink, mapOptions.zoomLock);
+    bdrs.map.addControlPanel(map, mapOptions.hideShowMapLink, mapOptions.enlargeMapLink, mapOptions.zoomLock);
     
     if (jQuery('#OpenLayers_Control_MaximizeDiv_innerImage')) {
         jQuery('#OpenLayers_Control_MaximizeDiv_innerImage').attr("title", "Change the baselayer and turn map layers on or off");
@@ -483,11 +488,12 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
  * element if the map supports either enlarge map capabilities or zoom lock capabilities. 
  *
  * @param map [object] the open layers map instance
+ * @param hideShowAvailable [boolean] true if the user can hide or show the map, false otherwise.
  * @param enlargeMapAvailable [boolean] true if the user can enlarge/collapse the map, false otherwise.
  * @param zoomLockAvailable [boolean]  true if the zoom lock control is available, false otherwise.
  */
-bdrs.map.addControlPanel = function(map, enlargeMapAvailable, zoomLockAvailable) {
-    if(!enlargeMapAvailable && !zoomLockAvailable) {
+bdrs.map.addControlPanel = function(map, hideShowAvailable, enlargeMapAvailable, zoomLockAvailable) {
+    if(!hideShowAvailable && !enlargeMapAvailable && !zoomLockAvailable) {
         return;
     }
     
@@ -501,6 +507,9 @@ bdrs.map.addControlPanel = function(map, enlargeMapAvailable, zoomLockAvailable)
     // Create each control
     var controlArray = [];
 
+    // Hide / Show Map
+    controlArray.push(bdrs.map.getHideShowControl(controlPanel, hideShowAvailable, map));
+
     // Enlarge Map
     controlArray.push(bdrs.map.getEnlargeMapControl(controlPanel, enlargeMapAvailable, map));
 
@@ -509,15 +518,18 @@ bdrs.map.addControlPanel = function(map, enlargeMapAvailable, zoomLockAvailable)
     
     var control;
     var sep;
+    var controlCount = 0;
     for(var i=0; i<controlArray.length; ++i) {
         control = controlArray[i];
         if(control !== undefined && control !== null) {
+
             // if the first, then we don't need to start with a separator
-            if(i > 0) {
+            if(controlCount > 0) {
                 sep = bdrs.map.getControlSeparator();
                 controlPanel.append(sep);
             } 
             controlPanel.append(control);
+            controlCount++;
         }
     }
     jQuery(map.div).parent().before(controlPanel);
@@ -590,6 +602,26 @@ bdrs.map.getZoomLockControl = function(controlPanel, available) {
     
     
     control.append(checkbox).append(label);
+    return control;
+};
+
+/**
+ * Creates the widget that allows the map to be displayed or hidden.
+ * 
+ * @param controlPanel [jQuery element] the control panel where the widget will be inserted.
+ * @param available [boolean] true if this widget is required, false otherwise.
+ */
+bdrs.map.getHideShowControl = function(controlPanel, available, map) {
+	if (!available) {
+		return;
+	}
+	
+	var control = jQuery("<a></a>");
+    
+    control.attr({"id": "hideShowMapLink", "href": "javascript:void(0);"});
+    control.text(bdrs.map.HIDE_MAP_LABEL);
+    control.click(function() {bdrs.map.collapseMap(jQuery(map.div).parent() , control);});
+
     return control;
 };
 
@@ -1178,12 +1210,15 @@ bdrs.map.clearAllVectorLayers = function(map){
 
 bdrs.map.collapseMap = function(mapWrapper, mapToggle) {
     mapWrapper.slideToggle(function() {
+
         var canSee = mapWrapper.css('display') === 'none';
-        mapToggle.text(canSee ? "Show Map" : "Hide Map");
+        mapToggle.text(canSee ? bdrs.map.SHOW_MAP_LABEL : bdrs.map.HIDE_MAP_LABEL);
         if(canSee) {
-            jQuery('.hideMapHide').hide();
+            mapWrapper.hide();
+            mapToggle.siblings().hide();
         } else {
-            jQuery('.hideMapHide').show();
+            mapWrapper.show();
+            mapToggle.siblings().show();
         }
     });
 };
