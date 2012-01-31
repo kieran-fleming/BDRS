@@ -122,6 +122,9 @@
         </put-list-attribute>
     </definition>
 	
+	<definition name="recordFormHeader" template="/WEB-INF/jsp/bdrs/user/record/render/recordFormHeader.jsp">
+	</definition>
+	
 	<definition name="recordFormFooter" template="/WEB-INF/jsp/bdrs/user/record/render/recordFormFooter.jsp">
 	</definition>
 	

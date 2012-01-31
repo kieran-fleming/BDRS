@@ -29,7 +29,11 @@ bdrs.advancedReview.TABLE_ROW_TMPL = '\
     <td>${ geometry ? latitude : "N/A" }, ${ geometry ? longitude : "N/A" }</td>\
     <td>${ user.name }</td>\
 	{{if authenticated}}\
-	   <td><input title=\"Select / deselect this record\" type=\"checkbox\" class=\"recordIdCheckbox\" value=\"${ id }\" /></td>\
+	   <td><input title=\"Select / deselect this record\" type=\"checkbox\" class=\"recordIdCheckbox\" value=\"${ id }\" \
+	   {{if user.id !== authenticatedUserId && !isAdmin }}\
+	       disabled=\"true\"\
+	   {{/if}}\
+	   /></td>\
 	{{/if}}\
 </tr>';
 
@@ -140,6 +144,8 @@ bdrs.advancedReview.getInitViewStyleTableFcn = function(tableSelector) {
 	        // Start of sighting
 	        if (bdrs.authenticated) {
 	            record.authenticated = true;
+	            record.authenticatedUserId = bdrs.authenticatedUserId;
+	            record.isAdmin = bdrs.isAdmin;
 	        }
 	        record._when = bdrs.util.formatDate(new Date(record.when));
 			var row = jQuery.tmpl(compiled_row_tmpl, record);

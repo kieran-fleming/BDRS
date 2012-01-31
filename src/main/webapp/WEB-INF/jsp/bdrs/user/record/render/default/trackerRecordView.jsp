@@ -48,6 +48,11 @@
             <input type="hidden" name="recordVisibility" value="${survey.defaultRecordVisibility}" />
         </c:if>
         
+        <%-- the record form header contains the unlock form icon --%>
+        <tiles:insertDefinition name="recordFormHeader">
+            <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />
+        </tiles:insertDefinition>
+        
         <table class="form_table tracker_form_table">
             <tbody>
          

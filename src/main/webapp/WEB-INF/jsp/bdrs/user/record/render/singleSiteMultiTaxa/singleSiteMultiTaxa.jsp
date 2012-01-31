@@ -30,6 +30,11 @@
     </c:if>
     <input type="hidden" name="surveyId" value="${survey.id}"/>
     
+    <%-- the record form header contains the unlock form icon --%>
+    <tiles:insertDefinition name="recordFormHeader">
+        <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />
+    </tiles:insertDefinition>
+    
     <div id="tableContainer">
     <table class="form_table">
         <tbody>

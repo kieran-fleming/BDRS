@@ -31,6 +31,11 @@
 	    <input type="hidden" id="ident" name="ident" value="<%= context.getUser().getRegistrationKey() %>"/>
 	    <input type="hidden" id="surveyId" name="surveyId" value="${survey.id}"/>
 	
+	    <%-- the record form header contains the unlock form icon --%>
+        <tiles:insertDefinition name="recordFormHeader">
+            <tiles:putAttribute name="recordWebFormContext" value="${recordWebFormContext}" />
+        </tiles:insertDefinition>
+        
 	    <table class="form_table">
 	        <tbody>
 	            <tr>
