@@ -39,8 +39,8 @@ bdrs.attribute.addAttributeRow = function(tableSelector, showScope, isTag) {
         bdrs.dnd.attachTableDnD(tableSelector);
         bdrs.dnd.tableDnDDropHandler(table[0], row[0]); 
         jQuery('form').ketchup();
-		
-		bdrs.attribute.setAttributeWeights(tableSelector);
+        
+        bdrs.attribute.setAttributeWeights(tableSelector);
     });
 };
 
@@ -50,14 +50,69 @@ bdrs.attribute.addAttributeRow = function(tableSelector, showScope, isTag) {
  * @param {Object} tableSelector - the selector for the form table
  */
 bdrs.attribute.setAttributeWeights = function(tableSelector) {
-	// this code relies on the fact that jQuery returns nodes in document order.
-	// jQuery does this as of 1.3.2, http://docs.jquery.com/Release%3AjQuery_1.3.2
-	var weight = 100;
+    // this code relies on the fact that jQuery returns nodes in document order.
+    // jQuery does this as of 1.3.2, http://docs.jquery.com/Release%3AjQuery_1.3.2
+    var weight = 100;
     jQuery(tableSelector).find(".sort_weight").each(function(index, element) {
-		jQuery(element).val(weight);
-		weight += 100;
-	});
+        jQuery(element).val(weight);
+        weight += 100;
+    });
 };
+
+bdrs.attribute.rowTypeChanged = function(event) {
+    var index = event.data.index;
+    var bNewRow = event.data.bNewRow;
+    
+    var prefix = bNewRow ? 'add_' : '';
+    var newTypeCode = jQuery("[name=" + prefix + "typeCode_" + index + "]").val();
+    var attrType = bdrs.model.taxa.attributeType.code[newTypeCode];
+    var tooltip = bdrs.attribute.OPTION_TOOLTIP.get(attrType);
+    var validation = bdrs.attribute.VALIDATION_CLASS.get(attrType);
+
+    bdrs.attribute.enableInput(
+        (bdrs.model.taxa.attributeType.STRING_WITH_VALID_VALUES.code === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.INTEGER_WITH_RANGE.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.BARCODE.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.REGEX.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.MULTI_CHECKBOX.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.MULTI_SELECT.code  === newTypeCode),
+        '[name=' + prefix + 'option_'+index+']', tooltip, validation); 
+        
+
+    var requiredSelector = '[name=' + prefix  +'required_'+index+']';
+    if(bdrs.model.taxa.attributeType.SINGLE_CHECKBOX.code  === newTypeCode ||
+        bdrs.model.taxa.attributeType.HTML.code  === newTypeCode ||
+        bdrs.model.taxa.attributeType.HTML_COMMENT.code  === newTypeCode ||
+        bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code  === newTypeCode) {
+        jQuery(requiredSelector).attr('checked',false);
+        jQuery(requiredSelector).attr('disabled','disabled');
+    } else { 
+        jQuery(requiredSelector).removeAttr('disabled'); 
+    }
+    
+    var descriptionSelector = '[name=' + prefix + 'description_'+index+']';
+    if(bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code  === newTypeCode) { 
+        jQuery(descriptionSelector).val('');
+        jQuery(descriptionSelector).attr('disabled','disabled');
+    } else { 
+        jQuery(descriptionSelector).removeAttr('disabled');
+    }
+    if(bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) { 
+        jQuery(descriptionSelector).attr('onfocus','bdrs.attribute.showHtmlEditor(jQuery(\'#htmlEditorDialog\'), jQuery(\'#markItUp\')[0], this)');
+    } else { 
+        jQuery(descriptionSelector).removeAttr('onfocus');
+    }
+    
+    // name in database
+    var nameSelector = '[name=' + prefix + 'name_'+index+']';
+    if (bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code === newTypeCode) {
+        jQuery(nameSelector).val("");
+        bdrs.attribute.enableInput(false, nameSelector, "", null);
+    } else {
+        bdrs.attribute.enableInput(true, nameSelector, "The name used to store this attribute in the database", "validate(uniqueAndRequired(.uniqueName))");
+    }
+}
 
 /**
  * Returns a function to be attached to the onchanged event of the field type
@@ -69,58 +124,7 @@ bdrs.attribute.setAttributeWeights = function(tableSelector) {
  * @return a function to be triggered by the field type select control onchange.
  */
 bdrs.attribute.getRowTypeChangedFunc = function(index, bNewRow) {
-	return new function() {
-		
-		var prefix = bNewRow ? 'add_' : '';
-		var newTypeCode = jQuery("[name=" + prefix + "typeCode_" + index + "]").val();
-		var attrType = bdrs.model.taxa.attributeType.code[newTypeCode];
-		var tooltip = bdrs.attribute.OPTION_TOOLTIP.get(attrType);
-		var validation = bdrs.attribute.VALIDATION_CLASS.get(attrType);
-    
-	    bdrs.attribute.enableInput(
-	        (bdrs.model.taxa.attributeType.STRING_WITH_VALID_VALUES.code === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.INTEGER_WITH_RANGE.code  === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.BARCODE.code  === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.REGEX.code  === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.MULTI_CHECKBOX.code  === newTypeCode) ||
-	        (bdrs.model.taxa.attributeType.MULTI_SELECT.code  === newTypeCode),
-	        '[name=' + prefix + 'option_'+index+']', tooltip, validation); 
-	        
-			
-		var requiredSelector = '[name=' + prefix  +'required_'+index+']';
-	    if(bdrs.model.taxa.attributeType.SINGLE_CHECKBOX.code  === newTypeCode ||
-	        bdrs.model.taxa.attributeType.HTML.code  === newTypeCode ||
-	        bdrs.model.taxa.attributeType.HTML_COMMENT.code  === newTypeCode ||
-	        bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code  === newTypeCode) {
-	        jQuery(requiredSelector).attr('checked',false);
-	        jQuery(requiredSelector).attr('disabled','disabled');
-	    } else { 
-	        jQuery(requiredSelector).removeAttr('disabled'); 
-	    }
-		
-		var descriptionSelector = '[name=' + prefix + 'description_'+index+']';
-	    if(bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code  === newTypeCode) { 
-	        jQuery(descriptionSelector).val('');
-	        jQuery(descriptionSelector).attr('disabled','disabled');
-	    } else { 
-	        jQuery(descriptionSelector).removeAttr('disabled');
-	    }
-	    if(bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) { 
-	        jQuery(descriptionSelector).attr('onfocus','bdrs.attribute.showHtmlEditor(jQuery(\'#htmlEditorDialog\'), jQuery(\'#markItUp\')[0], this)');
-	    } else { 
-	        jQuery(descriptionSelector).removeAttr('onfocus');
-	    }
-		
-		// name in database
-		var nameSelector = '[name=' + prefix + 'name_'+index+']';
-		if (bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code === newTypeCode) {
-			jQuery(nameSelector).val("");
-			bdrs.attribute.enableInput(false, nameSelector, "", null);
-		} else {
-			bdrs.attribute.enableInput(true, nameSelector, "The name used to store this attribute in the database", "validate(uniqueAndRequired(.uniqueName))");
-		}
-	};
+    return bdrs.attribute.rowTypeChanged;
 };
 
 bdrs.attribute.validateClassRegex = /validate\([\w,\s]+\)/;
@@ -134,27 +138,27 @@ bdrs.attribute.validateClassRegex = /validate\([\w,\s]+\)/;
  */
 bdrs.attribute.enableInput = function(enableOption, inputSelector, tooltip, validationClass) {
     var elem = jQuery(inputSelector);
-	
-	//var oldClass = elem.attr("class");
-	// we always want to remove the current validation so...
-	//var newClass = oldClass ? elem.attr("class").replace(bdrs.attribute.validateClassRegex, "") : null;
-	var newClass = bdrs.attribute.removeValidationClass(elem.attr("class"));
-	elem.attr("class", newClass);
+    
+    //var oldClass = elem.attr("class");
+    // we always want to remove the current validation so...
+    //var newClass = oldClass ? elem.attr("class").replace(bdrs.attribute.validateClassRegex, "") : null;
+    var newClass = bdrs.attribute.removeValidationClass(elem.attr("class"));
+    elem.attr("class", newClass);
 
     if(enableOption) {
         elem.removeAttr("disabled");
-		elem.attr("title", tooltip);
-		elem.addClass(validationClass);
+        elem.attr("title", tooltip);
+        elem.addClass(validationClass);
     } else {
         // clear the options before disabling
         elem.val('');
         elem.attr("disabled", "disabled");
-		elem.attr("title", null);
-		elem.removeClass("hasKetchup");
+        elem.attr("title", null);
+        elem.removeClass("hasKetchup");
     }
-	
-	// rebind ketchup
-	elem.parents('form').ketchup();
+    
+    // rebind ketchup
+    elem.parents('form').ketchup();
 };
 
 
@@ -165,41 +169,41 @@ bdrs.attribute.KETCHUP_VALIDATE_CLASS_PREFIX = "validate(";
  * @return the class string minus the validation class if it exists. null otherwise. 
  */
 bdrs.attribute.removeValidationClass = function(classStr) {
-	if (!classStr) {
-		return null;
-	}
-	var startIdx = classStr.indexOf(bdrs.attribute.KETCHUP_VALIDATE_CLASS_PREFIX);
-	if (startIdx > 0) {
-	   var currentIdx = startIdx + bdrs.attribute.KETCHUP_VALIDATE_CLASS_PREFIX.length;
-	   var bracketCount = 1;
-	   
-	   var currentChar;
-	   while (currentIdx < classStr.length - 1) {
-	   	   
+    if (!classStr) {
+        return null;
+    }
+    var startIdx = classStr.indexOf(bdrs.attribute.KETCHUP_VALIDATE_CLASS_PREFIX);
+    if (startIdx > 0) {
+       var currentIdx = startIdx + bdrs.attribute.KETCHUP_VALIDATE_CLASS_PREFIX.length;
+       var bracketCount = 1;
+       
+       var currentChar;
+       while (currentIdx < classStr.length - 1) {
+              
            currentChar = classStr.charAt(currentIdx);
-		   if (currentChar === "(") {
-		      ++bracketCount;
-		   } else if (currentChar === ")") {
-		   	  --bracketCount;
-		   }
-	       if (bracketCount === 0) {
-		      break;
-		   }
-		   ++currentIdx; 
-	   }
-	   
-	   if (bracketCount !== 0) {
-	       // error, brackets not matched.
-		   return null;	
-	   }
-	   // else brackets are closed properly...
-	   var validateClassString = classStr.substr(startIdx, currentIdx - startIdx + 1);
-	   var result = classStr.replace(validateClassString, "");
-	   return result;
-	   
-	} else {
-		return null;
-	}
+           if (currentChar === "(") {
+              ++bracketCount;
+           } else if (currentChar === ")") {
+                 --bracketCount;
+           }
+           if (bracketCount === 0) {
+              break;
+           }
+           ++currentIdx; 
+       }
+       
+       if (bracketCount !== 0) {
+           // error, brackets not matched.
+           return null;    
+       }
+       // else brackets are closed properly...
+       var validateClassString = classStr.substr(startIdx, currentIdx - startIdx + 1);
+       var result = classStr.replace(validateClassString, "");
+       return result;
+       
+    } else {
+        return null;
+    }
 };
 
 bdrs.attribute.htmlInput = "";

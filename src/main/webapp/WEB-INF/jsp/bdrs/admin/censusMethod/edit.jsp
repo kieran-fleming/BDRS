@@ -2,6 +2,11 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="/WEB-INF/cw.tld" prefix="cw" %>
 
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/markitup/jquery.markitup.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/bdrs/admin.js"></script>
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/sets/html/style.css" />
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/js/markitup/skins/bdrs-email/style.css" />
+
 <%@page import="au.com.gaiaresources.bdrs.model.method.Taxonomic"%>
 
 <jsp:useBean id="censusMethod" scope="request" type="au.com.gaiaresources.bdrs.model.method.CensusMethod"/> 
@@ -146,6 +151,11 @@
     </tiles:insertDefinition>
 </div>
 
+<div id="htmlEditorDialog" title="HTML Editor">
+    <label>Edit the HTML content that you want to display in the editor below: </label>
+    <textarea id="markItUp"></textarea>
+</div>
+
 <script type="text/javascript">
     jQuery(function() {
         bdrs.dnd.attachTableDnD('#attribute_input_table');
@@ -178,6 +188,28 @@
                 addCensusMethodGrid_GridHelper.reload();
                 jQuery( "#addCensusMethodDialog" ).dialog( "open" );
         });
+
+        jQuery( "#htmlEditorDialog" ).dialog({
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+			resizable: false,
+            buttons: {
+                Cancel: function() {
+                    jQuery( this ).dialog( "close" );
+                },
+                "Clear": function() {
+                    jQuery('#markItUp')[0].value = "";
+                },
+                "OK": function() {
+                    bdrs.attribute.saveAndUpdateContent(jQuery("#markItUp")[0]);
+                    jQuery( this ).dialog( "close" );
+                }
+            }
+        });
+		bdrs.fixJqDialog("#htmlEditorDialog");
+
+        jQuery('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
     });
     
 </script>

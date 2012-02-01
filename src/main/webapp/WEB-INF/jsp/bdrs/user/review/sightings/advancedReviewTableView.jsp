@@ -28,113 +28,113 @@
 
         <c:choose>
             <c:when test="${viewStyle == 'DIV'}">
-            	<div class="right">
-		            <label for="sortOrder">Sort Order</label>
-		            <select id="sortOrder" name="sortOrder">
-		                <option value="ASC"
-		                    <c:if test="${ 'ASC' == sortOrder }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    ascending
-		                </option>
-		                <option value="DESC"
-		                    <c:if test="${ 'DESC' == sortOrder }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    descending
-		                </option>
-		            </select>
-		        </div>
-		        
-		        <div class="right">
-		            <label for="sortBy">Sort By</label>
-		            <select id="sortBy" name="sortBy">
-		                <option value="record.when"
-		                    <c:if test="${ 'when' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    date
-		                </option>
-		                <option value="species.scientificName"
-		                    <c:if test="${ 'species.scientificName' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    scientific name
-		                </option>
-		                <option value="species.commonName"
-		                    <c:if test="${ 'species.commonName' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    common name
-		                </option>
-		                <option value="location.name"
-		                    <c:if test="${ 'location.name' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    location
-		                </option>
-		                <option value="censusMethod.type"
-		                    <c:if test="${ 'censusMethod.type' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    type
-		                </option>
-		                <option value="record.user"
-		                    <c:if test="${ 'record.user' == sortBy }">
-		                        selected="selected"
-		                    </c:if>
-		                >
-		                    user
-		                </option>
-		            </select>
-		        </div>
+                <div class="right">
+                    <label for="sortOrder">Sort Order</label>
+                    <select id="sortOrder" name="sortOrder">
+                        <option value="ASC"
+                            <c:if test="${ 'ASC' == sortOrder }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            ascending
+                        </option>
+                        <option value="DESC"
+                            <c:if test="${ 'DESC' == sortOrder }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            descending
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="right">
+                    <label for="sortBy">Sort By</label>
+                    <select id="sortBy" name="sortBy">
+                        <option value="record.when"
+                            <c:if test="${ 'when' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            date
+                        </option>
+                        <option value="species.scientificName"
+                            <c:if test="${ 'species.scientificName' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            scientific name
+                        </option>
+                        <option value="species.commonName"
+                            <c:if test="${ 'species.commonName' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            common name
+                        </option>
+                        <option value="location.name"
+                            <c:if test="${ 'location.name' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            location
+                        </option>
+                        <option value="censusMethod.type"
+                            <c:if test="${ 'censusMethod.type' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            type
+                        </option>
+                        <option value="record.user"
+                            <c:if test="${ 'record.user' == sortBy }">
+                                selected="selected"
+                            </c:if>
+                        >
+                            user
+                        </option>
+                    </select>
+                </div>
             </c:when>
-			<c:otherwise>
-				<%-- default to table style view --%>
-			    <input id="sortBy" type="hidden" name="sortBy" value="${sortBy}" />
+            <c:otherwise>
+                <%-- default to table style view --%>
+                <input id="sortBy" type="hidden" name="sortBy" value="${sortBy}" />
                 <input id="sortOrder" type="hidden" name="sortOrder" value="${sortOrder}" />
-			</c:otherwise>
-		</c:choose>
-		
+            </c:otherwise>
+        </c:choose>
+        
         <div class="clear"></div>
     </div>
-	
-	<c:choose>
-		<c:when test="${viewStyle == 'DIV'}">
-			<span id="alaSightingsTable" class="alaSightingsTable"></span>
-		</c:when>
-		<c:otherwise>
-	        <table id="alaSightingsTable" class="alaSightingsTable">
+    
+    <c:choose>
+        <c:when test="${viewStyle == 'DIV'}">
+            <span id="alaSightingsTable" class="alaSightingsTable"></span>
+        </c:when>
+        <c:otherwise>
+            <table id="alaSightingsTable" class="alaSightingsTable">
                 <thead id="alaSightingsTableHeader" class="columnBanner">
                     <tr>
                         <td class="sortBy(censusMethod.type) typeColumn">
-                        	<div title="The record type" class="left alaSightingsTableHeader">Type</div>
+                            <div title="The record type" class="left alaSightingsTableHeader">Type</div>
                         </td>
                         <td class="sortBy(record.when) dateColumn">
-                        	<div title="The date the record was taken." class="left alaSightingsTableHeader">Date</div>
+                            <div title="The date the record was taken." class="left alaSightingsTableHeader">Date</div>
                         </td>
                         <td class="sortBy(species.scientificName) sciNameColumn alaSightingsTableHeaderDoubleLine">
-                        	<div title="The scientific name of the species recorded." class="left">Scientific<br />Name</div>
+                            <div title="The scientific name of the species recorded." class="left">Scientific<br />Name</div>
                         </td>
                         <td class="sortBy(species.commonName) commonNameColumn alaSightingsTableHeaderDoubleLine">
-                        	<div title="The common name of the species recorded." class="left">Common<br />Name</div>
+                            <div title="The common name of the species recorded." class="left">Common<br />Name</div>
                         </td>
                         <td class="sortBy(location.name) locationColumn">
-                        	<div title="The name of the location where the record was taken. If there was no named location, the latitude and longitude where the record was taken." class="left alaSightingsTableHeader">Location</div>
+                            <div title="The name of the location where the record was taken. If there was no named location, the latitude and longitude where the record was taken." class="left alaSightingsTableHeader">Location</div>
                         </td>
                         <td class="sortBy(record.user) userColumn">
-                        	<div title="The user that logged the record." class="left alaSightingsTableHeader">User</div>
+                            <div title="The user that logged the record." class="left alaSightingsTableHeader">User</div>
                         </td>
                         <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_USER">
                             <td style="width:auto">
-                                <input id="bulkSelectCheckbox" title="Select/deselect all" type="checkbox" onchange="bdrs.advancedReview.bulkSelectOnChangeHandler(this)" />
+                                <input id="bulkSelectCheckbox" title="Select/deselect all" type="checkbox"  />
                             </td>
                         </sec:authorize>
                     </tr>
@@ -142,26 +142,26 @@
                 <tbody>
                 </tbody>
             </table>
-		</c:otherwise>		
-	</c:choose>
-	
-	<sec:authorize ifAnyGranted="ROLE_USER, ROLE_POWER_USER, ROLE_SUPERVISOR, ROLE_ADMIN">
-		<div class="bulkActionContainer">
-			<div class="right">
-				<span>Apply action to selected records: </span>
-				<a title="Delete the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkDelete()">Delete</a>
-				<sec:authorize ifAnyGranted="ROLE_POWER_USER, ROLE_SUPERVISOR, ROLE_ADMIN">
-	               |<a title="Hold the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(true)">Hold</a>
-	               |<a title="Release the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(false)">Release</a>
+        </c:otherwise>        
+    </c:choose>
+    
+    <sec:authorize ifAnyGranted="ROLE_USER, ROLE_POWER_USER, ROLE_SUPERVISOR, ROLE_ADMIN">
+        <div class="bulkActionContainer">
+            <div class="right">
+                <span>Apply action to selected records: </span>
+                <a title="Delete the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkDelete()">Delete</a>
+                <sec:authorize ifAnyGranted="ROLE_POWER_USER, ROLE_SUPERVISOR, ROLE_ADMIN">
+                   |<a title="Hold the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(true)">Hold</a>
+                   |<a title="Release the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(false)">Release</a>
                 </sec:authorize>
-	            <c:if test="${viewStyle == 'DIV'}">
-                    <input id="bulkSelectCheckbox" title="Select/deselect all" type="checkbox" onchange="bdrs.advancedReview.bulkSelectOnChangeHandler(this)" />
-				</c:if>
-	        </div>
-		</div>
-	</sec:authorize>
-	
-	<div class="clear"></div>
+                <c:if test="${viewStyle == 'DIV'}">
+                    <input id="bulkSelectCheckbox" title="Select/deselect all" type="checkbox" />
+                </c:if>
+            </div>
+        </div>
+    </sec:authorize>
+    
+    <div class="clear"></div>
 </div>
 
 <%-- may want to make paginationRange and maxPaginationItems portal prefs in the future --%>
@@ -209,11 +209,9 @@
 </div>
 
 <script type="text/javascript">
-	
     jQuery(function() {
         bdrs.advancedReview.initTableView('#facetForm',  
             '#alaSightingsTable', 'input[name=sortOrder]', 'input[name=sortBy]', 
-            'select[name=resultsPerPage]', "${viewStyle != null ? viewStyle : 'null'}");
+            'select[name=resultsPerPage]', "${viewStyle != null ? viewStyle : 'null'}", "#bulkSelectCheckbox");
     });
-	
 </script>
