@@ -1138,6 +1138,52 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
     }
     
     @Override
+    public List<Pair<String, Long>> getDistinctLocationAttributeValues(Session sesh, User user,
+            String attributeName, int limit) {
+        
+        StringBuilder b = new StringBuilder();
+        
+        b.append(" select distinct locAttrVal.stringValue, count(distinct rec)");
+        b.append(" from Record as rec join rec.location as loc join loc.attributes as locAttrVal join locAttrVal.attribute as attr");
+        b.append(" where ");
+        b.append(String.format(" attr.description = '%s'", attributeName));
+        // ignore empty string values
+        b.append(" and locAttrVal.stringValue is not null and locAttrVal.stringValue != ''");
+        
+        // add user visibility parameters here
+        if (user != null) {
+            if (!user.isAdmin()) {
+                b.append(" and rec.user.id = "+user.getId());
+            }
+        } else {
+            b.append(" and rec.recordVisibility = :vis and rec.held = :held");
+        }
+        b.append(" group by locAttrVal.stringValue");
+        b.append(" order by 2 desc");
+        
+        if(sesh == null) {
+            sesh = super.getSessionFactory().getCurrentSession();
+        }
+        
+        Query q = sesh.createQuery(b.toString());
+        if (user == null) {
+            q.setParameter("vis", RecordVisibility.PUBLIC);
+            q.setParameter("held", false);
+        }
+        if (limit > 0) {
+            q.setMaxResults(limit);
+        }
+        
+        List<Pair<String, Long>> results =  new ArrayList<Pair<String, Long>>();
+        for(Object rowObj : q.list()) {
+            Object[] row = (Object[])rowObj;
+            
+            results.add(new Pair<String, Long>(row[0].toString(), (Long)row[1]));
+        }
+        return results;
+    }
+    
+    @Override
     public List<Record> find(Integer[] mapLayerId, Geometry intersectGeom, Boolean isPrivate, Integer userId) {
         // To avoid having an empty array which will cause an exception during the query.
         if (mapLayerId.length == 0) {

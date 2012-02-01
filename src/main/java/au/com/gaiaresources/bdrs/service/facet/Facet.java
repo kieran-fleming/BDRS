@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.service.facet;
 
 import java.util.List;
 
+import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 
 /**
@@ -142,4 +143,10 @@ public interface Facet {
      * @return the prefix to be appended before all inputs.
      */
     public String getPrefix();
+
+    /**
+     * To be overridden by implementors if any custom table joins are required
+     * before the predicate is applied. 
+     */
+    public void applyCustomJoins(HqlQuery query);
 }

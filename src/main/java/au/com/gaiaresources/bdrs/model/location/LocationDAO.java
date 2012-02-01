@@ -162,4 +162,4 @@ public interface LocationDAO extends TransactionDAO {
      * @return
      */
     PagedQueryResult<Location> getSurveylocations(PaginationFilter filter, User user, int surveyIdToExclude);
-}
+    }

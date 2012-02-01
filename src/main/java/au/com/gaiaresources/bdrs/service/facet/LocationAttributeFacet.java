@@ -14,15 +14,14 @@ import au.com.gaiaresources.bdrs.util.Pair;
 import net.sf.json.JSONObject;
 
 /**
- * Creates a {@link Facet} for showing records by attribute values.
- * @author stephanie
+ * Creates a {@link Facet} for showing records by location attribute values.
  */
-public class AttributeFacet extends AbstractFacet {
+public class LocationAttributeFacet extends AbstractFacet {
     
     /**
      * The base name of the query parameter.
      */
-    public static final String QUERY_PARAM_NAME = "attribute_%s";
+    public static final String QUERY_PARAM_NAME = "loc_attribute_%s";
     
     /**
      * The expected JSON key from user preferences indicating the 
@@ -48,7 +47,7 @@ public class AttributeFacet extends AbstractFacet {
      * @param user the user that is accessing the records.
      * @param userParams user configurable parameters provided in via the {@link Preference)}.
      */
-    public AttributeFacet(String defaultDisplayName, RecordDAO recordDAO, Map<String, String[]> parameterMap, User user,
+    public LocationAttributeFacet(String defaultDisplayName, RecordDAO recordDAO, Map<String, String[]> parameterMap, User user,
             JSONObject userParams, int facetIndex) {
         // The query param name being passed to the super constructor here is
         // just a placeholder. We need to check if the 'attributeName' attribute
@@ -73,43 +72,34 @@ public class AttributeFacet extends AbstractFacet {
             // later it should retrieve attribute objects vs count
             // and determine which type of attribute options to add 
             // based on the type of the attribute
-            for(Pair<String, Long> pair : recordDAO.getDistinctAttributeValues(null, user, this.attributeName, userParams.optInt("optionCount"))) {
-                super.addFacetOption(new StringAttributeFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions, facetIndex));
+            for(Pair<String, Long> pair : recordDAO.getDistinctLocationAttributeValues(null, user, this.attributeName, userParams.optInt("optionCount"))) {
+                super.addFacetOption(new LocationAttributeFacetOption(pair.getFirst(), pair.getSecond(), selectedOptions, facetIndex));
             }
         } else {
             // The JSON object is malformed.
             super.setActive(false);
-            log.info(String.format("Deactivating the AttributeFacet because the JSON configuration is missing the \"%s\" attribute.", JSON_ATTRIBUTE_NAME_KEY));
+            log.info(String.format("Deactivating the LocationAttributeFacet because the JSON configuration is missing the \"%s\" attribute.", JSON_ATTRIBUTE_NAME_KEY));
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see au.com.gaiaresources.bdrs.service.facet.AbstractFacet#getPredicate()
-     */
     @Override
     public Predicate getPredicate() {
         Predicate facetPredicate = super.getPredicate();
         
         if(facetPredicate != null) {
             return Predicate.enclose(facetPredicate.and(
-                                     Predicate.eq("attribute"+facetIndex+".description", this.attributeName)));
+                                     Predicate.eq("locAttribute"+facetIndex+".description", this.attributeName)));
         } else {
             return null;
         }
     }
 
-    public int getFacetIndex() {
-        return facetIndex;
-    }
-
     @Override
     public void applyCustomJoins(HqlQuery query) {
         super.applyCustomJoins(query);
-        
-        // attribute facet predicates create an additional join to the attributes/attribute 
+        // create an additional join to the attributes/attribute 
         // tables to accomodate multiple attribute values
-        query.leftJoin("record.attributes", "recordAttribute" + facetIndex);
-        query.leftJoin("recordAttribute" + facetIndex + ".attribute", "attribute" + facetIndex);
+        query.leftJoin("location.attributes", "locAttributeVal" + facetIndex);
+        query.leftJoin("locAttributeVal" + facetIndex + ".attribute", "locAttribute" + facetIndex);
     }
 }

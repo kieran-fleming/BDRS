@@ -449,6 +449,18 @@ public interface RecordDAO extends TransactionDAO {
             User user, String attributeName, int limit);
 
     /**
+     * Queries all locations for an attribute with the given attributeName.
+     * @param sesh the session to use for this query.
+     * @param user the user who is trying to access the records
+     *             (for record visibility filtering)
+     *             this should be set to null for anonymous access
+     * @param attributeName the name of the attribute for the query
+     * @param limit the number of results to return
+     * @return a list of distinct attribute value names and the count of records that match each one.
+     */
+    List<Pair<String, Long>> getDistinctLocationAttributeValues(Session sesh,
+            User user, String attributeName, int limit);
+    /**
      * Returns a list of public records that intersect the specified geometry.
      * @param intersectGeom the polygon that records must intersect
      * @return a list of public records that intersect the specified geometry.

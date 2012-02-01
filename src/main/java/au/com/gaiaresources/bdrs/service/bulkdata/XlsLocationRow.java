@@ -20,6 +20,7 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 
 /**
@@ -84,10 +85,18 @@ public class XlsLocationRow extends StyledRowImpl {
             }
             
             for(Attribute attr : locationScopeAttrs) {
-                AttributeValue attrVal = locAttrValMap.get(attr);
-                bulkDataReadWriteService.writeTypedAttributeValueCell(this,
-                                                                      row.createCell(colIndex++), 
-                                                                      attrVal);
+                AttributeType attrType = attr.getType();
+                if (!AttributeType.FILE.equals(attrType)
+                    && !AttributeType.IMAGE.equals(attrType)
+                    && !AttributeType.HTML.equals(attrType)
+                    && !AttributeType.HTML_COMMENT.equals(attrType)
+                    && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrType)) {
+                
+                    AttributeValue attrVal = locAttrValMap.get(attr);
+                    bulkDataReadWriteService.writeTypedAttributeValueCell(this,
+                                                                          row.createCell(colIndex++), 
+                                                                          attrVal);
+                }
             }
         }
     }
@@ -159,9 +168,17 @@ public class XlsLocationRow extends StyledRowImpl {
         cell.setCellStyle(headerStyle);
         
         for(Attribute attr : locationScopeAttrs) {
-            cell = row.createCell(colIndex++);
-            cell.setCellValue(attr.getDescription());
-            cell.setCellStyle(headerStyle);
+            AttributeType attrType = attr.getType();
+            if (!AttributeType.FILE.equals(attrType)
+                && !AttributeType.IMAGE.equals(attrType)
+                && !AttributeType.HTML.equals(attrType)
+                && !AttributeType.HTML_COMMENT.equals(attrType)
+                && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrType)) {
+                
+                cell = row.createCell(colIndex++);
+                cell.setCellValue(attr.getDescription());
+                cell.setCellStyle(headerStyle);
+            }
         }
         
         return rowIndex;

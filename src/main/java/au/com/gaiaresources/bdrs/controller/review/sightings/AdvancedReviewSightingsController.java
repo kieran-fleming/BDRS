@@ -34,7 +34,6 @@ import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
-import au.com.gaiaresources.bdrs.service.facet.AttributeFacet;
 import au.com.gaiaresources.bdrs.service.facet.Facet;
 import au.com.gaiaresources.bdrs.service.facet.FacetOption;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
@@ -237,7 +236,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
         
         Integer surveyId = null;
         if(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME) != null) {
-            surveyId = new Integer(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
+            surveyId = Integer.parseInt(request.getParameter(SurveyFacet.SURVEY_ID_QUERY_PARAM_NAME));
         }
         List<Facet> facetList = facetService.getFacetList(user, (Map<String, String[]>)request.getParameterMap());
         ScrollableRecords sc = getMatchingRecordsAsScrollableRecords(facetList,
@@ -307,29 +306,28 @@ public class AdvancedReviewSightingsController extends SightingsController{
 
         Query query = toHibernateQuery(hqlQuery);
         Object result = query.uniqueResult();
-        return Long.parseLong(result.toString(), 10);
+        return Long.parseLong(result.toString());
     }
 
     private void applyFacetsToQuery(HqlQuery hqlQuery, List<Facet> facetList,
             Integer surveyId, String searchText) {
 
         hqlQuery.leftJoin("record.location", "location");
+        hqlQuery.leftJoin("location.attributes", "locAttribute");
+        
         hqlQuery.leftJoin("record.species", "species");
         hqlQuery.leftJoin("record.censusMethod", "censusMethod");
-        hqlQuery.leftJoin("record.attributes", "recordAttribute");
-        hqlQuery.leftJoin("recordAttribute.attribute", "attribute");
+        
+        hqlQuery.leftJoin("record.attributes", "recordAttributeVal");
+        hqlQuery.leftJoin("recordAttributeVal.attribute", "recordAttribute");
         
         for(Facet f : facetList) {
-            Predicate p = f.getPredicate();
-            if (p != null) {
-                if (f instanceof AttributeFacet) {
-                    // attribute facet predicates create an additional join to the attributes/attribute 
-                    // tables to accomodate multiple attribute values
-                    int attributesIndex = ((AttributeFacet)f).getFacetIndex();
-                    hqlQuery.leftJoin("record.attributes", "recordAttribute" + attributesIndex);
-                    hqlQuery.leftJoin("recordAttribute" + attributesIndex + ".attribute", "attribute" + attributesIndex);
+            if(f.isActive()) {
+                Predicate p = f.getPredicate();
+                if (p != null) {
+                    f.applyCustomJoins(hqlQuery);
+                    hqlQuery.and(p);
                 }
-                hqlQuery.and(p);
             }
         }
         
@@ -407,8 +405,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
                                             String sortProperty, 
                                             String sortOrder, 
                                             String searchText) {
-        Query query = createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
-        return query;
+        return createFacetQuery(facetList, surveyId, sortProperty, sortOrder, searchText);
     }
     
     /**
@@ -451,14 +448,12 @@ public class AdvancedReviewSightingsController extends SightingsController{
         HqlQuery hqlQuery = new HqlQuery("select distinct record, species.scientificName, species.commonName, location.name, censusMethod.type from Record record");
         
         applyFacetsToQuery(hqlQuery, facetList, surveyId, searchText);
-        
-        if(sortProperty != null && sortOrder != null) {
-            // NO SQL injection for you
-            if(VALID_SORT_PROPERTIES.contains(sortProperty)) {
-                hqlQuery.order(sortProperty, 
-                               SortOrder.valueOf(sortOrder).name(),
-                               null);
-            }
+
+        // NO SQL injection for you
+        if(sortProperty != null && sortOrder != null && VALID_SORT_PROPERTIES.contains(sortProperty)) {
+            hqlQuery.order(sortProperty, 
+                           SortOrder.valueOf(sortOrder).name(),
+                           null);
         }
         return toHibernateQuery(hqlQuery);  
     }
@@ -472,7 +467,6 @@ public class AdvancedReviewSightingsController extends SightingsController{
         Object[] parameterValues = hqlQuery.getParametersValue();
         for(int i=0; i<parameterValues.length; i++) {
             query.setParameter(i, parameterValues[i]);
-            log.debug(i+": "+parameterValues[i] == null ? "null" : parameterValues[i].toString());
         }
         return query;
     }

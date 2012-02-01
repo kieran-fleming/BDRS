@@ -62,7 +62,7 @@ public class BulkDataReadWriteServiceImpl implements BulkDataReadWriteService {
             case IMAGE:
             case FILE:
                 throw new UnsupportedOperationException(
-                        "Spreadsheet upload of file data is not supported.");
+                        "Spreadsheet download of file data is not supported.");
             case TEXT:
             case STRING_WITH_VALID_VALUES:
             case STRING:

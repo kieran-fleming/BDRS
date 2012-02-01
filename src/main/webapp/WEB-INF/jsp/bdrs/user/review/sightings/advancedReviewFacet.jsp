@@ -9,9 +9,11 @@
 	   <%--
 	   <div class='tree_node <c:choose><c:when test="${ !facet.containsSelected }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
        --%>
-       <div class='${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer tree_node <c:choose><c:when test="${ facet.displayName == 'Species Group' }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
-       <span class="${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer">
-	       <c:out value="${ facet.displayName }"/>
+       <span class="left">
+	       <div class='${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer tree_node <c:choose><c:when test="${ facet.displayName == 'Species Group' }">tree_node_collapsed</c:when><c:otherwise>tree_node_expanded</c:otherwise></c:choose>'></div>
+	       <span class="${ facet.prefix }_${ facet.queryParamName }_tree_node_handler cursorPointer">
+		       <c:out value="${ facet.displayName }"/>
+	       </span>
        </span>
 	   
 	   <div class="select_all right">
@@ -24,6 +26,8 @@
 	       />
 	       <label class="vertmiddle" for="${ facet.prefix }_${ facet.queryParamName }_select_all">Select All</label>
        </div>
+       
+       <div class="clear"></div>
     </h4>
     
 	<div class="facetOptions ${ facet.prefix }_${ facet.queryParamName }OptContainer"

@@ -51,7 +51,7 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         // Facets are correctly initialised with the default values except
         // for the attribute facet.
         for(Facet facet : facetList) {
-            if(facet instanceof AttributeFacet) {
+            if(facet instanceof AttributeFacet || facet instanceof LocationAttributeFacet) {
                 Assert.assertEquals(false, facet.isActive());
                 Assert.assertEquals(Facet.DEFAULT_WEIGHT_CONFIG, facet.getWeight());
             } else {

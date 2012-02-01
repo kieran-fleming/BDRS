@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 
 /**
@@ -169,6 +170,11 @@ public abstract class AbstractFacet implements Facet {
     @Override
     public int getWeight() {
         return weight;
+    }
+    
+    @Override
+    public void applyCustomJoins(HqlQuery query) {
+        // Do nothing. This is a placeholder for decendents to override if needed.
     }
     
     // -------------------------------------
