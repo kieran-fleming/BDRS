@@ -1,0 +1,6 @@
+{
+    "name" : "Site Species Matrix",
+    "description" : "The Site Species Matrix is a grid of occurence counts for each species in each survey.",
+    "icon" : "icon.png",
+    "report" : "report"
+}

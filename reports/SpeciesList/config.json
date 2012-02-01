@@ -1,0 +1,6 @@
+{
+    "name" : "Species List",
+    "description" : "The Species List report generates a table of all organisms that can be recorded for a survey.",
+    "icon" : "icon.png",
+    "report" : "report"
+}

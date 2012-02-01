@@ -1,0 +1,74 @@
+<link rel="stylesheet" type="text/css" href="static.htm?fileName=media/css/report.css"/>
+
+#if not $getVar('survey_array', []):
+    <div class="messages">
+        #if $len($survey_array) == 0:
+            <p class="message">
+                You have no projects available. Please add a project or contact your system administrator.
+            </p>
+        #end if
+    </div>
+#end if
+
+<h2>Species List</h2>
+<p>
+    The Species List report generates a table of all organisms that can be recorded for a survey.
+</p>
+
+#if $getVar('survey_array', []):
+    <div class="sepBottomDotted">   
+        <p>
+            To begin, select a survey from the drop down below. 
+        </p>
+    </div>
+
+    <form method="GET">
+        <div class="survey_select">
+            <label class="strong" for="survey">Select a Survey:</label>
+            <select id="survey" name="surveyId">
+                #for $survey in $survey_array:
+                    <option value="$survey.id" 
+                        #if $survey_id == $survey.id 
+                            selected="selected"
+                        #end if
+                    >
+                        $survey.name
+                    </option>
+                #end for
+            </select>
+        </div>
+    </form> 
+
+    <table class="datatable">
+        <tbody>
+            <thead>
+                <tr>
+                    <th>Group</th>
+                    <th>Rank</th>
+                    <th>Scientific Name</th>
+                    <th>Common Name</th>
+                    <th>Author</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            #for $taxon in $taxa_array:
+                <tr>
+                    <td>$taxon.taxonGroup.name</td>
+                    <td>$taxon.taxonRank.title</td>
+                    <td class="scientificName">$taxon.scientificName</td>
+                    <td>$taxon.commonName</td>
+                    <td>$taxon.author</td>
+                    <td>$taxon.year</td>
+                </tr>
+            #end for
+        </tbody>
+    </table>
+
+    <script type="text/javascript">
+        jQuery(function() {
+            jQuery("#survey").change(function(event) {
+                jQuery(event.currentTarget).parents("form").submit(); 
+            });
+        });
+    </script>
+#end if

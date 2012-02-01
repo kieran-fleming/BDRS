@@ -1,0 +1,88 @@
+<link rel="stylesheet" type="text/css" href="static.htm?fileName=media/css/report.css"/>
+
+#if not $getVar('loc_registry', []) or not $getVar('taxa_array', []):
+    <div class="messages">
+        #if $len($survey_array) == 0:
+            <p class="message">
+                You have no projects available. Please add a project or contact your system administrator.
+            </p>
+        #elif not $getVar('loc_registry', []):
+            <p class="message">
+                There are no locations for the selected project.
+            </p>
+        #elif $getVar('survey_ids', []) and not $getVar('taxa_array', []):
+            <p class="message">
+                There are no taxonomic records for the selected project(s).
+            </p>
+        #end if
+    </div>
+#end if
+
+<h2>Site Species Matrix</h2>
+<p>
+    The Site Species Matrix is a grid of occurence counts for each species in each survey.
+</p>
+
+#if $len($survey_array) > 0:
+    <div class="sepBottomDotted">
+        <p>
+            To begin, select one or more a surveys from the drop down below. To select multiple items,
+            hold down the Control key on your keyboard and click the desired items.
+        </p>
+    </div>
+    <form method="GET">
+        <div class="survey_select">
+            <label class="strong verttop" for="survey">Select a Survey:</label>
+            <select id="survey" name="surveyId" multiple="multiple">
+                #for $survey in $survey_array:
+                    <option value="$survey.id" 
+                        #if $survey.id in $survey_ids
+                            selected="selected"
+                        #end if
+                    >
+                        $survey.name
+                    </option>
+                #end for
+            </select>
+        </div>
+        <div class="textright buttonpanel">
+            <input class="form_action" type="submit" value="Update"/>
+        </div>
+    </form>
+
+    
+    #if $getVar('loc_registry', []) and $getVar('taxa_array', []):
+        <div class="datatable_container">
+            <table class="datatable">
+                <thead>
+                    <tr>
+                        <th>Species</th>
+                        #for $loc in $loc_registry:
+                            <th>$loc.name</th>
+                        #end for
+                    </tr>
+                </thead>
+                <tbody>
+                    #for $taxon_map in $taxa_array:
+                        <tr>
+                            <td class="scientificName">$taxon_map.taxon.scientificName</td>
+                            #for $loc in $loc_registry:
+                                <td>
+                                    #if $taxon_map.locations.has_key($loc.id):
+                                        $taxon_map.locations[$loc.id].count
+                                    #else
+                                        &nbsp;
+                                    #end if
+                                </td>
+                            #end for
+                        </tr>
+                    #end for
+                </tbody>
+            </table>
+        </div>
+    #end if
+#end if
+
+
+
+
