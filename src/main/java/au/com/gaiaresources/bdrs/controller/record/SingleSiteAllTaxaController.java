@@ -53,7 +53,6 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
      * @param sightingIndex the row index where 0 is the first row.
      * @return 
      */    
-    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     @RequestMapping(value = "/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm", method = RequestMethod.GET)
     public ModelAndView ajaxGetSightingsTable(HttpServletRequest request,
                                     HttpServletResponse response,

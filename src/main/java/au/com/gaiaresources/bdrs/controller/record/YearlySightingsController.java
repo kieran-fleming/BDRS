@@ -50,7 +50,6 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.security.Role;
-import au.com.gaiaresources.bdrs.service.web.RedirectionService;
 
 /**
  * Controller to render the yearly sightings form
@@ -316,6 +315,7 @@ public class YearlySightingsController extends AbstractController {
                     }
                     rec.setAttributes(recAtts);
 
+                    rec.setRecordVisibility(survey.getDefaultRecordVisibility());
                     rec.setNumber(Integer.parseInt(value));
                     recordDAO.saveRecord(rec);
                     // we know 'rec' is not null here so...

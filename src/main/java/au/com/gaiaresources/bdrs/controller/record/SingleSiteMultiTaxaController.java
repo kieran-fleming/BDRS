@@ -62,7 +62,6 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @return 
      */
     @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa/sightingRow.htm", method = RequestMethod.GET)
-    @RolesAllowed( {Role.USER,"ROLE_STUDENT","ROLE_POWERSTUDENT","ROLE_TEACHER",Role.ADMIN, Role.POWERUSER, Role.SUPERVISOR} )
     public ModelAndView ajaxAddSightingRow(HttpServletRequest request,
                                     HttpServletResponse response,
                                     @RequestParam(value= PARAM_SURVEY_ID, required=true) int surveyId,

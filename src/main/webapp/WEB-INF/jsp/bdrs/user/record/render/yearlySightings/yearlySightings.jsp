@@ -28,7 +28,7 @@
 	<c:if test="${ not preview }">
 	    <form method="post" action="${pageContext.request.contextPath}/bdrs/user/yearlySightings.htm" enctype="multipart/form-data">
 	</c:if>
-	    <input type="hidden" id="ident" name="ident" value="<%= context.getUser().getRegistrationKey() %>"/>
+	    <input type="hidden" id="ident" name="ident" value="<%= context.getUser() == null ? null : context.getUser().getRegistrationKey() %>"/>
 	    <input type="hidden" id="surveyId" name="surveyId" value="${survey.id}"/>
 	
 	    <%-- the record form header contains the unlock form icon --%>

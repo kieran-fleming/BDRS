@@ -66,7 +66,18 @@
 			        </c:choose>
 			    </c:if>
 			</c:forEach>
-		
+		    <c:choose>
+				<c:when test="${ not recordWebFormContext.preview and not recordWebFormContext.editable and recordWebFormContext.existingRecord }">
+    				<c:if test="${recordWebFormContext.unlockable}">
+						<div class="buttonpanel textright">
+							<tiles:insertDefinition name="unlockRecordWidget">
+		                        <tiles:putAttribute name="surveyId" value="${record.survey.id}" />
+		                        <tiles:putAttribute name="recordId" value="${record.id}" />
+	                        </tiles:insertDefinition>
+						</div>
+					</c:if>
+		        </c:when>
+		    </c:choose>
         <table class="form_table">
             <tbody>
 				<c:set var="formField" value="<%= formFieldMap.get(RecordPropertyType.WHEN) %>"/>
@@ -183,14 +194,6 @@
                             </c:if>
                             <input class="form_action" type="submit" name="submit" value="Save Changes"/>
 		                </div>
-		        </c:when>
-				<c:when test="${not recordWebFormContext.editable and recordWebFormContext.existingRecord}">
-					<div class="buttonpanel textright">
-						<tiles:insertDefinition name="unlockRecordWidget">
-	                        <tiles:putAttribute name="surveyId" value="${record.survey.id}" />
-	                        <tiles:putAttribute name="recordId" value="${record.id}" />
-                        </tiles:insertDefinition>
-					</div>
 		        </c:when>
 		    </c:choose>
 	    </div>

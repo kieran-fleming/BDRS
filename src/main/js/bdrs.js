@@ -29,15 +29,15 @@ bdrs.underDev = function() {
 // *********************************************************************
 // if open layers is loaded in the javascript vm...
 if (window.OpenLayers !== undefined) {
-	// We had a problem where for a dataset with > 10000 points, the map was centering
-	// on a single point after the KML was loaded.
-	// The problem was caused by clustering. The data set had about 10000 points in a small area. 
-	// The default map zoom combined caused all of these 10000 points to be placed into a single clustered point. 
-	// Thus when zooming to the layer extents, we zoomed in on a single point.
-	// Change the Vector layer prototype so we calculate the data
-	// extent by taking into account the content of clustered features.
-	OpenLayers.Layer.Vector.prototype.getDataExtent = function () {
-		
+    // We had a problem where for a dataset with > 10000 points, the map was centering
+    // on a single point after the KML was loaded.
+    // The problem was caused by clustering. The data set had about 10000 points in a small area. 
+    // The default map zoom combined caused all of these 10000 points to be placed into a single clustered point. 
+    // Thus when zooming to the layer extents, we zoomed in on a single point.
+    // Change the Vector layer prototype so we calculate the data
+    // extent by taking into account the content of clustered features.
+    OpenLayers.Layer.Vector.prototype.getDataExtent = function () {
+        
         var maxExtent = null;
         var features = this.features;
         if(features && (features.length > 0)) {
@@ -48,19 +48,19 @@ if (window.OpenLayers !== undefined) {
                 if (geometry) {
                     maxExtent.extend(geometry.getBounds());
                 }
-				// begin cluster loop:
-				// calculate the extent of the layer in non clustered features...
-				// the rest of this js function is the same as the original
-				if (features[i].cluster && (features[i].cluster.length > 0)) {
-					for (var clusterIdx=0; clusterIdx<features[i].cluster.length; ++clusterIdx) {
-					   geometry = features[i].cluster[clusterIdx].geometry;
-					   if (geometry) {
-		                  maxExtent.extend(geometry.getBounds());
-		               }
-					}
+                // begin cluster loop:
+                // calculate the extent of the layer in non clustered features...
+                // the rest of this js function is the same as the original
+                if (features[i].cluster && (features[i].cluster.length > 0)) {
+                    for (var clusterIdx=0; clusterIdx<features[i].cluster.length; ++clusterIdx) {
+                       geometry = features[i].cluster[clusterIdx].geometry;
+                       if (geometry) {
+                          maxExtent.extend(geometry.getBounds());
+                       }
+                    }
                 }
-				// end of cluster loop - the rest of this js function is the same as
-				// the original
+                // end of cluster loop - the rest of this js function is the same as
+                // the original
             }
         }
         return maxExtent;
@@ -152,20 +152,20 @@ bdrs.postWith = function(to, p){
     myForm.method = "post";
     myForm.action = to;
     for (var k in p) {
-		if (jQuery.isArray(p[k])) {
-			var myArray = p[k];
-			for (var index=0; index<myArray.length; ++index) {
-				var myInput = document.createElement("input");
-	            myInput.setAttribute("name", k);
-	            myInput.setAttribute("value", myArray[index]);
-	            myForm.appendChild(myInput);
-			}
-		} else {
-			var myInput = document.createElement("input");
-	        myInput.setAttribute("name", k);
-	        myInput.setAttribute("value", p[k]);
-	        myForm.appendChild(myInput);
-		}
+        if (jQuery.isArray(p[k])) {
+            var myArray = p[k];
+            for (var index=0; index<myArray.length; ++index) {
+                var myInput = document.createElement("input");
+                myInput.setAttribute("name", k);
+                myInput.setAttribute("value", myArray[index]);
+                myForm.appendChild(myInput);
+            }
+        } else {
+            var myInput = document.createElement("input");
+            myInput.setAttribute("name", k);
+            myInput.setAttribute("value", p[k]);
+            myForm.appendChild(myInput);
+        }
     }
     document.body.appendChild(myForm);
     myForm.submit();
@@ -319,32 +319,32 @@ bdrs.map.initBaseMap = function(mapId, options){
 bdrs.map.createDefaultMap = function(mapId, mapOptions){
     /*
      var mapOptions = {
-	     // the initial center point of the map
-	     mapCenter : new OpenLayers.LonLat(...)
-	     
-	     // the initial zoom level of the map
-	     // if the zoom level is < 0, zoom the map to its maximum level
-	     mapZoom : int,
-	     
-	     // true if the enlarge/shrink links at the top of the map is available
+         // the initial center point of the map
+         mapCenter : new OpenLayers.LonLat(...)
+         
+         // the initial zoom level of the map
+         // if the zoom level is < 0, zoom the map to its maximum level
+         mapZoom : int,
+         
+         // true if the enlarge/shrink links at the top of the map is available
          enlargeMapLink: true,
          
          // true if the checkbox to toggle the ability of the
          // scroll wheel to zoom the map is available.
          zoomLock: true,
-	     
-	     // Geocode Options
-	     geocode : {
-		     // jQuery selector of the container for the geocode input.
-		     selector: string
-		     
-		     // zoom level to use when centering on a geocode location. default 10.
-		     // if the zoom level is < 0, zoom the map to its maximum level
-		     zoom: int
-		     
-		     // true if the map center occurs on key down, false otherwise. default true.
-		     useKeyHandler : boolean
-	     }
+         
+         // Geocode Options
+         geocode : {
+             // jQuery selector of the container for the geocode input.
+             selector: string
+             
+             // zoom level to use when centering on a geocode location. default 10.
+             // if the zoom level is < 0, zoom the map to its maximum level
+             zoom: int
+             
+             // true if the map center occurs on key down, false otherwise. default true.
+             useKeyHandler : boolean
+         }
      }
      */
     var options = {
@@ -371,52 +371,52 @@ bdrs.map.createDefaultMap = function(mapId, mapOptions){
     // duck punch in persistentLayers - will not be removed when other layers
     // are cleared from the map
     map.persistentLayers = new Array();
-	
-	// This stops the user from reaching zoom level '0' which wraps around
-	// the world several times.
-	var MIN_GOOGLE_ZOOM_LEVEL = 1;
+    
+    // This stops the user from reaching zoom level '0' which wraps around
+    // the world several times.
+    var MIN_GOOGLE_ZOOM_LEVEL = 1;
     
     if (mapOptions.isPublic === true) {
         var layers =  [];
         if(window.G_PHYSICAL_MAP !== undefined && window.G_PHYSICAL_MAP !== null) {
-	        var gphy = new OpenLayers.Layer.Google('Google Physical', {
-	            type: G_PHYSICAL_MAP,
-	            sphericalMercator: true,
+            var gphy = new OpenLayers.Layer.Google('Google Physical', {
+                type: G_PHYSICAL_MAP,
+                sphericalMercator: true,
                 MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
-	        });
-	        layers.push(gphy);
+            });
+            layers.push(gphy);
         }
 
         if(window.G_NORMAL_MAP !== undefined && window.G_NORMAL_MAP !== null) {
-	        var gmap = new OpenLayers.Layer.Google('Google Streets', // the default
-	        {
-	            type: G_NORMAL_MAP,
-	            numZoomLevels: 20,
-	            sphericalMercator: true,
+            var gmap = new OpenLayers.Layer.Google('Google Streets', // the default
+            {
+                type: G_NORMAL_MAP,
+                numZoomLevels: 20,
+                sphericalMercator: true,
                 MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
-	        });
-	        layers.push(gmap);
+            });
+            layers.push(gmap);
         }
         
         var ghyb = null;
         if(window.G_HYBRID_MAP !== undefined && window.G_HYBRID_MAP !== null) {
-	        ghyb = new OpenLayers.Layer.Google('Google Hybrid', {
-	            type: G_HYBRID_MAP,
-	            numZoomLevels: 20,
-	            sphericalMercator: true,
-				MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
-	        });
-	        layers.push(ghyb);
+            ghyb = new OpenLayers.Layer.Google('Google Hybrid', {
+                type: G_HYBRID_MAP,
+                numZoomLevels: 20,
+                sphericalMercator: true,
+                MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
+            });
+            layers.push(ghyb);
         }
         
         if(window.G_SATELLITE_MAP !== undefined && window.G_SATELLITE_MAP !== null) {
-	        var gsat = new OpenLayers.Layer.Google('Google Satellite', {
-	            type: G_SATELLITE_MAP,
-	            numZoomLevels: 22,
-	            sphericalMercator: true,
+            var gsat = new OpenLayers.Layer.Google('Google Satellite', {
+                type: G_SATELLITE_MAP,
+                numZoomLevels: 22,
+                sphericalMercator: true,
                 MIN_ZOOM_LEVEL: MIN_GOOGLE_ZOOM_LEVEL
-	        });
-	        layers.push(gsat);
+            });
+            layers.push(gsat);
         }
         
         if(layers.length === 0) {
@@ -612,11 +612,11 @@ bdrs.map.getZoomLockControl = function(controlPanel, available) {
  * @param available [boolean] true if this widget is required, false otherwise.
  */
 bdrs.map.getHideShowControl = function(controlPanel, available, map) {
-	if (!available) {
-		return;
-	}
-	
-	var control = jQuery("<a></a>");
+    if (!available) {
+        return;
+    }
+    
+    var control = jQuery("<a></a>");
     
     control.attr({"id": "hideShowMapLink", "href": "javascript:void(0);"});
     control.text(bdrs.map.HIDE_MAP_LABEL);
@@ -644,11 +644,11 @@ bdrs.map.maximiseMap = function(map, trigger, enlargeMapLabel, shrinkMapLabel, e
         mapContainer.unwrap().css({'width':'inherit', 'height':'inherit'});
         // The following only needed for IE7, but does not harm other browsers
         mapDiv.css({
-	        position: "relative",
-	        top: null,
-	        bottom: null,
-	        left: null,
-	        right: null
+            position: "relative",
+            top: null,
+            bottom: null,
+            left: null,
+            right: null
         });
         mapDiv.removeAttr("style");
         mapDiv.removeClass(enlargeMapClass).addClass(shrinkMapClass);
@@ -736,22 +736,22 @@ bdrs.map.updateMapLogo = function() {
  * @param noCookie [boolean] true if a cookie should NOT be created storing the state, false otherwise. 
  */
 bdrs.map.scrollZoom = function(scrollZoomEnabled, map, noCookie) {
-	var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
-	
-	if(controls.length > 0) {
-		if (scrollZoomEnabled) {
-			controls[0].enableZoomWheel();
-		} else {
-			controls[0].disableZoomWheel();
-		}
-		
-		if (!noCookie) {
+    var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
+    
+    if(controls.length > 0) {
+        if (scrollZoomEnabled) {
+            controls[0].enableZoomWheel();
+        } else {
+            controls[0].disableZoomWheel();
+        }
+        
+        if (!noCookie) {
             // The false value doesn't matter. Its only enabled when the value
             // is equal to the enabled value.
-		    var cookieVal = scrollZoomEnabled ? bdrs.map.SCROLL_ZOOM_ENABLED_VALUE : 'false';
+            var cookieVal = scrollZoomEnabled ? bdrs.map.SCROLL_ZOOM_ENABLED_VALUE : 'false';
             bdrs.util.cookie.create(bdrs.map.SCROLL_ZOOM_COOKIE, cookieVal, 1000);
         }
-	}
+    }
 };
 
 /**
@@ -762,11 +762,11 @@ bdrs.map.restoreScrollZoomState = function(map) {
     var controls = map.getControlsByClass('OpenLayers.Control.Navigation');
     
     if(controls.length > 0) {
-	    if (bdrs.map.isScrollZoomEnabled()) {
-	        controls[0].enableZoomWheel();
-	    } else {
-	        controls[0].disableZoomWheel();
-	    }
+        if (bdrs.map.isScrollZoomEnabled()) {
+            controls[0].enableZoomWheel();
+        } else {
+            controls[0].disableZoomWheel();
+        }
     }
 };
 
@@ -896,12 +896,12 @@ bdrs.map.createOpenlayersStyleMap = function(selectedId) {
     };
     
     var defaultOLStyle = new OpenLayers.Style({
-		'strokeWidth': 2,
-		'strokeOpacity': 1,
-		'strokeColor': '${getStrokeColor}',
-		'fillColor': '${getFillColor}',
-		'fillOpacity': 0.8,
-		'pointRadius': 5
+        'strokeWidth': 2,
+        'strokeOpacity': 1,
+        'strokeColor': '${getStrokeColor}',
+        'fillColor': '${getFillColor}',
+        'fillOpacity': 0.8,
+        'pointRadius': 5
     }, {context:context});
     
     var pickedOLStyle = new OpenLayers.Style({
@@ -909,12 +909,12 @@ bdrs.map.createOpenlayersStyleMap = function(selectedId) {
            fillColor: bdrs.map.PICKED_FEATURE_FILL_COLOR
     }); 
     
-	var styles = {
-	   "default": defaultOLStyle,
+    var styles = {
+       "default": defaultOLStyle,
        "select": pickedOLStyle
     };
-	
-	return new OpenLayers.StyleMap(styles);
+    
+    return new OpenLayers.StyleMap(styles);
 };
 
 /**
@@ -1579,7 +1579,7 @@ bdrs.map.addSingleFeatureDrawLayer = function(map, layerName, options){
         featureMovedHandler: featureMovedHandler,
         featureMoveCompleteHandler: featureMoveCompleteHandler,
         featureModifiedHandler: featureModifiedHandler,
-		dragStartHandler: options.dragStartHandler
+        dragStartHandler: options.dragStartHandler
     };
     
     return bdrs.map.addPolygonDrawLayer(map, layerName, drawOptions);
@@ -1597,9 +1597,9 @@ bdrs.map.addPolygonDrawLayer = function(map, layerName, options){
         // called on move complete vs on drag
         featureMoveCompleteHandler: function(){
         },
-		// called on mouse down when dragging an item
-		dragStartHandler: function() {
-		}
+        // called on mouse down when dragging an item
+        dragStartHandler: function() {
+        }
     };
     options = jQuery.extend(defaultOptions, options);
     
@@ -1626,7 +1626,7 @@ bdrs.map.addPolygonDrawLayer = function(map, layerName, options){
     var dragFeature = new OpenLayers.Control.DragFeature(layer, {
         onDrag: options.featureMovedHandler,
         onComplete: options.featureMoveCompleteHandler,
-		onStart: options.dragStartHandler
+        onStart: options.dragStartHandler
     });
     map.addControl(dragFeature);
     dragFeature.activate();
@@ -1841,18 +1841,19 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
         if (item.type == "record") {
             // record specific stuff
             var recordAttrKeys = ["owner", "census_method", "species", "common_name", "number", "notes", "habitat", "when", "behaviour"];
+            var recordId = item["recordId"];
+            var ownerId = item["ownerId"];
+            var recordVisibility = item["recordVisibility"];
+            // if the record is public or if you are the owner or admin, add the view link
+            if (recordVisibility == 'PUBLIC' || (bdrs.authenticated && (bdrs.authenticatedUserId === ownerId || bdrs.isAdmin))) {
+                var viewRecordRow = jQuery("<tr><td></td></tr>");
+                viewRecordRow.attr('colspan', '2');
+                var surveyId = item["surveyId"];
+                var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
+                jQuery("<a>View&nbsp;Record</a>").attr('href', recordUrl).appendTo(viewRecordRow.find("td"));
+                tbody.append(viewRecordRow);
+            }
             if (bdrs.authenticated) {
-                var recordId = item["recordId"];
-                var ownerId = item["ownerId"];
-                if (bdrs.authenticatedUserId === ownerId || bdrs.isAdmin) {
-                    var editRecordRow = jQuery("<tr><td></td></tr>");
-                    editRecordRow.attr('colspan', '2');
-                    var surveyId = item["surveyId"];
-                    var recordUrl = bdrs.contextPath + "/bdrs/user/surveyRenderRedirect.htm?surveyId=" + surveyId + "&recordId=" + recordId;
-                    jQuery("<a>View&nbsp;Record</a>").attr('href', recordUrl).appendTo(editRecordRow.find("td"));
-                    tbody.append(editRecordRow);
-                }
-                
                 var requestRecordInfoRow = jQuery("<tr><td></td></tr>");
                 requestRecordInfoRow.attr('colspan', '2');
                 var requestRecordInfoUrl = bdrs.contextPath + "/bdrs/user/contactRecordOwner.htm?recordId=" + recordId;
@@ -1864,15 +1865,15 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
                 var key = recordAttrKeys[i];
                 var value;
                 if (key === 'when') {
-					// Only show the date if non null else we get 'NaN' in the formatted
-					// date string. The following actually omits the 'when' row
-					var dateTicks = item.when;
-					if (dateTicks !== null && dateTicks !== undefined) {
-					    value = new Date(parseInt(dateTicks, 10));
+                    // Only show the date if non null else we get 'NaN' in the formatted
+                    // date string. The following actually omits the 'when' row
+                    var dateTicks = item.when;
+                    if (dateTicks !== null && dateTicks !== undefined) {
+                        value = new Date(parseInt(dateTicks, 10));
                         value = bdrs.util.formatDate(value);
-					} else {
-						value = "";
-					}
+                    } else {
+                        value = "";
+                    }
                 }
                 else 
                     if (key === 'species' && item[key]) {
@@ -1919,7 +1920,7 @@ bdrs.map.createContentState = function(itemArray, popup, mapServerQueryManager){
             }    
         }
         
-		var table = jQuery("<table></table>").append(tbody);
+        var table = jQuery("<table></table>").append(tbody);
         table.addClass("kmlDescriptionTable");
         var tableDiv = jQuery("<div></div>").append(table);
         tableDiv.addClass("popupPage" + itemIndex);
@@ -2442,11 +2443,11 @@ bdrs.map.createFeaturePopup = function(map, googleProjectionLonLatPos, featureAr
     
     // the final target....
     var content = jQuery("<span></span>");
-	var cyclerDiv = jQuery("<div></div>").addClass("textcenter").appendTo(content);
-	
+    var cyclerDiv = jQuery("<div></div>").addClass("textcenter").appendTo(content);
+    
     // only add the arrows if more than one total page
-	var leftShiftDiv = jQuery('<div></div>').addClass("shiftContentLeftContainer").appendTo(content);;
-	var rightShiftDiv = jQuery('<div></div>').addClass("shiftContentRightContainer textright").appendTo(content);
+    var leftShiftDiv = jQuery('<div></div>').addClass("shiftContentLeftContainer").appendTo(content);;
+    var rightShiftDiv = jQuery('<div></div>').addClass("shiftContentRightContainer textright").appendTo(content);
     jQuery('<img src="' + bdrs.contextPath + '/images/icons/left.png" />').addClass("shiftContentLeft").appendTo(leftShiftDiv);
     jQuery("<span></span>").addClass("currentPage").appendTo(cyclerDiv);
     jQuery("<span>&nbsp;of&nbsp;</span>").appendTo(cyclerDiv);
@@ -2529,8 +2530,8 @@ bdrs.survey.location.updateLocation = function(pk, options) {
             // zoom the map to show the currently selected location
             var geobounds = feature.geometry.getBounds();
             var zoom = bdrs.map.baseMap.getZoomForExtent(geobounds);
-			
-			zoom = zoom > bdrs.map.DEFAULT_POINT_ZOOM_LEVEL ? bdrs.map.DEFAULT_POINT_ZOOM_LEVEL : zoom;
+            
+            zoom = zoom > bdrs.map.DEFAULT_POINT_ZOOM_LEVEL ? bdrs.map.DEFAULT_POINT_ZOOM_LEVEL : zoom;
             bdrs.map.baseMap.setCenter(geobounds.getCenterLonLat(), zoom);
             
             // show the location attributes in the locationAttributesContainer
@@ -2564,8 +2565,8 @@ bdrs.getDatePickerParams = function() {
     
     var params = {
         showAnim: '',
-		changeMonth: true,
-		changeYear: true,
+        changeMonth: true,
+        changeYear: true,
         dateFormat: bdrs.dateFormat,
         onSelect: onSelectHandler,
         onClose: onCloseHandler
@@ -2576,7 +2577,7 @@ bdrs.getDatePickerParams = function() {
 
 bdrs.timePickerCloseHandler = function(value,timePickerInstance) {
     // only way I could see to acces the input node.
-	// calls blur event to trigger form validation
+    // calls blur event to trigger form validation
     jQuery(timePickerInstance.input[0]).blur();
 };
 
@@ -2586,9 +2587,9 @@ bdrs.initDatePicker = function(){
     // and vice versa in the date picker
     var onSelectDateRangeHandler = function(selectedDate, instance){
         var option = this.id == "from" ? "minDate" : "maxDate";
-		var targetSelector = this.id == "from" ? "#to" : "#from";
-		var date = $.datepicker.parseDate((instance.settings.dateFormat || $.datepicker._defaults.dateFormat), selectedDate, instance.settings);
-		jQuery(targetSelector).datepicker("option", option, date);
+        var targetSelector = this.id == "from" ? "#to" : "#from";
+        var date = $.datepicker.parseDate((instance.settings.dateFormat || $.datepicker._defaults.dateFormat), selectedDate, instance.settings);
+        jQuery(targetSelector).datepicker("option", option, date);
         jQuery(this).trigger('blur');
     };
     
@@ -2599,38 +2600,38 @@ bdrs.initDatePicker = function(){
     var historicalDpParams = bdrs.getDatePickerParams();
     historicalDpParams.maxDate = new Date(); // Cannot pick a date in the future,
     historicalDpParams.beforeShow = function(){
-		// only way to change z-index of datepicker
-    	setTimeout(function() {jQuery('#ui-datepicker-div').css('z-index',800);},  50);
+        // only way to change z-index of datepicker
+        setTimeout(function() {jQuery('#ui-datepicker-div').css('z-index',800);},  50);
     };
 
     jQuery(".datepicker_historical").not(".hasDatepicker").datepicker(historicalDpParams);
     
-	var rangeDpParams = bdrs.getDatePickerParams();
-	rangeDpParams.onSelect = onSelectDateRangeHandler;
+    var rangeDpParams = bdrs.getDatePickerParams();
+    rangeDpParams.onSelect = onSelectDateRangeHandler;
     jQuery(".datepicker_range").not(".hasDatepicker").datepicker(rangeDpParams);
-	
-	// this handler is used when the user is typing in their date. Date.parse
-	// will handle most funky inputs. We will attempt to parse the date and 
-	// fill out the date input in our expected format.
-	jQuery(".datepicker, .datepicker_historical, .datepicker_range").bind("keydown", function(event) {
-		// i.e. if 'enter' is pressed
-		if (event.keyCode === 13) {
-			try {
-				var dateInput = jQuery(this);
-				var parsedDate = Date.parse(dateInput.val());
-				if (parsedDate) {
-				    dateInput.val(bdrs.util.formatDate(parsedDate));	
-				}
-			} catch (ex) {
-				// catch exception quietly...
-			}
-		}
+    
+    // this handler is used when the user is typing in their date. Date.parse
+    // will handle most funky inputs. We will attempt to parse the date and 
+    // fill out the date input in our expected format.
+    jQuery(".datepicker, .datepicker_historical, .datepicker_range").bind("keydown", function(event) {
+        // i.e. if 'enter' is pressed
+        if (event.keyCode === 13) {
+            try {
+                var dateInput = jQuery(this);
+                var parsedDate = Date.parse(dateInput.val());
+                if (parsedDate) {
+                    dateInput.val(bdrs.util.formatDate(parsedDate));    
+                }
+            } catch (ex) {
+                // catch exception quietly...
+            }
+        }
     });
-	
-	// initialise timepicker inputs
-	jQuery('.timepicker').timepicker({
-		onClose: bdrs.timePickerCloseHandler
-	});
+    
+    // initialise timepicker inputs
+    jQuery('.timepicker').timepicker({
+        onClose: bdrs.timePickerCloseHandler
+    });
 };
 
 bdrs.initColorPicker = function(){
@@ -2645,7 +2646,7 @@ bdrs.initColorPicker = function(){
  * @param {Object} formNode - the form we are currently submitting
  */
 bdrs.unbindDisableHandler = function(formNode) {
-	jQuery('form[method=post] input[type=submit]', formNode).unbind('click.disable');
+    jQuery('form[method=post] input[type=submit]', formNode).unbind('click.disable');
 }
 
 //disable form submit button on click to prevent double-click dual submission
@@ -2677,7 +2678,7 @@ bdrs.initSubmitDisabler = function() {
  */
 bdrs.fixJqDialog = function(dialogSelector) {
 
-	jQuery(dialogSelector).dialog().bind("dialogopen", function(event, ui) {
+    jQuery(dialogSelector).dialog().bind("dialogopen", function(event, ui) {
         // fix for width:auto in IE
         var jqDialog = jQuery(this);
         var parent = jqDialog.parent();
@@ -2710,8 +2711,8 @@ bdrs.fixJqDialog = function(dialogSelector) {
  * found, i.e., the contents of the rounded brackets.
  */
 bdrs.handleClassParamNodes = function(paramName, paramFoundHandler) {
-	jQuery("[class^='" + paramName + "']").each(function(index, node) {
-		var getClassParamValue = bdrs.getClassParamValue(node, paramName);
+    jQuery("[class^='" + paramName + "']").each(function(index, node) {
+        var getClassParamValue = bdrs.getClassParamValue(node, paramName);
         if (getClassParamValue !== null && getClassParamValue !== undefined) {
             paramFoundHandler(node, getClassParamValue);
         }
@@ -2725,11 +2726,11 @@ bdrs.handleClassParamNodes = function(paramName, paramFoundHandler) {
  * @param {Object} paramName the param name to search for.
  */
 bdrs.getClassParamValue = function(node, paramName) {
-	var regex = paramName + "\\(([\\w\\.]+)\\)$";
-	var classAttr = jQuery(node).attr('class');
+    var regex = paramName + "\\(([\\w\\.]+)\\)$";
+    var classAttr = jQuery(node).attr('class');
     if (classAttr != null && classAttr != undefined) {
-		var classList = classAttr.split(/\s+/);
-		for (var i=0; i<classList.length; ++i) {
+        var classList = classAttr.split(/\s+/);
+        for (var i=0; i<classList.length; ++i) {
             var match = classList[i].match(regex);
             if (match && match.length === 2) {
                 return match[1];
@@ -2737,9 +2738,9 @@ bdrs.getClassParamValue = function(node, paramName) {
         }
         // not found return null
         return null;
-	} else {
+    } else {
         return null;
-	}
+    }
 };
 
 
@@ -2770,12 +2771,12 @@ bdrs.init = function(){
             }
         }
     });
-	
+    
     // Changing blockUI defaults
     // this puts the block UI above all known items...
     jQuery.blockUI.defaults.baseZ = 1070;
-	// CSS can be found in base.css in the theme.
-	jQuery.blockUI.defaults.css = {};
+    // CSS can be found in base.css in the theme.
+    jQuery.blockUI.defaults.css = {};
 };
 
 /*

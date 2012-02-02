@@ -54,6 +54,7 @@ import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.service.db.DeleteCascadeHandler;
 import au.com.gaiaresources.bdrs.service.db.DeletionService;
 import au.com.gaiaresources.bdrs.util.Pair;
+import au.com.gaiaresources.bdrs.util.StringUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -612,12 +613,16 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
         builder.append(" select r");
         builder.append(" from Record r");
         builder.append(" where r.survey.id = :surveyPk and");
-        builder.append("       r.location.id = :locationPk and");
-        builder.append("       r.user.registrationKey = :regKey");
+        builder.append("       r.location.id = :locationPk ");
+        if (!StringUtils.nullOrEmpty(userRegistrationKey) && !"null".equals(userRegistrationKey)) {
+            builder.append("       and r.user.registrationKey = :regKey");
+        }
         builder.append(" order by r.when");
 
         Query q = getSession().createQuery(builder.toString());
-        q.setParameter("regKey", userRegistrationKey);
+        if (!StringUtils.nullOrEmpty(userRegistrationKey) && !"null".equals(userRegistrationKey)) {
+            q.setParameter("regKey", userRegistrationKey);
+        }
         q.setParameter("surveyPk", surveyPk);
         q.setParameter("locationPk", locationPk);
 

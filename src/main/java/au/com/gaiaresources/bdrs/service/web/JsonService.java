@@ -39,6 +39,7 @@ public class JsonService {
     public static final String RECORD_KEY_BEHAVIOUR = "behaviour";
     public static final String RECORD_KEY_RECORD_ID = "recordId";
     public static final String RECORD_KEY_SURVEY_ID = "surveyId";
+    public static final String RECORD_KEY_VISIBILITY = "recordVisibility";
     
     // first + last name of the recording user
     public static final String RECORD_KEY_USER = "owner";
@@ -100,7 +101,8 @@ public class JsonService {
         // This is important, always include this stuff
         addToAttributeMap(attrMap, JSON_KEY_ID, record.getId());
         addToAttributeMap(attrMap, JSON_KEY_TYPE, JSON_ITEM_TYPE_RECORD);
-
+        addToAttributeMap(attrMap, RECORD_KEY_VISIBILITY, record.getRecordVisibility());
+        
         return JSONObject.fromObject(attrMap);
     }
     

@@ -75,7 +75,7 @@ bdrs.advancedReview.initTableView = function(formSelector,
     jQuery(selectAllSelector).change(function(evt) {
         var select_all_elem = jQuery(evt.currentTarget);
         var select_all = select_all_elem.prop("checked");
-        var checkboxes = select_all_elem.parents("table").find('.recordIdCheckbox');
+        var checkboxes = select_all_elem.parents("table").find('.recordIdCheckbox:not(:disabled)');
         checkboxes.prop("checked", select_all);
     });
     

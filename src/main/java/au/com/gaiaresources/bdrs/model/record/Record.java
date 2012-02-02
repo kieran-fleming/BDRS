@@ -685,19 +685,19 @@ public class Record extends PortalPersistentImpl implements ReadOnlyRecord, Attr
         boolean isOwner = viewer != null ? viewer.getId().equals(this.getUser().getId()) : false;
         
         switch (this.recordVisibility) {
-        // only the owner or admin can view an OWNER_ONLY record
-        case OWNER_ONLY:
-        // CONTROLLED records are a bit strange. alot of the information is hidden so rendering
-        // forms could be a little tricky. For now handle controlled records the same as
-        // owner only records
-        case CONTROLLED:
-            return isOwner || hasPrivilege;
-        // anyone can view a public record
-        case PUBLIC:
-            return true;
-            
-            default:
-                throw new IllegalStateException("record visibility type not handled : " + this.recordVisibility);
+            // only the owner or admin can view an OWNER_ONLY record
+            case OWNER_ONLY:
+            // CONTROLLED records are a bit strange. alot of the information is hidden so rendering
+            // forms could be a little tricky. For now handle controlled records the same as
+            // owner only records
+            case CONTROLLED:
+                return isOwner || hasPrivilege;
+            // anyone can view a public record
+            case PUBLIC:
+                return true;
+                
+                default:
+                    throw new IllegalStateException("record visibility type not handled : " + this.recordVisibility);
         }
     }
 

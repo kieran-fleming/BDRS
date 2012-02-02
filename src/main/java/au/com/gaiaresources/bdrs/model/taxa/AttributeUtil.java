@@ -31,6 +31,6 @@ public class AttributeUtil {
      */
     public static boolean isVisibleByScopeAndUser(Attribute attr, User loggedInUser, TypedAttributeValue attrVal) {
         return AttributeScope.isModerationScope(attr.getScope()) && 
-                (loggedInUser.isModerator() || (attrVal != null && attrVal.isPopulated()));
+                ((loggedInUser != null && loggedInUser.isModerator()) || (attrVal != null && attrVal.isPopulated()));
     }
 }

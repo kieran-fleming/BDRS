@@ -500,12 +500,12 @@ public abstract class SingleSiteController extends AbstractController {
                 AttributeValue attrVal = AttributeValueUtil.getAttributeValue(attribute, record);
                 if (AttributeScope.SURVEY.equals(attribute.getScope()) || 
                         (AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) && 
-                                (accessor.isModerator() || (attrVal != null && attrVal.isPopulated())))) {
+                                ((accessor != null && accessor.isModerator()) || (attrVal != null && attrVal.isPopulated())))) {
                     // only add moderation attributes if the accessor is a moderator or the value is populated
                     formFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute, attrVal));
                 } else if (AttributeScope.RECORD.equals(attribute.getScope()) || 
                         (AttributeScope.RECORD_MODERATION.equals(attribute.getScope()) && 
-                                (accessor.isModerator() || (attrVal != null && attrVal.isPopulated())))) {
+                                ((accessor != null && accessor.isModerator()) || (attrVal != null && attrVal.isPopulated())))) {
                     recordScopedAttributeList.add(attribute);
                     sightingRowFormFieldList.add(formFieldFactory.createRecordFormField(survey, record, attribute));
                 }

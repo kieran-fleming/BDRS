@@ -55,7 +55,6 @@ public class RenderController extends AbstractController {
      *            the primary key of the survey in question.
      * @return redirected view to the survey renderer.
      */
-    @RolesAllowed( { Role.USER, Role.POWERUSER, Role.SUPERVISOR, Role.ADMIN })
     @SuppressWarnings("unchecked")
     @RequestMapping(value = SURVEY_RENDER_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView surveyRendererRedirect(HttpServletRequest request,
