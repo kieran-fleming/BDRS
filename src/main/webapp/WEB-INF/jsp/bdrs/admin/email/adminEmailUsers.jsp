@@ -72,6 +72,7 @@
 
 <script type="text/javascript">
     jQuery(document).ready(function() {
+        bdrs.admin.adminEditContent.setTextArea('#markItUp');
 		// set the popups to only open on command, not page open
         jQuery('#savePopup').dialog({ zIndex: bdrs.MODAL_DIALOG_Z_INDEX, autoOpen: false, resizable: false, });
 		bdrs.fixJqDialog('#savePopup');

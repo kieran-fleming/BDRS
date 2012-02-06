@@ -47,6 +47,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeDAO;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeType;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.security.Role;
+import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
 @RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
@@ -71,6 +72,12 @@ public class SurveyAttributeBaseController extends AbstractController {
     @Autowired
     private CensusMethodDAO cmDAO;
     
+    /**
+     * Content access for moderation email settings.
+     */
+    @Autowired
+    private ContentService contentService;
+    
     @Autowired
     private PropertyService propertyService;
     
@@ -79,7 +86,8 @@ public class SurveyAttributeBaseController extends AbstractController {
     // will there be a 'standard taxonomic' (i.e. no census method) census method
     // provided in the contribute menu.
     public static final String PARAM_DEFAULT_CENSUS_METHOD_PROVIDED = "defaultCensusMethodProvided";
-    
+    public static final String PARAM_MODERATION_REQUIRED_EMAIL = "ownerToModeratorEmail";
+    public static final String PARAM_MODERATION_PERFORMED_EMAIL = "moderatorToOwnerEmail";
 
     /**
      * Creates a surveyEditAttributes view.
@@ -127,6 +135,13 @@ public class SurveyAttributeBaseController extends AbstractController {
         ModelAndView mv = new ModelAndView("surveyEditAttributes");
         mv.addObject("survey", survey);
         mv.addObject("formFieldList", formFieldList);
+        // add the email templates for moderation email settings
+        mv.addObject("emailTemplates", contentService.getKeysStartingWith("email"));
+        // add the settings for moderation emails
+        Metadata md = survey.getMetadataByKey(Metadata.MODERATION_REQUIRED_EMAIL);
+        mv.addObject(PARAM_MODERATION_REQUIRED_EMAIL, md == null ? ContentService.MODERATION_REQUIRED_EMAIL_KEY : md.getValue());
+        md = survey.getMetadataByKey(Metadata.MODERATION_PERFORMED_EMAIL);
+        mv.addObject(PARAM_MODERATION_PERFORMED_EMAIL, md == null ? ContentService.MODERATION_PERFORMED_EMAIL_KEY : md.getValue());
         return mv;
     }
 
@@ -141,18 +156,20 @@ public class SurveyAttributeBaseController extends AbstractController {
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyAttributes(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList,
-            @RequestParam(value = PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, defaultValue="false") boolean defaultCensusMethodProvided) {
+            @RequestParam(value = PARAM_DEFAULT_CENSUS_METHOD_PROVIDED, defaultValue="false") boolean defaultCensusMethodProvided,
+            @RequestParam(value = PARAM_MODERATION_PERFORMED_EMAIL, required=false) String modPerformedEmailKey,
+            @RequestParam(value = PARAM_MODERATION_REQUIRED_EMAIL, required=false) String modRequiredEmailKey) {
         
         Survey survey = getSurvey(request.getParameter("surveyId"));
 
-		if (survey == null) {
+	if (survey == null) {
             return SurveyBaseController.nullSurveyRedirect(getRequestContext());
         }
 		
-		 Map<String, String[]> parameterMap = request.getParameterMap();
+	Map<String, String[]> parameterMap = request.getParameterMap();
         for (RecordPropertyType type : RecordPropertyType.values()) {
         	RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
-			formFieldFactory.createAttributeFormField(recordProperty, parameterMap);
+		formFieldFactory.createAttributeFormField(recordProperty, parameterMap);
         }
         
         survey.setDefaultCensusMethodProvided(defaultCensusMethodProvided, metadataDAO);
@@ -170,6 +187,10 @@ public class SurveyAttributeBaseController extends AbstractController {
             Metadata md = survey.setFormRendererType(SurveyFormRendererType.DEFAULT);
             metadataDAO.save(md);
         }
+        
+        // update the moderation email keys if specified
+        updateModerationSettings(survey, modPerformedEmailKey, ContentService.MODERATION_PERFORMED_EMAIL_KEY, Metadata.MODERATION_PERFORMED_EMAIL);
+        updateModerationSettings(survey, modRequiredEmailKey, ContentService.MODERATION_REQUIRED_EMAIL_KEY, Metadata.MODERATION_REQUIRED_EMAIL);
         
         // no child protection!
         List<CensusMethod> childList = new ArrayList<CensusMethod>();
@@ -211,6 +232,31 @@ public class SurveyAttributeBaseController extends AbstractController {
             mv = new ModelAndView(new RedirectView("/bdrs/admin/survey/listing.htm", true));
         }
         return mv;
+    }
+
+    /**
+     * Updates the email settings for moderation attributes.  Creates a {@link Metadata} value for metadataKey
+     * with value paramValue if the paramValue is specified and is not equal to the default content, specified
+     * by contentKey. If it matches the default, any existing {@link Metadata} for metadataKey will be removed.
+     * @param survey The survey that contains the metadata
+     * @param paramValue The value of the metadata to set
+     * @param contentKey The default content key
+     * @param metadataKey The key for the metadata
+     */
+    private void updateModerationSettings(Survey survey, String paramValue, String contentKey, String metadataKey) {
+        // if it is not null and is not the default key, set a metadata for the value
+        if (paramValue != null && !paramValue.equals(contentKey)) {
+            Metadata md = survey.addMetadata(metadataKey, paramValue);
+            metadataDAO.save(md);
+        } else if (paramValue == null || paramValue.equals(contentKey)) {
+            // delete the existing metadata if it is reset to the default
+            Metadata md = survey.getMetadataByKey(metadataKey);
+            if (md != null) {
+                survey.removeMetadata(md);
+                metadataDAO.save(md);
+                metadataDAO.delete(md);
+            }
+        }
     }
 
     /**

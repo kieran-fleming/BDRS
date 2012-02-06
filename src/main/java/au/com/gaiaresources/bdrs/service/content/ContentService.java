@@ -1,14 +1,15 @@
-/**
- * 
- */
 package au.com.gaiaresources.bdrs.service.content;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +21,8 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import edu.emory.mathcs.backport.java.util.TreeSet;
 
 import au.com.gaiaresources.bdrs.model.content.Content;
 import au.com.gaiaresources.bdrs.model.content.ContentDAO;
@@ -38,6 +41,10 @@ public class ContentService {
     private static Logger log = Logger.getLogger(ContentService.class);
     
     private static final String CONTENT_PACKAGE = "/au/com/gaiaresources/bdrs/service/content/";
+    
+    // keys for the default moderation email content
+    public static final String MODERATION_REQUIRED_EMAIL_KEY = "email/ModerationRequired";
+    public static final String MODERATION_PERFORMED_EMAIL_KEY = "email/ModerationPerformed";
     
     public static final Map<String, String> CONTENT;
     static {
@@ -64,6 +71,7 @@ public class ContentService {
         tmp.put("admin/thresholdEdit", "admin_thresholdEdit.vm");
         tmp.put("admin/censusMethodEdit", "admin_censusMethodEdit.vm");
         tmp.put("admin/censusMethodListing", "admin_censusMethodListing.vm");
+        tmp.put("admin/editProject/editModerationEmailSettings", "admin_editModerationEmailSettings.vm");
         
         tmp.put("user/home", "user_home.vm");
         tmp.put("user/managedFileListing", "user_managedFileListing.vm");
@@ -116,8 +124,8 @@ public class ContentService {
         tmp.put("email/UserSignUpWait", "/au/com/gaiaresources/bdrs/email/UserSignUpWait.vm");
         tmp.put("email/ContactRecordOwner", "/au/com/gaiaresources/bdrs/email/ContactRecordOwner.vm");
         tmp.put("email/ContactRecordOwnerSendToSelf", "/au/com/gaiaresources/bdrs/email/ContactRecordOwnerSendToSelf.vm");
-        tmp.put("email/ModerationPerformed", "/au/com/gaiaresources/bdrs/email/ModerationPerformed.vm");
-        tmp.put("email/ModerationRequired", "/au/com/gaiaresources/bdrs/email/ModerationRequired.vm");
+        tmp.put(MODERATION_PERFORMED_EMAIL_KEY, "/au/com/gaiaresources/bdrs/email/ModerationPerformed.vm");
+        tmp.put(MODERATION_REQUIRED_EMAIL_KEY, "/au/com/gaiaresources/bdrs/email/ModerationRequired.vm");
         tmp.put("email/RecordReleased", "/au/com/gaiaresources/bdrs/email/RecordReleased.vm");
         
         CONTENT = Collections.unmodifiableMap(tmp);
@@ -330,5 +338,36 @@ public class ContentService {
      */
     public static void putContentParams(Map<String, Object> params) {
         putContentParams(null, null, null, params);
+    }
+
+    /**
+     * Gets a {@link Set} of content keys that start with the given {@link String}
+     * @param string the {@link String} to match content on
+     * @return A sorted {@link Set} of unique keys that start with the given {@link String}
+     */
+    public Set<String> getKeysStartingWith(String string) {
+        List<String> keys = contentDAO.getKeysStartingWith(string);
+        // add the default portal initializer email keys as well if not present
+        Set<String> uniqueKeys = new TreeSet(keys);
+        uniqueKeys.addAll(getItemsStartingWith(ContentService.CONTENT.keySet(),string));
+        return uniqueKeys;
+    }
+    
+
+    /**
+     * Utility method for finding all the items in a Collection that start 
+     * with the given prefix.
+     * @param items the collection to search through
+     * @param prefix the prefix to search for
+     * @return A list of items that start with the prefix
+     */
+    private List<String> getItemsStartingWith(Collection<? extends String> items,
+            String prefix) {
+        List<String> foundItems = new ArrayList<String>();
+        for (String string : items) {
+            if (string.startsWith(prefix))
+                foundItems.add(string);
+        }
+        return foundItems;
     }
 }

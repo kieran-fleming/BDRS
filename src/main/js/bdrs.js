@@ -2901,6 +2901,7 @@ bdrs.require("bdrs/contribute.js");
 bdrs.require("bdrs/location.js");
 bdrs.require("bdrs/dnd.js");
 bdrs.require("bdrs/map.js");
+bdrs.require("bdrs/model/attribute_scope.js");
 bdrs.require("bdrs/model/attribute_type.js");
 bdrs.require("bdrs/attribute.js");
 bdrs.require("bdrs/url/urls.js");

@@ -44,13 +44,6 @@
                                 </c:forEach>
                             </select>
                         </span>
-                        <script type="text/javascript">
-                            jQuery(function() {
-                                var func = bdrs.attribute.getRowTypeChangedFunc(${index}, true);
-                                var eventData = {index: ${index}, bNewRow: true};
-                                jQuery("[name=add_typeCode_"+${index}+"]").change(eventData, func);
-                            });
-                        </script>
                     </td>
                     <td class="textcenter">
                         <input id="add_required_${index}" 
@@ -60,7 +53,7 @@
                     <c:if test="${ showScope == true }">
                         <td class="textcenter">
                             <span class="table_input_container">
-                                <select name="add_scope_${index}">
+                                <select class="attrScopeSelect" name="add_scope_${index}" >
                                     <c:forEach items="<%= AttributeScope.values() %>" var="add_scope">
                                         <jsp:useBean id="add_scope" type="au.com.gaiaresources.bdrs.model.taxa.AttributeScope" />
                                         <option value="<%= add_scope.toString() %>">
@@ -81,6 +74,14 @@
                             <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>
                         </a>
                     </td>
+                    <script type="text/javascript">
+                        jQuery(function() {
+                            var func = bdrs.attribute.getRowTypeChangedFunc();
+                            var eventData = {index: ${index}, bNewRow: true};
+                            jQuery("[name=add_typeCode_"+${index}+"]").change(eventData, func);
+                            jQuery("[name=add_scope_"+${index}+"]").change(eventData, rowScopeChanged);
+                        });
+                    </script>
                 </c:when>
                 <c:otherwise>
                     <td class="drag_handle">
@@ -110,7 +111,7 @@
                     </td>
                     <td>
                         <span class="table_input_container">
-                            <select class="attrTypeSelect" name="typeCode_${formField.attribute.id}" onChange="bdrs.attribute.rowTypeChanged({data: {index:${formField.attribute.id}, bNewRow:false}});">
+                            <select class="attrTypeSelect" name="typeCode_${formField.attribute.id}" >
                                 <c:forEach items="<%=AttributeType.values()%>" var="type">
                                     <jsp:useBean id="type" type="au.com.gaiaresources.bdrs.model.taxa.AttributeType" />
                                     <option value="<%= type.getCode() %>"
@@ -143,7 +144,7 @@
                     <c:if test="${ showScope == true }">
                         <td class="textcenter">
                             <span class="table_input_container">
-                                <select name="scope_${formField.attribute.id}">
+                                <select class="attrScopeSelect" name="scope_${formField.attribute.id}" >
                                     <c:forEach items="<%= AttributeScope.values() %>" var="attr_scope">
                                         <jsp:useBean id="attr_scope" type="au.com.gaiaresources.bdrs.model.taxa.AttributeScope" />
                                         <option value="<%= attr_scope.toString() %>"
@@ -183,6 +184,15 @@
                             <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>
                         </a>
                     </td>
+                    
+                    <script type="text/javascript">
+                        jQuery(function() {
+                            var func = bdrs.attribute.getRowTypeChangedFunc();
+                            var eventData = {index: ${formField.attribute.id}, bNewRow: false};
+                            jQuery("[name=typeCode_"+${formField.attribute.id}+"]").change(eventData, func);
+                            jQuery("[name=scope_"+${formField.attribute.id}+"]").change(eventData, rowScopeChanged);
+                        });
+                    </script>
                 </c:otherwise>
             </c:choose>
         </c:when>

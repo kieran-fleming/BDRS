@@ -40,7 +40,19 @@ public interface ContentDAO extends TransactionDAO {
     
     public List<String> getAllKeys();
 
+    /**
+     * Gets a {@link List} of {@link Content} keys that contain the given string.
+     * @param string The string to match the keys with
+     * @return A {@link List} of {@link Content} keys that contain the given string.
+     */
     public List<String> getKeysLike(String string);
+    
+    /**
+     * Gets a {@link List} of {@link Content} keys that start with the given string.
+     * @param string The string to match the beginning of keys with
+     * @return A {@link List} of {@link Content} keys that start with the given string.
+     */
+    public List<String> getKeysStartingWith(String string);
 
     public String getContentValue(Session sesh, String key, Portal portal);
 

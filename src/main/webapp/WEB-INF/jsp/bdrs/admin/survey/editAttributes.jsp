@@ -43,6 +43,44 @@
 	    </table>
     </div>
     
+    <div id="moderationSettingsLink" style="display:none;margin-top:13px;" class="right">
+        <a id="moderationSettingsToggle" href="javascript: void(0);">Click here to show the moderation email settings section.</a>
+    </div>
+		
+    <div id="moderationSettings" style="display:none">
+        <h2>Edit Project: Moderation Email Settings</h2>
+    
+		<cw:getContent key="admin/editProject/editModerationEmailSettings" />
+		
+		<div class="input_container" id="moderationEmailWrapper" >
+			<div style="margin-bottom:5px;">
+				<label for="ownerToModeratorEmail" class="strong" title="The email to be sent from the record owner to a moderator on create/update of a record.">Email to send from owner:</label>
+				<select name="ownerToModeratorEmail" id="ownerToModeratorEmail">
+					<option value="-1">--select existing template--</option>
+	                <c:forEach items="${emailTemplates}" var="k">
+	                    <option value="${k}" 
+	                    <c:if test="${ownerToModeratorEmail == k}">selected="true"</c:if>
+	                    >${k}</option>
+	                </c:forEach>
+				</select>
+				<a href="javascript: openEmailDialog('#ownerToModeratorEmail');">Edit email template.</a>
+			</div>
+			<div class="clear"></div>
+	        <div>
+		        <label for="moderatorToOwnerEmail" class="strong" title="The email to be sent from the moderator to the record owner on moderation of a record.">Email to send from moderator:</label>
+	            <select name="moderatorToOwnerEmail" id="moderatorToOwnerEmail">
+	            	<option value="-1">--select existing template--</option>
+	                <c:forEach items="${emailTemplates}" var="k">
+	                    <option value="${k}"
+	                    <c:if test="${moderatorToOwnerEmail == k}">selected="true"</c:if>
+	                    >${k}</option>
+	                </c:forEach>
+	            </select>
+		        <a href="javascript: openEmailDialog('#moderatorToOwnerEmail');">Edit email template.</a>
+	        </div>
+	    </div>
+    </div>
+	<div class="clear"></div>
     <h2>Edit Project: Choose Census Methods</h2>
     
 	<cw:getContent key="admin/editProject/chooseCensusMethods" />
@@ -118,8 +156,85 @@
     <textarea id="markItUp"></textarea>
 </div>
 
+<div id="emailEditorDialog" title="Email Editor">
+    <p>Edit the email content in the editor and enter a new name for the template below 
+    if you would like to save this content as a new template.</p>
+    <textarea id="markItUpEmail"></textarea>
+    <label>Enter the name you would like to save the template as: </label>
+    <input id="saveTemplateName" style="width:53%;"></input>
+</div>
+
 <script type="text/javascript">
+    var openEmailDialog = function(selector) {
+        jQuery( "#emailEditorDialog" ).data('selector',selector).dialog("open");
+    };
+
+    var insertAndSelectEmailOption = function(emailTemplateSelectElem, emailTemplateKey) {
+        var foundMatch = false;
+        emailTemplateSelectElem.find('option').each(function() {
+			if (!foundMatch) {
+                // find the item in the list or find the item that will be after this one
+	            var thisVal = jQuery(this).val();
+	            if (thisVal === emailTemplateKey) {
+	                emailTemplateSelectElem.val(thisVal);
+	                foundMatch = true;
+	            } else if (thisVal > emailTemplateKey) {
+	                // if the item is not found, insert the new item
+	                var newOption = jQuery('<option></option>');
+	                newOption.val(emailTemplateKey);
+	                newOption.text(emailTemplateKey);
+	                newOption.insertBefore(this);
+	                emailTemplateSelectElem.val(emailTemplateKey);
+	                foundMatch = true;
+	            }
+            }
+        });
+    };
+
+
+    var toggleModerationSettings = function(modSettingsSelector, modSettingsLinkSelector) {
+        var canSee = jQuery(modSettingsSelector).css('display') === 'none';
+        jQuery(modSettingsLinkSelector).text(canSee ? "Click here to hide the moderation email settings section." : 
+                                                          "Click here to show the moderation email settings section.");
+        jQuery(modSettingsSelector).slideToggle();
+    };
+    
+    var rowScopeChanged = function(event) {
+        var index = event.data.index;
+        var bNewRow = event.data.bNewRow;
+        
+        var changedElement = jQuery(event.currentTarget);
+        var newScopeCode = changedElement.val();
+        var attrScope = bdrs.model.taxa.attributeScope.value[newScopeCode];
+        
+        if (attrScope.isModerationScope()) {
+            // show the moderation email settings div
+            jQuery("#moderationSettingsLink").css("display","block");
+            var isVisible = jQuery("#moderationSettings").css('display') !== 'none';
+            if (!isVisible) {
+            	toggleModerationSettings("#moderationSettings", "#moderationSettingsLink");
+            }
+        } else {
+            var isOneModScope = false;
+            // if there are no moderation attributes, hide the email settings
+            changedElement.parents("table").find(".attrScopeSelect").each(function() {
+                var scope = bdrs.model.taxa.attributeScope.value[jQuery(this).val()];
+                isOneModScope |= scope.isModerationScope();
+            });
+            
+            if (!isOneModScope) {
+                // hide the moderation email settings div
+                jQuery("#moderationSettingsLink").css("display","none");
+                var isVisible = jQuery("#moderationSettings").css('display') !== 'none';
+                if (isVisible) {
+                    toggleModerationSettings("#moderationSettings", "#moderationSettingsLink");
+                }
+            }
+        }
+    };
+    
     jQuery(function() {
+        bdrs.admin.adminEditContent.setTextArea('#markItUpEmail');
         bdrs.dnd.attachTableDnD('#attribute_input_table');
 		bdrs.attribute.setAttributeWeights('#attribute_input_table');
         
@@ -133,7 +248,7 @@
 			resizable: false,
             buttons: {
                 "OK": function() {
-                    var selected = addCensusMethodGrid_GridHelper.getSelected();                    
+                    var selected = addCensusMethodGrid_GridHelper.getSelected();
                     // single select so...
                     bdrs.censusMethod.addCensusMethodRow("#censusMethod_input_table", selected);
                     jQuery( this ).dialog( "close" );
@@ -173,6 +288,78 @@
 
         jQuery('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
 
+        // create the email dialog
+        jQuery( "#emailEditorDialog" ).dialog({
+            width: '735px',
+            modal: true,
+            autoOpen: false,
+			resizable: false,
+            buttons: {
+                Cancel: function() {	
+                    jQuery( this ).dialog( "close" );
+                },
+                "Clear": function() {
+                    jQuery('#markItUpEmail')[0].value = "";
+                    jQuery('#saveTemplateName').val("");
+                },
+                "Save": function() {
+                    var emailTemplateKey = "email/" + jQuery('#saveTemplateName').val();
+                    // warn the user that they are overwriting content that exists if the 
+                    // key is alreay present
+                    var save = true;
+                    var emailTemplateSelector = jQuery(jQuery(this).data('selector'));
+                    var existingKey = jQuery(emailTemplateSelector).find("option[value='"+emailTemplateKey+"']");
+                    if (existingKey.length >= 1) {
+                    	save = confirm("An email template with that name already exists.  Are you sure you want to replace that content with your changes?")
+                    }
+                    if (save) {
+	                	bdrs.admin.adminEditContent.saveContent(emailTemplateKey);
+	                    // set the select box for the link that opened the dialog to 
+	                    // the saved content
+	                    insertAndSelectEmailOption(emailTemplateSelector, emailTemplateKey);
+	                    jQuery( this ).dialog( "close" );
+        		    }
+                }
+            },
+            open: function(event, ui) {
+                var emailTemplateSelector = jQuery(jQuery(this).data('selector'));
+                var emailTemplate = emailTemplateSelector.val();
+                if (emailTemplate !== -1) {
+                    // load the content to the html editor
+        			bdrs.admin.adminEditContent.loadContent(emailTemplate);
+                    jQuery('#saveTemplateName').val(emailTemplate.substr(6));
+                }
+                
+            }
+        });
+		bdrs.fixJqDialog("#emailEditorDialog");
+		
+     	// add the variable selector to myHtmlSettings before adding them to the markup editor
+    	bdrs.admin.myHtmlSettings.markupSet.push(
+    			{separator:'---------------' }
+    	);
+    	bdrs.admin.myHtmlSettings.markupSet.push(
+                { name:'Insert Variable', className:'myVariableDrop',
+                    dropMenu: [
+                       { name:'to.username', className:'myDropLink', replaceWith:'\$\{to.name\}'},
+                       { name:'to.first name', className:'myDropLink', replaceWith:'\$\{to.firstName\}'},
+                       { name:'to.last name', className:'myDropLink', replaceWith:'\$\{to.lastName\}'},
+                       { name:'to.email address', className:'myDropLink', replaceWith:'\$\{to.emailAddress\}'},
+                       { name:'from.username', className:'myDropLink', replaceWith:'\$\{from.name\}'},
+                       { name:'from.first name', className:'myDropLink', replaceWith:'\$\{from.firstName\}'},
+                       { name:'from.last name', className:'myDropLink', replaceWith:'\$\{from.lastName\}'},
+                       { name:'from.email address', className:'myDropLink', replaceWith:'\$\{from.emailAddress\}'},
+                       { name:'homepage link', className:'myDropLink', replaceWith:'\<a href=\"\$\{bdrsApplicationUrl\}\/home.htm\"\>link\<\/a\>'}
+                      ]
+                });
+
+    	jQuery('#markItUpEmail').markItUp(bdrs.admin.myHtmlSettings);
+        
+     	// Moderation Email Settings expand/collapse
+        jQuery("#moderationSettingsToggle").click(function() {
+            bdrs.attribute.toggleModerationSettings("#moderationSettings", "#moderationSettingsLink a");
+        });
+        
         // Census method expand/collapse
         jQuery("#censusMethodToggle").click(function() {
             var canSee = jQuery("#censusMethodWrapper").css('display') === 'none';
@@ -182,5 +369,6 @@
 		
 		// trigger the onchange events on all of the type fields to initialise tooltips and validation.
 		jQuery(".attrTypeSelect").change();
+		jQuery(".attrScopeSelect").change();
     });
 </script>

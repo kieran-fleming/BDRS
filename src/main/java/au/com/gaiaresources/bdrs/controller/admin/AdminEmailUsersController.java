@@ -1,20 +1,12 @@
-/**
- * 
- */
 package au.com.gaiaresources.bdrs.controller.admin;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,18 +16,16 @@ import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.email.EmailService;
-import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
-import edu.emory.mathcs.backport.java.util.TreeSet;
 
 /**
+ * Controller for sending emails to users.
  * @author stephanie
- *
  */
 @RolesAllowed({Role.ADMIN,Role.SUPERVISOR})
 @Controller
@@ -46,7 +36,7 @@ public class AdminEmailUsersController extends AbstractController {
      * Content access for retrieving and saving email templates.
      */
     @Autowired
-    private ContentDAO contentDAO;
+    private ContentService contentService;
     @Autowired
     private UserDAO userDAO;
     @Autowired
@@ -54,18 +44,29 @@ public class AdminEmailUsersController extends AbstractController {
     @Autowired
     private EmailService emailService;
     
+    /**
+     * Renders the email users interface.
+     * @param request
+     * @param response
+     * @return
+     */
     @RequestMapping(value = "/admin/emailUsers.htm", method = RequestMethod.GET)
     public ModelAndView renderPage(HttpServletRequest request,
             HttpServletResponse response) {
         ModelAndView mav = new ModelAndView("adminEmailUsers");
-        List<String> keys = contentDAO.getKeysLike("email");
-        // add the default portal initializer email keys as well if not present
-        Set<String> uniqueKeys = new TreeSet(keys);
-        uniqueKeys.addAll(getItemsStartingWith(ContentService.CONTENT.keySet(),"email"));
-        mav.addObject("keys", uniqueKeys);
+        mav.addObject("keys", contentService.getKeysStartingWith("email"));
         return mav;
     }
 
+    /**
+     * Sends an email with the given subject and message content from the 
+     * logged in user to a list of email addresses
+     * @param request
+     * @param response
+     * @param to The address(es) to send the message to
+     * @param subject The subject of the message
+     * @param content The content of the message
+     */
     @RequestMapping(value = "/admin/sendMessage.htm", method = RequestMethod.POST)
     public void sendMessage(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = "to", required = true) String to,
@@ -84,6 +85,13 @@ public class AdminEmailUsersController extends AbstractController {
         }
     }
     
+    /**
+     * Creates a map of subsitution key-value pairs to be used when rendering the velocity template message.
+     * @param toUser The recipient of the message
+     * @param fromUser The sender of the message
+     * @param content The content of the message
+     * @return A map of key-value pairs to be used when rendering the velocity template message.
+     */
     private Map<String, Object> createSubstitutionParams(User toUser,
             User fromUser, String content) {
         Map<String, Object> subParams = ContentService.getContentParams();
@@ -119,22 +127,5 @@ public class AdminEmailUsersController extends AbstractController {
             }
         }
         return subParams;
-    }
-
-    /**
-     * Utility method for finding all the items in a Collection that start 
-     * with the given prefix.
-     * @param keySet
-     * @param string
-     * @return
-     */
-    private List<String> getItemsStartingWith(Collection<? extends String> items,
-            String prefix) {
-        List<String> foundItems = new ArrayList<String>();
-        for (String string : items) {
-            if (string.startsWith(prefix))
-                foundItems.add(string);
-        }
-        return foundItems;
     }
 }

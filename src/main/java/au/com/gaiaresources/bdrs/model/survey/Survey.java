@@ -614,5 +614,43 @@ public class Survey extends PortalPersistentImpl implements Comparable<Survey> {
         // the above null checks in.
         return this.getId().compareTo(o.getId());
     }
-	
+
+    /**
+     * Method for adding {@link Metadata} to a survey. This will create a new 
+     * {@link Metadata} if the key is not found and otherwise update the existing 
+     * {@link Metadata}. Setting a value of null will cause the existing {@link Metadata}
+     * object to be deleted.
+     * @param metadataKey the key of the {@link Metadata} to add
+     * @param value the value of the {@link Metadata} to add
+     * @return the newly added {@link Metadata} object
+     */
+    @Transient
+    public Metadata addMetadata(String metadataKey, String value) {
+        Metadata md = getMetadataByKey(metadataKey);
+
+        // Find the metadata or create it.
+        if(md == null) {
+            md = new Metadata();
+            md.setKey(metadataKey);
+        }
+
+        if(value == null){
+            // Setting it to null so remove it from the set (if present).
+            metadata.remove(md);
+        } else {
+            // Set the value and add it to the set.
+            md.setValue(value);
+            metadata.add(md);
+        }
+        return md;
+    }
+
+    /**
+     * Removes the metadata from the survey.
+     * @param md The {@link Metadata} object to remove from the survey
+     */
+    @Transient
+    public void removeMetadata(Metadata md) {
+        metadata.remove(md);
+    }
 }

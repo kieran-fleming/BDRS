@@ -91,6 +91,10 @@ public class Metadata extends PortalPersistentImpl {
      */
     public static final String FORM_SUBMIT_ACTION = "FormSubmitAction";
     
+    // Moderation Email keys
+    public static final String MODERATION_REQUIRED_EMAIL = "ModerationRequiredEmail";
+    public static final String MODERATION_PERFORMED_EMAIL = "ModerationPerformedEmail";
+    
     // SpeciesProfile Keys
     public static final String SCIENTIFIC_NAME_SOURCE_DATA_ID = "ScientificNameSourceDataId";
     public static final String COMMON_NAME_SOURCE_DATA_ID = "CommonNameSourceDataId";

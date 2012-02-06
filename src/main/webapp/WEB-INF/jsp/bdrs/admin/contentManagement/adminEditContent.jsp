@@ -41,6 +41,7 @@
 </div>
 <script type="text/javascript">
     jQuery(document).ready(function() {
+        bdrs.admin.adminEditContent.setTextArea('#markItUp');
         $('#markItUp').markItUp(bdrs.admin.myHtmlSettings);
     });
 </script>

@@ -2,8 +2,12 @@ bdrs.admin = {};
 
 bdrs.admin.adminEditContent =  {
 		originalText: "",
+		textArea: null,
+		setTextArea: function(textAreaSelector) {
+			textArea = $(textAreaSelector)[0];
+		},
 		getTextarea: function() {
-			return $('#markItUp')[0];
+			return textArea;
 		},
 		loadContent: function(key) {
 			jQuery.ajax(bdrs.contextPath + "/webservice/content/loadContent.htm", 

@@ -68,7 +68,7 @@ bdrs.attribute.rowTypeChanged = function(event) {
     var attrType = bdrs.model.taxa.attributeType.code[newTypeCode];
     var tooltip = bdrs.attribute.OPTION_TOOLTIP.get(attrType);
     var validation = bdrs.attribute.VALIDATION_CLASS.get(attrType);
-
+    
     bdrs.attribute.enableInput(
         (bdrs.model.taxa.attributeType.STRING_WITH_VALID_VALUES.code === newTypeCode) ||
         (bdrs.model.taxa.attributeType.INTEGER_WITH_RANGE.code  === newTypeCode) ||
@@ -123,7 +123,7 @@ bdrs.attribute.rowTypeChanged = function(event) {
  * @param {Object} bNewRow signals whether this row is a new row or an existing row.
  * @return a function to be triggered by the field type select control onchange.
  */
-bdrs.attribute.getRowTypeChangedFunc = function(index, bNewRow) {
+bdrs.attribute.getRowTypeChangedFunc = function() {
     return bdrs.attribute.rowTypeChanged;
 };
 
