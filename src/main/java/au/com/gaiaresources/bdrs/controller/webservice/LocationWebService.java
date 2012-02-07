@@ -2,7 +2,11 @@ package au.com.gaiaresources.bdrs.controller.webservice;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +28,11 @@ import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationDAO;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
+import au.com.gaiaresources.bdrs.model.survey.Survey;
+import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
+import au.com.gaiaresources.bdrs.model.taxa.Attribute;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
+import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
 
@@ -39,6 +48,8 @@ public class LocationWebService extends AbstractController {
     private UserDAO userDAO;
     @Autowired
     private MetadataDAO metadataDAO;
+    @Autowired
+    private SurveyDAO surveyDAO;
     
     public static final String JSON_KEY_ISVALID = "isValid";
     public static final String JSON_KEY_MESSAGE = "message";
@@ -49,17 +60,34 @@ public class LocationWebService extends AbstractController {
 
     private Logger log = Logger.getLogger(getClass());
     
+    /**
+     * Service to get a {@link Location} object by id. Returns the object in JSONObject
+     * form. The surveyId parameter should be specified in order to prevent 
+     * {@link AttributeValue AttributeValues} from other surveys from being returned
+     * as part of the object.
+     * @param request
+     * @param response
+     * @param pk the id of the {@link Location}
+     * @param surveyId the id of the {@link Survey} (used to filter attributes)
+     * @throws IOException
+     */
     @RequestMapping(value="/webservice/location/getLocationById.htm", method=RequestMethod.GET)
     public void getLocationById(HttpServletRequest request,
                                 HttpServletResponse response,
-                                @RequestParam(value="id", required=true) int pk)
+                                @RequestParam(value="id", required=true) int pk,
+                                @RequestParam(value="surveyId", required=false, defaultValue="-1") int surveyId)
         throws IOException {
 
         Location location = locationDAO.getLocation(pk);
+        if (surveyId != -1) {
+            // evict the location from the session so changes are not persisted
+            getRequestContext().getHibernate().evict(location);
+            location = filterAttributesBySurvey(surveyId, location);
+        }
         response.setContentType("application/json");
         response.getWriter().write(JSONObject.fromObject(location.flatten(3)).toString());
     }
-    
+
     @RequestMapping(value="/webservice/location/getLocationsById.htm", method=RequestMethod.GET)
     public void getLocationsById(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -161,5 +189,36 @@ public class LocationWebService extends AbstractController {
             }  
         }
         writeJson(request, response, result.toString());
+    }
+    
+    /**
+     * Removes any attributes from another survey from this location.
+     * @param surveyId the survey for which the location is requested
+     * @param location the location
+     * @return the location with any attributes from other surveys removed
+     */
+    private Location filterAttributesBySurvey(int surveyId, Location location) {
+        Survey survey = surveyDAO.get(surveyId);
+        // create an Attribute-indexed map of the location attributes
+        // so we can get the attribute value by attribute later
+        Map<Attribute, AttributeValue> typedAttrMap = new HashMap<Attribute, AttributeValue>();
+        for (AttributeValue attr : location.getAttributes()) {
+            typedAttrMap.put(attr.getAttribute(), attr);
+        }
+        
+        // get all of the attributes for the survey and filter only keep 
+        // attribute values for this location that match the survey attributes
+        Set<AttributeValue> surveyLocAttrs = new HashSet<AttributeValue>();
+        for(Attribute attribute : survey.getAttributes()) {
+            if(AttributeScope.LOCATION.equals(attribute.getScope())) {
+                AttributeValue value = typedAttrMap.get(attribute);
+                if (value != null) {
+                    surveyLocAttrs.add(value);
+                }
+            }
+        }
+        location.setAttributes(surveyLocAttrs);
+        
+        return location;
     }
 }

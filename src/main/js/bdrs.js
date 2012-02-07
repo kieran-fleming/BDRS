@@ -2500,9 +2500,9 @@ bdrs.survey.location = {};
 bdrs.survey.location.LAYER_NAME = 'Position Layer';
 bdrs.survey.location.LOCATION_LAYER_NAME = 'Location Layer';
 
-bdrs.survey.location.updateLocation = function(pk, options) {
+bdrs.survey.location.updateLocation = function(pk, surveyId, options) {
     if(pk > 0) {
-        jQuery.get(bdrs.contextPath+"/webservice/location/getLocationById.htm", {id: pk}, function(data) {
+        jQuery.get(bdrs.contextPath+"/webservice/location/getLocationById.htm", {id: pk, surveyId: surveyId}, function(data) {
             var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
             var feature = wkt.read(data.location);
             var point = feature.geometry.getCentroid().transform(

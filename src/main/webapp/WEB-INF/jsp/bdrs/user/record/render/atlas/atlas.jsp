@@ -115,7 +115,7 @@
 						        <textarea name="locationName" id="locationName" class="locationTextArea"><c:if test="${ record != null && record.location != null }">${ record.location.name }</c:if></textarea>
 		                        &nbsp;
 		                        <!-- 
-		                        <a href="javascript: bdrs.survey.location.updateLocation(-1)">Clear</a>
+		                        <a href="javascript: bdrs.survey.location.updateLocation(-1, -1)">Clear</a>
 		                        -->
 						
 						    </c:when>
@@ -250,9 +250,9 @@
         </c:otherwise>
     </c:choose> 
 
-    bdrs.survey.location.updateLocation = function(pk) {
+    bdrs.survey.location.updateLocation = function(pk, surveyId) {
         if(pk > 0) {
-        	jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk}, function(data) {
+        	jQuery.get("${pageContext.request.contextPath}/webservice/location/getLocationById.htm", {id: pk, surveyId: surveyId}, function(data) {
                 var wkt = new OpenLayers.Format.WKT(bdrs.map.wkt_options);
 	            var feature = wkt.read(data.location);
 	            var point = feature.geometry.getCentroid().transform(
