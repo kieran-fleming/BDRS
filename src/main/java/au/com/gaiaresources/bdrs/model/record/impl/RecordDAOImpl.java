@@ -385,6 +385,7 @@ public class RecordDAOImpl extends AbstractDAOImpl implements RecordDAO {
 //                        
 //                    }
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                 case STRING:

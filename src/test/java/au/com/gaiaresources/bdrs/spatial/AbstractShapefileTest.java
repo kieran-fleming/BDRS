@@ -460,6 +460,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         case STRING_WITH_VALID_VALUES:
@@ -530,6 +531,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         case STRING_WITH_VALID_VALUES:
@@ -580,6 +582,7 @@ public abstract class AbstractShapefileTest extends AbstractControllerTest {
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         case STRING_WITH_VALID_VALUES:

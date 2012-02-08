@@ -142,6 +142,7 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
             return av.getStringValue() != null ? av.getStringValue() : "";
             
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
             Assert.fail("HTML elements should not be exported in DwC-A");

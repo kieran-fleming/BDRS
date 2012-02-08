@@ -12,6 +12,7 @@ bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.INTEGER_WITH_RAN
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.BARCODE, "This is designed for use on mobile devices");
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.REGEX, "Enter a Java regular expression");
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.HTML, "Enter valid HTML into this option field to have it display on the form");
+bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.HTML_NO_VALIDATION, "Enter valid HTML into this option field to have it display on the form. This HTML will not be validated and could potentially prevent the form from displaying.");
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.STRING_WITH_VALID_VALUES, "Enter your choices, separated by a comma");
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.MULTI_CHECKBOX, "Enter your choices, separated by a comma");
 bdrs.attribute.OPTION_TOOLTIP.put(bdrs.model.taxa.attributeType.MULTI_SELECT, "Enter your choices, separated by a comma");
@@ -75,6 +76,7 @@ bdrs.attribute.rowTypeChanged = function(event) {
         (bdrs.model.taxa.attributeType.BARCODE.code  === newTypeCode) ||
         (bdrs.model.taxa.attributeType.REGEX.code  === newTypeCode) ||
         (bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) ||
+        (bdrs.model.taxa.attributeType.HTML_NO_VALIDATION.code  === newTypeCode) ||
         (bdrs.model.taxa.attributeType.MULTI_CHECKBOX.code  === newTypeCode) ||
         (bdrs.model.taxa.attributeType.MULTI_SELECT.code  === newTypeCode),
         '[name=' + prefix + 'option_'+index+']', tooltip, validation); 
@@ -83,6 +85,7 @@ bdrs.attribute.rowTypeChanged = function(event) {
     var requiredSelector = '[name=' + prefix  +'required_'+index+']';
     if(bdrs.model.taxa.attributeType.SINGLE_CHECKBOX.code  === newTypeCode ||
         bdrs.model.taxa.attributeType.HTML.code  === newTypeCode ||
+        bdrs.model.taxa.attributeType.HTML_NO_VALIDATION.code  === newTypeCode ||
         bdrs.model.taxa.attributeType.HTML_COMMENT.code  === newTypeCode ||
         bdrs.model.taxa.attributeType.HTML_HORIZONTAL_RULE.code  === newTypeCode) {
         jQuery(requiredSelector).attr('checked',false);
@@ -98,7 +101,8 @@ bdrs.attribute.rowTypeChanged = function(event) {
     } else { 
         jQuery(descriptionSelector).removeAttr('disabled');
     }
-    if(bdrs.model.taxa.attributeType.HTML.code  === newTypeCode) { 
+    if(bdrs.model.taxa.attributeType.HTML.code  === newTypeCode || 
+       bdrs.model.taxa.attributeType.HTML_NO_VALIDATION.code  === newTypeCode) { 
         jQuery(descriptionSelector).attr('onfocus','bdrs.attribute.showHtmlEditor(jQuery(\'#htmlEditorDialog\'), jQuery(\'#markItUp\')[0], this)');
     } else { 
         jQuery(descriptionSelector).removeAttr('onfocus');

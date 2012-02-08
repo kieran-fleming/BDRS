@@ -88,10 +88,7 @@ public class LocationAttributeFormField extends AbstractFormField implements Typ
     
     @Override
     public boolean isDisplayFormField() {
-        return attribute != null && 
-               (AttributeType.HTML.equals(attribute.getType()) || 
-                AttributeType.HTML_COMMENT.equals(attribute.getType()) || 
-                AttributeType.HTML_HORIZONTAL_RULE.equals(attribute.getType()));
+        return attribute != null && AttributeType.isHTMLType(attribute.getType());
     }
     
     @Override

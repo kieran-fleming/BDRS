@@ -596,6 +596,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         attrList.add(createAttribute("", AttributeType.HTML_COMMENT, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_14", AttributeType.HTML_HORIZONTAL_RULE, attrRequired, scope));
         attrList.add(createAttribute(namePrefix + "_15", AttributeType.REGEX, attrRequired, scope));
+        attrList.add(createAttribute(namePrefix + "_16", AttributeType.HTML_NO_VALIDATION, attrRequired, scope));
         return attrList;
     }
     
@@ -674,6 +675,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         case STRING_WITH_VALID_VALUES:
@@ -743,6 +745,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
                 break;
                 
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 av.setStringValue(String.format("<p>seed is : %d</p>", seed));
@@ -832,6 +835,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         }
             
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         {
@@ -918,6 +922,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         case STRING_AUTOCOMPLETE:
         case TEXT:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
         case STRING_WITH_VALID_VALUES:
@@ -980,7 +985,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
         {
             Location loc = locationList.get(seed%locationList.size());
             while (loc.equals(rec.getLocation())) {
-                loc = locationList.get(seed%locationList.size());
+                loc = locationList.get(++seed%locationList.size());
             }
             
             if (assign) {

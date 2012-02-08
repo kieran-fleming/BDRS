@@ -267,6 +267,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                         recAttr.setStringValue("12:34");
                         break;
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                         recAttr.setStringValue("<hr/>");
@@ -447,6 +448,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                         value = "12:34";
                         break;
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                         value = "<hr/>";
@@ -539,6 +541,7 @@ public class YearlySightingsControllerTest extends RecordFormTest {
                     case BARCODE:
                     case TIME:
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                         Assert.assertEquals(params.get(key), recAttr.getStringValue());

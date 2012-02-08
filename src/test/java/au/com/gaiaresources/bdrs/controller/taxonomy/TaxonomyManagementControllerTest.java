@@ -468,6 +468,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     value = "12:34";
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     value = "<hr/>";
@@ -574,6 +575,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     value = "12:34";
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     value = "<hr/>";
@@ -720,6 +722,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                     value = "12:34";
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                     value = "<html><body></body></html>";
                     break;
                 case HTML_COMMENT:
@@ -788,6 +791,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
                 case BARCODE:
                 case TIME:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(request.getParameter(key), taxonAttr.getStringValue());

@@ -644,6 +644,7 @@ public class ShapeFileWriter {
                 // don't add
                 break;
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 // display only fields, don't add
@@ -699,6 +700,7 @@ public class ShapeFileWriter {
                 // don't add
                 break;
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 // display only fields, don't add

@@ -88,10 +88,7 @@ public class RecordAttributeFormField extends AbstractRecordFormField implements
 	
     @Override
     public boolean isDisplayFormField() {
-        return attribute != null && 
-               (AttributeType.HTML.equals(attribute.getType()) || 
-                AttributeType.HTML_COMMENT.equals(attribute.getType()) || 
-                AttributeType.HTML_HORIZONTAL_RULE.equals(attribute.getType()));
+        return attribute != null && AttributeType.isHTMLType(attribute.getType());
     }
     
     @Override

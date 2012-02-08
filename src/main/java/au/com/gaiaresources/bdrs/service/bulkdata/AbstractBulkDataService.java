@@ -927,6 +927,7 @@ public abstract class AbstractBulkDataService {
             case STRING_WITH_VALID_VALUES:
             case STRING:
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
             default:

@@ -63,9 +63,6 @@ public class RecordAttributeHandler implements OperatorHandler {
                     case BARCODE:
                     case REGEX:
                     case TIME:
-                    case HTML:
-                    case HTML_COMMENT:
-                    case HTML_HORIZONTAL_RULE:
                         match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getStringValue(), condition.stringValue());
                         break;
                     case INTEGER:
@@ -86,6 +83,13 @@ public class RecordAttributeHandler implements OperatorHandler {
                         break;
                     case DATE:
                         match = conditionOperatorHandler.match(condition.getValueOperator(), recAttr.getDateValue(), condition.dateValue());
+                        break;
+                    case HTML:
+                    case HTML_NO_VALIDATION:
+                    case HTML_COMMENT:
+                    case HTML_HORIZONTAL_RULE:
+                        // HTML attributes will never have an attribute value because they are display only
+                        match = false;
                         break;
                     default:
                         log.warn(String.format("Unknown attribute type found %s Match is false.", recAttr.getAttribute().getType().toString()));

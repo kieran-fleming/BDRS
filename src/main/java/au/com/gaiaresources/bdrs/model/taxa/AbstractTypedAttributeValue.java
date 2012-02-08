@@ -54,6 +54,7 @@ public abstract class AbstractTypedAttributeValue extends PortalPersistentImpl i
         case TEXT:
         
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
 
@@ -160,6 +161,7 @@ public abstract class AbstractTypedAttributeValue extends PortalPersistentImpl i
         case REGEX:
         case TIME:
         case HTML:
+        case HTML_NO_VALIDATION:
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:  
         case STRING_WITH_VALID_VALUES:

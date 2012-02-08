@@ -87,9 +87,11 @@
 			</c:otherwise>
 		</c:choose>
     </c:when>
-    <c:when test="${ formField.attribute.type == 'HTML'}">
+    <c:when test="${ formField.attribute.type == 'HTML' || formField.attribute.type == 'HTML_NO_VALIDATION'}">
        <%-- Build tags from the attribute options --%>
+       <c:if test="${ formField.attribute.type == 'HTML'}">
        <div class="htmlContent">
+       </c:if>
        <c:forEach var="optopen" items="<%= formField.getAttribute().getOptions() %>">
           <jsp:useBean id="optopen" type="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
           <c:choose>
@@ -104,7 +106,14 @@
               </c:when>
           </c:choose>
        </c:forEach>
-       <cw:validateHtml html="${formField.attribute.description}"/>
+       <c:choose>
+       <c:when test="${ formField.attribute.type == 'HTML'}">
+           <cw:validateHtml html="${formField.attribute.description}"/>
+       </c:when>
+       <c:when test="${ formField.attribute.type == 'HTML_NO_VALIDATION'}">
+           ${formField.attribute.description}
+       </c:when>
+       </c:choose>
        <c:forEach var="optclose" items="<%= formField.getAttribute().getOptions() %>">
           <jsp:useBean id="optclose" type="au.com.gaiaresources.bdrs.model.taxa.AttributeOption"/>
               <c:choose>
@@ -119,7 +128,9 @@
                   </c:when>
               </c:choose>
        </c:forEach>
+       <c:if test="${ formField.attribute.type == 'HTML'}">
        </div>
+       </c:if>
     </c:when>
     <c:when test="${ formField.attribute.type == 'HTML_COMMENT'}">
        <center>

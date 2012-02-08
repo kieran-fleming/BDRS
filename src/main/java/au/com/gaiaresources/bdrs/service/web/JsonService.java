@@ -149,8 +149,11 @@ public class JsonService {
 		        obj.accumulate(key, format);
 		        break;
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
+                        // ignore html attributes because they do not have attribute values
+                        break;
 		    case STRING:
 		    case STRING_AUTOCOMPLETE:
 		    case TEXT:

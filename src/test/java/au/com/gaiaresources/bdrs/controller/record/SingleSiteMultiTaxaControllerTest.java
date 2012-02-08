@@ -366,6 +366,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                     case BARCODE:
                     case TIME:
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                         value = String.format("String %d", sightingIndex);
@@ -473,6 +474,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
                 case BARCODE:
                 case TIME:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(expected, recAttr.getStringValue());

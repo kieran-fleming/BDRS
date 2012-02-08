@@ -389,6 +389,7 @@ public class AdvancedReviewSightingsControllerTest extends
                     attrVal.setStringValue("12:34");
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     attrVal.setStringValue("<hr/>");
@@ -508,6 +509,7 @@ public class AdvancedReviewSightingsControllerTest extends
                     recAttr.setStringValue("12:34");
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     recAttr.setStringValue("<hr/>");
@@ -582,6 +584,7 @@ public class AdvancedReviewSightingsControllerTest extends
                         recAttr.setStringValue("12:34");
                         break;
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                         recAttr.setStringValue("<hr/>");

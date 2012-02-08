@@ -94,7 +94,7 @@
                                 <c:if test="<%= ((AttributeInstanceFormField)formField).getAttribute() != null && AttributeType.HTML_HORIZONTAL_RULE.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) %>">
                                     disabled="disabled"
                                 </c:if>
-                                <c:if test="<%= ((AttributeInstanceFormField)formField).getAttribute() != null && AttributeType.HTML.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) %>">
+                                <c:if test="<%= ((AttributeInstanceFormField)formField).getAttribute() != null && (AttributeType.HTML.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) || AttributeType.HTML_NO_VALIDATION.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode())) %>">
                                     onfocus="bdrs.attribute.showHtmlEditor($('#htmlEditorDialog'), $('#markItUp')[0], this)"
                                 </c:if>
                             />
@@ -133,9 +133,7 @@
                                 </c:if>
                                 <c:if test="<%= ((AttributeInstanceFormField)formField).getAttribute() != null && 
                                         (AttributeType.SINGLE_CHECKBOX.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) || 
-                                         AttributeType.HTML.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) || 
-                                         AttributeType.HTML_COMMENT.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode()) || 
-                                         AttributeType.HTML_HORIZONTAL_RULE.getCode().equals(((AttributeInstanceFormField)formField).getAttribute().getTypeCode())) %>">
+                                         AttributeType.isHTMLType(((AttributeInstanceFormField)formField).getAttribute().getType())) %>">
                                     disabled="disabled"
                                 </c:if>
                             />

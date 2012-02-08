@@ -405,6 +405,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
                     value = "Test Group Attr Text";
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     value = "<hr/>";
@@ -465,6 +466,7 @@ public class TrackerControllerCensusMethodTest extends AbstractControllerTest {
                 case STRING_AUTOCOMPLETE:
                 case TEXT:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(params.get(key), recAttr.getStringValue());

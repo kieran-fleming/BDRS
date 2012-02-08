@@ -500,6 +500,7 @@ public class ShapeFileReader {
                     attrValue.setNumericValue(new BigDecimal(((Double)prop.getValue()).doubleValue()));
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     // do nothing for view only types

@@ -88,9 +88,7 @@ public class XlsLocationRow extends StyledRowImpl {
                 AttributeType attrType = attr.getType();
                 if (!AttributeType.FILE.equals(attrType)
                     && !AttributeType.IMAGE.equals(attrType)
-                    && !AttributeType.HTML.equals(attrType)
-                    && !AttributeType.HTML_COMMENT.equals(attrType)
-                    && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrType)) {
+                    && !AttributeType.isHTMLType(attrType)) {
                 
                     AttributeValue attrVal = locAttrValMap.get(attr);
                     bulkDataReadWriteService.writeTypedAttributeValueCell(this,
@@ -171,9 +169,7 @@ public class XlsLocationRow extends StyledRowImpl {
             AttributeType attrType = attr.getType();
             if (!AttributeType.FILE.equals(attrType)
                 && !AttributeType.IMAGE.equals(attrType)
-                && !AttributeType.HTML.equals(attrType)
-                && !AttributeType.HTML_COMMENT.equals(attrType)
-                && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrType)) {
+                && !AttributeType.isHTMLType(attrType)) {
                 
                 cell = row.createCell(colIndex++);
                 cell.setCellValue(attr.getDescription());
@@ -274,6 +270,7 @@ public class XlsLocationRow extends StyledRowImpl {
                     case STRING_WITH_VALID_VALUES:
                     case STRING:
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                     default:

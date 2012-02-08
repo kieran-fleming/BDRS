@@ -218,9 +218,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
         for (Attribute attrib : sortedAttributes) {
             if (!AttributeType.FILE.equals(attrib.getType())
                     && !AttributeType.IMAGE.equals(attrib.getType())
-                    && !AttributeType.HTML.equals(attrib.getType())
-                    && !AttributeType.HTML_COMMENT.equals(attrib.getType())
-                    && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrib.getType())) {
+                    && !AttributeType.isHTMLType(attrib.getType())) {
                 
                 if (superHeaderRow.getCell(colIndex) == null) {
                     Cell superRowCell = superHeaderRow.createCell(colIndex);
@@ -502,9 +500,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
             if(!AttributeScope.LOCATION.equals(attrib.getScope())) {
                 if (!AttributeType.FILE.equals(attrib.getType())
                         && !AttributeType.IMAGE.equals(attrib.getType())
-                        && !AttributeType.HTML.equals(attrib.getType())
-                        && !AttributeType.HTML_COMMENT.equals(attrib.getType())
-                        && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrib.getType())) {
+                        && !AttributeType.isHTMLType(attrib.getType())) {
 
                     Cell namespaceCell = superHeaderRow.getCell(colIndex);
                     if (namespaceCell != null) {
@@ -532,9 +528,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
                 for (Attribute attrib : cm.getAttributes()) {
                     if (!AttributeType.FILE.equals(attrib.getType())
                             && !AttributeType.IMAGE.equals(attrib.getType())
-                            && !AttributeType.HTML.equals(attrib.getType())
-                            && !AttributeType.HTML_COMMENT.equals(attrib.getType())
-                            && !AttributeType.HTML_HORIZONTAL_RULE.equals(attrib.getType())) {
+                            && !AttributeType.isHTMLType(attrib.getType())) {
                         
                         Cell namespaceCell = superHeaderRow.getCell(colIndex);
                         if (namespaceCell != null) {
@@ -739,6 +733,7 @@ public class XlsRecordRow extends StyledRowImpl implements RecordRow {
                     case STRING_WITH_VALID_VALUES:
                     case STRING:
                     case HTML:
+                    case HTML_NO_VALIDATION:
                     case HTML_COMMENT:
                     case HTML_HORIZONTAL_RULE:
                     default:

@@ -20,7 +20,8 @@ public enum AttributeType implements E {
     STRING_AUTOCOMPLETE("SA", "Short Text (Auto Complete)"),
     TEXT("TA", "Long Text"),
     
-    HTML("HL", "HTML"),
+    HTML("HL", "HTML (Validated)"),
+    HTML_NO_VALIDATION("HV", "HTML (Not Validated)"),
     HTML_COMMENT("CM", "Comment"),
     HTML_HORIZONTAL_RULE("HR", "Horizontal Rule"),
 
@@ -56,5 +57,19 @@ public enum AttributeType implements E {
             }
         }
         return null;
+    }
+    
+    /**
+     * Returns true if type is an HTML type, one of:
+     * AttributeType.HTML, AttributeType.HTML_NO_VALIDATION, AttributeType.HTML_COMMENT,
+     * AttributeType.HTML_HORIZONTAL_RULE
+     * @param type the type to find out if it is HTML
+     * @return true if the type is an html type, false otherwise
+     */
+    public static boolean isHTMLType(AttributeType type) {
+        return AttributeType.HTML.equals(type) ||
+               AttributeType.HTML_NO_VALIDATION.equals(type) ||
+               AttributeType.HTML_COMMENT.equals(type) ||
+               AttributeType.HTML_HORIZONTAL_RULE.equals(type);
     }
 }

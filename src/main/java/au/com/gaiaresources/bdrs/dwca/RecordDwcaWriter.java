@@ -316,9 +316,7 @@ public class RecordDwcaWriter {
         
         // certain attribute value types should never be written
         Attribute a = av.getAttribute();
-        if (a.getType() == AttributeType.HTML ||
-                a.getType() == AttributeType.HTML_COMMENT ||
-                a.getType() == AttributeType.HTML_HORIZONTAL_RULE) {
+        if (AttributeType.isHTMLType(a.getType())) {
             // don't write
             return;
         }
@@ -640,6 +638,7 @@ public class RecordDwcaWriter {
                 return redirService.getFileDownloadUrl(av, true);
                 
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
             default:

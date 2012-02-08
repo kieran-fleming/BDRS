@@ -123,6 +123,9 @@ public abstract class AttributeParser {
         case HTML_COMMENT:
         case HTML_HORIZONTAL_RULE:
             return validator.validate(parameterMap, ValidationType.HTML, paramKey, attribute);
+        case HTML_NO_VALIDATION:
+            // there is no validation, so it always returns true
+            return true;
         default:
             log.warn("Unknown Attribute Type: " + attribute.getType());
             throw new IllegalArgumentException("Unknown Attribute Type: " + attribute.getType());
@@ -207,6 +210,7 @@ public abstract class AttributeParser {
                 case BARCODE:
                 case REGEX:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     break;

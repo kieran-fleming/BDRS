@@ -501,6 +501,7 @@ public class TestDataCreator implements TestDataConstants {
                 taxonAttr.setStringValue("12:34");
                 break;
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 taxonAttr.setStringValue("<hr/>");

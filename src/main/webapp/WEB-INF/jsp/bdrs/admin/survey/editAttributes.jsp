@@ -212,7 +212,7 @@
             jQuery("#moderationSettingsLink").css("display","block");
             var isVisible = jQuery("#moderationSettings").css('display') !== 'none';
             if (!isVisible) {
-            	toggleModerationSettings("#moderationSettings", "#moderationSettingsLink");
+            	toggleModerationSettings("#moderationSettings", "#moderationSettingsLink a");
             }
         } else {
             var isOneModScope = false;
@@ -227,7 +227,7 @@
                 jQuery("#moderationSettingsLink").css("display","none");
                 var isVisible = jQuery("#moderationSettings").css('display') !== 'none';
                 if (isVisible) {
-                    toggleModerationSettings("#moderationSettings", "#moderationSettingsLink");
+                    toggleModerationSettings("#moderationSettings", "#moderationSettingsLink a");
                 }
             }
         }
@@ -357,7 +357,7 @@
         
      	// Moderation Email Settings expand/collapse
         jQuery("#moderationSettingsToggle").click(function() {
-            bdrs.attribute.toggleModerationSettings("#moderationSettings", "#moderationSettingsLink a");
+            toggleModerationSettings("#moderationSettings", "#moderationSettingsLink a");
         });
         
         // Census method expand/collapse

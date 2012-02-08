@@ -524,6 +524,7 @@ public class TrackerControllerTest extends RecordFormTest {
                     recAttr.setStringValue("12:34");
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     recAttr.setStringValue("<hr/>");
@@ -599,6 +600,7 @@ public class TrackerControllerTest extends RecordFormTest {
                     recAttr.setStringValue("12:34");
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     recAttr.setStringValue("<hr/>");
@@ -793,6 +795,7 @@ public class TrackerControllerTest extends RecordFormTest {
                 case BARCODE:
                 case TIME:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     Assert.assertEquals(params.get(key), recAttr.getStringValue());
@@ -917,6 +920,7 @@ public class TrackerControllerTest extends RecordFormTest {
                     value = image_filename;
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     value = "<hr/>";
@@ -955,6 +959,7 @@ public class TrackerControllerTest extends RecordFormTest {
                 value = "Test Group Attr String";
                 break;
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 value = "<hr/>";

@@ -241,6 +241,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
             case REGEX:
             case TIME:
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 Assert.assertEquals(params.get(key), recAttr.getStringValue());
@@ -393,6 +394,7 @@ public class LocationBaseControllerTest extends AbstractControllerTest {
                     value = image_filename;
                     break;
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     value = "<hr/>";

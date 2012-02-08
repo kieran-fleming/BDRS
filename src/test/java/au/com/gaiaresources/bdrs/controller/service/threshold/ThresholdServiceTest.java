@@ -244,6 +244,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
             case IMAGE:
             case FILE:
             case HTML:
+            case HTML_NO_VALIDATION:
             case HTML_COMMENT:
             case HTML_HORIZONTAL_RULE:
                 attributeTypeValueLookup.put(at, at.getCode());
@@ -360,6 +361,7 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 case BARCODE:
                 case TIME:
                 case HTML:
+                case HTML_NO_VALIDATION:
                 case HTML_COMMENT:
                 case HTML_HORIZONTAL_RULE:
                     recAttr.setStringValue((String) attributeTypeValueLookup.get(attrType));
@@ -449,9 +451,6 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                         case STRING_WITH_VALID_VALUES:
                         case IMAGE:
                         case FILE:
-                        case HTML:
-                        case HTML_COMMENT:
-                        case HTML_HORIZONTAL_RULE:
                             condition.setValue((String) attributeTypeValueLookup.get(attrType));
                             falseValue = condition.getValue() + "Wrong";
                             break;
@@ -491,6 +490,13 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                             condition.setValue((String)attributeTypeValueLookup.get(attrType));
                             falseValue = "012t6589#";
                             break;
+                        case HTML:
+                        case HTML_NO_VALIDATION:
+                        case HTML_COMMENT:
+                        case HTML_HORIZONTAL_RULE:
+                            // html attributes have no attribute value, therefore the conditions can never match
+                            // ignore this case
+                            continue;
                         default:
                             Assert.assertTrue(false);
                             break;
