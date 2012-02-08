@@ -77,6 +77,7 @@ public abstract class SingleSiteController extends AbstractController {
             RecordPropertyType.SPECIES, RecordPropertyType.NUMBER };
 
     public static final String PREFIX_TEMPLATE = "%d_";
+    public static final String PARAM_ROW_PREFIX = "rowPrefix";
 
     public static final String PARAM_RECORD_ID = "recordId";
     public static final String PARAM_SURVEY_ID = "surveyId";
@@ -184,7 +185,7 @@ public abstract class SingleSiteController extends AbstractController {
             MultipartHttpServletRequest request, HttpServletResponse response,
             int surveyId, Double latitude, Double longitude, Date date,
             String time_hour, String time_minute, String notes,
-            Integer sightingIndex) throws ParseException, IOException {
+            Integer sightingIndex, String[] rowIds) throws ParseException, IOException {
 
         Map<String, String[]> paramMap = this.getModifiableParameterMap(request);
 
@@ -244,133 +245,135 @@ public abstract class SingleSiteController extends AbstractController {
         WebFormAttributeParser attributeParser = new WebFormAttributeParser();
         List<Record> records = new ArrayList<Record>();
 
-        for (int index = STARTING_SIGHTING_INDEX; index < sightingIndex; index++) {
-            String recordPrefix = getSightingPrefix(index);
-            
-            // Attempt to retrieve a record
-            try {
-                String recIdString = request.getParameter(recordPrefix + PARAM_RECORD_ID);
-                if (StringUtils.notEmpty(recIdString)) {
-                    Integer recId = Integer.parseInt(recIdString);
-                    record = recordDAO.getRecord(recId);
-                    // the rec id we attempted to retrieve does not exist, new record
-                    if (record == null) {
+        for (String recordPrefix : rowIds) {
+        	
+            if (StringUtils.notEmpty(recordPrefix)) {
+                // Attempt to retrieve a record
+                try {
+                    String recIdString = request.getParameter(recordPrefix + PARAM_RECORD_ID);
+                    if (StringUtils.notEmpty(recIdString)) {
+                        Integer recId = Integer.parseInt(recIdString);
+                        record = recordDAO.getRecord(recId);
+                        // the rec id we attempted to retrieve does not exist, new record
+                        if (record == null) {
+                            record = new Record();
+                        }    
+                    } else {
+                        // rec id string is null or empty, make a new record
                         record = new Record();
-                    }    
-                } else {
-                    // rec id string is null or empty, make a new record
+                    }
+                    
+                } catch (NumberFormatException nfe) {
+                    // fall back to a new record
                     record = new Record();
                 }
+
+                // Set record visibility to survey default. Setting via web form not supported.
+                // Survey's default record visibility can be set in the 'admin -> projects' interface
+                // This will also set an existing record's visibility back to the survey default.
+                record.setRecordVisibility(survey.getDefaultRecordVisibility());
+
+                // Preserve the original owner of the record if this is a record edit.
+                if (record.getUser() == null) {
+                    record.setUser(user);
+                }
                 
-            } catch (NumberFormatException nfe) {
-                // fall back to a new record
-                record = new Record();
-            }
-
-            // Set record visibility to survey default. Setting via web form not supported.
-            // Survey's default record visibility can be set in the 'admin -> projects' interface
-            // This will also set an existing record's visibility back to the survey default.
-            record.setRecordVisibility(survey.getDefaultRecordVisibility());
-
-            // Preserve the original owner of the record if this is a record edit.
-            if (record.getUser() == null) {
-                record.setUser(user);
-            }
-            
-            record.setSurvey(survey);
-            record.setAccuracyInMeters(accuracy);
-            if (notes != null) {
-                record.setNotes(notes);
-            }
-            if (loc != null) {
-                record.setLocation(loc);
-                record.setPoint(loc.getPoint());
-            } else {
-                // clear the location item...
-                record.setLocation(null);
-                if (latitude != null && longitude != null) {
-                    record.setPoint(locationService.createPoint(latitude, longitude));
+                record.setSurvey(survey);
+                record.setAccuracyInMeters(accuracy);
+                if (notes != null) {
+                    record.setNotes(notes);
                 }
-            }
-
-            // Avoiding (for no reason) using the same instance of the date
-            if (dateTemplate != null) {
-                Date recordDate = new Date(dateTemplate.getTime());
-                record.setWhen(recordDate);
-                record.setTime(recordDate.getTime());
-                record.setLastDate(recordDate);
-                record.setLastTime(recordDate.getTime());
-            }
-
-            // Constants
-            record.setFirstAppearance(false);
-            record.setLastAppearance(false);
-
-            // Taxonomy
-            String speciesPkStr = request.getParameter(String.format("%s" + PARAM_SPECIES, recordPrefix));
-            if (speciesPkStr != null && !speciesPkStr.trim().isEmpty()) {
-                int speciesPk = Integer.parseInt(speciesPkStr);
-                IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesPk);
-                record.setSpecies(species);
-            }
-            // Number
-            // this can happen in the singleSiteAllTaxa page
-            String count = request.getParameter(String.format("%s" + PARAM_NUMBER, recordPrefix));
-            Integer number = null;
-            if (!StringUtils.nullOrEmpty(count)) {
-                try {
-                    number = Integer.parseInt(count);
-                } catch (NumberFormatException e) {
-                    log.error("Value should be an integer: " + e.getMessage());
+                if (loc != null) {
+                    record.setLocation(loc);
+                    record.setPoint(loc.getPoint());
+                } else {
+                    // clear the location item...
+                    record.setLocation(null);
+                    if (latitude != null && longitude != null) {
+                        record.setPoint(locationService.createPoint(latitude, longitude));
+                    }
                 }
-            }
-            record.setNumber(number);
-            // check that we can save the record at this point based on the count
-            boolean canSave = canSaveRecord(number);
-            // Record Attributes
-            AttributeValue recAttr;
-            String prefix;
-            Map<AttributeValue, MultipartFile> attsToSave = new HashMap<AttributeValue, MultipartFile>();
-            List<AttributeValue> attsToDelete = new ArrayList<AttributeValue>();
-            for (Attribute attribute : survey.getAttributes()) {
-                if (!AttributeScope.LOCATION.equals(attribute.getScope())) {
-                    if (AttributeUtil.isModifiableByScopeAndUser(attribute, user)) {
-                        prefix = AttributeScope.SURVEY.equals(attribute.getScope()) || 
-                             AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) ? surveyPrefix
-                            : recordPrefix;
-                        recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
-                        if (attributeParser.isAddOrUpdateAttribute()) {
-                            attsToSave.put(recAttr, attributeParser.getAttrFile());
-                        } else {
-                            attsToDelete.add(recAttr);
-                        }
-                        if (!canSave) {
-                            canSave = AttributeScope.RECORD.equals(attribute.getScope()) && 
-                                      recAttr != null && recAttr.isPopulated();
+
+                // Avoiding (for no reason) using the same instance of the date
+                if (dateTemplate != null) {
+                    Date recordDate = new Date(dateTemplate.getTime());
+                    record.setWhen(recordDate);
+                    record.setTime(recordDate.getTime());
+                    record.setLastDate(recordDate);
+                    record.setLastTime(recordDate.getTime());
+                }
+
+                // Constants
+                record.setFirstAppearance(false);
+                record.setLastAppearance(false);
+
+                // Taxonomy
+                String speciesPkStr = request.getParameter(String.format("%s" + PARAM_SPECIES, recordPrefix));
+                if (speciesPkStr != null && !speciesPkStr.trim().isEmpty()) {
+                    int speciesPk = Integer.parseInt(speciesPkStr);
+                    IndicatorSpecies species = taxaDAO.getIndicatorSpecies(speciesPk);
+                    record.setSpecies(species);
+                }
+                // Number
+                // this can happen in the singleSiteAllTaxa page
+                String count = request.getParameter(String.format("%s" + PARAM_NUMBER, recordPrefix));
+                Integer number = null;
+                if (!StringUtils.nullOrEmpty(count)) {
+                    try {
+                        number = Integer.parseInt(count);
+                    } catch (NumberFormatException e) {
+                        log.error("Value should be an integer: " + e.getMessage());
+                    }
+                }
+                record.setNumber(number);
+                // check that we can save the record at this point based on the count
+                boolean canSave = canSaveRecord(number);
+                // Record Attributes
+                AttributeValue recAttr;
+                String prefix;
+                Map<AttributeValue, MultipartFile> attsToSave = new HashMap<AttributeValue, MultipartFile>();
+                List<AttributeValue> attsToDelete = new ArrayList<AttributeValue>();
+                for (Attribute attribute : survey.getAttributes()) {
+                    if (!AttributeScope.LOCATION.equals(attribute.getScope())) {
+                        if (AttributeUtil.isModifiableByScopeAndUser(attribute, user)) {
+                            prefix = AttributeScope.SURVEY.equals(attribute.getScope()) || 
+                                 AttributeScope.SURVEY_MODERATION.equals(attribute.getScope()) ? surveyPrefix
+                                : recordPrefix;
+                            recAttr = attributeParser.parse(prefix, attribute, record, paramMap, request.getFileMap());
+                            if (attributeParser.isAddOrUpdateAttribute()) {
+                                attsToSave.put(recAttr, attributeParser.getAttrFile());
+                            } else {
+                                attsToDelete.add(recAttr);
+                            }
+                            if (!canSave) {
+                                canSave = AttributeScope.RECORD.equals(attribute.getScope()) && 
+                                          recAttr != null && recAttr.isPopulated();
+                            }
                         }
                     }
                 }
-            }
-            
-            // always save records that are being edited
-            canSave = canSave || record.getId() != null;
-            if (canSave) {
-                records.add(recordDAO.saveRecord(record));
                 
-                for (Entry<AttributeValue, MultipartFile> entry : attsToSave.entrySet()) {
-                    recAttr = entry.getKey();
-                    recAttr = attributeDAO.save(recAttr);
-                    if (entry.getValue() != null) {
-                        fileService.createFile(recAttr, entry.getValue());
+                // always save records that are being edited
+                canSave = canSave || record.getId() != null;
+                if (canSave) {
+                    records.add(recordDAO.saveRecord(record));
+                    
+                    for (Entry<AttributeValue, MultipartFile> entry : attsToSave.entrySet()) {
+                        recAttr = entry.getKey();
+                        recAttr = attributeDAO.save(recAttr);
+                        if (entry.getValue() != null) {
+                            fileService.createFile(recAttr, entry.getValue());
+                        }
+                        record.getAttributes().add(recAttr);
                     }
-                    record.getAttributes().add(recAttr);
-                }
-                
-                for (AttributeValue attributeValue : attsToDelete) {
-                    record.getAttributes().remove(attributeValue);
-                    attributeDAO.delete(attributeValue);
+                    
+                    for (AttributeValue attributeValue : attsToDelete) {
+                        record.getAttributes().remove(attributeValue);
+                        attributeDAO.delete(attributeValue);
+                    }
                 }
             }
+
         }
 
         ModelAndView mv = RecordWebFormContext.getSubmitRedirect(request, record);
@@ -438,8 +441,9 @@ public abstract class SingleSiteController extends AbstractController {
         mv.addObject("record", record);
         mv.addObject("survey", survey);
         mv.addObject("formFieldList", formFieldList);
+        mv.addObject("sightingIndex", prefix);
         // by definition editing must be enabled for items to be added to the
-	// sightings table.
+        // sightings table.
         mv.addObject(RecordWebFormContext.MODEL_EDIT, true);
         return mv;
     }
@@ -591,6 +595,9 @@ public abstract class SingleSiteController extends AbstractController {
         mv.addObject("preview", request.getParameter("preview") != null);
         mv.addObject("censusMethod", censusMethod);
         mv.addObject(RecordWebFormContext.MODEL_WEB_FORM_CONTEXT, context);
+        if (accessor != null) {
+        	mv.addObject("ident", accessor.getRegistrationKey());
+        }
         
         return mv;
     }

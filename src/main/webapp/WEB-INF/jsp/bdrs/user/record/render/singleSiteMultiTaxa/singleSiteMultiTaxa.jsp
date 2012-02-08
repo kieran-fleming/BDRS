@@ -99,7 +99,10 @@
 									</th>
 								</c:if>
 							</c:if>
-                   </c:forEach>   
+                   </c:forEach>
+                   <c:if test="${ not preview and recordWebFormContext.editable }">
+                   		<th>Delete</th>
+                   </c:if>
                </tr>
             </thead>
             <tbody>

@@ -22,7 +22,9 @@
 </c:choose>
 
 <tr class="textcenter <c:if test="${highlight}">bdrsHighlight</c:if>"  >
-    <input name="${ recordFormFieldCollection.prefix }recordId" type="hidden" value="${recordFormFieldCollection.recordId}" />
+
+    <input name="${recordFormFieldCollection.prefix}${sightingIndex}recordId" type="hidden" value="${recordFormFieldCollection.recordId}" class="recordRow" />
+    <input name="rowPrefix" type="hidden" value="${recordFormFieldCollection.prefix}${sightingIndex}" />
     <c:forEach items="${ffList}" var="formField">
         <jsp:useBean id="formField" type="au.com.gaiaresources.bdrs.controller.attribute.formfield.AbstractRecordFormField" />
            <c:choose>
@@ -51,7 +53,13 @@
             </c:when>
         </c:choose>
     </c:forEach>
-    
+     <c:if test="${ editEnabled }">
+	    <td class="delete_col">
+	     	<a href="javascript: void(0);" onclick="bdrs.survey.deleteAjaxRecord('${ident}', '${recordFormFieldCollection.recordId}', jQuery(this).parents('tr'), '.messages');">
+	           <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>
+			</a>
+	    </td>
+	</c:if>
 </tr>
 
 

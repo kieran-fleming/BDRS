@@ -115,6 +115,7 @@ public class SingleSiteMultiTaxaMsgAndRedirectTest extends
             params.put(String.format("%d_survey_species_search", sightingIndex), taxon.getScientificName());
             params.put(String.format("%d_species", sightingIndex), taxon.getId().toString());
             params.put(String.format("%d_number", sightingIndex), Integer.valueOf(sightingIndex + 21).toString());
+            params.put(SingleSiteController.PARAM_ROW_PREFIX, String.format("%d_", sightingIndex));
 
             attributeValueMapping = new HashMap<Attribute, Object>();
             recordScopeAttributeValueMapping.put(taxon, attributeValueMapping);

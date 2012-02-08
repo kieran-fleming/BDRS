@@ -85,6 +85,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @param time the time when the sighting occured
      * @param notes additional notes to be attached to all records
      * @param sightingIndex the number of records to be saved.
+     * @param rowIds an Array of prefix ids for each row
      * @return 
      * @throws ParseException throws if the date cannot be parsed
      * @throws IOException thrown if uploaded files cannot be saved
@@ -100,7 +101,8 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
                                     @RequestParam(value=SingleSiteController.PARAM_TIME_HOUR, required=false) String time_hour,
                                     @RequestParam(value=SingleSiteController.PARAM_TIME_MINUTE, required=false) String time_minute,
                                     @RequestParam(value=SingleSiteController.PARAM_NOTES, required=false) String notes,
-                                    @RequestParam(value=SingleSiteController.PARAM_SIGHTING_INDEX, required=true) int sightingIndex) throws ParseException, IOException {
-        return saveRecordHelper(request, response, surveyId, latitude, longitude, date, time_hour, time_minute, notes, sightingIndex);
+                                    @RequestParam(value=SingleSiteController.PARAM_SIGHTING_INDEX, required=true) int sightingIndex,
+                                    @RequestParam(value=SingleSiteController.PARAM_ROW_PREFIX, required=true, defaultValue="") String[] rowIds) throws ParseException, IOException {
+        return saveRecordHelper(request, response, surveyId, latitude, longitude, date, time_hour, time_minute, notes, sightingIndex, rowIds);
     }
 }

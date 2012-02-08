@@ -496,22 +496,15 @@ public class RecordService extends AbstractController {
 
     /**
      * Delete a record of a particular user.
-     * 
-     * @param ident
-     *            The registration key assigned to the user.
-     * @param surveyPk
-     *            Id of the survey of which records are requested
-     * @param recordPk
-     *            Id of the record that needs to be deleted.
-     * @param response
-     *            HttpServletResponse
+     * @param ident - The registration key assigned to the user.
+     * @param recordPk - Id of the record that needs to be deleted.
+     * @param response - HttpServletResponse
      * @throws IOException
      */
-    @RequestMapping(value = "/webservice/record/deleteRecord.htm", method = RequestMethod.GET)
+    @RequestMapping(value = "/webservice/record/deleteRecord.htm", method = RequestMethod.POST)
     public void deleteRecord(
-            @RequestParam(value = "regkey", required = true) String ident,
-            @RequestParam(value = "surveyId", defaultValue = "0", required = true) int surveyPk,
-            @RequestParam(value = "recordId", defaultValue = "0", required = true) int recordPk,
+            @RequestParam(value = "ident", required = true) String ident,
+            @RequestParam(value = "recordId", required = true) int recordPk,
             HttpServletResponse response) throws IOException {
 
         User user;
@@ -523,8 +516,13 @@ public class RecordService extends AbstractController {
                 throw new HTTPException(HttpServletResponse.SC_UNAUTHORIZED);
             }
         }
-
+        
         recordDAO.deleteById(recordPk);
+        // return true if succesfull
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.element("succeeded", true);
+        response.setContentType("application/json");
+        response.getWriter().write(jsonObject.toString());
     }
 
     /**
@@ -541,7 +539,7 @@ public class RecordService extends AbstractController {
             HttpServletResponse response,
             @RequestParam(value = "ident", required = true) String ident)
             throws IOException {
-        
+                    
         JSONObject jsonRecordIdsMap = JSONObject.fromObject(request
                 .getParameter("JSONrecords"));
         // Authenticate the user
@@ -649,16 +647,16 @@ public class RecordService extends AbstractController {
 
     /**
      * Deletes records from the database with the given record ids.
-     * 
-     * @param ident
-     *            The users registration key.
-     * @param recordIds
-     *            The ids of the records that need to be deleted.
+     * @param request - HttpServletRequest
+     * @param response - HttpServletResponse
+     * @param ident - The users registration key.
+     * @param JSONrecords - The records that need to be updated or removed.
      * @throws IOException
      */
     @RequestMapping(value = "/webservice/record/syncToServer.htm", method = RequestMethod.POST)
     public void sync(HttpServletRequest request, HttpServletResponse response,
-            @RequestParam(value = "ident", required = true) String ident)
+            @RequestParam(value = "ident", required = true) String ident,
+            @RequestParam(value="JSONrecords", required = true) JSONArray allRecordsObject)
             throws IOException, ParseException {
         
         User user;
@@ -679,10 +677,6 @@ public class RecordService extends AbstractController {
         Map<String, Integer> onlineRecordIds = new HashMap<String, Integer>();
         Map<String, Integer> updatedRecordIds = new HashMap<String, Integer>();
         Map<String, String> deletedRecordIds = new HashMap<String, String>();
-        
-        
-        // Gets records :  from JSONArray and puts them in a JSONObject
-        JSONArray allRecordsObject = JSONArray.fromObject(request.getParameter("JSONrecords"));
         
         // Delete records : gets the JSONArray with records that need to be deleted from the allRecords Object 
         JSONArray deleteRecordsArray = allRecordsObject.getJSONArray(0);

@@ -322,6 +322,7 @@ public class SingleSiteMultiTaxaControllerTest extends RecordFormTest {
             params.put(String.format("%d_number", sightingIndex), Integer.valueOf(sightingIndex + 21).toString());
 
             String recordPrefix = String.format("%d_", sightingIndex);
+            request.addParameter(SingleSiteController.PARAM_ROW_PREFIX, recordPrefix);
             String prefix;
             String key;
             String value; // The value in the post dict

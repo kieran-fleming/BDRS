@@ -2495,6 +2495,44 @@ if (bdrs.attribute === undefined) {
 //--------------------------------------
 
 bdrs.survey = {};
+
+/**
+ * Deletes a record via ajax post.
+ * @param userIdent - The users registrationKey.
+ * @param recordId - The server id of the record that needs to be deleted.
+ * @param recordSelector [optional] - The id of the element that needs to be removed from the DOM.
+ * @param msgSelector [optional] - The id of the domElement that will receive a statusMessage in regards to the delete action.
+ */
+bdrs.survey.deleteAjaxRecord = function(userIdent, recordId, recordSelector, msgSelector) {
+	if(recordId !== undefined && recordId !== ""){
+		if(confirm('Are you sure you want to delete this record?')) {
+			var statusMsg;
+			jQuery.ajax({
+				url: bdrs.contextPath + "/webservice/record/deleteRecord.htm",
+			    type: "POST",
+			    data: {
+			        ident: userIdent,
+	        		recordId: recordId
+			    },
+			    success: function(data){
+			    	if(data.succeeded){
+			    		if(recordSelector !== undefined){
+			    			jQuery(recordSelector).remove();
+			    		}
+			    	} else {
+			    		bdrs.message.set("The record is not deleted.");
+			    	}
+			    },
+			    error: function(){
+			    	bdrs.message.set("The record is not deleted.");
+			    }
+			});
+	    }
+	} else {
+		jQuery(recordSelector).remove();
+	}
+};
+
 bdrs.survey.location = {};
 
 bdrs.survey.location.LAYER_NAME = 'Position Layer';

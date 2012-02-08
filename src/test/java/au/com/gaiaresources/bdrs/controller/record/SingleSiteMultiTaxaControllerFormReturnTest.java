@@ -435,6 +435,7 @@ public class SingleSiteMultiTaxaControllerFormReturnTest extends
         String prefix = String.format("%d_", index);
         // add the record id....
         req.addParameter(prefix + SingleSiteController.PARAM_RECORD_ID, rec.getId().toString());
+        req.addParameter(SingleSiteController.PARAM_ROW_PREFIX, prefix);
         addItemsToPostMap(rec, req, scopeList, prefix, seed, avMap, recPropMap, useLocation);
     }
     
