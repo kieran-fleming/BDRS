@@ -47,11 +47,8 @@
                         </label>
                     </th>
                     <td>
-                        <textarea maxlength="255" rows="2" name="locationDescription" id="locationDescription" class="locationMetadata">
-                            <c:if test="${location != null}">
-                                <c:out value="${description}"/>
-                            </c:if>
-                        </textarea>
+                    	<!-- Do not format textarea element or it's content. Formatting causes whitespaces in the textarea -->
+                        <textarea maxlength="255" rows="2" name="locationDescription" id="locationDescription" class="locationMetadata"><c:if test="${location != null}"><c:out value="${description}"/></c:if></textarea>
                     </td>
                 </tr>
             </table>

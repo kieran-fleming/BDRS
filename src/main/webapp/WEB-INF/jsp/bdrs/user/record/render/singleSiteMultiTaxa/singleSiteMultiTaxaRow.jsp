@@ -53,7 +53,7 @@
             </c:when>
         </c:choose>
     </c:forEach>
-     <c:if test="${ editEnabled }">
+     <c:if test="${ editEnabled and not preview}">
 	    <td class="delete_col">
 	     	<a href="javascript: void(0);" onclick="bdrs.survey.deleteAjaxRecord('${ident}', '${recordFormFieldCollection.recordId}', jQuery(this).parents('tr'), '.messages');">
 	           <img src="${pageContext.request.contextPath}/images/icons/delete.png" alt="Delete" class="vertmiddle"/>

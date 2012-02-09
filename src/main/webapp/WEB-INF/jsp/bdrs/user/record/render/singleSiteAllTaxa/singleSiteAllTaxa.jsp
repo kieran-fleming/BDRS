@@ -20,10 +20,12 @@
     <p><cw:validateHtml html="${censusMethod.description}"></cw:validateHtml></p>
 </c:if>
 
+<c:if test="${displayMap}">
     <tiles:insertDefinition name="recordEntryMap">
         <tiles:putAttribute name="survey" value="${survey}"/>
         <tiles:putAttribute name="censusMethod" value="${censusMethod}"/>
     </tiles:insertDefinition>
+</c:if>
 	
 	<c:if test="${ not preview && recordWebFormContext.editable }">
 	    <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/singleSiteAllTaxa.htm" enctype="multipart/form-data">
@@ -100,6 +102,9 @@
 							</c:if>
 						
 		           </c:forEach>
+		           <c:if test="${ not preview and recordWebFormContext.editable }">
+                   		<th>Delete</th>
+                   </c:if>
 		       </tr>
 		    </thead>
 		    <tbody>

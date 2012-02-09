@@ -520,10 +520,16 @@ public abstract class SingleSiteController extends AbstractController {
         // save a list of the record scoped record properties for construction of form fields
         // for each record (aka sighting table row) later...
         List<RecordProperty> recordScopedRecordPropertyList = new ArrayList<RecordProperty>();
-        
+        boolean showMap = false;
         for (RecordPropertyType type : RecordPropertyType.values()) {
+        	
             RecordProperty recordProperty = new RecordProperty(survey, type,
                     metadataDAO);
+            
+            //showMap if location or point fields are hidden.
+            if(!showMap && (type.equals(RecordPropertyType.LOCATION) || type.equals(RecordPropertyType.POINT))){
+            	showMap = !recordProperty.isHidden();
+            }
             
             if (!recordProperty.isHidden()) {
                 if (recordProperty.getScope().equals(AttributeScope.SURVEY) || 
@@ -598,6 +604,7 @@ public abstract class SingleSiteController extends AbstractController {
         if (accessor != null) {
         	mv.addObject("ident", accessor.getRegistrationKey());
         }
+        mv.addObject("displayMap", showMap);
         
         return mv;
     }

@@ -417,9 +417,15 @@ public class TrackerController extends AbstractController {
         } else {
             recordProperties = Record.NON_TAXONOMIC_RECORD_PROPERTY_NAMES;
         }
+        
+        boolean showMap =false;
         // Add all property form fields
         for (RecordPropertyType type : recordProperties) {
             RecordProperty recordProperty = new RecordProperty(survey, type, metadataDAO);
+            //showMap if location or point fields are hidden.
+            if(!showMap && (type.equals(RecordPropertyType.LOCATION) || type.equals(RecordPropertyType.POINT))){
+            	showMap = !recordProperty.isHidden();
+            }
             surveyFormFieldList.add(formFieldFactory.createRecordFormField(record, recordProperty, species, taxonomic));
         }
         
@@ -478,6 +484,7 @@ public class TrackerController extends AbstractController {
         
         mv.addObject(MV_ERROR_MAP, errorMap);
         mv.addObject("valueMap", valueMap);
+        mv.addObject("displayMap", showMap);
         
         return mv;
     }

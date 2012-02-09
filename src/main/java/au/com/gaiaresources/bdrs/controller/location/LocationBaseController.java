@@ -355,6 +355,7 @@ public class LocationBaseController extends AbstractController {
         mv.addObject("survey", survey);
         mv.addObject("locationFormFieldList", surveyFormFieldList);
         mv.addObject("location", location);
+        mv.addObject("description", location.getDescription());
         // location scoped attributes are always editable on the edit location page...
         mv.addObject(RecordWebFormContext.MODEL_EDIT, true);
         

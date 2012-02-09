@@ -11,15 +11,17 @@
 <%-- Access the facade to retrieve the preference information --%>
 <jsp:useBean id="bdrsPluginFacade" scope="request" type="au.com.gaiaresources.bdrs.servlet.BdrsPluginFacade"></jsp:useBean>
 <c:set var="showScientificName" value="<%= bdrsPluginFacade.getPreferenceBooleanValue(\"taxon.showScientificName\") %>" />
-
 <div>
-    <tiles:insertDefinition name="recordEntryMap">
-        <tiles:putAttribute name="survey" value="${survey}"/>
-        <tiles:putAttribute name="censusMethod" value="${censusMethod}"/>
-        <tiles:putAttribute name="mapEditable" value="${recordWebFormContext.editable}" />
-    </tiles:insertDefinition>
-    
-    <c:if test="${ not preview and recordWebFormContext.editable}">
+	<c:if test="${displayMap}">
+		<tiles:insertDefinition name="recordEntryMap">
+			<tiles:putAttribute name="survey" value="${survey}" />
+			<tiles:putAttribute name="censusMethod" value="${censusMethod}" />
+			<tiles:putAttribute name="mapEditable"
+				value="${recordWebFormContext.editable}" />
+		</tiles:insertDefinition>
+	</c:if>
+
+	<c:if test="${ not preview and recordWebFormContext.editable}">
         <form method="POST" action="${pageContext.request.contextPath}/bdrs/user/tracker.htm" enctype="multipart/form-data">
     </c:if>
         <input type="hidden" name="parentRecordId" value="${parentRecordId}"/>
