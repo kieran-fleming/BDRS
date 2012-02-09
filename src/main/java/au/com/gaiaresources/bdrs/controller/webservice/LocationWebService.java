@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
@@ -35,6 +36,7 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -71,6 +73,7 @@ public class LocationWebService extends AbstractController {
      * @param surveyId the id of the {@link Survey} (used to filter attributes)
      * @throws IOException
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/getLocationById.htm", method=RequestMethod.GET)
     public void getLocationById(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -80,14 +83,13 @@ public class LocationWebService extends AbstractController {
 
         Location location = locationDAO.getLocation(pk);
         if (surveyId != -1) {
-            // evict the location from the session so changes are not persisted
-            getRequestContext().getHibernate().evict(location);
             location = filterAttributesBySurvey(surveyId, location);
         }
         response.setContentType("application/json");
         response.getWriter().write(JSONObject.fromObject(location.flatten(3)).toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/getLocationsById.htm", method=RequestMethod.GET)
     public void getLocationsById(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -116,6 +118,7 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(ob.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/bookmarkUserLocation.htm", method=RequestMethod.GET)
     public void bookmarkUserLocation(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -159,6 +162,7 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(JSONObject.fromObject(loc.flatten()).toString());
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=IS_WKT_VALID_URL, method=RequestMethod.GET)
     public void bookmarkUserLocation(HttpServletRequest request,
                                 HttpServletResponse response, 
@@ -217,6 +221,8 @@ public class LocationWebService extends AbstractController {
                 }
             }
         }
+        // evict the location from the session before modifying it
+        getRequestContext().getHibernate().evict(location);
         location.setAttributes(surveyLocAttrs);
         
         return location;
