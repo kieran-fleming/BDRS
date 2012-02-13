@@ -473,7 +473,7 @@ public class RecordDwcaWriter {
             if (r.getSpecies() != null) {
                 IndicatorSpecies s = r.getSpecies();
                 // no guid, generate our own lsid.
-                String lsid = s.getGuid();
+                String lsid = s.getSourceId();
                 if (lsid == null) {
                     return lsidService.toLSID(s).toString();
                 } else {

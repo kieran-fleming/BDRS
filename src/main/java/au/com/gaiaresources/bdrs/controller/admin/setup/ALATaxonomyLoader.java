@@ -589,12 +589,7 @@ public class ALATaxonomyLoader {
         if (taxon == null) {
             taxon = new IndicatorSpecies();
 
-            Metadata md = new Metadata();
-            md.setKey(Metadata.TAXON_SOURCE_DATA_ID);
-            md.setValue(nubId);
-            metadataDAO.save(sesh, md);
-
-            taxon.getMetadata().add(md);
+            taxon.setSourceId(nubId);
         }
         return taxon;
     }

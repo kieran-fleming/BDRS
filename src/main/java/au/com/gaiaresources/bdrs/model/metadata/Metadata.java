@@ -101,7 +101,6 @@ public class Metadata extends PortalPersistentImpl {
     public static final String PUBLICATION_SOURCE_DATA_ID = "PublicationSourceDataId";
     
     // IndicatorSpecies Keys
-    public static final String TAXON_SOURCE_DATA_ID = "TaxonSourceDataID";
     public static final String TAXON_SOURCE = "TaxonSource";
     public static final String TAXON_FAMILY = "TaxonFamily";
     public static final String TAXON_KINGDOM = "TaxonKingdom";

@@ -12,8 +12,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -427,7 +427,7 @@ public abstract class AbstractGridControllerTest extends AbstractControllerTest 
             species.setScientificNameAndAuthor(sciName + " - " + author);
         }
         if (guid != null) {
-            species.setGuid(metaDAO, guid);
+            species.setSourceId(guid);
         }
         
         species.setRunThreshold(false);

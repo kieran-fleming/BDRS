@@ -162,9 +162,11 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(JSONObject.fromObject(loc.flatten()).toString());
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
+    // Temporarily removing as it breaks tests running on dev machines. Doesn't break on
+    // jenkins as jenkins sed's all of the RolesAllowed annotations.
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=IS_WKT_VALID_URL, method=RequestMethod.GET)
-    public void bookmarkUserLocation(HttpServletRequest request,
+    public void wktValidation(HttpServletRequest request,
                                 HttpServletResponse response, 
                                 @RequestParam(value=PARAM_WKT, required=false) String wkt) throws IOException {
         

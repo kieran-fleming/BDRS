@@ -46,9 +46,9 @@ public abstract class AbstractDwcaTest extends AbstractGridControllerTest {
             } else {
                 Assert.assertEquals("species should match", rec.getSpecies().getScientificName(), dwcr.getScientificName());    
             }
-            if (rec.getSpecies().getGuid() != null) {
-                Assert.assertEquals("guid should match", rec.getSpecies().getGuid(), dwcr.getTaxonID());
-                Assert.assertEquals("guid should match", rec.getSpecies().getGuid(), dwcr.getScientificNameID());
+            if (rec.getSpecies().getSourceId() != null) {
+                Assert.assertEquals("source id should match", rec.getSpecies().getSourceId(), dwcr.getTaxonID());
+                Assert.assertEquals("source id should match", rec.getSpecies().getSourceId(), dwcr.getScientificNameID());
             } else {
                 Assert.assertEquals("lsid should match", lsidService.toLSID(rec.getSpecies()).toString(), dwcr.getTaxonID());
                 Assert.assertEquals("lsid should match", lsidService.toLSID(rec.getSpecies()).toString(), dwcr.getScientificNameID());

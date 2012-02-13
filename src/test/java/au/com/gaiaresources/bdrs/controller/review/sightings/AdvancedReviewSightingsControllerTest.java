@@ -128,8 +128,6 @@ public class AdvancedReviewSightingsControllerTest extends
 
     @Before
     public void setUp() throws Exception {
-        System.err.println("setUp");
-        
         dateA = dateFormat.parse("27 Jun 2004");
         dateB = dateFormat.parse("02 Oct 2005");
 

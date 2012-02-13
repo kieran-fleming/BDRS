@@ -17,7 +17,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -29,7 +28,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
@@ -210,8 +208,8 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         importSpecies.setScientificName("Indicator Species Import");
         importSpecies.setTaxonGroup(taxonGroupButterflies);
         importSpecies.setInfoItems(profileList);
-        importSpecies = atlasService.createTaxonMetadata(importSpecies, Metadata.TAXON_SOURCE_DATA_ID, 
-                                                         SPECIES_PROFILES.get(0));
+        importSpecies.setSourceId(SPECIES_PROFILES.get(0));
+        
         importSpecies = taxaDAO.save(importSpecies);
     }
 
@@ -928,7 +926,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         ModelAndViewAssert.assertViewName(mv, "editTaxon");
         
         if (guid == null) {
-            compareTaxon(importSpecies.getGuid(), pk);
+            compareTaxon(importSpecies.getSourceId(), pk);
         } else {
             compareTaxon(guid, pk);
         }
@@ -943,7 +941,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
             expectedTaxon = atlasService.createShortProfile(expectedTaxon, ob, guid, null);
         }
         IndicatorSpecies actualTaxon = taxaDAO.getIndicatorSpeciesByGuid(guid);
-        Assert.assertEquals(guid, actualTaxon.getGuid());
+        Assert.assertEquals(guid, actualTaxon.getSourceId());
         compareTaxon(expectedTaxon, actualTaxon);
     }
 
@@ -962,7 +960,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         IndicatorSpecies actualTaxon = taxaDAO.getIndicatorSpecies(pk);
 
         Assert.assertEquals(importSpecies.getId(), pk);
-        Assert.assertEquals(guid, actualTaxon.getGuid());
+        Assert.assertEquals(guid, actualTaxon.getSourceId());
         compareTaxon(expectedTaxon, actualTaxon);
     }
     

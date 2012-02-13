@@ -16,6 +16,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -35,7 +36,6 @@ import au.com.gaiaresources.bdrs.annotation.CompactAttribute;
 import au.com.gaiaresources.bdrs.db.impl.PortalPersistentImpl;
 import au.com.gaiaresources.bdrs.model.attribute.Attributable;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
-import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.util.CollectionUtils;
 
@@ -60,6 +60,8 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
     private TaxonRank rank;
     private String author;
     private String year;
+    private String source;
+    private String sourceId;
     
     private Set<Metadata> metadata = new HashSet<Metadata>();
     // Cache of metadata mapped against the key. This is not a database 
@@ -200,18 +202,81 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
         this.year = year;
     }  
     
+    /**
+     * The data source of this taxon. For example, ALA, Max, NSW Flora
+     * 
+     * @return the name of the data source
+     */
+    @Column(name="source", nullable=true)
+    @Lob
+    public String getSource() {
+        return source;
+    }
+
+    /**
+     * The data source of this taxon. For example, ALA, Max, NSW Flora
+     * 
+     * @param source the name of the source to set
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    /**
+     * The identifier for this taxon. It should either be globally unique or
+     * locally unique within the data source of this taxon, see get/setSource()
+     * If the identifier is locally unique within the data source - it is highly
+     * recommended that the source for this taxon is non null!
+     * 
+     * @return identifier for this taxon
+     */
+    @Column(name="source_id", nullable=true)
+    @Lob
+    @Index(name="indicator_species_source_id_index")
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    /**
+     * The identifier for this taxon. It should either be globally unique or
+     * locally unique within the data source of this taxon, see get/setSource()
+     * If the identifier is locally unique within the data source - it is highly
+     * recommended that the source for this taxon is non null!
+     * 
+     * @param sourceId identifier for this taxon
+     */
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
+    }
+
     // Many to many is a work around (read hack) to prevent a unique
     // constraint being applied on the metadata id.
+    /**
+     * Sets the Metadata associated with this IndicatorSpecies
+     * 
+     * @return Metadata associated with this IndicatorSpecies
+     */
     @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.REMOVE })
     @Cascade(org.hibernate.annotations.CascadeType.DELETE)
     public Set<Metadata> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the Metadata associated with this IndicatorSpecies
+     * 
+     * @param metadata Metadata associated with this IndicatorSpecies.
+     */
     public void setMetadata(Set<Metadata> metadata) {
         this.metadata = metadata;
     }
     
+    /**
+     * Gets a Metadata for this species by key
+     * 
+     * @param key key used to search for Metadata
+     * @return Metadata with the requested key if it exists, null otherwise
+     */
     @Transient
     public Metadata getMetadataByKey(String key) {
         if(key == null) {
@@ -245,25 +310,5 @@ public class IndicatorSpecies extends PortalPersistentImpl implements Attributab
     @Transient
     public IndicatorSpeciesAttribute createAttribute() {
         return new IndicatorSpeciesAttribute();
-    }
-    
-    @Transient
-    public String getGuid() {
-        Metadata md = getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
-        if (md == null) {
-            return null;
-        }
-        return md.getValue();
-    }
-    
-    @Transient 
-    public void setGuid(MetadataDAO metaDAO, String guid) {
-        Metadata md = getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
-        if (md == null) {
-            md = new Metadata();
-            md.setKey(Metadata.TAXON_SOURCE_DATA_ID);
-        }
-        md.setValue(guid);
-        metaDAO.save(md);
     }
 }

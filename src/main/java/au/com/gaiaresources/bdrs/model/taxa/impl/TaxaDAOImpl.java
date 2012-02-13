@@ -496,26 +496,26 @@ public class TaxaDAOImpl extends AbstractDAOImpl implements TaxaDAO {
 	@Override
 	public IndicatorSpecies getIndicatorSpeciesBySourceDataID(Session sesh,
 			String sourceDataId) {
-		String query = "select s from IndicatorSpecies s join s.metadata md where md.key = :source_data_id_key and md.value = :source_data_id";
-		Query q;
-		if (sesh == null) {
-			q = getSession().createQuery(query);
-		} else {
-			q = sesh.createQuery(query);
-		}
-		q.setParameter("source_data_id_key", Metadata.TAXON_SOURCE_DATA_ID);
-		q.setParameter("source_data_id", sourceDataId);
-		List<IndicatorSpecies> taxonList = q.list();
-		if (taxonList.isEmpty()) {
-			return null;
-		} else {
-			if (taxonList.size() > 1) {
-				log
-						.warn("More than one IndicatorSpecies returned for the provided Source Data ID: "
-								+ sourceDataId + " Returning the first");
-			}
-			return taxonList.get(0);
-		}
+	    
+	    String query = "select s from IndicatorSpecies s where s.sourceId = :sourceId";
+	    
+	    Query q;
+	    if (sesh == null) {
+                q = getSession().createQuery(query);
+            } else {
+                    q = sesh.createQuery(query);
+            }
+	    q.setParameter("sourceId", sourceDataId);
+	    List<IndicatorSpecies> taxonList = q.list();
+            if (taxonList.isEmpty()) {
+                return null;
+            } else {
+                if (taxonList.size() > 1) {
+                    log.warn("More than one IndicatorSpecies returned for the provided Source Data ID: "
+                            + sourceDataId + " Returning the first");
+                }
+                return taxonList.get(0);
+            }
 	}
 
 	@Override

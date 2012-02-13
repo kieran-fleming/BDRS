@@ -42,7 +42,6 @@ import au.com.gaiaresources.bdrs.controller.record.WebFormAttributeParser;
 import au.com.gaiaresources.bdrs.file.FileService;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
-import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
@@ -339,16 +338,7 @@ public class TaxonomyManagementController extends AbstractController {
         
         // save the guid if it exists
         if (!StringUtils.nullOrEmpty(guid)) {
-            Metadata md = taxon.getMetadataByKey(Metadata.TAXON_SOURCE_DATA_ID);
-            if (md == null) {
-                md = new Metadata();
-                md.setKey(Metadata.TAXON_SOURCE_DATA_ID);
-            } else {
-                taxon.getMetadata().remove(md);
-            }
-            md.setValue(guid);
-            metadataDAO.save(md);
-            taxon.getMetadata().add(md);
+            taxon.setSourceId(guid);
         }
         
         IndicatorSpecies parent = null;
@@ -480,7 +470,7 @@ public class TaxonomyManagementController extends AbstractController {
         if (importTaxon == null) {
             // return the error that caused the import to fail
             String tmpl = propertyService.getMessage(MSG_KEY_IMPORT_FAIL);
-            getRequestContext().addMessage(String.format(tmpl, StringUtils.nullOrEmpty(guid) ? taxon.getGuid() : guid));
+            getRequestContext().addMessage(String.format(tmpl, StringUtils.nullOrEmpty(guid) ? taxon.getSourceId() : guid));
         } else {
             taxon = importTaxon;
             // Need to be careful that a taxon may have attribute values

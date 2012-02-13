@@ -109,7 +109,7 @@ public class AtlasService {
      * @return the IndicatorSpecies object resulting from the import
      */
     public IndicatorSpecies importSpecies(IndicatorSpecies species, boolean shortProfile, Map<String, String> errorMap, String group) {
-        return importSpecies(species, species.getGuid(), shortProfile, errorMap, group);
+        return importSpecies(species, species.getSourceId(), shortProfile, errorMap, group);
     }
     
     /**
@@ -128,7 +128,7 @@ public class AtlasService {
             } 
             if (guid == null || StringUtils.nullOrEmpty(guid.trim()) || "null".equals(guid.trim())) {
                 // get the guid from the species if none is specified
-                guid = species.getGuid();
+                guid = species.getSourceId();
             }
             JSONObject ob = null;
             if (guid != null) {
@@ -149,7 +149,10 @@ public class AtlasService {
             }
             
             species = createTaxonMetadata(species, Metadata.TAXON_SOURCE, SPECIES_PROFILE_SOURCE);
-            species = createTaxonMetadata(species, Metadata.TAXON_SOURCE_DATA_ID, guid);
+            // Hard code data source to the ALA. It shouldn't matter that much
+            // since the source id is globally unique.
+            species.setSource("ALA");
+            species.setSourceId(guid);
             
             if (species != null) {
             	if (species.getScientificName() != null) {
