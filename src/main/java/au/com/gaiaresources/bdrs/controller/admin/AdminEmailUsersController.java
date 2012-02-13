@@ -50,6 +50,7 @@ public class AdminEmailUsersController extends AbstractController {
      * @param response
      * @return
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/emailUsers.htm", method = RequestMethod.GET)
     public ModelAndView renderPage(HttpServletRequest request,
             HttpServletResponse response) {
@@ -67,6 +68,7 @@ public class AdminEmailUsersController extends AbstractController {
      * @param subject The subject of the message
      * @param content The content of the message
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/sendMessage.htm", method = RequestMethod.POST)
     public void sendMessage(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = "to", required = true) String to,

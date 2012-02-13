@@ -69,6 +69,7 @@ public class ManagedFileController extends AbstractController {
     
     private ParamEncoder managedFileListingParamEncoder = new ParamEncoder(MANAGED_FILE_LISTING_TABLE_ID);
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/user/managedfile/edit.htm", method = RequestMethod.GET)
     public ModelAndView edit(HttpServletRequest request,
                              HttpServletResponse response,
@@ -80,6 +81,7 @@ public class ManagedFileController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/user/managedfile/edit.htm", method = RequestMethod.POST)
     public ModelAndView editSubmit(MultipartHttpServletRequest request,
                                  HttpServletResponse response,
@@ -92,6 +94,7 @@ public class ManagedFileController extends AbstractController {
         return new ModelAndView(new RedirectView("/bdrs/user/managedfile/listing.htm", true));
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/user/managedfile/listing.htm", method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request,
                                 HttpServletResponse response) {
@@ -100,6 +103,7 @@ public class ManagedFileController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/user/managedfile/delete.htm", method = RequestMethod.POST)
     public ModelAndView delete(HttpServletRequest request,
                                HttpServletResponse response,
@@ -126,6 +130,7 @@ public class ManagedFileController extends AbstractController {
         return managedFileListingParamEncoder.encodeParameterName(TableTagParameters.PARAMETER_ORDER);
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = MANAGED_FILE_EDIT_AJAX_URL, method = RequestMethod.GET)
     public void viewService(HttpServletRequest request,
                             HttpServletResponse response,
@@ -154,6 +159,7 @@ public class ManagedFileController extends AbstractController {
         response.getWriter().write(result.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = MANAGED_FILE_EDIT_AJAX_URL, method = RequestMethod.POST)
     public void saveService(MultipartHttpServletRequest request,
             HttpServletResponse response,
@@ -204,6 +210,7 @@ public class ManagedFileController extends AbstractController {
      * @param imagesOnly If true, will restrict the results to ManagedFiles with a contentType starting with "image".
      * @throws Exception if there is an error performing the search (e.g. a database failure).
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = MANAGED_FILE_SEARCH_AJAX_URL, method = RequestMethod.GET)
     public void searchService(HttpServletRequest request,
                               HttpServletResponse response,

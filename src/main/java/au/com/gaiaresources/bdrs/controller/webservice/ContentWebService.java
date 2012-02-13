@@ -58,12 +58,13 @@ public class ContentWebService extends AbstractController {
     }
 
     /**
-     * Web service for retrieving content
+     * Web service for retrieving content.
      * 
      * @param request
      * @param response
      * @throws Exception
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/content/loadContent.htm", method = RequestMethod.GET)
     public void load(HttpServletRequest request, HttpServletResponse response)
             throws Exception {

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +39,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.util.KMLUtils;
 
 
@@ -57,6 +59,7 @@ public class RecordMapController extends AbstractController {
         super();
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = "/map/recordTracker.htm", method = RequestMethod.GET)
     public ModelAndView showrecordTracker(HttpServletRequest request,
             HttpServletResponse response) throws UnsupportedEncodingException {
@@ -88,6 +91,7 @@ public class RecordMapController extends AbstractController {
         return mv;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = "/map/addRecordBaseMapLayer.htm", method = RequestMethod.GET)
     public void addRecordBaseMapLayer(HttpServletRequest request,
                                       HttpServletResponse response,
@@ -131,6 +135,7 @@ public class RecordMapController extends AbstractController {
         RecordDownloadWriter.write(sesh, request, response, sc, format, currentUser);
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = KMLUtils.GET_RECORD_PLACEMARK_PNG_URL, method = RequestMethod.GET)
     public void renderRecordPlacemark(HttpServletRequest request, HttpServletResponse response)
         throws IOException {

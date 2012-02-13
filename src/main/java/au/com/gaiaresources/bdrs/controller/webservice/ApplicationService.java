@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,6 +53,7 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class ApplicationService extends AbstractController {
@@ -92,6 +94,7 @@ public class ApplicationService extends AbstractController {
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/application/survey.htm", method = RequestMethod.GET)
     public void getSurvey( HttpServletRequest request, HttpServletResponse response,
                            @RequestParam(value = "ident", defaultValue = "") String ident,
@@ -238,6 +241,7 @@ public class ApplicationService extends AbstractController {
         log.debug("Wrote out data in  :" + (System.currentTimeMillis() - now));now = System.currentTimeMillis();
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/application/clientSync.htm", method = RequestMethod.POST)
     public ModelAndView clientSync(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="inFrame", defaultValue="true") boolean inFrame) throws IOException {
@@ -321,6 +325,7 @@ public class ApplicationService extends AbstractController {
         }
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/application/ping.htm", method = RequestMethod.GET)
     public void ping(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // support for JSONP

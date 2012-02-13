@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.mobile;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.file.AbstractDownloadFileController;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class MobileApplicationController extends AbstractDownloadFileController {
@@ -22,6 +24,7 @@ public class MobileApplicationController extends AbstractDownloadFileController 
 	public static final String APPLICATION_URL = "/mobile/application.htm";
 	public static final String ANDROID_APP_URL = "/au/com/gaiaresources/bdrs/controller/mobile/bdrs-mobile.apk";
 	
+	@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
 	@RequestMapping(value = APPLICATION_URL, method = RequestMethod.GET)
 	public ModelAndView getApplication(HttpServletResponse response) throws IOException{
 		

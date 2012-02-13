@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,6 +29,7 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpeciesAttribute;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class BdrsCoreOfflineController extends AbstractController {
@@ -44,6 +46,7 @@ public class BdrsCoreOfflineController extends AbstractController {
 	 * @param 	response
 	 * @return	ModelAndView	A combined javaScript file generated through jsp.
 	 */
+	@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
 	@RequestMapping(value = "/js/mobile/bdrs-mobile.js")
 	public ModelAndView getDbJs(HttpServletRequest request,
 			HttpServletResponse response) {
@@ -60,6 +63,7 @@ public class BdrsCoreOfflineController extends AbstractController {
 	 * @param 	response
 	 * @return	ModelAndView	A combined javaScript file generated through jsp.
 	 */
+	@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
 	@RequestMapping(value = "/js/mobile/bdrs-mobile-micro-templates.js")
 	public ModelAndView getMicroTemplatesJs(HttpServletRequest request,
 			HttpServletResponse response) {
@@ -74,6 +78,7 @@ public class BdrsCoreOfflineController extends AbstractController {
 	 * @param 	response
 	 * @return	ModelAndView	A combined manifest file generated through jsp.
 	 */
+	@RolesAllowed({Role.USER, Role.POWERUSER, Role.ADMIN, Role.SUPERVISOR})
 	@RequestMapping(value = "/bdrs/mobile/mobile.manifest")
 	public ModelAndView getManifst(HttpServletRequest request,
 			HttpServletResponse response) {
@@ -109,6 +114,7 @@ public class BdrsCoreOfflineController extends AbstractController {
 	 * @param response
 	 * @return ModelAndView
 	 */
+	@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
 	@RequestMapping(value = "/js/mobile/bdrs-mobile-database-content.js")
 	public ModelAndView prepDownloadJs(HttpServletRequest request,
 			HttpServletResponse response) {
@@ -235,7 +241,9 @@ public class BdrsCoreOfflineController extends AbstractController {
         return urls;
     }
     
-/*    @RequestMapping(value = "/bdrs/mobile/offlineConfirm.htm", method = RequestMethod.GET)
+/*    
+        @RolesAllowed({Role.USER, Role.POWERUSER, Role.ADMIN, Role.SUPERVISOR})
+        @RequestMapping(value = "/bdrs/mobile/offlineConfirm.htm", method = RequestMethod.GET)
 	public ModelAndView renderConfirm(HttpServletRequest request,
 			HttpServletResponse response) {
 		ModelAndView mv = new ModelAndView("offlinereq");
@@ -262,7 +270,8 @@ public class BdrsCoreOfflineController extends AbstractController {
     }
 
    
-    
+
+    @RolesAllowed({Role.USER, Role.POWERUSER, Role.ADMIN, Role.ROOT, Role.SUPERVISOR, Role.ANONYMOUS})
 	@RequestMapping(value = "/bdrs/mobile/hlp.htm", method = RequestMethod.GET)
 	public ModelAndView getHelp(HttpServletRequest request,
 			HttpServletResponse response) {

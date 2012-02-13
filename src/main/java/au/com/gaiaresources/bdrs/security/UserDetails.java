@@ -17,9 +17,6 @@ public class UserDetails implements org.springframework.security.core.userdetail
 	private transient User user;
     
     public UserDetails(User user) {
-        if(user == null) {
-            throw new NullPointerException();
-        }
         this.user = user;
     }
     
@@ -28,6 +25,9 @@ public class UserDetails implements org.springframework.security.core.userdetail
      */
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
+        if (user == null) {
+            return AuthorityUtils.commaSeparatedStringToAuthorityList(Role.ANONYMOUS);
+        }
     	StringBuilder roles = new StringBuilder();
     	for (String role : user.getRoles())
     	{
@@ -42,6 +42,9 @@ public class UserDetails implements org.springframework.security.core.userdetail
      */
     @Override
     public String getPassword() {
+        if (user == null) {
+            return User.ANONYMOUS_PASSWORD;
+        }
         return user.getPassword();
     }
 
@@ -50,6 +53,9 @@ public class UserDetails implements org.springframework.security.core.userdetail
      */
     @Override
     public String getUsername() {
+        if (user == null) {
+            return User.ANONYMOUS_USERNAME;
+        }
         return user.getName();
     }
 
@@ -82,6 +88,10 @@ public class UserDetails implements org.springframework.security.core.userdetail
      */
     @Override
     public boolean isEnabled() {
+        // the anonymous account is always enabled
+        if (user == null) {
+            return true;
+        }
         return user.isActive();
     }
     
@@ -90,9 +100,6 @@ public class UserDetails implements org.springframework.security.core.userdetail
     }
     
     public void setUser(User user) {
-        if(user == null) {
-            throw new NullPointerException();
-        }
     	this.user = user;
     }
 }

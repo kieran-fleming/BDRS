@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.controller.webservice;
 
 import java.io.IOException;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.security.Role;
  
 /**
  * Webservice for retrieving managed file information.
@@ -30,6 +32,7 @@ public class ManagedFileWebService extends AbstractController {
 
     /**
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/managedfile/getFile.htm", method = RequestMethod.GET)
     public void searchValues(   @RequestParam(value="uuid", required=true) String uuid,
                                 HttpServletResponse response) throws IOException {

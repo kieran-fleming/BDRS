@@ -82,6 +82,13 @@ public class SetupController extends AbstractController {
     private RecordDAO recordDAO;
 
 
+    /**
+     * @deprecated URL not used, causes a 500 error
+     * @param request
+     * @param response
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/setup.htm", method = RequestMethod.GET)
     public String render(HttpServletRequest request, HttpServletResponse response) {
 

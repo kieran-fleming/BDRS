@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
 
@@ -23,6 +24,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.db.TransactionCallback;
 import au.com.gaiaresources.bdrs.model.region.Region;
 import au.com.gaiaresources.bdrs.model.region.RegionService;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.kml.servlet.KMLWriter;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -38,12 +40,14 @@ public class RegionController extends AbstractController {
     private RegionFormValidator validator;
     
     /**
+     * @deprecated URL no longer used, causes 500 error
      * Render the region admin screen. Added to the model are:
      * <ul>
      *   <li><code>regions</code> - The list of currently defined regions.</li>
      * </ul>
      * @return <code>ModelAndView</code>.
      */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/regions.htm", method = RequestMethod.GET)
     public ModelAndView render() {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -52,14 +56,24 @@ public class RegionController extends AbstractController {
     }
     
     /**
+     * @deprecated URL no longer used, causes 500 error
      * Render the draw region form.
      * @return <code>ModelAndView</code>.
      */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/drawRegion.htm", method = RequestMethod.GET)
     public ModelAndView drawRegion() {
         return new ModelAndView("drawRegions", "region", new RegionForm());
     }
     
+    /**
+     * @deprecated URL no longer used, causes 500 error
+     * 
+     * @param r
+     * @param result
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = {"/admin/drawRegion.htm", "/admin/editRegion.htm"}, method = RequestMethod.POST)
     public String saveRegion(@ModelAttribute("region") final RegionForm r, BindingResult result) {
         validator.validate(r, result);
@@ -84,6 +98,13 @@ public class RegionController extends AbstractController {
         }
     }
     
+    /**
+     * @deprecated URL no longer used, causes 500 error
+     * 
+     * @param regionID
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/editRegion.htm", method = RequestMethod.GET)
     public ModelAndView renderEdit(@RequestParam(value = "regionID", required = true) Integer regionID) {
         Region region = regionService.getRegion(regionID);
@@ -100,6 +121,15 @@ public class RegionController extends AbstractController {
         return new ModelAndView("drawRegions", "region", regionForm);
     }
     
+    /**
+     * @deprecated URL no longer used, causes 500 error
+     * 
+     * @param request
+     * @param regionId
+     * @return
+     * @throws JAXBException
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = "/authenticated/getRegion.htm", method = RequestMethod.GET)
     public ModelAndView getRegion(HttpServletRequest request, @RequestParam("regionID") Integer regionId) throws JAXBException {
         KMLWriter writer = new KMLWriter(request);

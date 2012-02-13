@@ -56,6 +56,9 @@ public class User extends PortalPersistentImpl implements Comparable<User> {
     private Boolean active;
     private String registrationKey;
 
+    public static final String ANONYMOUS_USERNAME = "anonymous";
+    public static final String ANONYMOUS_PASSWORD = "anonymous";
+    
     /**
      * Get the users e-mail address.
      * 

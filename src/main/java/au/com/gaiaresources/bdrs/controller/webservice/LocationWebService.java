@@ -162,9 +162,7 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(JSONObject.fromObject(loc.flatten()).toString());
     }
     
-    // Temporarily removing as it breaks tests running on dev machines. Doesn't break on
-    // jenkins as jenkins sed's all of the RolesAllowed annotations.
-    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=IS_WKT_VALID_URL, method=RequestMethod.GET)
     public void wktValidation(HttpServletRequest request,
                                 HttpServletResponse response, 

@@ -34,11 +34,21 @@ public class TaxonGroupAttributeController extends AbstractController {
     @Autowired
     private TaxaService taxaService;
 
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/attributes.htm", method = RequestMethod.GET)
     public View render() {
         return new RedirectView("/admin/taxonGroups.htm", true);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/attributes.htm", method = RequestMethod.GET, params = {"taxonGroupID"})
     public ModelAndView render(@RequestParam("taxonGroupID") Integer taxonGroupID) {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -51,6 +61,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("adminTaxonGroupAttributes", model);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/addAttributes.htm", method = RequestMethod.GET)
     public ModelAndView addAttribute(@RequestParam("taxonGroupID") Integer taxonGroupID) {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -62,6 +77,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("addTaxonGroupAttribute", model);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/addAttributes.htm", method = RequestMethod.POST)
     public ModelAndView saveAttribute(@ModelAttribute("attribute") final TaxonGroupAttributeForm attributeForm,  
                                       BindingResult result) 
@@ -78,6 +98,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("redirect:/admin/taxonGroups/attributes.htm", "taxonGroupID", attributeForm.getTaxonGroupId());
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/editAttribute.htm", method = RequestMethod.GET)
     public ModelAndView editAttribute(@RequestParam("attributeID") Integer attributeID) {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -93,6 +118,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("addTaxonGroupAttribute", model);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/editAttribute.htm", method = RequestMethod.POST)
     public ModelAndView editAttribute(@ModelAttribute("attribute") final TaxonGroupAttributeForm attributeForm,  
             BindingResult result) {
@@ -108,6 +138,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("redirect:/admin/taxonGroups/attributes.htm", "taxonGroupID", attributeForm.getTaxonGroupId());
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/editAttributeValueOptions", method = RequestMethod.GET, params = {"attributeID"})
     public ModelAndView renderOptions(@RequestParam("attributeID") Integer attributeID) {
     	Attribute attr = taxaService.getAttribute(attributeID);
@@ -122,6 +157,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("adminTaxonGroupAttributeOptions", model);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/addAttributeOptions.htm", method = RequestMethod.GET)
     public ModelAndView addAttributeOptions(@RequestParam("attributeID") Integer attributeID) {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -132,6 +172,11 @@ public class TaxonGroupAttributeController extends AbstractController {
         return new ModelAndView("addTaxonGroupAttributeOption", model);
     }
     
+    /**
+     * @deprecated URL no longer used in system, replace with TaxonomyManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups/addAttributeOptions.htm", method = RequestMethod.POST)
     public ModelAndView addAttributeOptions(@ModelAttribute("option") final TaxonGroupAttributeOptionForm optionForm,  
                                       BindingResult result) 

@@ -33,6 +33,7 @@ public class AdminEditContentController extends AbstractController {
     @Autowired
     private ContentDAO contentDAO;
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/editContent.htm", method = RequestMethod.GET)
     public ModelAndView renderPage(HttpServletRequest request,
             HttpServletResponse response) {
@@ -47,6 +48,7 @@ public class AdminEditContentController extends AbstractController {
     
     // There is no protection when using this URL directly. You will reset
     // all of your content!
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value="/admin/resetContentToDefault.htm", method = RequestMethod.GET)
     public String reset(HttpServletRequest request, HttpServletResponse response, 
             @RequestParam(value = "key", required = false) String key) throws Exception {   

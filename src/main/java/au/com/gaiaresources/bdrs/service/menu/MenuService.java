@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
+import au.com.gaiaresources.bdrs.controller.RenderController;
 import au.com.gaiaresources.bdrs.model.map.GeoMap;
 import au.com.gaiaresources.bdrs.model.menu.MenuDAO;
 import au.com.gaiaresources.bdrs.model.menu.MenuItem;
@@ -84,7 +85,7 @@ public class MenuService {
         if (surveys != null) {
             for (Survey survey : surveys) {
                 MenuItem item = new MenuItem(survey.getName(), 
-                                             "bdrs/user/surveyRenderRedirect.htm?surveyId="+survey.getId(), 
+                                             RenderController.SURVEY_RENDER_REDIRECT_URL + "?surveyId="+survey.getId(), 
                                              survey.getDescription(), 
                                              createCensusMethodMenu(survey));
                 menu.add(item);
@@ -103,13 +104,13 @@ public class MenuService {
         if (survey.isDefaultCensusMethodProvided()) {
             // cover the default case...
             MenuItem item = new MenuItem(CensusMethod.DEFAULT_NAME, 
-                                         "bdrs/user/surveyRenderRedirect.htm?surveyId="+survey.getId()+"&censusMethodId=0", 
+                                         RenderController.SURVEY_RENDER_REDIRECT_URL + "?surveyId="+survey.getId()+"&censusMethodId=0", 
                                          null);
             menu.add(item);
         }
         for (CensusMethod censusMethod : survey.getCensusMethods()) {
             MenuItem item = new MenuItem(censusMethod.getName(), 
-                                         "bdrs/user/surveyRenderRedirect.htm?surveyId="+survey.getId()+"&censusMethodId="+censusMethod.getId(), 
+                                         RenderController.SURVEY_RENDER_REDIRECT_URL + "?surveyId="+survey.getId()+"&censusMethodId="+censusMethod.getId(), 
                                          censusMethod.getDescription(),
                                          null);
             menu.add(item);

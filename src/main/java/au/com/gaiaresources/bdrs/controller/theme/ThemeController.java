@@ -90,7 +90,7 @@ public class ThemeController extends AbstractDownloadFileController {
      * Lists all themes for the current portal.
      * @param portalId the primary key of the portal associated with the themes to be returned.
      */
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/theme/listing.htm", method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request,
                                 HttpServletResponse response) {
@@ -123,7 +123,7 @@ public class ThemeController extends AbstractDownloadFileController {
         return mv;
     }
     
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.GET)
     public ModelAndView admin_editThemeFile(HttpServletRequest request,
                              HttpServletResponse response,
@@ -251,7 +251,7 @@ public class ThemeController extends AbstractDownloadFileController {
         return editThemeFileSubmit(request, response, theme, themeFileName, themeFileContent, revert, ROOT_EDIT_URL);
     }
     
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_FILE_URL, method = RequestMethod.POST)
     public ModelAndView admin_editThemeFileSubmit(HttpServletRequest request,
                              HttpServletResponse response,
@@ -369,7 +369,7 @@ public class ThemeController extends AbstractDownloadFileController {
     }
     
     // The admin can only edit the themes for the current portal
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.GET)
     public ModelAndView admin_edit(HttpServletRequest request,
                              HttpServletResponse response,
@@ -463,7 +463,7 @@ public class ThemeController extends AbstractDownloadFileController {
         return editSubmit(request, response, portal, theme, name, themeFileUUID, active, revert, ROOT_EDIT_URL);
     }
     
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = ADMIN_EDIT_URL, method = RequestMethod.POST)
     public ModelAndView admin_editSubmit(HttpServletRequest request,
                                    HttpServletResponse response,
@@ -568,7 +568,7 @@ public class ThemeController extends AbstractDownloadFileController {
      * @param themeId The unique id of the theme.
      * @return
      */
-    @RolesAllowed({ Role.ADMIN })
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/theme/downloadTheme.htm", method = RequestMethod.GET)
     public ModelAndView download(HttpServletRequest request,
             HttpServletResponse response,
@@ -589,6 +589,7 @@ public class ThemeController extends AbstractDownloadFileController {
      * @throws IOException 
      */
     // public so no login required
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.SUPERVISOR, Role.POWERUSER, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = REVERT_DEFAULT_THEME_URL, method = RequestMethod.GET)
     public void revertDefaultTheme(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String contextPath = request.getContextPath();

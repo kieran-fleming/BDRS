@@ -75,7 +75,7 @@
                 </tr>
                 <tr>
                     <th><label for="guid">Guid</label></th>
-                    <td><input class="" type="text" name="guid" id="guid" value="${ taxon.guid }"/></td>
+                    <td><input class="" type="text" name="guid" id="guid" value="${ taxon.sourceId }"/></td>
                 </tr>
             </tbody>
         </table>

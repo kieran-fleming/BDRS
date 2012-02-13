@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.controller.record.AtlasController;
@@ -56,17 +57,20 @@ public class RenderController extends AbstractController {
      * @return redirected view to the survey renderer.
      */
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = SURVEY_RENDER_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView surveyRendererRedirect(HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            @RequestParam(value=PARAM_RECORD_ID, required=false) String recordId,
+            @RequestParam(value=PARAM_SURVEY_ID, required=false) String surveyPk) {
 
         int surveyId = 0;
         
         // if there is a record id present we shouldn't need to look for the
         // survey id separately.
-        if (StringUtils.hasLength(request.getParameter(PARAM_RECORD_ID))) {
+        if (StringUtils.hasLength(recordId)) {
             try {
-                Integer recId = Integer.valueOf(request.getParameter(PARAM_RECORD_ID));
+                Integer recId = Integer.valueOf(recordId);
                 Record rec = recordDAO.getRecord(recId);
                 if (rec != null && rec.getSurvey() != null && rec.getSurvey().getId() != null) {
                     surveyId = rec.getSurvey().getId().intValue();
@@ -76,9 +80,9 @@ public class RenderController extends AbstractController {
             }
         } 
 
-		if (surveyId == 0) {
+	if (surveyId == 0) {
             try {
-                surveyId = Integer.parseInt(request.getParameter(PARAM_SURVEY_ID));
+                surveyId = Integer.parseInt(surveyPk);
             } catch (NumberFormatException nfe) {
                 try {
                     log.debug("Default is : "

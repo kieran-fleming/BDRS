@@ -82,6 +82,7 @@ public class CensusMethodController extends AbstractController {
     
     private AttributeFormFieldFactory formFieldFactory = new AttributeFormFieldFactory();
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/censusMethod/listing.htm", method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request, HttpServletResponse response) {
         
@@ -89,6 +90,7 @@ public class CensusMethodController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView openEdit(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="censusMethodId", defaultValue="0", required=false) Integer pk) {
@@ -114,6 +116,7 @@ public class CensusMethodController extends AbstractController {
     }
     
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="censusMethodName", required=true) String name,
@@ -198,6 +201,7 @@ public class CensusMethodController extends AbstractController {
      * @param surveyId - Gets the census methods assigned to this survey ID.
      * @throws Exception
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=CENSUS_METHOD_SEARCH_URL, method = RequestMethod.GET)
     public void searchService(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="name", required=false) String name,
@@ -259,6 +263,7 @@ public class CensusMethodController extends AbstractController {
     
     // AL - I'm doing it this way to use the tile as a template since we have no javascript templating at the moment and 
     // it keeps it consistent with the rest of the form. Yes I know it's inefficient.
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=CENSUS_METHOD_ADD_AJAX_ROW_URL, method = RequestMethod.GET)
     public ModelAndView addSubCensusMethod(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="id", required=true) Integer id) {

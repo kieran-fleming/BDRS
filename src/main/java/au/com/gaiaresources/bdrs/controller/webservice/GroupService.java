@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.webservice;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,6 +15,7 @@ import au.com.gaiaresources.bdrs.db.impl.PagedQueryResult;
 import au.com.gaiaresources.bdrs.db.impl.PaginationFilter;
 import au.com.gaiaresources.bdrs.model.group.Group;
 import au.com.gaiaresources.bdrs.model.group.GroupDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class GroupService extends AbstractController {
@@ -25,6 +27,7 @@ public class GroupService extends AbstractController {
     public static final String GROUP_NAME = "name";
     public static final String GROUP_DESC = "description";
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/group/searchGroups.htm", method=RequestMethod.GET)
     public void searchUsers(
                 @RequestParam(value = "parentGroupId", defaultValue = "") Integer parentGroupId,

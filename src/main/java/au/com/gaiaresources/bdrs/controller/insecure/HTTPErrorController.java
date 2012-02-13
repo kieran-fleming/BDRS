@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.insecure;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.email.EmailService;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class HTTPErrorController {
@@ -24,6 +26,7 @@ public class HTTPErrorController {
     private EmailService emailService;
     private Logger log = Logger.getLogger(getClass());
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/error/redirect404.htm", method = RequestMethod.GET)
     public ModelAndView handleRedirect404(HttpServletRequest request) {
         
@@ -42,6 +45,7 @@ public class HTTPErrorController {
         return view;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/error/redirect500.htm", method = RequestMethod.GET)
     public ModelAndView handleRedirect500(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         log.error("Exception",ex);
@@ -63,6 +67,7 @@ public class HTTPErrorController {
         return view;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = NOT_FOUND_URL, method = RequestMethod.GET)
     public ModelAndView handle404(HttpServletRequest req, HttpServletResponse response) {
         
@@ -80,6 +85,7 @@ public class HTTPErrorController {
         return view;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/error/500.htm", method = RequestMethod.GET)
     public ModelAndView handle500(HttpServletRequest req, HttpServletResponse response) {
         

@@ -91,6 +91,7 @@ public class GalleryController extends AbstractDownloadFileController {
     private Logger log = Logger.getLogger(this.getClass());
     
     // Lists all the galleries in a grid
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=LIST_URL, method=RequestMethod.GET)
     public ModelAndView list(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mv = new ModelAndView("galleryListing");
@@ -98,6 +99,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // Open up an editing page
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=EDIT_URL, method=RequestMethod.GET)
     public ModelAndView view(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GALLERY_PK_VIEW, defaultValue="0") Integer pk) {
@@ -114,6 +116,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // The submission of the edited page
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=EDIT_URL, method=RequestMethod.POST)
     public ModelAndView save(MultipartHttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GALLERY_PK_SAVE, defaultValue="0") Integer pk,
@@ -263,6 +266,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // delete a gallery
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=DELETE_URL, method=RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GALLERY_PK_SAVE, defaultValue="0") Integer pk) {
@@ -273,6 +277,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // ajax service for the grid to display all galleries
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value=LIST_SERVICE_URL, method=RequestMethod.GET)
     public void listService(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_NAME, required=false) String name,
@@ -299,6 +304,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // returns the slideshow image
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=SLIDESHOW_IMG_URL, method=RequestMethod.GET)
     public ModelAndView getSlideshowImg(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_UUID, required=true) String uuid) {
@@ -311,6 +317,7 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // returns the full sized image
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=FULL_IMG_URL, method=RequestMethod.GET)
     public ModelAndView getFullImg(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_UUID, required=true) String uuid) {

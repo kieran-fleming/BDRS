@@ -42,6 +42,11 @@ public class IndicatorSpeciesController extends AbstractController {
     @Autowired
     private FileService fileService;
 
+    /**
+     * @deprecated URL not used in system, use TaxonomyManagementController.setup instead
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/indicatorSpecies.htm", method = RequestMethod.GET)
     public ModelAndView render() {
         Map<TaxonGroup, List<IndicatorSpecies>> groupedSpecies = taxaService.getGroupedIndicatorSpecies();
@@ -55,11 +60,21 @@ public class IndicatorSpeciesController extends AbstractController {
         return new ModelAndView("adminIndicatorSpecies", "species", groupedDisplay);
     }
 
+    /**
+     * @deprecated URL not used in system, use TaxonomyManagementController.edit instead
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/addIndicatorSpecies.htm", method = RequestMethod.GET)
     public ModelAndView renderAdd() {
         return buildModelAndView("addIndicatorSpecies", new IndicatorSpeciesForm());
     }
 
+    /**
+     * @deprecated URL not used in system, use TaxonomyManagementController.edit instead
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = { "/admin/addIndicatorSpecies.htm", "/admin/editIndicatorSpecies.htm" }, 
                     method = RequestMethod.POST)
     public String addIndicatorSpecies(@ModelAttribute("species") final IndicatorSpeciesForm species,
@@ -91,6 +106,11 @@ public class IndicatorSpeciesController extends AbstractController {
         return "redirect:/admin/indicatorSpecies.htm";
     }
 
+    /**
+     * @deprecated URL not used in system, use TaxonomyManagementController.edit instead
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/editIndicatorSpecies.htm", method = RequestMethod.GET)
     public ModelAndView renderEdit(@RequestParam("speciesID") Integer speciesID) {
         if (speciesID != null && speciesID > 0) {

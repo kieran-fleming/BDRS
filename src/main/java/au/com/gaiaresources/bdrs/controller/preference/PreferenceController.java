@@ -36,7 +36,7 @@ public class PreferenceController extends AbstractController {
     @Autowired
     private PreferenceDAO prefDAO;
 
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/preference/preference.htm", method = RequestMethod.GET)
     public ModelAndView edit(HttpServletRequest request,
             HttpServletResponse response) {
@@ -61,7 +61,7 @@ public class PreferenceController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/preference/preference.htm", method = RequestMethod.POST)
     public ModelAndView editSubmit(
             HttpServletRequest request,
@@ -131,7 +131,7 @@ public class PreferenceController extends AbstractController {
                 "/bdrs/admin/preference/preference.htm", true));
     }
 
-    @RolesAllowed( { Role.ADMIN })
+    @RolesAllowed( { Role.ROOT, Role.ADMIN })
     @RequestMapping(value = "/bdrs/admin/preference/ajaxAddPreferenceRow.htm", method = RequestMethod.GET)
     public ModelAndView ajaxAddPreferenceRow(
             HttpServletRequest request,

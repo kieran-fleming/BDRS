@@ -132,7 +132,7 @@
                 bdrs.ident = '<%= context.getUser() == null ? "" : context.getUser().getRegistrationKey() %>';
                 bdrs.dateFormat = 'dd M yy';
 				
-				<sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_USER">
+				<sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_SUPERVISOR,ROLE_POWER_USER,ROLE_USER">
 				<%--   
 				    This stuff isn't used for anything extremely important.
 				    Messing with these will allow you to pull some extra geom data
@@ -141,6 +141,7 @@
                 bdrs.authenticated = true;
                 bdrs.authenticatedUserId = ${authenticatedUserId != null ? authenticatedUserId : 'null'};
                 bdrs.isAdmin = ${isAdmin ? isAdmin : 'null'};
+                bdrs.authenticatedRole = '${authenticatedRole != null ? authenticatedRole : ROLE_ANONYMOUS}';
                 </sec:authorize>
 
                 bdrs.init();

@@ -18,6 +18,8 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.email.EmailService;
+import au.com.gaiaresources.bdrs.email.impl.MockEmail;
+import au.com.gaiaresources.bdrs.email.impl.MockEmailService;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.location.LocationService;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
@@ -600,11 +602,11 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 propertyService);
         handler.executeAction(getRequestContext().getHibernate(), threshold, record, action);
         
-        List<MockEmailMessage> messageQueue = emailService.getMessageQueue();
+        List<MockEmail> messageQueue = emailService.getMockEmailList();
         Assert.assertEquals(1, messageQueue.size());
         
-        MockEmailMessage message = messageQueue.get(0);
-        Assert.assertEquals(action.getValue(), message.to);
+        MockEmail message = messageQueue.get(0);
+        Assert.assertEquals(action.getValue(), message.getTo());
     }
 
     @Test
@@ -672,11 +674,11 @@ public class ThresholdServiceTest extends AbstractControllerTest {
                 propertyService, contentService, redirService, userDAO);
         handler.executeAction(getRequestContext().getHibernate(), threshold, record, action);
         
-        List<MockEmailMessage> messageQueue = emailService.getMessageQueue();
+        List<MockEmail> messageQueue = emailService.getMockEmailList();
         Assert.assertTrue("At least one message should have been sent", messageQueue.size() > 0);
         
-        for (MockEmailMessage message : messageQueue) {
-            Assert.assertEquals(user.getEmailAddress(), message.from);
+        for (MockEmail message : messageQueue) {
+            Assert.assertEquals(user.getEmailAddress(), message.getFrom());
         }
         
         messageQueue.clear();
@@ -687,100 +689,12 @@ public class ThresholdServiceTest extends AbstractControllerTest {
         
         handler.executeAction(getRequestContext().getHibernate(), threshold, record, action);
         // test that it sends a message to the record owner that their record has been moderated
-        messageQueue = emailService.getMessageQueue();
+        messageQueue = emailService.getMockEmailList();
         Assert.assertTrue("At least one message should have been sent", messageQueue.size() > 0);
         
-        for (MockEmailMessage message : messageQueue) {
-            Assert.assertEquals(admin.getEmailAddress(), message.from);
-            Assert.assertEquals(user.getEmailAddress(), message.to);
-        }
-    }
-    
-    private class MockEmailService implements EmailService {
-
-        private List<MockEmailMessage> messageQueue = new ArrayList<MockEmailMessage>();
-
-        @Override
-        public String getErrorToAddress() {
-            return "error@fakemail.com";
-        }
-
-        @Override
-        public void sendMessage(String to, String subject, String templateName,
-                Map<String, Object> subsitutionParams) {
-        	
-            messageQueue.add(new MockEmailMessage(to, subject, templateName,
-                    subsitutionParams));
-        }
-
-        @Override
-        public void sendMessage(String to, String from, String subject,
-                String message) {
-            messageQueue.add(new MockEmailMessage(to, from, subject, message));
-        }
-
-        public List<MockEmailMessage> getMessageQueue() {
-            return messageQueue;
-        }
-
-        @Override
-        public void sendMessage(String[] to, String from, String subject,
-                String message) {
-            messageQueue.add(new MockEmailMessage(to, from, subject, message));
-        }
-
-        @Override
-        public void sendMessage(String to, String from, String subject,
-                String message, Map<String, Object> substitutionParams) {
-            messageQueue.add(new MockEmailMessage(to, from, subject, message));
-        }
-
-        @Override
-        public void sendTemplateMessage(String to, String from, String subject,
-                String templateName, Map<String, Object> subsitutionParams) {
-            messageQueue.add(new MockEmailMessage(to, from, subject, templateName, subsitutionParams));
-        }
-    }
-    
-    @SuppressWarnings("unused")
-    private class MockEmailMessage {
-        String to;
-        String from;
-        String subject;
-        String templateName;
-        Map<String, Object> substitutionParams;
-        String message;
-
-        MockEmailMessage(String to, String subject, String templateName,
-                Map<String, Object> substitutionParams) {
-            this.to = to;
-            this.subject = subject;
-            this.templateName = templateName;
-            this.substitutionParams = substitutionParams;
-        }
-        
-        MockEmailMessage(String to, String from, String subject, String templateName,
-                         Map<String, Object> substitutionParams) {
-            this.to = to;
-            this.from = from;
-            this.subject = subject;
-            this.templateName = templateName;
-            this.substitutionParams = substitutionParams;
-        }
-
-        MockEmailMessage(String to, String from, String subject, String message) {
-
-            this.to = to;
-            this.from = from;
-            this.subject = subject;
-            this.message = message;
-        }
-        
-        MockEmailMessage(String[] to, String from, String subject, String message) {
-            this.to = to[0];
-            this.from = from;
-            this.subject = subject;
-            this.message = message;
+        for (MockEmail message : messageQueue) {
+            Assert.assertEquals(admin.getEmailAddress(), message.getFrom());
+            Assert.assertEquals(user.getEmailAddress(), message.getTo());
         }
     }
 }

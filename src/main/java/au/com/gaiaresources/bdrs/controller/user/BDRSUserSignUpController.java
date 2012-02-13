@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.user;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,6 +20,7 @@ import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaProtected;
 
@@ -36,6 +38,7 @@ public class BDRSUserSignUpController extends AbstractController {
      * On a GET, render the form.
      * @return
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/usersignup.htm", method = RequestMethod.GET)
     public ModelAndView renderForm() {
         return new ModelAndView("usersignup", "user", new UserSignUpForm());
@@ -46,6 +49,7 @@ public class BDRSUserSignUpController extends AbstractController {
      * @param u
      * @return
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/usersignup.htm", method = RequestMethod.POST)
     public String save(HttpServletRequest request, HttpServletResponse response, 
             @ModelAttribute("user") final UserSignUpForm u, BindingResult result) {

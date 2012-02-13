@@ -38,6 +38,7 @@ import au.com.gaiaresources.bdrs.model.theme.ThemeElement;
 import au.com.gaiaresources.bdrs.model.theme.ThemePage;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.security.UserDetails;
 import au.com.gaiaresources.bdrs.service.menu.MenuService;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
@@ -74,6 +75,7 @@ public class Interceptor implements HandlerInterceptor {
     public static final String PARAM_PAGE_TITLE = "pageTitle";
     public static final String PARAM_PAGE_DESCRIPTION = "pageDescription";
     private static final String MV_USER_ID = "authenticatedUserId";
+    private static final String MV_USER_ROLE = "authenticatedRole";
     private static final String MV_USER_IS_ADMIN = "isAdmin";
     
     /**
@@ -86,7 +88,7 @@ public class Interceptor implements HandlerInterceptor {
         RequestContext c = RequestContextHolder.getContext();
         SecurityContext securityContext = SecurityContextHolder.getContext();
         if ((securityContext.getAuthentication() != null) && (securityContext.getAuthentication().getPrincipal() instanceof UserDetails)) {
-    		c.setUserDetails((UserDetails) securityContext.getAuthentication().getPrincipal());
+            c.setUserDetails((UserDetails) securityContext.getAuthentication().getPrincipal());
         } else {
         	if (request.getUserPrincipal() != null) {
 	        	AttributePrincipal principal = (org.jasig.cas.client.authentication.AttributePrincipal)request.getUserPrincipal();
@@ -122,10 +124,10 @@ public class Interceptor implements HandlerInterceptor {
 	        		userDAO.updateUser(u);
 	        	}
         		c.setUserDetails(new UserDetails(u));
-                List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>(u.getRoles().length);
-                for(String role : u.getRoles()) {
-                    grantedAuth.add(new GrantedAuthorityImpl(role));
-                }
+                        List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>(u.getRoles().length);
+                        for(String role : u.getRoles()) {
+                            grantedAuth.add(new GrantedAuthorityImpl(role));
+                        }
         			
         		Authentication auth = new AnonymousAuthenticationToken(u.getName(), 
         				principal, 
@@ -134,7 +136,16 @@ public class Interceptor implements HandlerInterceptor {
         		securityContext.setAuthentication(auth);
         		SecurityContextHolder.setContext(securityContext);
 	        } else {
-        		//System.err.println("REMOVEME : User Principal is null");
+	            // anonymous access
+	            List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>();
+                    grantedAuth.add(new GrantedAuthorityImpl(Role.ANONYMOUS));
+                            
+                    Authentication auth = new AnonymousAuthenticationToken("anonymous", 
+                                    new UserDetails(null), 
+                                    grantedAuth);
+                    auth.setAuthenticated(true);
+                    securityContext.setAuthentication(auth);
+                    SecurityContextHolder.setContext(securityContext);
         	}	
         }
         
@@ -217,6 +228,7 @@ public class Interceptor implements HandlerInterceptor {
                 User loggedInUser = requestContext.getUser();
                 if (loggedInUser != null && loggedInUser.getId() != null) {
                     modelAndView.getModel().put(MV_USER_ID, loggedInUser.getId().toString());
+                    modelAndView.getModel().put(MV_USER_ROLE, Role.getHighestRole(loggedInUser.getRoles()));
                     modelAndView.getModel().put(MV_USER_IS_ADMIN, loggedInUser.isAdmin());
                 }
                 

@@ -106,6 +106,7 @@ public class UserService extends AbstractController {
      *     This function is restricted to administration users only.
      * </p>
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/searchUserAndGroup.htm", method=RequestMethod.GET)
     public void searchUserAndGroup(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
@@ -147,6 +148,7 @@ public class UserService extends AbstractController {
     /* Ping service used by the client to see if there is a connection
      * Returns true
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/ping.htm")
     public void ping(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
@@ -181,6 +183,7 @@ public class UserService extends AbstractController {
      *     This function is unrestricted.
      * </p>
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/checkUsername.htm", method=RequestMethod.GET)
     public void searchUser(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
@@ -222,6 +225,7 @@ public class UserService extends AbstractController {
      *     This function is restricted by a secret.
      * </p>
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/registerUser.htm")
     public void registerUser(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
@@ -321,6 +325,7 @@ public class UserService extends AbstractController {
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/validate.htm")
     public void validateUser(
     		        @RequestParam(value = "username", defaultValue = "") String userName,
@@ -382,6 +387,7 @@ public class UserService extends AbstractController {
     /**
      * Web logging service for the mobile API. This takes and ident and if valid, prints a log message
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/log.htm")
     public void logRequest(
     		@RequestParam(value = "ident", defaultValue = "") String ident,
@@ -449,6 +455,7 @@ public class UserService extends AbstractController {
         response.getWriter().write(builder.toJson());
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/user/getUsers.htm", method=RequestMethod.GET)
     public void getUsers(
                 @RequestParam(value = "queryType", defaultValue = "allUsers") String queryType,
@@ -467,6 +474,7 @@ public class UserService extends AbstractController {
         response.getWriter().write(JSONSerializer.toJSON(queryList).toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/user/downloadUsers.htm", method = RequestMethod.GET)
 	public void downloadUsers(
 	    @RequestParam(value = "ident", defaultValue = "") String ident,	

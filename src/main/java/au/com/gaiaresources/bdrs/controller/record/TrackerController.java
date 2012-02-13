@@ -27,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.RenderController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormField;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.FormFieldFactory;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
@@ -286,6 +287,7 @@ public class TrackerController extends AbstractController {
      * @return a ModelAndView for rendering the tracker form
      */
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,
@@ -597,7 +599,7 @@ public class TrackerController extends AbstractController {
         if (request.getParameter(PARAM_SUBMIT_AND_SWITCH_TO_SUB_RECORD_TAB) != null) {
             // A tab change has been requested
             mv = new ModelAndView(new RedirectView(
-               "/bdrs/user/surveyRenderRedirect.htm", true));
+               RenderController.SURVEY_RENDER_REDIRECT_URL, true));
                mv.addObject("surveyId", survey.getId());
                mv.addObject("censusMethodId", Integer.valueOf(censusMethodId));
                mv.addObject("selectedTab", SELECT_TAB_SUB_RECORD);

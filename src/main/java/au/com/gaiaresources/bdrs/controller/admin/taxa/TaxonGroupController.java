@@ -32,19 +32,33 @@ public class TaxonGroupController extends AbstractController {
     private TaxonGroupFormValidator validator;
     
     /**
+     * @deprecated this has been replaced with /bdrs/admin/taxongroup/edit.htm in TaxonGroupManagementController.edit
      * Render the initial taxon groups page.
      * @return <code>String</code>.
      */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/taxonGroups.htm", method = RequestMethod.GET)
     public ModelAndView render() {
         return new ModelAndView("adminTaxonGroups", "groups", taxaService.getTaxonGroups());
     }
     
+    /**
+     * @deprecated this has been replaced with /bdrs/admin/taxongroup/edit.htm in TaxonGroupManagementController.edit
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/addTaxonGroup.htm", method = RequestMethod.GET)
     public ModelAndView renderAddGroup() {
         return new ModelAndView("enterTaxonGroup", "taxonGroup", new TaxonGroupForm());
     }
     
+    /**
+     * @deprecated this has been replaced with /bdrs/admin/taxongroup/edit.htm in TaxonGroupManagementController.edit
+     * @param taxonGroup
+     * @param result
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/addTaxonGroup.htm", method = RequestMethod.POST)
     public String saveGroup(@ModelAttribute("taxonGroup") final TaxonGroupForm taxonGroup, BindingResult result) {
         validator.validate(taxonGroup, result);
@@ -75,6 +89,12 @@ public class TaxonGroupController extends AbstractController {
         return "redirect:/admin/taxonGroups.htm";
     }
     
+    /**
+     * @deprecated this has been replaced with /bdrs/admin/taxongroup/edit.htm in TaxonGroupManagementController.edit
+     * @param groupID
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/editTaxonGroup.htm", method = RequestMethod.GET)
     public ModelAndView renderEdit(@RequestParam(value = "groupID", required = true) Integer groupID) {
         TaxonGroup group = taxaService.getTaxonGroup(groupID);
@@ -90,6 +110,13 @@ public class TaxonGroupController extends AbstractController {
         return new ModelAndView("enterTaxonGroup", "taxonGroup", form);
     }
     
+    /**
+     * @deprecated this has been replaced with /bdrs/admin/taxongroup/edit.htm in TaxonGroupManagementController.edit
+     * @param taxonGroup
+     * @param result
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/editTaxonGroup.htm", method = RequestMethod.POST)
     public String saveEditGroup(@ModelAttribute("taxonGroup") final TaxonGroupForm taxonGroup, BindingResult result) {
         return saveGroup(taxonGroup, result);

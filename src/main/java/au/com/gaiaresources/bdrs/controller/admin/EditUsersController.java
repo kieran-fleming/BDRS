@@ -79,6 +79,7 @@ public class EditUsersController extends AbstractController {
         return paramEncoder.encodeParameterName(TableTagParameters.PARAMETER_ORDER);
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = USER_LISTING_URL, method = RequestMethod.GET)
     public ModelAndView searchUsers(HttpServletRequest request,
             HttpServletResponse response) throws Exception {
@@ -86,6 +87,7 @@ public class EditUsersController extends AbstractController {
         return new ModelAndView("editUsers");
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = APPROVE_USER_WEBSERVICE_URL, method = RequestMethod.POST)
     public void approveUser(HttpServletRequest request, HttpServletResponse response, 
             @RequestParam(value=PARAM_USER_PK, required=true) int userPk) {

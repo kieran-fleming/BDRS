@@ -43,6 +43,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @param surveyId the primary key of the survey where the record shall be added.
      * @return
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = SINGLE_SITE_MULTI_TAXA_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -61,6 +62,7 @@ public class SingleSiteMultiTaxaController extends SingleSiteController {
      * @param sightingIndex the row index where 0 is the first row.
      * @return 
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/user/singleSiteMultiTaxa/sightingRow.htm", method = RequestMethod.GET)
     public ModelAndView ajaxAddSightingRow(HttpServletRequest request,
                                     HttpServletResponse response,

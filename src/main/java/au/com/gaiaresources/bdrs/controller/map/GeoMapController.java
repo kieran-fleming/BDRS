@@ -73,14 +73,14 @@ public class GeoMapController extends AbstractController {
     public static final String PARAM_UPPER_ZOOM_LIMIT = "upperZoomLimit";
     public static final String PARAM_LOWER_ZOOM_LIMIT = "lowerZoomLimit";
 
-    @RolesAllowed( {Role.ADMIN} )
+    @RolesAllowed( {Role.ROOT, Role.ADMIN} )
     @RequestMapping(value = LISTING_URL, method = RequestMethod.GET)
     public ModelAndView listing(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mv = new ModelAndView("geoMapListing");
         return mv;
     }
     
-    @RolesAllowed( {Role.ADMIN} )
+    @RolesAllowed( {Role.ROOT, Role.ADMIN} )
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView view(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=GEO_MAP_PK_VIEW, defaultValue="0") Integer pk) {
@@ -92,7 +92,7 @@ public class GeoMapController extends AbstractController {
         return mv; 
     }
     
-    @RolesAllowed( {Role.ADMIN} )
+    @RolesAllowed( {Role.ROOT, Role.ADMIN} )
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(HttpServletRequest request, HttpServletResponse response, 
             @RequestParam(value=GEO_MAP_PK_SAVE, defaultValue="0") Integer pk,
@@ -173,7 +173,7 @@ public class GeoMapController extends AbstractController {
         return mv; 
     }
     
-    @RolesAllowed( {Role.ADMIN} )
+    @RolesAllowed( {Role.ROOT, Role.ADMIN} )
     @RequestMapping(value = LIST_SERVICE_URL, method = RequestMethod.GET)
     public void listService(
             @RequestParam(value = FILTER_NAME, defaultValue = "") String name,
@@ -208,6 +208,7 @@ public class GeoMapController extends AbstractController {
     }
     
     // public
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = GET_AVAILABLE_MAP_SERVICE_URL, method = RequestMethod.GET)
     public void getAvailableService(HttpServletRequest request, HttpServletResponse response) throws Exception {
         List<GeoMap> mapList = mapService.getAvailableMaps(getRequestContext().getUser());
@@ -232,6 +233,7 @@ public class GeoMapController extends AbstractController {
     }
     
     // public
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = LIST_MAP_LAYER_SERVICE_URL, method = RequestMethod.GET) 
     public void getMapLayers(HttpServletRequest request, HttpServletResponse response,
         @RequestParam(value = GEO_MAP_PK_VIEW, required=false, defaultValue="0") int mapPk) throws Exception {
@@ -259,6 +261,7 @@ public class GeoMapController extends AbstractController {
     }
     
     // public
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = VIEW_MAP_URL, method = RequestMethod.GET) 
     public ModelAndView viewMap(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_PK_VIEW, required=true) int mapPk) {
@@ -275,7 +278,7 @@ public class GeoMapController extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed( {Role.ADMIN} )
+    @RolesAllowed( {Role.ROOT, Role.ADMIN} )
     @RequestMapping(value = DELETE_URL, method = RequestMethod.POST)
     public ModelAndView deleteMap(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GEO_MAP_PK_SAVE, required=true) int mapPk) {

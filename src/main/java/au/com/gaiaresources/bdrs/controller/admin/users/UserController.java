@@ -2,6 +2,7 @@ package au.com.gaiaresources.bdrs.controller.admin.users;
 
 import java.io.IOException;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,6 +32,11 @@ public class UserController extends AbstractController {
     @Autowired
     private UserDAO userDAO;
     
+    /**
+     * @deprecated URL not used in the system, causes a 500 error
+     * @return
+     */
+    //@RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/admin/users/list.htm", method = RequestMethod.GET)
     public String render() {
         return "adminUserList";
@@ -56,6 +62,7 @@ public class UserController extends AbstractController {
      *     the registration failed.
      * </p>
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value="/admin/registerUser.htm", method = RequestMethod.POST)
     public void registerUser(HttpServletRequest request, HttpServletResponse response)
         throws IOException {

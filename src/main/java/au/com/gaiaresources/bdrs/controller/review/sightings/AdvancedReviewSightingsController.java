@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
@@ -34,6 +35,7 @@ import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.ScrollableRecordsImpl;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.user.User;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.facet.Facet;
 import au.com.gaiaresources.bdrs.service.facet.FacetOption;
 import au.com.gaiaresources.bdrs.service.facet.FacetService;
@@ -95,6 +97,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
      * view. The map or list view will populate itself via asynchronous 
      * javascript requests. 
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/review/sightings/advancedReview.htm", method = RequestMethod.GET)
     public ModelAndView advancedReview(HttpServletRequest request, 
                                        HttpServletResponse response,
@@ -164,6 +167,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
     /**
      * Returns the list of records matching the {@link Facet} criteria as KML.
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/review/sightings/advancedReviewKMLSightings.htm", method = RequestMethod.GET)
     public void advancedReviewKMLSightings(HttpServletRequest request, HttpServletResponse response) throws IOException, JAXBException {
         
@@ -215,6 +219,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
     /**
      * Returns a JSON array of records matching the {@link Facet} criteria.
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/review/sightings/advancedReviewJSONSightings.htm", method = RequestMethod.GET)
     public void advancedReviewJSONSightings(HttpServletRequest request, 
                                             HttpServletResponse response,
@@ -268,6 +273,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
      * are part of a single survey.
      * @throws Exception 
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/review/sightings/advancedReviewDownload.htm", method = RequestMethod.GET)
     public void advancedReviewDownload(HttpServletRequest request, 
                                        HttpServletResponse response,

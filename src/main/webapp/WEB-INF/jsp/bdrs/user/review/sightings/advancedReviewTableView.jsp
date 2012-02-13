@@ -132,7 +132,7 @@
                         <td class="sortBy(record.user) userColumn">
                             <div title="The user that logged the record." class="left alaSightingsTableHeader">User</div>
                         </td>
-                        <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_USER">
+                        <sec:authorize ifAnyGranted="ROLE_ADMIN,ROLE_SUPERVISOR,ROLE_POWER_USER,ROLE_USER">
                             <td style="width:auto">
                                 <input id="bulkSelectCheckbox" title="Select/deselect all" type="checkbox"  />
                             </td>
@@ -150,7 +150,7 @@
             <div class="right">
                 <span>Apply action to selected records: </span>
                 <a title="Delete the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkDelete()">Delete</a>
-                <sec:authorize ifAnyGranted="ROLE_POWER_USER, ROLE_SUPERVISOR, ROLE_ADMIN">
+                <sec:authorize ifAnyGranted="ROLE_SUPERVISOR, ROLE_ADMIN">
                    |<a title="Hold the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(true)">Hold</a>
                    |<a title="Release the selected records" href="javascript:void(0)" onclick="bdrs.advancedReview.bulkModerate(false)">Release</a>
                 </sec:authorize>

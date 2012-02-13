@@ -61,6 +61,7 @@ public class UserGroupController extends AbstractController {
     @Autowired
     private UserDAO userDAO;
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = LISTING_URL, method = RequestMethod.GET)
     public ModelAndView list(HttpServletRequest request, HttpServletResponse response) throws Exception { 
         PaginationFilter filter = groupListTableHelper.createFilter(request);
@@ -70,6 +71,7 @@ public class UserGroupController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView view(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = GROUP_ID) Integer groupId) {
@@ -79,6 +81,7 @@ public class UserGroupController extends AbstractController {
         return mv;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.POST)
     public ModelAndView save(
             @RequestParam(value = GROUP_ID, required=true) Integer[] groupId,
@@ -99,6 +102,7 @@ public class UserGroupController extends AbstractController {
         return redirect(LISTING_URL);
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = CREATE_URL, method = RequestMethod.POST)
     public ModelAndView createGroup(
             HttpServletRequest request, HttpServletResponse response) {
@@ -110,6 +114,7 @@ public class UserGroupController extends AbstractController {
     }
     
     // deleting groups seems to clean up the many-to-many tables correctly
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = DELETE_URL, method = RequestMethod.POST)
     public ModelAndView deleteGroup(
             @RequestParam(value = GROUP_ID, required=true) Integer[] groupId,
@@ -119,6 +124,7 @@ public class UserGroupController extends AbstractController {
         return new ModelAndView(new RedirectView(LISTING_URL, true));
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = ADD_USERS_URL, method = RequestMethod.POST)
     public ModelAndView addUserPost(
             @RequestParam(value = GROUP_ID, required=true) Integer groupId,
@@ -143,6 +149,7 @@ public class UserGroupController extends AbstractController {
         return redirectToEditPage(groupToEdit.getId());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = ADD_GROUPS_URL, method = RequestMethod.POST)
     public ModelAndView addGroupPost(
             @RequestParam(value = GROUP_ID, required=true) Integer groupId,
@@ -174,6 +181,7 @@ public class UserGroupController extends AbstractController {
         return redirectToEditPage(groupToEdit.getId());
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = REMOVE_USERS_URL, method = RequestMethod.POST)
     public ModelAndView removeUser(
             @RequestParam(value = GROUP_ID, required=true) Integer groupId,
@@ -201,6 +209,7 @@ public class UserGroupController extends AbstractController {
         return redirectToEditPage(groupToEdit.getId());
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = REMOVE_GROUPS_URL, method = RequestMethod.POST)
     public ModelAndView removeGroup(
             @RequestParam(value = GROUP_ID, required=true) Integer groupId,

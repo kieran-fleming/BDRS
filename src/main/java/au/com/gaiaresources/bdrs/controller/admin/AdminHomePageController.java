@@ -21,7 +21,7 @@ public class AdminHomePageController extends AbstractController {
     
     public static final String ADMIN_HOME_URL = "/admin/home.htm";
 
-    @RolesAllowed({Role.ADMIN,Role.SUPERVISOR,Role.POWERUSER})
+    @RolesAllowed({Role.ROOT, Role.ADMIN,Role.SUPERVISOR,Role.POWERUSER})
     @RequestMapping(value = ADMIN_HOME_URL, method = RequestMethod.GET)
     public ModelAndView render() {
         User user = null;
@@ -33,44 +33,44 @@ public class AdminHomePageController extends AbstractController {
     }
     
     // Misc landing pages for admin functionality - these don't do much so I'm lumping them with the home page controller.
-    @RolesAllowed({Role.ADMIN,Role.SUPERVISOR})
+    @RolesAllowed({Role.ROOT, Role.ADMIN,Role.SUPERVISOR})
     @RequestMapping(value="/bdrs/admin/managePeople.htm", method=RequestMethod.GET)
     public ModelAndView renderManagePeople() {
         return new ModelAndView("managePeople");
     }
     
-    @RolesAllowed({Role.ADMIN})
+    @RolesAllowed({Role.ROOT, Role.ADMIN})
     @RequestMapping(value="/bdrs/admin/manageData.htm", method=RequestMethod.GET)
     public ModelAndView renderManageData() {
         return new ModelAndView("manageData");
     }
     
-    @RolesAllowed({Role.ADMIN})
+    @RolesAllowed({Role.ROOT, Role.ADMIN})
     @RequestMapping(value="/bdrs/admin/managePortal.htm", method=RequestMethod.GET)
     public ModelAndView renderManagePortal() {
         return new ModelAndView("managePortal");
     }
     
-    @RolesAllowed({ Role.ADMIN })
-    @RequestMapping(value="bdrs/admin/manageTaxonomy.htm", method=RequestMethod.GET) 
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
+    @RequestMapping(value="/bdrs/admin/manageTaxonomy.htm", method=RequestMethod.GET) 
     public ModelAndView renderManageTaxonomy() {
         return new ModelAndView("manageTaxonomy");
     }
     
-    @RolesAllowed({ Role.ADMIN })
-    @RequestMapping(value="bdrs/admin/manageMaps.htm", method=RequestMethod.GET) 
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
+    @RequestMapping(value="/bdrs/admin/manageMaps.htm", method=RequestMethod.GET) 
     public ModelAndView renderManageMaps() {
         return new ModelAndView("manageMaps");
     }
     
-    @RolesAllowed({ Role.ADMIN })
-    @RequestMapping(value="bdrs/admin/manageSite.htm", method=RequestMethod.GET) 
+    @RolesAllowed({ Role.ROOT, Role.ADMIN })
+    @RequestMapping(value="/bdrs/admin/manageSite.htm", method=RequestMethod.GET) 
     public ModelAndView renderManageSite() {
         return new ModelAndView("manageSite");
     }
     
-    @RolesAllowed({Role.ADMIN,Role.SUPERVISOR,Role.POWERUSER})
-    @RequestMapping(value="bdrs/admin/manageProjects.htm", method=RequestMethod.GET) 
+    @RolesAllowed({Role.ROOT, Role.ADMIN,Role.SUPERVISOR,Role.POWERUSER})
+    @RequestMapping(value="/bdrs/admin/manageProjects.htm", method=RequestMethod.GET) 
     public ModelAndView renderManageProjects() {
         return new ModelAndView("manageProjects");
     }

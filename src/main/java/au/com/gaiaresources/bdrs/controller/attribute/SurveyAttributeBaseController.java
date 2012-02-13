@@ -29,6 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
+import au.com.gaiaresources.bdrs.controller.RenderController;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
 import au.com.gaiaresources.bdrs.controller.record.RecordFormValidator;
@@ -95,6 +96,7 @@ public class SurveyAttributeBaseController extends AbstractController {
      * @param response <code>HttpServletResponse</code> 
      * @return <code>ModelAndView</code> that contains a <code>Survey</code> and a List of type <code>AttributeFormField</code>.
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyAttributes(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
@@ -153,6 +155,7 @@ public class SurveyAttributeBaseController extends AbstractController {
      * @return <code>ModelAndView</code> with a <code>RedirectView</code>
      */
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editAttributes.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyAttributes(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="childCensusMethod", required=false) int[] childCensusMethodList,
@@ -224,7 +227,7 @@ public class SurveyAttributeBaseController extends AbstractController {
             mv.addObject("surveyId", survey.getId());
         }
         else if(request.getParameter("saveAndPreview") != null) {
-            mv = new ModelAndView(new RedirectView("/bdrs/user/surveyRenderRedirect.htm", true));
+            mv = new ModelAndView(new RedirectView(RenderController.SURVEY_RENDER_REDIRECT_URL, true));
             mv.addObject("surveyId", survey.getId());
             mv.addObject("preview", "preview");
         }
@@ -315,6 +318,7 @@ public class SurveyAttributeBaseController extends AbstractController {
                     AttributeFormField formField = formFieldFactory.createAttributeFormField(attributeDAO, attr, request.getParameterMap());
                     Attribute newAttr = ((AttributeInstanceFormField)formField).getAttribute();
                     // check that the attribute is valid if it is an HTML type attribute
+                    // don't validate HTML_NO_VALIDATION types
                     if (newAttr.getType().equals(AttributeType.HTML) ||
                             newAttr.getType().equals(AttributeType.HTML_COMMENT)) {
                         isValid &= parser.validate(validator, "description_"+rawAttrPk, null, newAttr, request.getParameterMap(), null);
@@ -343,6 +347,7 @@ public class SurveyAttributeBaseController extends AbstractController {
                     AttributeFormField formField = formFieldFactory.createAttributeFormField(attributeDAO, index, request.getParameterMap());
                     Attribute newAttr = ((AttributeInstanceFormField)formField).getAttribute();
                     // check that the attribute is valid if it is an HTML type attribute
+                    // don't validate HTML_NO_VALIDATION types
                     if (newAttr.getType().equals(AttributeType.HTML) ||
                             newAttr.getType().equals(AttributeType.HTML_COMMENT)) {
                         isValid &= parser.validate(validator, "add_description_"+rawIndex, null, newAttr, request.getParameterMap(), null);

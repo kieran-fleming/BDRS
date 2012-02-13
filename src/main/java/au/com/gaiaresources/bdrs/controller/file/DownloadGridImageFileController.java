@@ -2,6 +2,8 @@ package au.com.gaiaresources.bdrs.controller.file;
 
 import java.math.BigDecimal;
 
+import javax.annotation.security.RolesAllowed;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,12 +13,14 @@ import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.model.grid.Grid;
 import au.com.gaiaresources.bdrs.model.grid.GridService;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class DownloadGridImageFileController extends AbstractDownloadFileController {
     @Autowired
     private GridService gridService;
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/files/downloadGrid.htm", method = RequestMethod.GET)
     public ModelAndView download(@RequestParam("precision") BigDecimal precision, 
     							 @RequestParam(required = false, value = "kml") Integer kml,

@@ -102,7 +102,7 @@ public class ModerationController extends AbstractController {
      * @return - ModelAndView for redirection
      * @throws IOException
      */
-    @RolesAllowed( { Role.ROOT, Role.SUPERVISOR, Role.ADMIN })
+    @RolesAllowed( { Role.ROOT, Role.SUPERVISOR, Role.ADMIN, Role.POWERUSER })
     @RequestMapping(value = RECORD_MODERATE_URL, method = RequestMethod.POST)
     public ModelAndView moderateRecord(
             HttpServletRequest request,

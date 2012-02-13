@@ -3,6 +3,7 @@ package au.com.gaiaresources.bdrs.controller.webservice;
 import java.io.File;
 import java.io.IOException;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,6 +21,7 @@ import au.com.gaiaresources.bdrs.model.record.RecordVisibility;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
 import au.com.gaiaresources.bdrs.model.record.impl.AdvancedRecordFilter;
 import au.com.gaiaresources.bdrs.model.record.impl.RecordFilter;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.lsid.LSIDService;
 import au.com.gaiaresources.bdrs.service.web.RedirectionService;
@@ -45,6 +47,7 @@ public class DarwinCoreArchiveService extends AbstractDownloadFileController {
      * @param response
      * @throws IOException
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = DOWNLOAD_ARCHIVE_URL, method = RequestMethod.GET)
     public void downloadArchive(HttpServletRequest request, HttpServletResponse response) throws IOException {
         

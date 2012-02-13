@@ -30,7 +30,7 @@ bdrs.advancedReview.TABLE_ROW_TMPL = '\
     <td>${ user.name }</td>\
     {{if authenticated}}\
        <td><input title=\"Select / deselect this record\" type=\"checkbox\" class=\"recordIdCheckbox\" value=\"${ id }\" \
-       {{if user.id !== authenticatedUserId && !isAdmin }}\
+       {{if user.id !== authenticatedUserId && !(authenticatedRole === \"ROLE_ROOT\" || authenticatedRole === \"ROLE_ADMIN\" || authenticatedRole === \"ROLE_SUPERVISOR\") }}\
            disabled=\"true\"\
        {{/if}}\
        /></td>\
@@ -153,6 +153,7 @@ bdrs.advancedReview.getInitViewStyleTableFcn = function(tableSelector) {
                 record.authenticated = true;
                 record.authenticatedUserId = bdrs.authenticatedUserId;
                 record.isAdmin = bdrs.isAdmin;
+                record.authenticatedRole = bdrs.authenticatedRole;
             }
             record._when = bdrs.util.formatDate(new Date(record.when));
             var row = jQuery.tmpl(compiled_row_tmpl, record);

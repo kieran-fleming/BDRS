@@ -100,11 +100,12 @@ public class FieldGuideController extends AbstractController {
      * @return
      */
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/public/speciesInfo.htm", method = RequestMethod.GET)
     public ModelAndView showSpeciesInfo(ModelMap model,
-            HttpServletRequest request) {
-        IndicatorSpecies selectedSpecies = taxaDAO.getIndicatorSpecies(new Integer(
-                request.getParameter("spid")));
+            HttpServletRequest request,
+            @RequestParam(value="spid", required=true) String spid) {
+        IndicatorSpecies selectedSpecies = taxaDAO.getIndicatorSpecies(new Integer(spid));
         TaxonGroup taxonGroup = selectedSpecies.getTaxonGroup();
         if (taxonGroup == null) {
             throw new NullPointerException(
@@ -211,6 +212,7 @@ public class FieldGuideController extends AbstractController {
     }
 
     @SuppressWarnings("unchecked")
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldGuide.htm", method = RequestMethod.GET)
     public ModelAndView showTaxonList(ModelMap model, HttpServletRequest request) {
         List<? extends TaxonGroup> taxonGroups = taxaDAO.getTaxonGroups();

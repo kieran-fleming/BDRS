@@ -11,9 +11,11 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContext;
@@ -35,6 +37,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import au.com.gaiaresources.bdrs.message.Message;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.Interceptor;
 import au.com.gaiaresources.bdrs.servlet.RecaptchaInterceptor;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
@@ -81,6 +84,15 @@ public abstract class AbstractControllerTest extends
         if ((securityContext.getAuthentication() != null)
                 && (securityContext.getAuthentication().getPrincipal() instanceof UserDetails)) {
             c.setUserDetails((au.com.gaiaresources.bdrs.security.UserDetails) securityContext.getAuthentication().getPrincipal());
+        } else {
+            // handle an anonymous user
+            List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>(1);
+            grantedAuth.add(new GrantedAuthorityImpl(Role.ANONYMOUS));
+            // null principal and credentials could pose an issue if they are requested later
+            TestingAuthenticationToken token = new TestingAuthenticationToken(null, null, grantedAuth);
+            token.setAuthenticated(true);
+            securityContext.setAuthentication(token);
+            SecurityContextHolder.setContext(securityContext);
         }
     }
 

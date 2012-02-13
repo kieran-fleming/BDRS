@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,6 +49,7 @@ import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 /**
  * The Survey Service provides a web API for Survey based services.
@@ -87,6 +89,7 @@ public class SurveyService extends AbstractController {
      * @param response the server response
      * @throws IOException
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/getSurvey.htm", method = RequestMethod.GET)
     public void getSurvey(HttpServletRequest request, 
                             HttpServletResponse response,
@@ -127,6 +130,7 @@ public class SurveyService extends AbstractController {
         }
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/surveysForUser.htm", method = RequestMethod.GET)
     public void surveysForUser(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
@@ -177,6 +181,7 @@ public class SurveyService extends AbstractController {
         }
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/speciesForSurvey.htm", method = RequestMethod.GET)
     public void speciesForSurvey(
             HttpServletRequest request,
@@ -205,6 +210,7 @@ public class SurveyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/surveySpeciesForTaxon.htm", method = RequestMethod.GET)
     public void surveySpeciesForTaxon(
             HttpServletRequest request,
@@ -224,6 +230,7 @@ public class SurveyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/taxaForSurvey.htm", method = RequestMethod.GET)
     public void taxaForSurvey(
             HttpServletRequest request,
@@ -246,6 +253,7 @@ public class SurveyService extends AbstractController {
      * Retrieves features related to a specific survey. E.g. idtool, fieldguide,
      * recording
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/featuresForSurvey.htm", method = RequestMethod.GET)
     public void featuresForSurvey(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -281,6 +289,7 @@ public class SurveyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/attributesForSurvey.htm", method = RequestMethod.GET)
     public void attributesForSurvey(
             HttpServletRequest request,
@@ -306,6 +315,7 @@ public class SurveyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/locationsForSurvey.htm", method = RequestMethod.GET)
     public void locationsForSurvey(
             HttpServletRequest request,
@@ -345,6 +355,7 @@ public class SurveyService extends AbstractController {
      * 
      * @return jsonObject contains the record id of the inserted record
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/saveRecord.htm", method = RequestMethod.GET)
     public void saveRecord(HttpServletRequest request,
             HttpServletResponse response,
@@ -444,6 +455,7 @@ public class SurveyService extends AbstractController {
      * 
      * @return jsonObject contains the record id of the updated record
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/updateRecord.htm", method = RequestMethod.GET)
     public void updateRecord(HttpServletRequest request,
             HttpServletResponse response,
@@ -529,6 +541,7 @@ public class SurveyService extends AbstractController {
         response.getWriter().write(jsonObject.toString());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/checklist.htm", method = RequestMethod.GET)
     public void checklistForSurvey(
             HttpServletRequest request,
@@ -590,6 +603,7 @@ public class SurveyService extends AbstractController {
         }
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/survey/getPublicSurveys.htm", method = RequestMethod.GET)
     public void getPublicSurveys(HttpServletRequest request,
             HttpServletResponse response) throws IOException {

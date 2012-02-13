@@ -82,6 +82,7 @@ public class BulkDataController extends AbstractController {
     @Autowired
     private BulkDataService bulkDataService;
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = BULK_DATA_URL, method = RequestMethod.GET)
     public ModelAndView bulkdata(HttpServletRequest request,
             HttpServletResponse response) {
@@ -93,6 +94,7 @@ public class BulkDataController extends AbstractController {
         return mv;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = SPREADSHEET_TEMPLATE_URL, method = RequestMethod.GET)
     public void spreadsheetTemplate(
             HttpServletRequest request,
@@ -115,6 +117,7 @@ public class BulkDataController extends AbstractController {
         bulkDataService.exportSurveyTemplate(getRequestContext().getHibernate(), survey, response.getOutputStream());
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value = "/bulkdata/upload.htm", method = RequestMethod.POST)
     public ModelAndView upload(MultipartHttpServletRequest req,
                                 HttpServletResponse res,
@@ -260,6 +263,7 @@ public class BulkDataController extends AbstractController {
         return view;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value=SHAPEFILE_TEMPLATE_URL, method=RequestMethod.GET) 
     public void getShapefileTemplate(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="surveyPk", required=true) int surveyPk,
@@ -318,6 +322,7 @@ public class BulkDataController extends AbstractController {
         return sb.toString();
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER})
     @RequestMapping(value=SHAPEFILE_UPLOAD_URL, method=RequestMethod.POST)
     public ModelAndView uploadShapefile(MultipartHttpServletRequest request, HttpServletResponse response) throws Exception {
         

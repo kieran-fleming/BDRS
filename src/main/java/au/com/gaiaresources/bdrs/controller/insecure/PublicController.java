@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,6 +19,7 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.portal.PortalDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.theme.Theme;
+import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.template.TemplateService;
 
 @Controller
@@ -33,6 +35,7 @@ public class PublicController extends AbstractController {
     
     private Logger log = Logger.getLogger(this.getClass());
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/about.htm", method = RequestMethod.GET)
     public ModelAndView render() {
         ModelAndView view = new ModelAndView("about");
@@ -59,30 +62,35 @@ public class PublicController extends AbstractController {
         return view;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/help.htm", method = RequestMethod.GET)
     public ModelAndView help() {
         ModelAndView view = new ModelAndView("helpme");
         return view;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/speciesCount.htm", method = RequestMethod.GET)
      public void speciesCount(HttpServletRequest request,
              HttpServletResponse response) throws IOException {
         response.getWriter().write(taxaDAO.countAllSpecies().toString());
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/termsAndConditions.htm", method = RequestMethod.GET)
     public ModelAndView renderTermsAndConditions() {
         ModelAndView view = new ModelAndView("termsAndConditions");
         return view;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/privacyStatement.htm", method = RequestMethod.GET)
     public ModelAndView renderPrivacyStatement() {
         ModelAndView view = new ModelAndView("privacyStatement");
         return view;
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/index.html", method = RequestMethod.GET)
     public ModelAndView index(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView view = new ModelAndView("index");

@@ -1,5 +1,6 @@
 package au.com.gaiaresources.bdrs.controller.file;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
@@ -12,6 +13,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import au.com.gaiaresources.bdrs.model.file.ManagedFile;
 import au.com.gaiaresources.bdrs.model.file.ManagedFileDAO;
+import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class DownloadFileController extends AbstractDownloadFileController {
@@ -25,6 +27,7 @@ public class DownloadFileController extends AbstractDownloadFileController {
     @Autowired
     private ManagedFileDAO managedFileDAO;
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = FILE_DOWNLOAD_URL, method = RequestMethod.GET)
     public ModelAndView downloadFile(@RequestParam(CLASS_NAME_QUERY_PARAM) String className,
                                      @RequestParam(INSTANCE_ID_QUERY_PARAM) Integer id,
@@ -39,6 +42,7 @@ public class DownloadFileController extends AbstractDownloadFileController {
         }
     }
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/files/downloadByUUID.htm", method=RequestMethod.GET)
     public ModelAndView downloadFileByUUID(HttpServletResponse response,
             @RequestParam(value="uuid", required=true) String uuid,

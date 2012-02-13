@@ -50,7 +50,6 @@ import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.servlet.RequestContext;
 import au.com.gaiaresources.bdrs.util.ImageUtil;
 
-@RolesAllowed( {Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
 @Controller
 public class SurveyBaseController extends AbstractController {
     
@@ -92,7 +91,7 @@ public class SurveyBaseController extends AbstractController {
     
     public static final String SURVEY_LISTING_URL = "/bdrs/admin/survey/listing.htm";
 
-    @RolesAllowed( {Role.USER,Role.POWERUSER,Role.SUPERVISOR,Role.ADMIN} )
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = SURVEY_LISTING_URL, method = RequestMethod.GET)
     public ModelAndView listSurveys(HttpServletRequest request, HttpServletResponse response) {
 
@@ -101,6 +100,7 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/edit.htm", method = RequestMethod.GET)
     public ModelAndView editSurvey(
             HttpServletRequest request,
@@ -147,6 +147,7 @@ public class SurveyBaseController extends AbstractController {
      * @return ModelAndView
      * @throws IOException
      */
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/edit.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyEdit(
             MultipartHttpServletRequest request,
@@ -285,6 +286,7 @@ public class SurveyBaseController extends AbstractController {
     //  Users
     // -------------------------------
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editUsers.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyUsers(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
@@ -297,6 +299,7 @@ public class SurveyBaseController extends AbstractController {
         return mv;
     }
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editUsers.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyUsers(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
@@ -364,6 +367,7 @@ public class SurveyBaseController extends AbstractController {
     //  Taxonomy
     // --------------------------------------
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editTaxonomy.htm", method = RequestMethod.GET)
     public ModelAndView editSurveyTaxonomy(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));
@@ -407,6 +411,7 @@ public class SurveyBaseController extends AbstractController {
     }
 
     
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value = "/bdrs/admin/survey/editTaxonomy.htm", method = RequestMethod.POST)
     public ModelAndView submitSurveyTaxonomy(HttpServletRequest request, HttpServletResponse response) {
         Survey survey = getSurvey(request.getParameter("surveyId"));

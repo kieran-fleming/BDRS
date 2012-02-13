@@ -14,6 +14,7 @@ import au.com.gaiaresources.bdrs.security.Role;
 @Controller
 public class ApproveUserController extends AbstractController {
 
+    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR})
     @RequestMapping(value="/bdrs/admin/userManagement/approveUsers.htm", method=RequestMethod.GET)
     public ModelAndView render() {
         return new ModelAndView("approveUsers");
