@@ -13,7 +13,7 @@ import au.com.gaiaresources.bdrs.db.impl.PersistentImpl;
 public final class JSONSerializer {
     
     private static JSONParser parser = new JSONParser();
-    private static ContainerFactory containerFactory = new ContainerFactory();
+    private static ContainerFactoryImpl containerFactory = new ContainerFactoryImpl();
     
     /**
      * Utility classes should not be instantiated.

@@ -8,7 +8,7 @@ import java.util.Map;
  * register the {@link JSONObject} and {@link JSONArray} as the desired Java 
  * representations of the Javascript Object and Array types.
  */
-public class ContainerFactory implements org.json.simple.parser.ContainerFactory {
+public class ContainerFactoryImpl implements org.json.simple.parser.ContainerFactory {
 
     @SuppressWarnings("rawtypes")
     @Override
