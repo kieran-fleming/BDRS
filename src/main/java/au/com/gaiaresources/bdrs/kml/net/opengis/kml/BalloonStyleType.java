@@ -9,7 +9,9 @@
 package au.com.gaiaresources.bdrs.kml.net.opengis.kml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -17,7 +19,6 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
 
 /**
  * <p>Java class for BalloonStyleType complex type.
@@ -87,7 +88,7 @@ public class BalloonStyleType
      *     
      */
     public byte[] getColor() {
-        return color;
+        return Arrays.copyOf(color, color.length);
     }
 
     /**
@@ -99,7 +100,7 @@ public class BalloonStyleType
      *     
      */
     public void setColor(byte[] value) {
-        this.color = ((byte[]) value);
+        this.color = Arrays.copyOf(value, value.length);
     }
 
     /**
@@ -111,7 +112,7 @@ public class BalloonStyleType
      *     
      */
     public byte[] getBgColor() {
-        return bgColor;
+        return Arrays.copyOf(bgColor, bgColor.length);
     }
 
     /**
@@ -123,7 +124,7 @@ public class BalloonStyleType
      *     
      */
     public void setBgColor(byte[] value) {
-        this.bgColor = ((byte[]) value);
+        this.bgColor = Arrays.copyOf(value, value.length);
     }
 
     /**
@@ -135,7 +136,7 @@ public class BalloonStyleType
      *     
      */
     public byte[] getTextColor() {
-        return textColor;
+        return Arrays.copyOf(bgColor, bgColor.length);
     }
 
     /**
@@ -147,7 +148,7 @@ public class BalloonStyleType
      *     
      */
     public void setTextColor(byte[] value) {
-        this.textColor = ((byte[]) value);
+        this.textColor = Arrays.copyOf(value, value.length);
     }
 
     /**

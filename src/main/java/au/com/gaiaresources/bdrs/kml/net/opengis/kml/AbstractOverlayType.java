@@ -9,7 +9,9 @@
 package au.com.gaiaresources.bdrs.kml.net.opengis.kml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -82,7 +84,7 @@ public abstract class AbstractOverlayType
      *     
      */
     public byte[] getColor() {
-        return color;
+        return Arrays.copyOf(color, color.length);
     }
 
     /**
@@ -94,7 +96,7 @@ public abstract class AbstractOverlayType
      *     
      */
     public void setColor(byte[] value) {
-        this.color = ((byte[]) value);
+        this.color = Arrays.copyOf(value, value.length);
     }
 
     /**

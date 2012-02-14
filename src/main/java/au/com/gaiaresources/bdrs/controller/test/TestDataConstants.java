@@ -2,7 +2,7 @@ package au.com.gaiaresources.bdrs.controller.test;
 
 import au.com.gaiaresources.bdrs.model.taxa.TaxonRank;
 
-public interface TestDataConstants {
+interface TestDataConstants {
     public static final String[] TEST_GROUPS = { "Birds", "Butterflies",
             "Rabbits", "Livestock", "Elephants", "Insects", "Fish",
             "Marine Life", "Deer", "Worms", "Arthropods", "Crocodilians",

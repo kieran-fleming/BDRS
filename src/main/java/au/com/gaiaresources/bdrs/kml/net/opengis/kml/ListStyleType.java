@@ -18,6 +18,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 
 /**
  * <p>Java class for ListStyleType complex type.
@@ -104,7 +106,7 @@ public class ListStyleType
      *     
      */
     public byte[] getBgColor() {
-        return bgColor;
+        return Arrays.copyOf(bgColor, bgColor.length);
     }
 
     /**
@@ -116,7 +118,7 @@ public class ListStyleType
      *     
      */
     public void setBgColor(byte[] value) {
-        this.bgColor = ((byte[]) value);
+        this.bgColor = Arrays.copyOf(value, value.length);
     }
 
     /**
