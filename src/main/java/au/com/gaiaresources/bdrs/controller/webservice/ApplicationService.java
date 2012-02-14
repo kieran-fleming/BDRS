@@ -220,7 +220,7 @@ public class ApplicationService extends AbstractController {
         // Store restructured survey data in JSONObject
         JSONObject surveyData = new JSONObject();
         surveyData.put("attributesAndOptions", attArray);
-        surveyData.put("locations", locArray.toString());
+        surveyData.put("locations", locArray);
         surveyData.put("indicatorSpecies_server_ids", survey.flatten());
         surveyData.put("indicatorSpecies", speciesArray);
         surveyData.put("taxonGroups", taxonGroupArray);
