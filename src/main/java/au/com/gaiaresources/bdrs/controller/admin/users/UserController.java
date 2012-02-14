@@ -6,8 +6,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +71,7 @@ public class UserController extends AbstractController {
         JSONObject ob = new JSONObject();
         if (query != null && !query.isEmpty()) {
         	try {
-        		JSONObject details = JSONObject.fromObject(query);
+        		JSONObject details = JSONObject.fromStringToJSONObject(query);
         		
         		User user = userDAO.getUser(String.valueOf(details.get("name")));
         		if (user == null) {

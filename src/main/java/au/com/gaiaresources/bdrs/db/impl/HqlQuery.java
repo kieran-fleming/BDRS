@@ -1,5 +1,11 @@
 package au.com.gaiaresources.bdrs.db.impl;
 
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
 /**
  * @author Davide Alberto Molin (davide.molin@gmail.com)
  * 
@@ -17,8 +23,18 @@ public class HqlQuery extends Predicate {
     String distinct;
     boolean count = false;
 
-    public enum SortOrder {
-        ASC, DESC
+    public enum SortOrder implements JSONEnum {
+        ASC, DESC;
+        
+        @Override
+        public void writeJSONString(Writer out) throws IOException {
+            JSONEnumUtil.writeJSONString(out, this);
+        }
+
+        @Override
+        public String toJSONString() {
+            return JSONEnumUtil.toJSONString(this);
+        }
     };
 
     public HqlQuery(Class entityClass) {

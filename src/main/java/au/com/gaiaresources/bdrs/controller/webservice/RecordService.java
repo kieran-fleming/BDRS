@@ -19,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
@@ -204,7 +204,7 @@ public class RecordService extends AbstractController {
         // variables
         Map<String, Object> jsonResponse = new HashMap<String, Object>();
         User user;
-        JSONObject jsonRecordObject = JSONObject.fromObject(request
+        JSONObject jsonRecordObject = JSONObject.fromStringToJSONObject(request
                 .getParameter("JSONrecords"));
 
         Survey survey = surveyDAO.getSurvey(surveyId);
@@ -284,8 +284,7 @@ public class RecordService extends AbstractController {
         }
         jsonResponse.put("succes", "true");
         jsonResponse.put("recordIdsMapping", onlineRecordIds);
-        JSONObject jsonObject = JSONObject.fromObject(jsonResponse);
-        response.getWriter().write(jsonObject.toString());
+        response.getWriter().write(JSONObject.fromMapToString(jsonResponse));
     }
 
     @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
@@ -297,7 +296,7 @@ public class RecordService extends AbstractController {
         // variables
         Map<String, Object> jsonResponse = new HashMap<String, Object>();
         User user;
-        JSONObject jsonRecordObject = JSONObject.fromObject(request
+        JSONObject jsonRecordObject = JSONObject.fromStringToJSONObject(request
                 .getParameter("JSONrecords"));
 
         Survey survey = surveyDAO.getSurvey(surveyId);
@@ -383,8 +382,7 @@ public class RecordService extends AbstractController {
         }
         jsonResponse.put("succes", "true");
         jsonResponse.put("recordIdsMapping", onlineRecordIds);
-        JSONObject jsonObject = JSONObject.fromObject(jsonResponse);
-        response.getWriter().write(jsonObject.toString());
+        response.getWriter().write(JSONObject.fromMapToString(jsonResponse));
     }
 
     @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
@@ -530,7 +528,7 @@ public class RecordService extends AbstractController {
         recordDAO.deleteById(recordPk);
         // return true if succesfull
         JSONObject jsonObject = new JSONObject();
-        jsonObject.element("succeeded", true);
+        jsonObject.put("succeeded", true);
         response.setContentType("application/json");
         response.getWriter().write(jsonObject.toString());
     }
@@ -551,7 +549,7 @@ public class RecordService extends AbstractController {
             @RequestParam(value = "ident", required = true) String ident)
             throws IOException {
                     
-        JSONObject jsonRecordIdsMap = JSONObject.fromObject(request
+        JSONObject jsonRecordIdsMap = JSONObject.fromStringToJSONObject(request
                 .getParameter("JSONrecords"));
         // Authenticate the user
         User user;
@@ -576,7 +574,7 @@ public class RecordService extends AbstractController {
 
         // return true if succesfull
         JSONObject jsonObject = new JSONObject();
-        jsonObject.element("succeeded", true);
+        jsonObject.put("succeeded", true);
         response.setContentType("application/json");
         response.getWriter().write(jsonObject.toString());
     }
@@ -860,10 +858,10 @@ public class RecordService extends AbstractController {
         }
 
         JSONObject jsonReturnObject = new JSONObject();
-        jsonReturnObject.element("succeeded", true);
-        jsonReturnObject.element("deleteResponse", deletedRecordIds);
-        jsonReturnObject.element("updateResponse", updatedRecordIds);
-        jsonReturnObject.element("uploadResponse", onlineRecordIds);
+        jsonReturnObject.put("succeeded", true);
+        jsonReturnObject.put("deleteResponse", deletedRecordIds);
+        jsonReturnObject.put("updateResponse", updatedRecordIds);
+        jsonReturnObject.put("uploadResponse", onlineRecordIds);
         response.setContentType("application/json");
         response.getWriter().write(jsonReturnObject.toString());
     }

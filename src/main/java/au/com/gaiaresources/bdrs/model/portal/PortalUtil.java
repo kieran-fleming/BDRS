@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -144,7 +144,7 @@ public class PortalUtil {
             builder.append(line);
         }
         reader.close();
-        return JSONArray.fromObject(builder.toString());
+        return JSONArray.fromString(builder.toString());
     }
 
     /**

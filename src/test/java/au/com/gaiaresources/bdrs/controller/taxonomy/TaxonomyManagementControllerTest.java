@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.junit.Before;
@@ -28,6 +26,8 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import au.com.gaiaresources.bdrs.controller.AbstractControllerTest;
 import au.com.gaiaresources.bdrs.deserialization.record.AttributeParser;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceDAO;
@@ -886,8 +886,7 @@ public class TaxonomyManagementControllerTest extends AbstractControllerTest {
         for (String guid : guidSplit) {
             compareTaxon(guid, shortProfile);
         }
-        
-        JSONObject json = JSONObject.fromObject(response.getContentAsString());
+        JSONObject json = JSONObject.fromStringToJSONObject(response.getContentAsString());
         String message = json.getString(TaxonomyManagementController.JSON_KEY_MESSAGE);
         JSONArray errorList = json.getJSONArray(TaxonomyManagementController.JSON_KEY_ERROR_LIST);
         

@@ -8,9 +8,15 @@
 
 package au.com.gaiaresources.bdrs.kml.net.opengis.kml;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 
 
 /**
@@ -30,7 +36,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlType(name = "colorModeEnumType")
 @XmlEnum
-public enum ColorModeEnumType {
+public enum ColorModeEnumType implements JSONEnum {
 
     @XmlEnumValue("normal")
     NORMAL("normal"),
@@ -55,4 +61,13 @@ public enum ColorModeEnumType {
         throw new IllegalArgumentException(v);
     }
 
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
+    }
 }

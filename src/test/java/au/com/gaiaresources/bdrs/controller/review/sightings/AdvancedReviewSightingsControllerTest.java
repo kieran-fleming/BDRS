@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.hibernate.FlushMode;
 import org.junit.Before;
@@ -827,7 +827,7 @@ public class AdvancedReviewSightingsControllerTest extends
         handle(request, response);
         Assert.assertEquals("application/json", response.getContentType());
         Assert.assertTrue(response.getContentAsString().length() > 0);
-        Assert.assertTrue(JSONArray.fromObject(response.getContentAsString()).size() > 0);
+        Assert.assertTrue(JSONArray.fromString(response.getContentAsString()).size() > 0);
     }
 
     //@Test

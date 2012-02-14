@@ -13,8 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +86,7 @@ public class LocationWebService extends AbstractController {
             location = filterAttributesBySurvey(surveyId, location);
         }
         response.setContentType("application/json");
-        response.getWriter().write(JSONObject.fromObject(location.flatten(3)).toString());
+        response.getWriter().write(JSONObject.fromMapToString(location.flatten(3)));
     }
 
     @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
@@ -96,7 +96,7 @@ public class LocationWebService extends AbstractController {
                                 @RequestParam(value="ids", required=true) String ids)
         throws IOException {
 
-        JSONArray arr = JSONArray.fromObject(ids);
+        JSONArray arr = JSONArray.fromString(ids);
         List<Integer> idList = new ArrayList<Integer>();
         for (int i = 0; i < arr.size(); i++) {
             idList.add(Integer.parseInt(arr.get(i).toString()));
@@ -113,7 +113,7 @@ public class LocationWebService extends AbstractController {
             }
         }
         JSONObject ob = new JSONObject();
-        ob.element("geometry", g.toText());
+        ob.put("geometry", g.toText());
         response.setContentType("application/json");
         response.getWriter().write(ob.toString());
     }
@@ -159,7 +159,7 @@ public class LocationWebService extends AbstractController {
         }
         
         response.setContentType("application/json");
-        response.getWriter().write(JSONObject.fromObject(loc.flatten()).toString());
+        response.getWriter().write(JSONObject.fromMapToString(loc.flatten()));
     }
     
     @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})

@@ -383,79 +383,79 @@
 			"value" : "#FFECA3"
 		},
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.dashboard',
-            'value' : 'templates/dashboard.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.dashboard",
+            "value" : "templates/dashboard.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.header',
-            'value' : 'templates/header.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.header",
+            "value" : "templates/header.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.menu',
-            'value' : 'templates/menu.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.menu",
+            "value" : "templates/menu.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.footer',
-            'value' : 'templates/footer.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.footer",
+            "value" : "templates/footer.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.page.footer',
-            'value' : 'templates/page_footer.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.page.footer",
+            "value" : "templates/page_footer.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.fieldguide.grouplisting',
-            'value' : 'templates/public/groupListing.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.fieldguide.grouplisting",
+            "value" : "templates/public/groupListing.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.fieldguide.taxalisting',
-            'value' : 'templates/public/taxaListing.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.fieldguide.taxalisting",
+            "value" : "templates/public/taxaListing.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.fieldguide.taxonview',
-            'value' : 'templates/public/taxonView.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.fieldguide.taxonview",
+            "value" : "templates/public/taxonView.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.public.home',
-            'value' : 'templates/public/home.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.public.home",
+            "value" : "templates/public/home.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.admin.home',
-            'value' : 'templates/admin/home.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.admin.home",
+            "value" : "templates/admin/home.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.user.home',
-            'value' : 'templates/user/home.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.user.home",
+            "value" : "templates/user/home.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.public.help',
-            'value' : 'templates/public/help.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.public.help",
+            "value" : "templates/public/help.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.public.about',
-            'value' : 'templates/public/about.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.public.about",
+            "value" : "templates/public/about.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.public.signin',
-            'value' : 'templates/public/signin.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.public.signin",
+            "value" : "templates/public/signin.vm"
         },
         {
-            'type'  : 'TEMPLATE',
-            'key'   : 'template.usersignup',
-            'value' : 'templates/public/userSignUp.vm'
+            "type"  : "TEMPLATE",
+            "key"   : "template.usersignup",
+            "value" : "templates/public/userSignUp.vm"
         }
     ]
 }

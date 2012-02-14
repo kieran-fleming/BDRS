@@ -1,11 +1,16 @@
 package au.com.gaiaresources.bdrs.db.impl;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.text.ParseException;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 
 /**
  * An indication if a dataset is to be sorted in ascending or descending order.
  */
-public enum SortOrder {
+public enum SortOrder implements JSONEnum {
     ASCENDING("1"), DESCENDING("2");
 
     private String text;
@@ -43,5 +48,15 @@ public enum SortOrder {
         }
         throw new NullPointerException(
                 "Cannot create enum PaginationFilter.SortOrder from null string");
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

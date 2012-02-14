@@ -1,88 +1,88 @@
 [
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.userManagement",
-        displayName: "User Management",
-        description: "Portal settings for user management."
+        "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.userManagement",
+        "displayName": "User Management",
+        "description": "Portal settings for user management."
     },
     {
-	    classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.apikey",
-        displayName: "API Keys",
-        description: "Any keys for third party APIs that may be used with the BDRS.<br />To add a google map API key:<ul><li>The key must begin with 'google.map.key.' e.g. 'google.map.key.mysite'</li><li>The value must be a comma separated pair: domain,apikey.</li></ul>"
+	    "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.apikey",
+        "displayName": "API Keys",
+        "description": "Any keys for third party APIs that may be used with the BDRS.<br />To add a google map API key:<ul><li>The key must begin with 'google.map.key.' e.g. 'google.map.key.mysite'</li><li>The value must be a comma separated pair: domain,apikey.</li></ul>"
 	},
 	{
-        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.storage",
-        displayName: "Storage",
-        description: "Preferences related to the storage of uploaded data on the server."
+        "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.storage",
+        "displayName": "Storage",
+        "description": "Preferences related to the storage of uploaded data on the server."
     },
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.taxonomy",
-        displayName: "Taxonomy",
-        description: "Preferences related to taxonomic information." 
+        "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.taxonomy",
+        "displayName": "Taxonomy",
+        "description": "Preferences related to taxonomic information." 
     },
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.survey",
-        displayName: "Survey",
-        description: "Preferences related to surveys." 
+        "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.survey",
+        "displayName": "Survey",
+        "description": "Preferences related to surveys." 
     },
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
-        key: "lsid.authority",
-        value: "dev.gaiaresources.com.au",
-        locked: true,
-        description: "An Life Sciences Identifier (LSID) authority identification is a character string that uniquely identifies a source of LSIDs. The identification is usually a domain name registered to the organization that assigned the identifiers.",
-        preferenceCategoryName: "category.taxonomy",
-        portalName: null,
-		isRequired: true
+        "classname": "au.com.gaiaresources.bdrs.model.preference.Preference",
+        "key": "lsid.authority",
+        "value": "dev.gaiaresources.com.au",
+        "locked": true,
+        "description": "An Life Sciences Identifier (LSID) authority identification is a character string that uniquely identifies a source of LSIDs. The identification is usually a domain name registered to the organization that assigned the identifiers.",
+        "preferenceCategoryName": "category.taxonomy",
+        "portalName": null,
+		"isRequired": true
     },
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
-        key: "file.store.location",
-        value: "/tmp",
-        locked: true,
-        description: "The directory where uploaded images and data files shall be stored.",
-        preferenceCategoryName: "category.storage",
-        portalName: null,
-		isRequired: true
+        "classname": "au.com.gaiaresources.bdrs.model.preference.Preference",
+        "key": "file.store.location",
+        "value": "/tmp",
+        "locked": true,
+        "description": "The directory where uploaded images and data files shall be stored.",
+        "preferenceCategoryName": "category.storage",
+        "portalName": null,
+		"isRequired": true
     },
 	{
-        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
-        key: "survey.default",
-        value: "1",
-        locked: true,
-        description: "The id of the default survey to render should a survey ID not be given.",
-        preferenceCategoryName: "category.survey",
-        portalName: null,
-		isRequired: true
+        "classname": "au.com.gaiaresources.bdrs.model.preference.Preference",
+        "key": "survey.default",
+        "value": "1",
+        "locked": true,
+        "description": "The id of the default survey to render should a survey ID not be given.",
+        "preferenceCategoryName": "category.survey",
+        "portalName": null,
+		"isRequired": true
     },
 	{
-        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
-        key: "user.account.approvalRequired",
-        value: "false",
-        locked: true,
-        description: "Set this value to 'true' if an admin must approve user accounts they become active.",
-        preferenceCategoryName: "category.userManagement",
-        portalName: null,
-        isRequired: true
+        "classname": "au.com.gaiaresources.bdrs.model.preference.Preference",
+        "key": "user.account.approvalRequired",
+        "value": "false",
+        "locked": true,
+        "description": "Set this value to 'true' if an admin must approve user accounts they become active.",
+        "preferenceCategoryName": "category.userManagement",
+        "portalName": null,
+        "isRequired": true
     },
     {
-        classname: "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
-        name: "category.facets",
-        displayName: "Facets",
-        description: "Configuration options for facets available on the Advanced Review screen." 
+        "classname": "au.com.gaiaresources.bdrs.model.preference.PreferenceCategory",
+        "name": "category.facets",
+        "displayName": "Facets",
+        "description": "Configuration options for facets available on the Advanced Review screen." 
     },
 	{
-        classname: "au.com.gaiaresources.bdrs.model.preference.Preference",
-	    key: "taxon.showScientificName",
-        value: "true",
-        locked: true,
-        description: "When 'true' will show the scientific names of taxon. Otherwise will show common names of taxon.",
-        preferenceCategoryName: "category.taxonomy",
-        portalName: null,
-        isRequired: true
+        "classname": "au.com.gaiaresources.bdrs.model.preference.Preference",
+	    "key": "taxon.showScientificName",
+        "value": "true",
+        "locked": true,
+        "description": "When 'true' will show the scientific names of taxon. Otherwise will show common names of taxon.",
+        "preferenceCategoryName": "category.taxonomy",
+        "portalName": null,
+        "isRequired": true
 	}
 ]

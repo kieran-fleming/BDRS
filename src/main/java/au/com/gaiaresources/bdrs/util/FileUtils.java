@@ -11,11 +11,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import au.com.gaiaresources.bdrs.json.JSON;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONSerializer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;

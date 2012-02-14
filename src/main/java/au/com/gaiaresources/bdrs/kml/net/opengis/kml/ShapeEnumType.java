@@ -8,9 +8,15 @@
 
 package au.com.gaiaresources.bdrs.kml.net.opengis.kml;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 
 
 /**
@@ -31,7 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlType(name = "shapeEnumType")
 @XmlEnum
-public enum ShapeEnumType {
+public enum ShapeEnumType implements JSONEnum {
 
     @XmlEnumValue("rectangle")
     RECTANGLE("rectangle"),
@@ -57,5 +63,14 @@ public enum ShapeEnumType {
         }
         throw new IllegalArgumentException(v);
     }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
 
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
+    }
 }

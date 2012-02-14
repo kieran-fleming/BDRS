@@ -95,7 +95,10 @@ public class AttributeValue extends AbstractTypedAttributeValue implements Typed
      * @return {@link BigDecimal}
      */
     @CompactAttribute
-    @Column(name = "NUMERIC_VALUE")
+    // Originally the precision and scale was not defined and the generated SQL
+    // set up a numeric precision of 19,2. The scale of 2 was far too small so 
+    // this was increased to 10. Why 10? Because it was a nice round number. 
+    @Column(name = "NUMERIC_VALUE", precision=19, scale=10)
     public BigDecimal getNumericValue() {
         return numericValue;
     }

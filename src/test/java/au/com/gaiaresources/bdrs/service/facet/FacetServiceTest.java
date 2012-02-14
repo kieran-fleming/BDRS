@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +65,7 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         Map<Class<? extends Facet>, List<Facet>> facetTypes = createFacetTypeMapping(facetList);
         for(FacetBuilder bob : FacetService.FACET_BUILDER_REGISTRY) {
             Preference pref = bob.getDefaultPreference(defaultPortal, category);
-            JSONArray userConfig = JSONArray.fromObject(pref.getValue());
+            JSONArray userConfig = JSONArray.fromString(pref.getValue());
             // config for AttributeFacet will be null and so will facet types for 
             // that class so skip them
             if (userConfig != null && facetTypes.get(bob.getFacetClass()) != null) {
@@ -80,7 +80,7 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         boolean addOffset = true;
         for(FacetBuilder builder : FacetService.FACET_BUILDER_REGISTRY) {
             Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
-            JSONArray userConfigArray = JSONArray.fromObject(pref.getValue());
+            JSONArray userConfigArray = JSONArray.fromString(pref.getValue());
             for(int i=0; i<userConfigArray.size(); i++) {
                 JSONObject userConfig = userConfigArray.getJSONObject(i);
                 userConfig.put(Facet.JSON_WEIGHT_KEY, weight);
@@ -112,7 +112,7 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         // Triple the number of instances in the preference value.
         for(FacetBuilder builder : FacetService.FACET_BUILDER_REGISTRY) {
             Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
-            JSONArray userConfigArray = JSONArray.fromObject(pref.getValue());
+            JSONArray userConfigArray = JSONArray.fromString(pref.getValue());
             int targetCount = 3 * userConfigArray.size();
             for(int i=userConfigArray.size(); i<targetCount; i++) {
                 // Implicitly this also tests the default value feature.
@@ -165,7 +165,7 @@ public class FacetServiceTest extends AbstractTransactionalTest {
         for(int i=0; i<FacetService.FACET_BUILDER_REGISTRY.size(); i++) {
             FacetBuilder builder = FacetService.FACET_BUILDER_REGISTRY.get(i);
             Preference pref = prefDAO.getPreferenceByKey(builder.getPreferenceKey());
-            JSONArray array = JSONArray.fromObject(pref.getValue());
+            JSONArray array = JSONArray.fromString(pref.getValue());
             String customName = String.format("Custom Name %s", pref.getId().toString());
             for(int j=0; j<array.size(); j++) {
                 JSONObject obj = array.getJSONObject(j);

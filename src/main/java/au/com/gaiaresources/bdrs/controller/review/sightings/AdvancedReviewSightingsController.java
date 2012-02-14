@@ -12,8 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
@@ -256,7 +256,7 @@ public class AdvancedReviewSightingsController extends SightingsController{
         Record r;
         while(sc.hasMoreElements()) {
             r = sc.nextElement();
-            array.add(JSONObject.fromObject(r.flatten(2)));
+            array.add(r.flatten(2));
             if (++recordCount % ScrollableRecords.RECORD_BATCH_SIZE == 0) {
                 sesh.clear();
             }

@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -103,7 +103,7 @@ public class JsonService {
         addToAttributeMap(attrMap, JSON_KEY_TYPE, JSON_ITEM_TYPE_RECORD);
         addToAttributeMap(attrMap, RECORD_KEY_VISIBILITY, record.getRecordVisibility());
         
-        return JSONObject.fromObject(attrMap);
+        return JSONObject.fromMapToJSONObject(attrMap);
     }
     
     public JSONObject toJson(GeoMapFeature feature) {
@@ -113,7 +113,7 @@ public class JsonService {
         // it's ok to use an empty context path here since GeoMapFeatures cannot have file attributes
         // which is the only type that requires the contextPath to create the download link
         attrMap.put(JSON_KEY_ATTRIBUTES, getOrderedAttributes(feature.getOrderedAttributes(), ""));
-        return JSONObject.fromObject(attrMap);
+        return JSONObject.fromMapToJSONObject(attrMap);
     }
     
     private void addToAttributeMap(Map<String, Object> attrMap, String key, Object value) {

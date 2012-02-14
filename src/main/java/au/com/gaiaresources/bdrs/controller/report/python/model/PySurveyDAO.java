@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
@@ -81,6 +81,6 @@ public class PySurveyDAO {
             flatSurvey.put("locations", flatLocList);
         }
         
-        return JSONObject.fromObject(flatSurvey).toString();
+        return JSONObject.fromMapToString(flatSurvey);
     }
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.db.impl.HqlQuery;
 import au.com.gaiaresources.bdrs.db.impl.Predicate;
 

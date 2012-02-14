@@ -22,8 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import au.com.gaiaresources.bdrs.model.taxa.*;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
@@ -109,11 +109,11 @@ public class SurveyService extends AbstractController {
         }
         
         Survey survey = surveyDAO.getSurvey(surveyId);
-        JSONObject json;
+        String json;
         if(survey == null) {
-            json = new JSONObject();
+            json = new JSONObject().toJSONString();
         } else {
-            json = JSONObject.fromObject(survey.flatten());
+            json = JSONObject.fromMapToString(survey.flatten());
         }
 
         // support for JSONP
@@ -124,7 +124,7 @@ public class SurveyService extends AbstractController {
             response.setContentType("application/json");
         }
 
-        response.getWriter().write(json.toString());
+        response.getWriter().write(json);
         if (request.getParameter("callback") != null) {
             response.getWriter().write(");");
         }
@@ -442,7 +442,7 @@ public class SurveyService extends AbstractController {
         record = recordDAO.saveRecord(record);
         // return record id as JSON
         JSONObject jsonObject = new JSONObject();
-        jsonObject.element("onlineRecordId", record.getId());
+        jsonObject.put("onlineRecordId", record.getId());
         response.setContentType("application/json");
         response.getWriter().write(jsonObject.toString());
     }

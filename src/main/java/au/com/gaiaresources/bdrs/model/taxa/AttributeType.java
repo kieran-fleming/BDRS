@@ -1,11 +1,17 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
 /**
  * Types of attributes.
  * @author Tim Carpenter
  *
  */
-public enum AttributeType implements E {
+public enum AttributeType implements E, JSONEnum {
     INTEGER("IN", "Integer"),
     INTEGER_WITH_RANGE("IR", "Integer Range"),
     DECIMAL("DE", "Decimal"),
@@ -71,5 +77,15 @@ public enum AttributeType implements E {
                AttributeType.HTML_NO_VALIDATION.equals(type) ||
                AttributeType.HTML_COMMENT.equals(type) ||
                AttributeType.HTML_HORIZONTAL_RULE.equals(type);
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

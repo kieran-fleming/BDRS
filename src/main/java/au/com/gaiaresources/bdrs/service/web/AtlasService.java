@@ -18,9 +18,9 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -233,7 +233,7 @@ public class AtlasService {
             }
             JSONObject ob = null;
             try {
-            	 ob = JSONObject.fromObject(buff.toString());
+            	 ob = JSONObject.fromStringToJSONObject(buff.toString());
             } catch (JSONException jse) {
             	log.warn("Unable to pull out JSON profile for ALA taxa : " + guid);
             }
@@ -295,7 +295,7 @@ public class AtlasService {
                 JSONObject commonObj = (JSONObject) commonIter.next();
                 
                 commonName = commonObj.getString("nameString");
-                commonGuid = commonObj.getString("guid");
+                commonGuid = commonObj.optString("guid", null);
                 isPreferred = commonObj.containsKey("preferred") ? 
                         commonObj.getBoolean("preferred") : 
                             commonObj.containsKey("isPreferred") ? 
@@ -347,7 +347,7 @@ public class AtlasService {
                 // just use the first image as there is no preferred/default setting
                 // stating which image to use
                 JSONObject imageObj = (JSONObject) imgIter.next();
-                String description = imageObj.getString("description");
+                String description = imageObj.optString("description", null);
                 
                 String filename = "", 
                        type = "",
@@ -361,10 +361,10 @@ public class AtlasService {
                                !StringUtils.nullOrEmpty(imageObj.getString("contentType")) ? 
                                        imageObj.getString("contentType") : "" : "",
                        credit = imageObj.containsKey("creator") ? 
-                               !StringUtils.nullOrEmpty(imageObj.getString("creator")) ? 
+                               !StringUtils.nullOrEmpty(imageObj.optString("creator", null)) ? 
                                        imageObj.getString("creator") : "" : "", 
                        license = imageObj.containsKey("licence") ? 
-                               !StringUtils.nullOrEmpty(imageObj.getString("licence")) ? 
+                               !StringUtils.nullOrEmpty(imageObj.optString("licence", null)) ? 
                                        imageObj.getString("licence") : "" : "",
                        imageSource = imageObj.getString("infoSourceName"),
                        docId = imageObj.containsKey("documentId") ? 
@@ -456,7 +456,7 @@ public class AtlasService {
             while (synoIter.hasNext()) {
                 JSONObject synonym = (JSONObject) synoIter.next();
                 String syn = synonym.getString("nameString");
-                String source = synonym.getString("author");
+                String source = synonym.optString("author", null);
                 if (StringUtils.nullOrEmpty(source)) {
                     // get the source from the synonym name
                     int index = syn.indexOf(",");
@@ -813,8 +813,8 @@ public class AtlasService {
     public IndicatorSpecies createShortProfile(IndicatorSpecies taxon, JSONObject ob, String guid, String group) throws IOException {
         // Scientific Name
         taxon = setScientificName(taxon, guid, ob.getString("scientificName"), 
-                                  ob.getString("author"), ob.getString("year"), 
-                                  ob.getString("scientificName") + " " + ob.getString("scientificNameAuthorship"));
+                                  ob.optString("author", null), ob.optString("year", null), 
+                                  ob.getString("scientificName") + " " + ob.optString("scientificNameAuthorship", ""));
         
         // Rank
         taxon = setRank(taxon, ob.getString("rank"));
@@ -823,7 +823,7 @@ public class AtlasService {
         String commonName = null, commonGuid = null;
         if (ob.containsKey("commonName")) {
             commonName = ob.getString("commonName");
-            commonGuid = ob.getString("commonNameGUID");
+            commonGuid = ob.optString("commonNameGUID", null);
         } else {
             commonName = taxon.getScientificName();
         }

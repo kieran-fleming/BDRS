@@ -9,8 +9,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
@@ -269,7 +269,7 @@ public class Interceptor implements HandlerInterceptor {
             	} else if (request.getParameter("format").equalsIgnoreCase("json")) {
             		modelAndView.setViewName("jsonDummyView");
 	            	response.setContentType("application/json");
-	            	response.getWriter().write(parseJSON(modelAndView.getModel()).toString(4));
+	            	response.getWriter().write(parseJSON(modelAndView.getModel()).toString());
 	            	response.getWriter().flush();
 	            	response.getWriter().close();
             	}
@@ -313,16 +313,16 @@ public class Interceptor implements HandlerInterceptor {
     	for (Object key : modelMap.keySet()) {
     		if (modelMap.get(key) instanceof PersistentImpl) {
     			PersistentImpl ob = (PersistentImpl)modelMap.get(key);
-    			json.element(key.toString(), ob.flatten());
+    			json.put(key.toString(), ob.flatten());
     		} else if (modelMap.get(key) instanceof Map) {
     			Map ob = (Map)modelMap.get(key);
-    			json.element(key.toString(), parseJSON(ob));
+    			json.put(key.toString(), parseJSON(ob));
     		} else if (modelMap.get(key) instanceof Set) {
-    			json.element(key.toString(), parseJSON((Set)modelMap.get(key)));
+    			json.put(key.toString(), parseJSON((Set)modelMap.get(key)));
     		} else if (modelMap.get(key) instanceof List) {
-    			json.element(key.toString(), parseJSON((List)modelMap.get(key)));    			
+    			json.put(key.toString(), parseJSON((List)modelMap.get(key)));    			
     		} else {
-    			json.element(key.toString(), String.valueOf(modelMap.get(key)));
+    			json.put(key.toString(), String.valueOf(modelMap.get(key)));
     		}
     	}
     	return json;

@@ -3,7 +3,7 @@ package au.com.gaiaresources.bdrs.controller.report.python;
 import java.io.File;
 import java.io.IOException;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
@@ -101,8 +101,8 @@ public class PyBDRS {
      * Returns a json serialized representation of the logged in {@link User}
      * @return the user a json serialized representation of the logged in {@link User}
      */
-    public JSONObject getUser() {
-        return JSONObject.fromObject(user.flatten());
+    public String getUser() {
+        return JSONObject.fromMapToString(user.flatten());
     }
     
     /**

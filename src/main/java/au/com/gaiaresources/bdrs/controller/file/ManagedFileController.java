@@ -7,7 +7,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.displaytag.tags.TableTagParameters;
 import org.displaytag.util.ParamEncoder;

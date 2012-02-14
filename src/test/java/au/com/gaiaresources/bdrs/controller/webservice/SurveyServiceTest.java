@@ -1,7 +1,7 @@
 package au.com.gaiaresources.bdrs.controller.webservice;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -76,7 +76,7 @@ public class SurveyServiceTest extends AbstractControllerTest {
 		Assert.assertEquals("Content type should be application/json",
 				"application/json", response.getContentType());
 		//tests if the response contains a survey with the name 'Test survey'
-		JSONArray responseContent = JSONArray.fromObject(response.getContentAsString());
+		JSONArray responseContent = JSONArray.fromString(response.getContentAsString());
 		//We should get both users surveys back
 		Assert.assertEquals("Returned json array size should match. We should get all the surveys created for the user back", 2, responseContent.size());
 		JSONObject survey = responseContent.getJSONObject(0);
@@ -100,7 +100,7 @@ public class SurveyServiceTest extends AbstractControllerTest {
                 // Tests if the groupId parameter was passed
                 Assert.assertEquals("groupId should be the value passed", group.getId().toString(), request.getParameter(SurveyService.GROUP_ID_PARAMETER));
                 // tests if the response contains a survey with the name 'Test survey'
-                JSONArray responseContent = JSONArray.fromObject(response.getContentAsString());
+                JSONArray responseContent = JSONArray.fromString(response.getContentAsString());
                 // We should get both users surveys back
                 Assert.assertEquals("Returned json array size should match", 1, responseContent.size());
                 JSONObject survey = responseContent.getJSONObject(0);

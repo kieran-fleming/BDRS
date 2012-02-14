@@ -11,7 +11,7 @@ import au.com.gaiaresources.bdrs.db.impl.Predicate;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.util.Pair;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 /**
  * Creates a {@link Facet} for showing records by attribute values.

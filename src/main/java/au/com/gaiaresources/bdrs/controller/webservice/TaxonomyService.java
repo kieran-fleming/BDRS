@@ -7,8 +7,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +86,8 @@ public class TaxonomyService extends AbstractController {
 
         response.setContentType("application/json");
         if(taxonPk > 0) {
-            JSONObject obj = JSONObject.fromObject(taxaDAO.getIndicatorSpecies(taxonPk).flatten(depth));
-            response.getWriter().write(obj.toString());
+            String json = JSONObject.fromMapToString(taxaDAO.getIndicatorSpecies(taxonPk).flatten(depth));
+            response.getWriter().write(json);
         }
     }
     
@@ -98,8 +98,8 @@ public class TaxonomyService extends AbstractController {
 
         response.setContentType("application/json");
         if(groupPk > 0) {
-            JSONObject obj = JSONObject.fromObject(taxaDAO.getTaxonGroup(groupPk).flatten());
-            response.getWriter().write(obj.toString());
+            String json = JSONObject.fromMapToString(taxaDAO.getTaxonGroup(groupPk).flatten());
+            response.getWriter().write(json);
         }
     }
     
@@ -122,8 +122,8 @@ public class TaxonomyService extends AbstractController {
                             HttpServletResponse response) throws IOException {
 
         response.setContentType("application/json");
-        JSONObject obj = JSONObject.fromObject(taxaDAO.getSpeciesProfileById(profilePk).flatten());
-        response.getWriter().write(obj.toString());
+        String json = JSONObject.fromMapToString(taxaDAO.getSpeciesProfileById(profilePk).flatten());
+        response.getWriter().write(json);
     }
     
     @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})

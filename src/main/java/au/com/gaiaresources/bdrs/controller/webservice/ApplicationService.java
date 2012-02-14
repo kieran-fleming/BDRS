@@ -17,8 +17,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
@@ -126,13 +126,15 @@ public class ApplicationService extends AbstractController {
         Collection<IndicatorSpecies> species;
 
         // Remove data from the requested survey that already exists on the device.
-        if ((request.getParameter("surveysOnDevice") != null) && 
-        		(JSONArray.fromObject(request.getParameter("surveysOnDevice")).size() > 0)) {
-
-            JSONArray surveysOnDeviceArray = JSONArray.fromObject(request.getParameter("surveysOnDevice"));
+        JSONArray surveysOnDeviceArray = null;
+        if(request.getParameter("surveysOnDevice") != null) {
+            surveysOnDeviceArray = JSONArray.fromString(request.getParameter("surveysOnDevice"));
+        }
+        if ((surveysOnDeviceArray != null) && (surveysOnDeviceArray.size() > 0)) {
             List<Survey> surveysOnDevice = new ArrayList<Survey>();
-            for (Object sid : surveysOnDeviceArray) {
-            	Survey s = surveyDAO.getSurvey((Integer) sid);
+            for (int i=0; i<surveysOnDeviceArray.size(); i++) {
+                int sid = surveysOnDeviceArray.getInt(i);
+            	Survey s = surveyDAO.getSurvey(sid);
             	surveysOnDevice.add(s);
                 //remove species
                 //species.removeAll(surveyDAO.getSurveyData((Integer) sid).getSpecies());
@@ -281,7 +283,7 @@ public class ApplicationService extends AbstractController {
                 // This should be a list of objects that map the client id 
                 // to the new server id.
                 List<Map<String, Object>> syncResponseList = new ArrayList<Map<String, Object>>(); 
-                JSONArray clientData = JSONArray.fromObject(jsonData);
+                JSONArray clientData = JSONArray.fromString(jsonData);
                 
                 for(Object jsonRecordBean : clientData){
                     syncRecord(syncResponseList, jsonRecordBean, user);

@@ -9,7 +9,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import junit.framework.Assert;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
@@ -421,7 +421,7 @@ public class ReportControllerTest extends AbstractGridControllerTest {
     
     private JSONObject getConfigFile(File reportDir) throws IOException, URISyntaxException {
         File config = new File(reportDir, ReportController.REPORT_CONFIG_FILENAME);
-        return JSONObject.fromObject(readFileAsString(config.getAbsolutePath()));
+        return JSONObject.fromStringToJSONObject(readFileAsString(config.getAbsolutePath()));
     }
     
     private String readFileAsString(String filePath) throws java.io.IOException {

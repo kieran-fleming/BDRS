@@ -1,5 +1,10 @@
 package au.com.gaiaresources.bdrs.model.map;
 
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 import au.com.gaiaresources.bdrs.model.record.Record;
 
 /**
@@ -9,7 +14,7 @@ import au.com.gaiaresources.bdrs.model.record.Record;
  * records in a survey. Likewise a scope of {@link Record} indicates that
  * each record contains a different value for the attribute.
  */
-public enum GeoMapLayerSource {
+public enum GeoMapLayerSource implements JSONEnum {
     KML,
     SHAPEFILE,
     SURVEY_KML,
@@ -27,5 +32,15 @@ public enum GeoMapLayerSource {
         } else {
             throw new IllegalArgumentException(value + " is not a valid String representation of GeoMapLayerSource");
         }
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

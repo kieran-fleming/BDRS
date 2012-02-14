@@ -1,6 +1,12 @@
 package au.com.gaiaresources.bdrs.service.user;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import org.apache.log4j.Logger;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 
 public class UserMetaData {
     
@@ -8,10 +14,20 @@ public class UserMetaData {
     // really we will consider anything not "TRUE" to be false
     public static final String FALSE = "false";
     
-    public enum UserMetaDataType
+    public enum UserMetaDataType implements JSONEnum
     {
         Boolean,
-        String
+        String;
+        
+        @Override
+        public void writeJSONString(Writer out) throws IOException {
+            JSONEnumUtil.writeJSONString(out, this);
+        }
+
+        @Override
+        public String toJSONString() {
+            return JSONEnumUtil.toJSONString(this);
+        }
     }
     
     Logger log = Logger.getLogger(getClass());
@@ -80,4 +96,6 @@ public class UserMetaData {
             break;
         }
     }
+    
+    
 }

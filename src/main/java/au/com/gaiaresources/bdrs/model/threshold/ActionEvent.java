@@ -1,10 +1,16 @@
 package au.com.gaiaresources.bdrs.model.threshold;
 
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
 /**
  * Represents the database events on which threshold actions can be run.
  * @author stephanie
  */
-public enum ActionEvent {
+public enum ActionEvent implements JSONEnum {
     /**
      * On creation or update of a class for which a threshold is set.
      */
@@ -32,5 +38,15 @@ public enum ActionEvent {
 
     public String getDisplayText() {
         return displayText;
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

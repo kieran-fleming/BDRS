@@ -3,9 +3,9 @@ package au.com.gaiaresources.bdrs.service.facet.builder;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;

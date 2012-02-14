@@ -1,5 +1,7 @@
 package au.com.gaiaresources.bdrs.model.survey;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -9,12 +11,14 @@ import au.com.gaiaresources.bdrs.config.AppContext;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordProperty;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertySetting;
 import au.com.gaiaresources.bdrs.controller.attribute.formfield.RecordPropertyType;
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
 import au.com.gaiaresources.bdrs.model.metadata.Metadata;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.service.property.PropertyService;
 
-public enum SurveyFormRendererType {
+public enum SurveyFormRendererType implements JSONEnum {
 	
     // Order the enum in alphabetical order so it is displayed properly
     // on the survey editing page.
@@ -220,5 +224,15 @@ public enum SurveyFormRendererType {
             }
         }
         return isEligible;
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

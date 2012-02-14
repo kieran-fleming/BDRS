@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -92,7 +92,7 @@ public class FacetService {
                 log.error("Cannot create facet. Cannot find preference with key: "+builder.getPreferenceKey());
             } else {
                 try {
-                    JSONArray configArray = JSONArray.fromObject(pref.getValue());
+                    JSONArray configArray = JSONArray.fromString(pref.getValue());
                     for(int i=0; i<configArray.size(); i++) {
                         try {
                             JSONObject configParams = configArray.getJSONObject(i);

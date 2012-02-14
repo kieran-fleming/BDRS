@@ -16,14 +16,12 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
-import net.sf.json.xml.XMLSerializer;
+import au.com.gaiaresources.bdrs.json.JSON;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONSerializer;
 
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -203,17 +201,10 @@ public class TaxonomyManagementController extends AbstractController {
     
                 JSON json = null;
                 try {
-                    // First try loading the file as an XML file.
-                    XMLSerializer xmlSerializer = new XMLSerializer();
-                    json = xmlSerializer.read(profileTmplBuilder.toString());
-                } catch (JSONException xe) {
-                    log.error("Unable to parse species profile template file as XML trying JSON.");
-                    try {
-                        // Otherwise try to load the file as a JSON file.
-                        json = JSONSerializer.toJSON(profileTmplBuilder.toString());
-                    } catch(JSONException je) {
-                        log.error("Unable to parse species profile template file as JSON.");
-                    }
+                    // Otherwise try to load the file as a JSON file.
+                    json = JSONSerializer.toJSON(profileTmplBuilder.toString());
+                } catch(JSONException je) {
+                    log.error("Unable to parse species profile template file as JSON.");
                 }
                 
                 if(json != null) {
@@ -229,25 +220,25 @@ public class TaxonomyManagementController extends AbstractController {
                         }
                         
                         JSONArray jsonArray = (JSONArray) json;
-                        List<DynaBean> groupDynaBeanList = (List<DynaBean>)JSONSerializer.toJava(jsonArray);
-                        
                         SpeciesProfile profile;
                         SpeciesProfile existingProfile;
                         String type;
                         String description;
                         String header;
-                        for(DynaBean groupDynaBean : groupDynaBeanList) {
+                        for(int i=0; i<jsonArray.size(); i++) {
+                            JSONObject jsonTaxonGroup = jsonArray.getJSONObject(i);
                             // Iterate the groups looking for one that matches the taxonGroup parameter
-                            if(taxonGroup.getName().equals(groupDynaBean.get("group_name").toString())) {
+                            if(taxonGroup.getName().equals(jsonTaxonGroup.get("group_name").toString())) {
                                 
-                                List<DynaBean> profileDynaBeanList = (List<DynaBean>)groupDynaBean.get("profile_template");
+                                JSONArray jsonProfileArray = jsonTaxonGroup.getJSONArray("profile_template");
                                 // Load each of the profile templates.
                                 int weight = 100;
-                                for(DynaBean profileDynaBean : profileDynaBeanList) {
+                                for(int j=0; i<jsonProfileArray.size(); j++) {
+                                    JSONObject jsonProfile = jsonProfileArray.getJSONObject(j);
                                     try {
-                                        type = profileDynaBean.get("type").toString();
-                                        description = profileDynaBean.get("description").toString();
-                                        header = profileDynaBean.get("header").toString();
+                                        type = jsonProfile.getString("type");
+                                        description = jsonProfile.getString("description");
+                                        header = jsonProfile.getString("header");
                                         
                                         existingProfile = existingProfileItemsMap.get(header);
                                         // Test if this is an existing profile.

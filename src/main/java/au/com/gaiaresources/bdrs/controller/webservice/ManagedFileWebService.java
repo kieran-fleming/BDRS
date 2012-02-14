@@ -5,7 +5,7 @@ import java.io.IOException;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class ManagedFileWebService extends AbstractController {
                                 HttpServletResponse response) throws IOException {
     	ManagedFile theFile = managedFileDAO.getManagedFile(uuid);
     	if (theFile != null) {
-    		String json = JSONObject.fromObject(theFile.flatten()).toString();
+    		String json = JSONObject.fromMapToString(theFile.flatten());
     		response.setContentType("application/json");
             response.getWriter().write(json);
     	}

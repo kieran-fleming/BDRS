@@ -1,6 +1,12 @@
 package au.com.gaiaresources.bdrs.model.taxa;
 
-public enum TaxonRank {
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
+public enum TaxonRank implements JSONEnum {
     SUBFORM("Subform","http://vocabularies.gbif.org/rank/Subform","subfm.","http://rs.tdwg.org/ontology/voc/TaxonRank"),
     UNCATALOGUED_RANKS("UnCatalogued ranks","http://vocabularies.gbif.org/rank/UnCatalogued-ranks","","http://www.ubio.org"),
     SUPERDOMAIN("superdomain","http://vocabularies.gbif.org/rank/superdomain","","http://www.ubio.org"),
@@ -177,5 +183,15 @@ public enum TaxonRank {
             }
         }
         return null;
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }

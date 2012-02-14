@@ -2,9 +2,9 @@ package au.com.gaiaresources.bdrs.controller.report.python.model;
 
 import java.util.Collection;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSON;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 
@@ -62,7 +62,7 @@ public class PyDAOUtil {
         if(obj == null) {
             return new JSONObject();
         } else {
-            return JSONObject.fromObject(obj.flatten());
+            return JSONObject.fromMapToJSONObject(obj.flatten());
         }
     }
     

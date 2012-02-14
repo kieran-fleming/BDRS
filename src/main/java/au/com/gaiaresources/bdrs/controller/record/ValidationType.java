@@ -1,6 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.record;
 
-public enum ValidationType {
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
+public enum ValidationType implements JSONEnum {
 
     STRING,
     REQUIRED_BLANKABLE_STRING,
@@ -45,4 +51,13 @@ public enum ValidationType {
     DATE_WITHIN_RANGE,
     REQUIRED_DATE_WITHIN_RANGE;
     
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
+    }
 }

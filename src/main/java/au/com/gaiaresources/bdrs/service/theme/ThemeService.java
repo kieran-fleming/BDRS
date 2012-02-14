@@ -27,9 +27,9 @@ import java.util.zip.ZipFile;
 
 import javax.activation.FileDataSource;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;

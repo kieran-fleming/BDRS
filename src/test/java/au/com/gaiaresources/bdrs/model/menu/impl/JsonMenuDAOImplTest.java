@@ -8,8 +8,8 @@ import java.io.InputStream;
 import java.util.List;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
 
 import org.junit.After;
 import org.junit.AfterClass;

@@ -24,9 +24,8 @@ import javax.imageio.ImageIO;
 
 import au.com.gaiaresources.bdrs.model.taxa.*;
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONNull;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
@@ -87,7 +86,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
         
         //System.err.println(mv.getModel().get("message"));
-        JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+        JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
         Assert.assertEquals(500, json.getInt("status"));
         
         JSONObject errorData = json.getJSONObject("500");
@@ -108,7 +107,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
         
         //System.err.println(mv.getModel().get("message"));
-        JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+        JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
         Assert.assertEquals(500, json.getInt("status"));
         
         JSONObject errorData = json.getJSONObject("500");
@@ -130,7 +129,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
         
         //System.err.println(mv.getModel().get("message"));
-        JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+        JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
         Assert.assertEquals(401, json.getInt("status"));
         
         JSONObject errorData = json.getJSONObject("401");
@@ -153,13 +152,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         ModelAndViewAssert.assertViewName(mv, "postMessage");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
         
-        JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+        JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
         //System.err.println(mv.getModel().get("message"));
         Assert.assertEquals(200, json.getInt("status"));
         
         JSONObject data = json.getJSONObject("200");
         JSONArray syncResult = data.getJSONArray("sync_result");
-        validate(JSONArray.fromObject(syncData), syncResult);
+        validate(JSONArray.fromString(syncData), syncResult);
         //System.err.println(data.toString());
     }
     
@@ -179,13 +178,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
         ModelAndViewAssert.assertViewName(mv, "postMessage");
         ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
         
-        JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+        JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
         //System.err.println(mv.getModel().get("message"));
         Assert.assertEquals(200, json.getInt("status"));
         
         JSONObject data = json.getJSONObject("200");
         JSONArray syncResult = data.getJSONArray("sync_result");
-        validate(JSONArray.fromObject(syncData), syncResult);
+        validate(JSONArray.fromString(syncData), syncResult);
         //System.err.println(data.toString());
     }
     
@@ -206,13 +205,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             ModelAndViewAssert.assertViewName(preMV, "postMessage");
             ModelAndViewAssert.assertModelAttributeAvailable(preMV, "message");
             
-            JSONObject preJSON = JSONObject.fromObject(preMV.getModel().get("message"));
+            JSONObject preJSON = JSONObject.fromStringToJSONObject(preMV.getModel().get("message").toString());
             //System.err.println(mv.getModel().get("message"));
             Assert.assertEquals(200, preJSON.getInt("status"));
             
             JSONObject preData = preJSON.getJSONObject("200");
             JSONArray preSyncResult = preData.getJSONArray("sync_result");
-            validate(JSONArray.fromObject(syncData), preSyncResult);
+            validate(JSONArray.fromString(syncData), preSyncResult);
         }
         // --------------------------
         {
@@ -226,13 +225,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             ModelAndViewAssert.assertViewName(mv, "postMessage");
             ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
             
-            JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+            JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
             //System.err.println(mv.getModel().get("message"));
             Assert.assertEquals(200, json.getInt("status"));
             
             JSONObject data = json.getJSONObject("200");
             JSONArray syncResult = data.getJSONArray("sync_result");
-            validate(JSONArray.fromObject(updateSyncData), syncResult);
+            validate(JSONArray.fromString(updateSyncData), syncResult);
             //System.err.println(data.toString());
         }
     }
@@ -254,13 +253,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             ModelAndViewAssert.assertViewName(preMV, "postMessage");
             ModelAndViewAssert.assertModelAttributeAvailable(preMV, "message");
             
-            JSONObject preJSON = JSONObject.fromObject(preMV.getModel().get("message"));
+            JSONObject preJSON = JSONObject.fromStringToJSONObject(preMV.getModel().get("message").toString());
             //System.err.println(mv.getModel().get("message"));
             Assert.assertEquals(200, preJSON.getInt("status"));
             
             JSONObject preData = preJSON.getJSONObject("200");
             JSONArray preSyncResult = preData.getJSONArray("sync_result");
-            validate(JSONArray.fromObject(syncData), preSyncResult);
+            validate(JSONArray.fromString(syncData), preSyncResult);
         }
         // --------------------------
         {
@@ -274,13 +273,13 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             ModelAndViewAssert.assertViewName(mv, "postMessage");
             ModelAndViewAssert.assertModelAttributeAvailable(mv, "message");
             
-            JSONObject json = JSONObject.fromObject(mv.getModel().get("message"));
+            JSONObject json = JSONObject.fromStringToJSONObject(mv.getModel().get("message").toString());
             //System.err.println(mv.getModel().get("message"));
             Assert.assertEquals(200, json.getInt("status"));
             
             JSONObject data = json.getJSONObject("200");
             JSONArray syncResult = data.getJSONArray("sync_result");
-            validate(JSONArray.fromObject(updateSyncData), syncResult);
+            validate(JSONArray.fromString(updateSyncData), syncResult);
             //System.err.println(data.toString());
         }
     }
@@ -319,7 +318,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                 Assert.assertEquals(jsonRecord.getDouble("longitude"), rec.getPoint().getX());
                 Assert.assertEquals(jsonRecord.getLong("when"), rec.getWhen().getTime());
                 
-                if(jsonRecord.get("lastDate") instanceof JSONNull) {
+                if(jsonRecord.isNull("lastDate")) {
                     Assert.assertEquals(rec.getWhen(), rec.getLastDate());
                 } else {
                     Assert.assertEquals(jsonRecord.getLong("lastDate"), rec.getLastDate().getTime());
@@ -327,7 +326,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                 Assert.assertEquals(jsonRecord.getString("notes"), rec.getNotes());
                 Assert.assertEquals(jsonRecord.getInt("number"), rec.getNumber().intValue());
                 Assert.assertEquals(jsonRecord.getInt("survey_id"), rec.getSurvey().getId().intValue());
-                if(JSONNull.getInstance().equals(jsonRecord.get("censusMethod_id"))) {
+                if(jsonRecord.isNull("censusMethod_id")) {
                     Assert.assertNull(rec.getCensusMethod());
                 } else {
                     Assert.assertEquals(jsonRecord.getInt("censusMethod_id"), rec.getCensusMethod().getId().intValue());
@@ -351,7 +350,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                 switch(attr.getType()) {
                     case INTEGER:
                     case INTEGER_WITH_RANGE:
-                        Assert.assertEquals(jsonRecAttr.getString("value"),
+                        Assert.assertEquals(jsonRecAttr.get("value").toString(),
                                             recAttr.getStringValue());
                         if(!recAttr.getStringValue().isEmpty()) {
                             Assert.assertEquals(jsonRecAttr.getInt("value"), 
@@ -359,7 +358,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                         }
                         break;
                     case DECIMAL:
-                        Assert.assertEquals(jsonRecAttr.getString("value"),
+                        Assert.assertEquals(jsonRecAttr.get("value").toString(),
                                             recAttr.getStringValue());
                         if(!recAttr.getStringValue().isEmpty()) {
                             Assert.assertEquals(jsonRecAttr.getDouble("value"), 
@@ -367,7 +366,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                         }
                         break;
                     case DATE:
-                        if((jsonRecAttr.get("value") instanceof JSONNull) || 
+                        if((jsonRecAttr.isNull("value")) || 
                                 jsonRecAttr.get("value").toString().isEmpty()) {
                             Assert.assertEquals("", recAttr.getStringValue());
                             Assert.assertEquals(null, recAttr.getDateValue());
@@ -381,32 +380,45 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                     case STRING_AUTOCOMPLETE:
                     case TEXT:
                     case STRING_WITH_VALID_VALUES:
-                    	Assert.assertEquals(jsonRecAttr.getString("value"),
-                                recAttr.getStringValue());
+                        if(jsonRecAttr.isNull("value")) {
+                            Assert.assertEquals("", recAttr.getStringValue());
+                        } else {
+                            Assert.assertEquals(jsonRecAttr.get("value").toString(),
+                                                recAttr.getStringValue());
+                        }
+                    	
                     	break;
                     case MULTI_CHECKBOX:
                     	String[] actualMultiCheckboxValues = recAttr.getMultiCheckboxValue(); 
                         Arrays.sort(actualMultiCheckboxValues);
-                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.getString("value"))) {
+                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.get("value").toString())) {
                             Assert.assertTrue(Arrays.binarySearch(actualMultiCheckboxValues, expected) > -1);
                         }
                         break;
                     case MULTI_SELECT:
                     	String[] actualMultiSelectValues = recAttr.getMultiSelectValue(); 
                         Arrays.sort(actualMultiSelectValues);
-                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.getString("value"))) {
+                        for(String expected : CSVUtils.fromCSVString(jsonRecAttr.get("value").toString())) {
                             Assert.assertTrue(Arrays.binarySearch(actualMultiSelectValues, expected) > -1);
                         }
                         break;
                     case SINGLE_CHECKBOX:
-                    	Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getString("value")).toString(),
-                                recAttr.getStringValue());
-                    	Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getString("value")),
-                    						recAttr.getBooleanValue());
+                        // If the attribute value is blank, the empty string will be parsed as a boolean
+                        // and then toString into the AttributeValue.stringValue.
+                        // This means that the boolean value is false and the string value is "false"
+                        if(jsonRecAttr.getString("value").isEmpty()) {
+                            Assert.assertEquals(Boolean.FALSE.toString(), recAttr.getStringValue());
+                            Assert.assertFalse(recAttr.getBooleanValue());
+                        } else {
+                            Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getBoolean("value")).toString(),
+                                                recAttr.getStringValue());
+                            Assert.assertEquals(Boolean.valueOf(jsonRecAttr.getBoolean("value")),
+                                                recAttr.getBooleanValue());
+                        }
                     	break;
                     case REGEX:
                     case BARCODE:
-                        Assert.assertEquals(jsonRecAttr.getString("value"),
+                        Assert.assertEquals(jsonRecAttr.get("value").toString(),
                                             recAttr.getStringValue());
                         break;
                     case TIME:
@@ -463,7 +475,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             syncData.add(createJSONRecord(survey, null, taxon, null, blankRecAttr));
         }
         
-        return JSONArray.fromObject(syncData).toString();
+        return JSONArray.toJSONString(syncData);
     }
     
     private String generateUpdateSyncData(boolean blankRecAttr) throws IOException {
@@ -483,7 +495,7 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
                 syncData.add(createJSONRecord(survey, record.getCensusMethod(), taxon, record, blankRecAttr));
             }
         }
-        return JSONArray.fromObject(syncData).toString();
+        return JSONArray.fromList(syncData).toString();
     }
     
     private Map<String, Object> createJSONRecord(Survey survey, CensusMethod method, IndicatorSpecies taxon, Record record, boolean blankRecAttr) throws IOException {
@@ -509,6 +521,8 @@ public class ApplicationServiceUploadTest extends AbstractControllerTest {
             } else {
                 rec.put("taxon_id", null);
             }
+        } else {
+            rec.put("censusMethod_id", null);
         }
         
         List<Map<String,Object>> recAttrs = new ArrayList<Map<String, Object>>();

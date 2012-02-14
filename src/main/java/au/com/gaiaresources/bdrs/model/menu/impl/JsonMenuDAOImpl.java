@@ -5,8 +5,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 

@@ -3,7 +3,7 @@ package au.com.gaiaresources.bdrs.controller.report.python.model;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONArray;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;

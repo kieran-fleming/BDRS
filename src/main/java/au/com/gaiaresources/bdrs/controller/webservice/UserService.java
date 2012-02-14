@@ -15,10 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Filter;
@@ -235,7 +235,7 @@ public class UserService extends AbstractController {
         if (query != null && !query.isEmpty()) {
         	String sig = request.getParameter("signature");
         	try {
-	        	JSONObject details = JSONObject.fromObject(query);
+	        	JSONObject details = JSONObject.fromStringToJSONObject(query);
 	        	
 	        	MessageDigest m = MessageDigest.getInstance("MD5");
 	        	String key = (query + "0a43f170d6c4282682511317d843d050");

@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.junit.Before;

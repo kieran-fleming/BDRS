@@ -28,8 +28,8 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.util.FileUtils;

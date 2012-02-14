@@ -2,7 +2,7 @@ package au.com.gaiaresources.bdrs.service.facet.builder;
 
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.model.preference.Preference;
 import au.com.gaiaresources.bdrs.model.preference.PreferenceCategory;

@@ -5,7 +5,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.location.Location;
 import au.com.gaiaresources.bdrs.model.record.Record;
 import au.com.gaiaresources.bdrs.model.record.ScrollableRecords;
@@ -97,7 +97,7 @@ public class PyScrollableRecords implements Enumeration<String>{
             recFlatten.put("attributes", attrValList);
         }
         
-        String jsonStr = JSONObject.fromObject(recFlatten).toString();
+        String jsonStr = JSONObject.fromMapToString(recFlatten);
         
         // evict to ensure garbage collection
         if (++count % ScrollableRecords.RECORD_BATCH_SIZE == 0) {

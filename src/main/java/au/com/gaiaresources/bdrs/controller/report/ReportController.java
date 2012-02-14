@@ -4,8 +4,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import javax.annotation.security.RolesAllowed;
@@ -16,9 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import jep.Jep;
 import jep.JepException;
-import net.sf.json.JSON;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
@@ -38,6 +40,9 @@ import au.com.gaiaresources.bdrs.controller.file.DownloadFileController;
 import au.com.gaiaresources.bdrs.controller.report.python.PyBDRS;
 import au.com.gaiaresources.bdrs.controller.report.python.PyResponse;
 import au.com.gaiaresources.bdrs.file.FileService;
+import au.com.gaiaresources.bdrs.json.JSON;
+import au.com.gaiaresources.bdrs.json.JSONException;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.report.Report;
@@ -356,6 +361,7 @@ public class ReportController extends AbstractController {
             jep.set("bdrs", bdrs);
             // Load and execute the report
             jep.runScript(new File(reportDir, PYTHON_REPORT).getAbsolutePath());
+            
             jep.eval(String.format(REPORT_EXEC_TMPL, jsonParams.toString()));
             // Terminate the interpreter
             jep.close();
@@ -472,8 +478,18 @@ public class ReportController extends AbstractController {
      * @return 
      */
     private JSONObject toJSONParams(HttpServletRequest request) {
+        // The documentation says the map is of the specified type.
+        @SuppressWarnings("unchecked")
+        Map<String, String[]> rawMap = request.getParameterMap();
+        
+        Map<String, List<String>> paramMap = 
+                new HashMap<String, List<String>>(rawMap.size());
+        for(Map.Entry<String, String[]> entry : rawMap.entrySet()) {
+            paramMap.put(entry.getKey(), Arrays.asList(entry.getValue()));
+        }
+        
         JSONObject params = new JSONObject();
-        params.accumulateAll(request.getParameterMap());
+        params.accumulateAll(paramMap);
         return params;
     }
 

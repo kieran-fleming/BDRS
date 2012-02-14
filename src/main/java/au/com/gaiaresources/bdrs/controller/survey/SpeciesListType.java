@@ -1,6 +1,12 @@
 package au.com.gaiaresources.bdrs.controller.survey;
 
-public enum SpeciesListType {
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
+public enum SpeciesListType implements JSONEnum {
 
     ONE_SPECIES("ONE", "A Single Species", "e.g. Carnaby&#39;s Cockatoo"),
     MANY_SPECIES("MANY", "A Selection of Species", "e.g. Carnaby&#39;s Cockatoo, Hooded Plover and Red-rumped Parrot"),
@@ -27,6 +33,16 @@ public enum SpeciesListType {
 
     public String getTip() {
         return tip;
+    }
+    
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
     }
 }
 

@@ -1,6 +1,12 @@
 package au.com.gaiaresources.bdrs.model.record;
 
-public enum RecordVisibility {
+import java.io.IOException;
+import java.io.Writer;
+
+import au.com.gaiaresources.bdrs.json.JSONEnum;
+import au.com.gaiaresources.bdrs.json.JSONEnumUtil;
+
+public enum RecordVisibility implements JSONEnum {
     // only the owner and admin can ever see this record
     OWNER_ONLY("Owner only"),         
     // owner and admin have full access, other users can see a simplified 
@@ -32,4 +38,15 @@ public enum RecordVisibility {
         }
         return defaultValue;
     }
+
+    @Override
+    public void writeJSONString(Writer out) throws IOException {
+        JSONEnumUtil.writeJSONString(out, this);
+    }
+
+    @Override
+    public String toJSONString() {
+        return JSONEnumUtil.toJSONString(this);
+    }
 }
+    

@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -204,10 +204,10 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         
         handle(request, response);
         
-        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        JSONObject responseContent = JSONObject.fromStringToJSONObject(response.getContentAsString());
         
         //count the survey attributes
-        JSONArray attributes = JSONArray.fromObject(responseContent.get("attributesAndOptions"));
+        JSONArray attributes = JSONArray.fromString(responseContent.get("attributesAndOptions").toString());
         int expectedAttributeCount = 0;
         for(Attribute a : frogSurveyInDb.getAttributes()) {
             if(!AttributeScope.LOCATION.equals(a.getScope())) {
@@ -216,10 +216,10 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         }
         Assert.assertEquals("Expected the attributes size to be " + attributes.size() + " but it was " + expectedAttributeCount , attributes.size(), expectedAttributeCount);
         //count the survey locations
-        JSONArray locations = JSONArray.fromObject(responseContent.get("locations"));
+        JSONArray locations = JSONArray.fromString(responseContent.get("locations").toString());
         Assert.assertEquals("Expected the locations size to be " + locations.size() + " but it was " + frogSurveyInDb.getLocations().size() , locations.size(), frogSurveyInDb.getLocations().size());
         //count the species in the survey
-        JSONArray indicatorSpecies = JSONArray.fromObject(responseContent.get("indicatorSpecies"));
+        JSONArray indicatorSpecies = JSONArray.fromString(responseContent.get("indicatorSpecies").toString());
         Assert.assertEquals("Expected the indicatorSpecies size to be " + indicatorSpecies.size() + " but it was " + frogSurveyInDb.getSpecies().size() , indicatorSpecies.size(), frogSurveyInDb.getSpecies().size());
         
     }
@@ -241,7 +241,7 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         
         handle(request, response);
         
-        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        JSONObject responseContent = JSONObject.fromStringToJSONObject(response.getContentAsString());
         
         //count the survey attributes
         int expectedAttributeCount = 0;
@@ -250,13 +250,13 @@ public class ApplicationServiceTest extends AbstractControllerTest {
                 expectedAttributeCount++;
             }
         }
-        JSONArray attributes = JSONArray.fromObject(responseContent.get("attributesAndOptions"));
+        JSONArray attributes = JSONArray.fromString(responseContent.get("attributesAndOptions").toString());
         Assert.assertEquals("Expected the attributes size to be " + attributes.size(), attributes.size(), expectedAttributeCount);
         //count the survey locations
-        JSONArray locations = JSONArray.fromObject(responseContent.get("locations"));
+        JSONArray locations = JSONArray.fromString(responseContent.get("locations").toString());
         Assert.assertEquals("Expected the locations size to be " + locations.size(), locations.size(), birdAndFrogSurveyInDb.getLocations().size());
         //count the species in the survey
-        JSONArray indicatorSpecies = JSONArray.fromObject(responseContent.get("indicatorSpecies"));
+        JSONArray indicatorSpecies = JSONArray.fromString(responseContent.get("indicatorSpecies").toString());
         Assert.assertEquals("IndicatorSpecies size does not match", indicatorSpecies.size(), (birdAndFrogSurveyInDb.getSpecies().size() - frogSurveyInDb.getSpecies().size()));
     }
     
@@ -277,12 +277,12 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         
         handle(request, response);
         
-        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        JSONObject responseContent = JSONObject.fromStringToJSONObject(response.getContentAsString());
         
         //count the record properties
         int expectedRecordPropertiesCount = RecordPropertyType.values().length;
         
-        JSONArray recordProperties = JSONArray.fromObject(responseContent.get("recordProperties"));
+        JSONArray recordProperties = JSONArray.fromString(responseContent.get("recordProperties").toString());
         Assert.assertEquals("Expected the recordProperties size to be " + expectedRecordPropertiesCount, expectedRecordPropertiesCount, recordProperties.size());
     }
     
@@ -309,12 +309,12 @@ public class ApplicationServiceTest extends AbstractControllerTest {
         
         handle(request, response);
         
-        JSONObject responseContent = JSONObject.fromObject(response.getContentAsString());
+        JSONObject responseContent = JSONObject.fromStringToJSONObject(response.getContentAsString());
         
         //count the record properties
         int expectedRecordPropertiesCount = RecordPropertyType.values().length - 2;
         
-        JSONArray recordProperties = JSONArray.fromObject(responseContent.get("recordProperties"));
+        JSONArray recordProperties = JSONArray.fromString(responseContent.get("recordProperties").toString());
         Assert.assertEquals("Expected the recordProperties size to be " + expectedRecordPropertiesCount, expectedRecordPropertiesCount, recordProperties.size());
     }
 

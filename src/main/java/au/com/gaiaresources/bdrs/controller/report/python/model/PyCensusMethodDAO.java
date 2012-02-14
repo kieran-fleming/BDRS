@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONObject;
 import au.com.gaiaresources.bdrs.model.method.CensusMethod;
 import au.com.gaiaresources.bdrs.model.method.CensusMethodDAO;
 import au.com.gaiaresources.bdrs.model.taxa.Attribute;
@@ -44,6 +44,6 @@ public class PyCensusMethodDAO {
             flatenedMethod.put("attributes", flatAttrList);
         }
         
-        return JSONObject.fromObject(flatenedMethod).toString();
+        return JSONObject.fromMapToString(flatenedMethod);
     }
 }

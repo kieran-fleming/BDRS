@@ -1,8 +1,8 @@
 package au.com.gaiaresources.bdrs.controller.webservice;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import au.com.gaiaresources.bdrs.json.JSONArray;
+import au.com.gaiaresources.bdrs.json.JSONObject;
+import au.com.gaiaresources.bdrs.json.JSONSerializer;
 
 import org.junit.Assert;
 import org.junit.Before;
