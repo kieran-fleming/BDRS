@@ -1,6 +1,5 @@
 package au.com.gaiaresources.bdrs.controller.webservice;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -8,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import au.com.gaiaresources.bdrs.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -16,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import au.com.gaiaresources.bdrs.controller.AbstractController;
-import au.com.gaiaresources.bdrs.model.content.ContentDAO;
 import au.com.gaiaresources.bdrs.model.portal.Portal;
 import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
@@ -64,7 +61,6 @@ public class ContentWebService extends AbstractController {
      * @param response
      * @throws Exception
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/content/loadContent.htm", method = RequestMethod.GET)
     public void load(HttpServletRequest request, HttpServletResponse response)
             throws Exception {

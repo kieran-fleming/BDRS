@@ -52,8 +52,7 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
      * @param surveyId the primary key of the survey where the record shall be added.
      * @param sightingIndex the row index where 0 is the first row.
      * @return 
-     */    
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
+     */
     @RequestMapping(value = "/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm", method = RequestMethod.GET)
     public ModelAndView ajaxGetSightingsTable(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -72,7 +71,6 @@ public class SingleSiteAllTaxaController extends SingleSiteController {
      * @param surveyId the primary key of the survey where the record shall be added.
      * @return
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = SINGLE_SITE_ALL_TAXA_URL, method = RequestMethod.GET)
     public ModelAndView addAllSpeciesRecord(HttpServletRequest request,
                                     HttpServletResponse response,

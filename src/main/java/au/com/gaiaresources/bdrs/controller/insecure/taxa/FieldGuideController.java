@@ -100,7 +100,6 @@ public class FieldGuideController extends AbstractController {
      * @return
      */
     @SuppressWarnings("unchecked")
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/public/speciesInfo.htm", method = RequestMethod.GET)
     public ModelAndView showSpeciesInfo(ModelMap model,
             HttpServletRequest request,
@@ -212,7 +211,6 @@ public class FieldGuideController extends AbstractController {
     }
 
     @SuppressWarnings("unchecked")
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldGuide.htm", method = RequestMethod.GET)
     public ModelAndView showTaxonList(ModelMap model, HttpServletRequest request) {
         List<? extends TaxonGroup> taxonGroups = taxaDAO.getTaxonGroups();

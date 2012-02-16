@@ -352,7 +352,6 @@ public class GeoMapLayerController extends AbstractController {
     }
 
     // public
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = GET_LAYER_URL, method = RequestMethod.GET)
     public void getLayer(
             @RequestParam(value = PARAM_LAYER_ID, required=true) int layerPk,
@@ -418,7 +417,6 @@ public class GeoMapLayerController extends AbstractController {
     }
     
     // public
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = DOWNLOAD_RECORDS_URL, method = RequestMethod.GET) 
     public void downloadRecords(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = PARAM_MAP_LAYER_ID, required=true) Integer[] mapLayerIds,
@@ -442,7 +440,6 @@ public class GeoMapLayerController extends AbstractController {
      * @throws Exception
      */
     // public
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = GET_RECORD_URL, method = RequestMethod.GET)
     public void getRecordKml(
             @RequestParam(value = PARAM_RECORD_ID, required=true) int recordPk,
@@ -470,7 +467,6 @@ public class GeoMapLayerController extends AbstractController {
     }
     
     // public
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=GET_FEATURE_SERVICE_URL, method=RequestMethod.GET) 
     public void getFeatureInfo(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_LATITUDE_Y, required = true) double latitude_y,

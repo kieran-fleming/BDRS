@@ -2,13 +2,10 @@ package au.com.gaiaresources.bdrs.controller;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.annotation.security.RolesAllowed;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import au.com.gaiaresources.bdrs.security.Role;
 
 public class TestAbstractController {
     @Test
@@ -23,7 +20,6 @@ public class TestAbstractController {
         assertEquals("mapping.htm", new AbstractControllerImpl().getControllerRequestMapping(AbstractControllerImpl.class));
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping("mapping.htm")
     @Ignore
     private static class AbstractControllerImpl extends AbstractController {

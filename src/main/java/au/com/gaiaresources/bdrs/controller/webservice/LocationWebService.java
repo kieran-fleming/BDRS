@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
@@ -36,7 +35,6 @@ import au.com.gaiaresources.bdrs.model.taxa.AttributeScope;
 import au.com.gaiaresources.bdrs.model.taxa.AttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.security.Role;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -73,7 +71,6 @@ public class LocationWebService extends AbstractController {
      * @param surveyId the id of the {@link Survey} (used to filter attributes)
      * @throws IOException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/getLocationById.htm", method=RequestMethod.GET)
     public void getLocationById(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -82,14 +79,16 @@ public class LocationWebService extends AbstractController {
         throws IOException {
 
         Location location = locationDAO.getLocation(pk);
+        
+        Map<String,Object> locationObj = location.flatten(3);
         if (surveyId != -1) {
-            location = filterAttributesBySurvey(surveyId, location);
+            filterAttributesBySurvey(surveyId, location, locationObj);
         }
+        
         response.setContentType("application/json");
-        response.getWriter().write(JSONObject.fromMapToString(location.flatten(3)));
+        response.getWriter().write(JSONObject.fromMapToString(locationObj));
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/getLocationsById.htm", method=RequestMethod.GET)
     public void getLocationsById(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -118,7 +117,6 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(ob.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value="/webservice/location/bookmarkUserLocation.htm", method=RequestMethod.GET)
     public void bookmarkUserLocation(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -162,7 +160,6 @@ public class LocationWebService extends AbstractController {
         response.getWriter().write(JSONObject.fromMapToString(loc.flatten()));
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=IS_WKT_VALID_URL, method=RequestMethod.GET)
     public void wktValidation(HttpServletRequest request,
                                 HttpServletResponse response, 
@@ -196,12 +193,12 @@ public class LocationWebService extends AbstractController {
     }
     
     /**
-     * Removes any attributes from another survey from this location.
+     * Filter attributes out of the flattened map to avoid changing the actual object
      * @param surveyId the survey for which the location is requested
      * @param location the location
-     * @return the location with any attributes from other surveys removed
+     * @param locationObj flattened location object
      */
-    private Location filterAttributesBySurvey(int surveyId, Location location) {
+    private void filterAttributesBySurvey(int surveyId, Location location, Map<String, Object> locationObj) {
         Survey survey = surveyDAO.get(surveyId);
         // create an Attribute-indexed map of the location attributes
         // so we can get the attribute value by attribute later
@@ -212,19 +209,26 @@ public class LocationWebService extends AbstractController {
         
         // get all of the attributes for the survey and filter only keep 
         // attribute values for this location that match the survey attributes
-        Set<AttributeValue> surveyLocAttrs = new HashSet<AttributeValue>();
+        Set<Integer> attrIdsToKeep = new HashSet<Integer>();
         for(Attribute attribute : survey.getAttributes()) {
             if(AttributeScope.LOCATION.equals(attribute.getScope())) {
                 AttributeValue value = typedAttrMap.get(attribute);
                 if (value != null) {
-                    surveyLocAttrs.add(value);
+                    attrIdsToKeep.add(attribute.getId());
                 }
             }
         }
-        // evict the location from the session before modifying it
-        getRequestContext().getHibernate().evict(location);
-        location.setAttributes(surveyLocAttrs);
         
-        return location;
+        List<Map<String, Map<String, Object>>> attributes = (List<Map<String, Map<String, Object>>>) locationObj.get("attributes");
+        List<Object> removeAttrs = new ArrayList<Object>();
+        for (Map<String, Map<String, Object>> attributeMap : attributes) {
+            Map<String, Object> attributeValues = attributeMap.get("attribute");
+            Integer id = (Integer) attributeValues.get("id");
+            if (!attrIdsToKeep.contains(id)) {
+                // remove attributes not found in the survey
+                removeAttrs.add(attributeMap);
+            }
+        }
+        attributes.removeAll(removeAttrs);
     }
 }

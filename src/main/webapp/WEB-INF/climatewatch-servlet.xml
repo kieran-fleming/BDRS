@@ -12,10 +12,16 @@
            http://www.springframework.org/schema/context/spring-context-2.5.xsd
            http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
 
+    <!-- HandlerExceptionResolver -->
+    <bean class="au.com.gaiaresources.bdrs.servlet.HandlerExceptionResolver" />
+
+    <!-- security declaration must be before other declarations or redirection could stop working -->
+    <security:global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>
+
     <context:annotation-config />
     <context:component-scan
         base-package="au.com.gaiaresources.bdrs.mobile.controller.test" />
-
+    
     <!-- KML View Resolver -->
     <bean id="kmlViewResolver"
         class="au.com.gaiaresources.bdrs.servlet.view.KMLViewResolver">
@@ -33,9 +39,6 @@
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
         <property name="alwaysUseFullPath" value="true"/>
     </bean>
-
-    <!-- HandlerExceptionResolver -->
-    <bean class="au.com.gaiaresources.bdrs.servlet.HandlerExceptionResolver" />
 
     <!-- Messages -->
     <!--bean id="messageSource"
@@ -56,9 +59,7 @@
         <!-- 100 megabytes = 104 857 600 bytes -->
         <property name="maxUploadSize" value="104857600" />
     </bean>
-
-    <security:global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>
-
+    
     <!-- Scan for controllers -->
     <context:component-scan base-package="au.com.gaiaresources.bdrs.controller" />
 

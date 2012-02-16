@@ -1,12 +1,9 @@
 package au.com.gaiaresources.bdrs.controller.signup;
 
-import javax.annotation.security.RolesAllowed;
-
 import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.security.Role;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,7 +23,6 @@ public class PasswordController extends AbstractController {
      * Render the password reminder screen.
      * @return {@link ModelAndView}
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/reminder.htm", method = RequestMethod.GET)
     public ModelAndView show() {
         return new ModelAndView("password-reminder");
@@ -37,7 +33,6 @@ public class PasswordController extends AbstractController {
      * @param emailAddress The provided e-mail address.
      * @return {@link String} a redirection.
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/reminder.htm", method = RequestMethod.POST)
     public String request(@RequestParam("emailaddress") String emailAddress) {
         User user = userDAO.getUserByEmailAddress(emailAddress);

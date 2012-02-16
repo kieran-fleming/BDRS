@@ -336,7 +336,6 @@ public class PortalController extends AbstractController {
         return portal;
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/portal/**")
     public void restfulPortalRequestForward(HttpServletRequest request, 
                                                     HttpServletResponse response) throws ServletException, IOException {

@@ -1,5 +1,9 @@
 package au.com.gaiaresources.bdrs.security;
 
+import java.util.List;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 
 public class Role {
     public static final String ROOT = "ROLE_ROOT";
@@ -7,7 +11,7 @@ public class Role {
     public static final String SUPERVISOR = "ROLE_SUPERVISOR";
     public static final String POWERUSER = "ROLE_POWER_USER";
     public static final String USER = "ROLE_USER";
-    public static final String ANONYMOUS = "ROLE_ANONYMOUS";
+    public static final String ANONYMOUS = "ROLE_BDRS_ANONYMOUS";
 
     private static final String[] ROLE_ORDER = { ROOT, ADMIN, SUPERVISOR,
             POWERUSER, USER, ANONYMOUS };
@@ -33,7 +37,30 @@ public class Role {
     public static final String[] getAllRoles() {
         return ROLE_ORDER;
     }
-
+    
+    /**
+     * Returns all of the roles as a single comma-separated String.
+     * @return
+     */
+    public static final String getRolesString() {
+        return getRolesString(Arrays.asList(getAllRoles()));
+    }
+    
+    /**
+     * Returns the roles in the list as a single comma-separated String.
+     * @param roleList
+     * @return
+     */
+    public static final String getRolesString(List<String> roleList) {
+        StringBuilder roles = new StringBuilder();
+        for (String role : roleList)
+        {
+                roles.append(role);
+                roles.append(",");
+        }
+        return roles.toString();
+    }
+    
     public static String[] getRolesLowerThan(String role) {
         int startIdx = getRoleOrderIndex(role) + 1;
         if (startIdx >= ROLE_ORDER.length) {

@@ -135,7 +135,6 @@ public class RecordMapController extends AbstractController {
         RecordDownloadWriter.write(sesh, request, response, sc, format, currentUser);
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = KMLUtils.GET_RECORD_PLACEMARK_PNG_URL, method = RequestMethod.GET)
     public void renderRecordPlacemark(HttpServletRequest request, HttpServletResponse response)
         throws IOException {

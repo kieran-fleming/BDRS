@@ -125,7 +125,6 @@ public class YearlySightingsController extends AbstractController {
      * @param recordId - the record ID to retrieve the form for. The form will likely contain many records.
      * @return ModelAndView for rendering the yearly sightings form
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = YEARLY_SIGHTINGS_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(HttpServletRequest request,
                                     HttpServletResponse response,

@@ -304,7 +304,6 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // returns the slideshow image
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=SLIDESHOW_IMG_URL, method=RequestMethod.GET)
     public ModelAndView getSlideshowImg(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_UUID, required=true) String uuid) {
@@ -317,7 +316,6 @@ public class GalleryController extends AbstractDownloadFileController {
     }
     
     // returns the full sized image
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value=FULL_IMG_URL, method=RequestMethod.GET)
     public ModelAndView getFullImg(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_UUID, required=true) String uuid) {

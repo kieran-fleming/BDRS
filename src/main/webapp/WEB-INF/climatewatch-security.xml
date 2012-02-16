@@ -4,15 +4,38 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
                         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
-    <!--
-    <global-method-security secured-annotations="enabled" jsr250-annotations="enabled"/>
-     -->
     
     <http realm="ClimateWatch Realm" access-denied-page="/accessDenied.htm" entry-point-ref="bdrsAuthenticationEntryPoint">
         <custom-filter position="FORM_LOGIN_FILTER" ref="bdrsAuthenticationFilter" />
         
-        <intercept-url pattern="/js/**/*" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER,ROLE_SUPERVISOR,ROLE_POWER_USER,ROLE_ROOT,ROLE_ANONYMOUS"/>
-
+        <intercept-url pattern="/index.html" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/js/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/css/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/files/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/images/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/review/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/error/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/*.htm" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/fieldguide/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/webservice/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/map/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/public/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/mobile/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/mobile/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/portal/**/*" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        
+        <intercept-url pattern="/bdrs/user/tracker.htm" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+         
+        <intercept-url pattern="/bdrs/user/surveyRenderRedirect.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/user/atlas.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/user/singleSite*Taxa.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/user/singleSiteAllTaxa/sightingTableAllTaxa.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/user/singleSiteMultiTaxa/sightingRow.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/bdrs/user/yearlySightings.htm" method="GET" access="ROLE_ANONYMOUS,IS_AUTHENTICATED_ANONYMOUSLY"/>
+        
+        <!--  -->
+        
+        <intercept-url pattern="/**" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER,ROLE_SUPERVISOR,ROLE_POWER_USER,ROLE_BDRS_ANONYMOUS"/>
         <!--intercept-url pattern="/html/mobile/*.manifest" access="ROLE_USER,ROLE_STUDENT,ROLE_POWERSTUDENT,ROLE_ADMIN,ROLE_TEACHER"/-->
         <!-- intercept-url pattern="/public/**/*" access=""/ -->
         
@@ -21,7 +44,8 @@
                     authentication-failure-url="/loginfailed.htm"
                     default-target-url="/authenticated/redirect.htm" />
                     -->
-        <logout logout-url="/logout" logout-success-url="/home.htm" invalidate-session="false"/>
+        <logout logout-url="/logout" invalidate-session="false" 
+                logout-success-url="/home.htm"/>
     </http>
     <authentication-manager alias="authenticationManager">
         <authentication-provider user-service-ref="userAuthenticationService">

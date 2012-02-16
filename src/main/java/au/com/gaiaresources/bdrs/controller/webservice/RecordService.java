@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.http.HTTPException;
@@ -51,7 +50,6 @@ import au.com.gaiaresources.bdrs.model.taxa.TaxaService;
 import au.com.gaiaresources.bdrs.model.taxa.TypedAttributeValue;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.bulkdata.AbstractBulkDataService;
 
 @Controller
@@ -86,7 +84,6 @@ public class RecordService extends AbstractController {
     @Autowired
     private AbstractBulkDataService bulkDataService;
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/lastRecords.htm", method = RequestMethod.GET)
     public void getLatestRecords(
             @RequestParam(value = "species", defaultValue = "") String species,
@@ -110,7 +107,6 @@ public class RecordService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/lastSpecies.htm", method = RequestMethod.GET)
     public void getLastSpecies(
             @RequestParam(value = "user", defaultValue = "0") int userPk,
@@ -140,7 +136,6 @@ public class RecordService extends AbstractController {
 
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/searchRecords.htm", method = RequestMethod.GET)
     public void searchRecords(
             @RequestParam(value = "ident", defaultValue = "") String ident,
@@ -195,7 +190,6 @@ public class RecordService extends AbstractController {
      * @throws IOException
      * @throws ParseException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/uploadRecords.htm", method = RequestMethod.POST)
     public void uploadRecords(
             @RequestParam(value = "survey", defaultValue = "") Integer surveyId,
@@ -287,7 +281,6 @@ public class RecordService extends AbstractController {
         response.getWriter().write(JSONObject.fromMapToString(jsonResponse));
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/updateRecords.htm", method = RequestMethod.POST)
     public void updateRecords(
             @RequestParam(value = "survey", defaultValue = "") Integer surveyId,
@@ -385,7 +378,6 @@ public class RecordService extends AbstractController {
         response.getWriter().write(JSONObject.fromMapToString(jsonResponse));
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/downloadRecords.htm", method = RequestMethod.GET)
     public void downloadRecords(
             @RequestParam(value = "ident", defaultValue = "") String ident,
@@ -445,7 +437,6 @@ public class RecordService extends AbstractController {
      *            Id of the survey of which records are requested
      * @throws IOException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/recordsForSurvey.htm", method = RequestMethod.GET)
     public void recordsForSurvey(HttpServletRequest request,
             HttpServletResponse response,
@@ -482,7 +473,6 @@ public class RecordService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/getRecordsForLocation.htm", method = RequestMethod.GET)
     public void getRecordsForLocation(
             @RequestParam(value = "ident", required = true) String ident,
@@ -508,7 +498,6 @@ public class RecordService extends AbstractController {
      * @param response - HttpServletResponse
      * @throws IOException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/deleteRecord.htm", method = RequestMethod.POST)
     public void deleteRecord(
             @RequestParam(value = "ident", required = true) String ident,
@@ -542,7 +531,6 @@ public class RecordService extends AbstractController {
      *            The ids of the records that need to be deleted.
      * @throws IOException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/deleteRecords.htm", method = RequestMethod.POST)
     public void deleteRecords(HttpServletRequest request,
             HttpServletResponse response,
@@ -579,7 +567,6 @@ public class RecordService extends AbstractController {
         response.getWriter().write(jsonObject.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/getRecordById.htm", method = RequestMethod.GET)
     public void getRecordById(
             @RequestParam(value = "regkey", required = true) String ident,
@@ -619,7 +606,6 @@ public class RecordService extends AbstractController {
 
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/getRecordAttributeById.htm", method = RequestMethod.GET)
     public void getRecordAttributeById(
             @RequestParam(value = "ident", required = true) String ident,
@@ -664,7 +650,6 @@ public class RecordService extends AbstractController {
      * @param JSONrecords - The records that need to be updated or removed.
      * @throws IOException
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/record/syncToServer.htm", method = RequestMethod.POST)
     public void sync(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value = "ident", required = true) String ident,
@@ -875,7 +860,6 @@ public class RecordService extends AbstractController {
      * @param censusMethodId - census method to search for inside the children
      * @throws Exception
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = AJAX_GET_CHILD_RECORD_URL, method = RequestMethod.GET)
     public void getChildRecords(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value=PARAM_PARENT_RECORD_ID, required=false) Integer parentRecordId,

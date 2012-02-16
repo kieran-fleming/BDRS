@@ -3,7 +3,6 @@ package au.com.gaiaresources.bdrs.controller.vanilla.insecure;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import au.com.gaiaresources.bdrs.model.metadata.MetadataDAO;
 import au.com.gaiaresources.bdrs.model.user.RegistrationService;
 import au.com.gaiaresources.bdrs.model.user.User;
 import au.com.gaiaresources.bdrs.model.user.UserDAO;
-import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.service.content.ContentService;
 import au.com.gaiaresources.bdrs.service.user.UserMetaData;
 import au.com.gaiaresources.bdrs.service.user.UserMetaDataService;
@@ -45,7 +43,6 @@ public class VanillaUserSignUpController extends AbstractController {
      * @return
      * @throws Exception
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/vanilla/usersignup.htm", method = RequestMethod.GET)
     public ModelAndView renderForm(HttpServletRequest request,
             HttpServletRequest response) throws Exception {
@@ -67,7 +64,6 @@ public class VanillaUserSignUpController extends AbstractController {
      * @throws Exception
      */
     @SuppressWarnings({ "unchecked" })
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/vanilla/usersignup.htm", method = RequestMethod.POST)
     public String save(
             HttpServletRequest request,

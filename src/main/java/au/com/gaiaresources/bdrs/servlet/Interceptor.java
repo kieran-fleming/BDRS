@@ -123,7 +123,7 @@ public class Interceptor implements HandlerInterceptor {
 	        	if (updateUser) {
 	        		userDAO.updateUser(u);
 	        	}
-        		c.setUserDetails(new UserDetails(u));
+	        	c.setUserDetails(new UserDetails(u));
                         List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>(u.getRoles().length);
                         for(String role : u.getRoles()) {
                             grantedAuth.add(new GrantedAuthorityImpl(role));
@@ -135,18 +135,7 @@ public class Interceptor implements HandlerInterceptor {
         		auth.setAuthenticated(true);
         		securityContext.setAuthentication(auth);
         		SecurityContextHolder.setContext(securityContext);
-	        } else {
-	            // anonymous access
-	            List<GrantedAuthority> grantedAuth = new ArrayList<GrantedAuthority>();
-                    grantedAuth.add(new GrantedAuthorityImpl(Role.ANONYMOUS));
-                            
-                    Authentication auth = new AnonymousAuthenticationToken("anonymous", 
-                                    new UserDetails(null), 
-                                    grantedAuth);
-                    auth.setAuthenticated(true);
-                    securityContext.setAuthentication(auth);
-                    SecurityContextHolder.setContext(securityContext);
-        	}	
+	        }	
         }
         
         c.setHibernate(sessionFactory.getCurrentSession());

@@ -3,7 +3,6 @@ package au.com.gaiaresources.bdrs.controller;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,7 +42,6 @@ public class HomePageController extends AbstractController {
     public static final String AUTHENTICATED_REDIRECT_URL = "/authenticated/redirect.htm";
     public static final String LOGIN_FAILED_URL = "/loginfailed.htm";
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = HOME_URL, method = RequestMethod.GET)
     public ModelAndView render(HttpServletRequest request,
             HttpServletResponse response) {
@@ -114,7 +112,6 @@ public class HomePageController extends AbstractController {
         return view;
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/deviceDataStore.htm", method = RequestMethod.POST)
     public void storeDeviceData(HttpServletRequest request,
             HttpServletResponse response) {
@@ -161,7 +158,6 @@ public class HomePageController extends AbstractController {
      * @param request
      * @return
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = LOGIN_FAILED_URL, method = RequestMethod.GET)
     public ModelAndView renderLoginFailed(HttpServletRequest request) {
         getRequestContext().addMessage(new Message("login.failed"));
@@ -183,7 +179,6 @@ public class HomePageController extends AbstractController {
      * @param res
      * @return
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = AUTHENTICATED_REDIRECT_URL, method = RequestMethod.GET)
     public String redirectForRole(HttpServletRequest req,
             HttpServletResponse res) {
@@ -222,7 +217,6 @@ public class HomePageController extends AbstractController {
      * @param res
      * @return
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/mobile/desktopSession.htm", method = RequestMethod.GET)
     public String setDesktopSession(HttpServletRequest req,
             HttpServletResponse res) {
@@ -238,7 +232,6 @@ public class HomePageController extends AbstractController {
      * @param res
      * @return
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/mobileSession.htm", method = RequestMethod.GET)
     public String setMobileSession(HttpServletRequest req,
             HttpServletResponse res) {
@@ -253,9 +246,7 @@ public class HomePageController extends AbstractController {
 	 * @param response
 	 * @return
 	 */
-
-        @RolesAllowed({Role.USER, Role.POWERUSER, Role.ROOT, Role.ADMIN, Role.SUPERVISOR, Role.ANONYMOUS})
-	@RequestMapping(value = "/bdrs/mobile/home.htm", method = RequestMethod.GET)
+    @RequestMapping(value = "/bdrs/mobile/home.htm", method = RequestMethod.GET)
 	public ModelAndView getHome(HttpServletRequest request,
 			HttpServletResponse response) {
 //		request.getSession().setAttribute("sessionType", "mobile");

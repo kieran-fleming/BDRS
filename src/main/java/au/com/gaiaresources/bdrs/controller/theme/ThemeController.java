@@ -589,7 +589,6 @@ public class ThemeController extends AbstractDownloadFileController {
      * @throws IOException 
      */
     // public so no login required
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.SUPERVISOR, Role.POWERUSER, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = REVERT_DEFAULT_THEME_URL, method = RequestMethod.GET)
     public void revertDefaultTheme(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String contextPath = request.getContextPath();

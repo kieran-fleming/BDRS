@@ -287,7 +287,6 @@ public class TrackerController extends AbstractController {
      * @return a ModelAndView for rendering the tracker form
      */
     @SuppressWarnings("unchecked")
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = EDIT_URL, method = RequestMethod.GET)
     public ModelAndView addRecord(
             HttpServletRequest request,

@@ -2,7 +2,6 @@ package au.com.gaiaresources.bdrs.controller;
 
 import java.io.IOException;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,7 +25,6 @@ import au.com.gaiaresources.bdrs.model.record.RecordDAO;
 import au.com.gaiaresources.bdrs.model.survey.Survey;
 import au.com.gaiaresources.bdrs.model.survey.SurveyDAO;
 import au.com.gaiaresources.bdrs.model.survey.SurveyFormRendererType;
-import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class RenderController extends AbstractController {
@@ -57,7 +55,6 @@ public class RenderController extends AbstractController {
      * @return redirected view to the survey renderer.
      */
     @SuppressWarnings("unchecked")
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = SURVEY_RENDER_REDIRECT_URL, method = RequestMethod.GET)
     public ModelAndView surveyRendererRedirect(HttpServletRequest request,
             HttpServletResponse response,

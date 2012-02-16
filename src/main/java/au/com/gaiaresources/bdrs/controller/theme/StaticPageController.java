@@ -64,7 +64,6 @@ public class StaticPageController extends AbstractController {
      *    If you're feeling lucky you can do a similar thing for static pages with 
      *    different role requirements, user, admin, root etc!
      */
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = STATIC_PUBLIC_URL_CATCHALL, method = RequestMethod.GET)
     public ModelAndView displayPublicStaticPage(HttpServletRequest request,
                                 HttpServletResponse response) throws Exception {

@@ -3,7 +3,6 @@ package au.com.gaiaresources.bdrs.controller.webservice;
 import java.io.IOException;
 import java.util.List;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,7 +20,6 @@ import au.com.gaiaresources.bdrs.controller.AbstractController;
 import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
-import au.com.gaiaresources.bdrs.security.Role;
 import au.com.gaiaresources.bdrs.util.Pair;
 
 /**
@@ -35,7 +33,6 @@ public class TaxonomyService extends AbstractController {
     @Autowired
     private TaxaDAO taxaDAO;
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/searchTaxonGroup.htm", method = RequestMethod.GET)
     public void searchTaxonGroup(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -55,7 +52,6 @@ public class TaxonomyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/searchTaxon.htm", method = RequestMethod.GET)
     public void searchTaxon(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -78,7 +74,6 @@ public class TaxonomyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/getTaxonById.htm", method = RequestMethod.GET)
     public void getTaxonById(@RequestParam(value="id", defaultValue="0") int taxonPk,
                              @RequestParam(value="depth", defaultValue="0", required=false) int depth,
@@ -91,7 +86,6 @@ public class TaxonomyService extends AbstractController {
         }
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/getTaxonGroupById.htm", method = RequestMethod.GET)
     public void getTaxonGroupById(@RequestParam(value="id", defaultValue="0") int groupPk,
                             HttpServletResponse response) throws IOException {
@@ -103,7 +97,6 @@ public class TaxonomyService extends AbstractController {
         }
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/getAllTaxonGroups.htm", method = RequestMethod.GET)
     public void getAllTaxonGroups(HttpServletResponse response) throws IOException {
 
@@ -116,7 +109,6 @@ public class TaxonomyService extends AbstractController {
         response.getWriter().write(array.toString());
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/getSpeciesProfileById.htm", method = RequestMethod.GET)
     public void getSpeciesProfileById(@RequestParam(value="id", required=true) int profilePk,
                             HttpServletResponse response) throws IOException {
@@ -126,7 +118,6 @@ public class TaxonomyService extends AbstractController {
         response.getWriter().write(json);
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/webservice/taxon/topSpecies.htm", method = RequestMethod.GET)
     public void getTopSpecies(@RequestParam(value="user", defaultValue="0") int userPk,
             @RequestParam(value="limit", defaultValue="5") int limit,

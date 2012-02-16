@@ -54,7 +54,6 @@ public class EmbeddedWidgetController extends AbstractController {
     @Autowired
     private TemplateService templateService;
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/widgetBuilder.htm", method = RequestMethod.GET)
     public ModelAndView widgetBuilder(HttpServletRequest request,
             HttpServletResponse response) {
@@ -68,7 +67,6 @@ public class EmbeddedWidgetController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/bdrs-embed.js", method = RequestMethod.GET)
     public ModelAndView generateEmbeddedJS(
             HttpServletRequest request,
@@ -118,7 +116,6 @@ public class EmbeddedWidgetController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/bdrs-embed.css", method = RequestMethod.GET)
     public void generateEmbeddedJS(HttpServletRequest request,
             HttpServletResponse response) {
@@ -140,7 +137,6 @@ public class EmbeddedWidgetController extends AbstractController {
     }
 
     @SuppressWarnings("unchecked")
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/redirect.htm", method = RequestMethod.GET)
     public ModelAndView edit(HttpServletRequest request,
             HttpServletResponse response,
@@ -157,7 +153,6 @@ public class EmbeddedWidgetController extends AbstractController {
         return mv;
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/latest_statistics.htm", method = RequestMethod.GET)
     public ModelAndView latest_statistics(HttpServletRequest request,
             HttpServletResponse response) {
@@ -181,7 +176,6 @@ public class EmbeddedWidgetController extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/bdrs/public/embedded/image_slideshow.htm", method = RequestMethod.GET)
     public ModelAndView image_slideshow(HttpServletRequest request, HttpServletResponse response,
             @RequestParam(value="galleryId", required=true) int galleryId) {

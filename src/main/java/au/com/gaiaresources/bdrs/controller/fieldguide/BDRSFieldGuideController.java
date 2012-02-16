@@ -2,7 +2,6 @@ package au.com.gaiaresources.bdrs.controller.fieldguide;
 
 import java.text.ParseException;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,7 +27,6 @@ import au.com.gaiaresources.bdrs.model.taxa.IndicatorSpecies;
 import au.com.gaiaresources.bdrs.model.taxa.SpeciesProfile;
 import au.com.gaiaresources.bdrs.model.taxa.TaxaDAO;
 import au.com.gaiaresources.bdrs.model.taxa.TaxonGroup;
-import au.com.gaiaresources.bdrs.security.Role;
 
 @Controller
 public class BDRSFieldGuideController  extends AbstractController {
@@ -43,7 +41,6 @@ public class BDRSFieldGuideController  extends AbstractController {
     
     private ParamEncoder taxonListingParamEncoder = new ParamEncoder(TAXA_LISTING_TABLE_ID);
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldguide/groups.htm", method = RequestMethod.GET)
     public ModelAndView listGroups(  HttpServletRequest request,
                                 HttpServletResponse response) {
@@ -53,7 +50,6 @@ public class BDRSFieldGuideController  extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldguide/taxa.htm", method = RequestMethod.GET)
     public ModelAndView listTaxa(  HttpServletRequest request,
                                 HttpServletResponse response,
@@ -83,7 +79,6 @@ public class BDRSFieldGuideController  extends AbstractController {
         return mv;
     }
     
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldguide/listTaxa.htm", method = RequestMethod.GET)
     public void asyncListTaxa(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -129,7 +124,6 @@ public class BDRSFieldGuideController  extends AbstractController {
         }
     }
 
-    @RolesAllowed({Role.ADMIN, Role.ROOT, Role.POWERUSER, Role.SUPERVISOR, Role.USER, Role.ANONYMOUS})
     @RequestMapping(value = "/fieldguide/taxon.htm", method = RequestMethod.GET)
     public ModelAndView viewTaxon(  HttpServletRequest request,
                                     HttpServletResponse response,
